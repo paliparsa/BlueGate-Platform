@@ -762,30 +762,76 @@ async function copyMiniServiceUrl(orderId,directUrl=''){
   }catch(e){showStatus(e.message||'کپی لینک انجام نشد','error')}
 }
 async function openDirectServiceViewer(orderId,directUrl='',title='مدیریت سرویس'){
-  let loadingTimer=null,frameLoaded=false;
+  let loadingTimer=null;
   try{
     showStatus('در حال باز کردن سرویس…');
     const url=await resolveMiniServiceUrl(orderId,directUrl);
     if(!/^https:\/\//i.test(url)) throw new Error('لینک سرویس معتبر نیست.');
     document.getElementById('miniDirectServiceViewer')?.remove();
+
+    // Keep the Mini App viewer visually identical to the Website phone viewer,
+    // but size it for Telegram's real viewport instead of forcing fullscreen.
     const ov=document.createElement('dialog');
-    ov.id='miniDirectServiceViewer';ov.className='mini-service-viewer direct';
-    ov.innerHTML=`<div class="mini-service-head"><button type="button" data-service-close aria-label="بستن">✕</button><div><b>🔗 ${esc(title)}</b><small>SUBSCRIPTION VIEWER</small></div><div class="mini-service-actions"><button type="button" data-service-copy aria-label="کپی لینک">⧉</button><button type="button" data-service-external aria-label="باز کردن مستقیم">↗</button><button type="button" data-service-refresh aria-label="بارگذاری دوباره">↻</button></div></div><div class="mini-service-frame"><div class="mini-service-loading"><div><b>در حال نمایش سرویس…</b><small>اگر مقصد نمایش داخلی را محدود کرده باشد، با ↗ همان لینک اصلی را باز کن.</small></div></div><iframe title="${esc(title)}" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation allow-storage-access-by-user-activation" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="mini-service-fallback"><b>نمایش داخلی در دسترس نیست؟</b><span>لینک ساب همچنان قابل کپی یا باز شدن مستقیم است.</span><div><button type="button" data-service-copy>📋 کپی لینک</button><button type="button" data-service-external>↗ باز کردن مستقیم</button></div></div></div>`;
+    ov.id='miniDirectServiceViewer';
+    ov.className='mini-phone-viewer-overlay';
+    ov.innerHTML=`<div class="mini-phone-viewer-device" role="document" aria-label="${esc(title)}">
+      <div class="mini-phone-viewer-toolbar">
+        <div class="mini-phone-viewer-dots"><i></i><i></i><i></i></div>
+        <div class="mini-phone-viewer-title"><span>🔗</span><b>${esc(title)}</b><small>SUBSCRIPTION VIEWER</small></div>
+        <div class="mini-phone-viewer-tools">
+          <button type="button" data-service-copy title="کپی لینک" aria-label="کپی لینک">⧉</button>
+          <button type="button" data-service-external title="باز کردن مستقیم" aria-label="باز کردن مستقیم">↗</button>
+          <button type="button" data-service-refresh title="بارگذاری دوباره" aria-label="بارگذاری دوباره">↻</button>
+          <button type="button" data-service-close title="بستن" aria-label="بستن">×</button>
+        </div>
+      </div>
+      <div class="mini-phone-viewer-screen">
+        <div class="mini-phone-viewer-loading"><div><b>در حال باز کردن سرویس…</b><small>صفحه سرویس داخل BlueGate باز می‌شود.</small></div></div>
+        <iframe title="${esc(title)}" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation allow-storage-access-by-user-activation" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        <div class="mini-phone-viewer-hint">اگر صفحه مقصد نمایش داخلی را محدود کرد، از دکمه ↗ استفاده کن.</div>
+      </div>
+    </div>`;
+
     document.body.appendChild(ov);
-    document.documentElement.classList.add('mini-service-open');document.body.classList.add('mini-service-open');
+    document.documentElement.classList.add('mini-service-open');
+    document.body.classList.add('mini-service-open');
     try{tg?.expand?.();tg?.disableVerticalSwipes?.()}catch{}
-    if(typeof ov.showModal==='function')ov.showModal();else ov.setAttribute('open','');
-    const fr=ov.querySelector('iframe'),ld=ov.querySelector('.mini-service-loading'),fb=ov.querySelector('.mini-service-fallback');
-    fr.addEventListener('load',()=>{frameLoaded=true;clearTimeout(loadingTimer);ld?.classList.add('done');fb?.classList.remove('visible')});
-    loadingTimer=setTimeout(()=>ld?.classList.add('done'),1500);
+    if(typeof ov.showModal==='function') ov.showModal(); else ov.setAttribute('open','');
+
+    const fr=ov.querySelector('iframe');
+    const loading=ov.querySelector('.mini-phone-viewer-loading');
+    const hint=ov.querySelector('.mini-phone-viewer-hint');
+    const clearLoading=()=>{clearTimeout(loadingTimer);loading?.classList.add('done')};
+    fr.addEventListener('load',clearLoading);
+    // A few subscription panels keep load pending. Never keep an overlay over usable content.
+    loadingTimer=setTimeout(clearLoading,1500);
     fr.src=url;
-    const close=()=>{clearTimeout(loadingTimer);try{tg?.enableVerticalSwipes?.()}catch{};try{ov.close()}catch{};ov.remove();document.documentElement.classList.remove('mini-service-open');document.body.classList.remove('mini-service-open')};
+
+    const close=()=>{
+      clearTimeout(loadingTimer);
+      try{tg?.enableVerticalSwipes?.()}catch{}
+      try{ov.close()}catch{}
+      ov.remove();
+      document.documentElement.classList.remove('mini-service-open');
+      document.body.classList.remove('mini-service-open');
+    };
     ov.querySelector('[data-service-close]').onclick=close;
-    ov.querySelector('[data-service-refresh]').onclick=()=>{clearTimeout(loadingTimer);fb?.classList.remove('visible');ld?.classList.remove('done');fr.src='about:blank';requestAnimationFrame(()=>{fr.src=url;loadingTimer=setTimeout(()=>ld?.classList.add('done'),1500)})};
-    ov.querySelectorAll('[data-service-copy]').forEach(btn=>btn.onclick=()=>copyMiniServiceUrl(orderId,url));
-    ov.querySelectorAll('[data-service-external]').forEach(btn=>btn.onclick=()=>{if(tg?.openLink)tg.openLink(url);else window.open(url,'_blank','noopener,noreferrer')});
+    ov.querySelector('[data-service-refresh]').onclick=()=>{
+      loading?.classList.remove('done');
+      hint?.classList.remove('show');
+      fr.src='about:blank';
+      requestAnimationFrame(()=>{
+        fr.src=url;
+        clearTimeout(loadingTimer);
+        loadingTimer=setTimeout(clearLoading,1500);
+        setTimeout(()=>hint?.classList.add('show'),4500);
+      });
+    };
+    ov.querySelector('[data-service-copy]').onclick=()=>copyMiniServiceUrl(orderId,url);
+    ov.querySelector('[data-service-external]').onclick=()=>{if(tg?.openLink)tg.openLink(url);else window.open(url,'_blank','noopener,noreferrer')};
     ov.addEventListener('cancel',e=>{e.preventDefault();close()});
-    setTimeout(()=>{if(document.body.contains(ov)&&!frameLoaded)fb?.classList.add('hint-ready')},4500);
+    ov.addEventListener('click',e=>{if(e.target===ov)close()});
+    setTimeout(()=>{if(document.body.contains(ov))hint?.classList.add('show')},4500);
   }catch(e){showStatus(e.message||'باز کردن سرویس ممکن نشد','error')}
 }
 
