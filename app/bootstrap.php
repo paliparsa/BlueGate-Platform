@@ -2777,6 +2777,45 @@ function refresh_crypto_order_amount_if_open(int $orderId): ?array {
     return order_by_id($orderId);
 }
 
+
+function validate_service_delivery_url(string $url): string {
+    $url = trim($url);
+    if ($url === '' || strlen($url) > 4096) throw new RuntimeException('SERVICE_URL_INVALID');
+    $parts = @parse_url($url);
+    if (!is_array($parts) || strtolower((string)($parts['scheme'] ?? '')) !== 'https' || empty($parts['host'])) {
+        throw new RuntimeException('SERVICE_URL_HTTPS_REQUIRED');
+    }
+    if (!empty($parts['user']) || !empty($parts['pass'])) throw new RuntimeException('SERVICE_URL_USERINFO_BLOCKED');
+    $host = strtolower(rtrim((string)$parts['host'], '.'));
+    if ($host === 'localhost' || str_ends_with($host, '.local') || str_ends_with($host, '.internal')) {
+        throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
+    }
+    if (filter_var($host, FILTER_VALIDATE_IP)) {
+        if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
+        }
+    }
+    return $url;
+}
+
+function set_order_service_delivery(int $orderId, string $url, string $title='', string $note='', bool $markDelivered=true): ?array {
+    $order = order_by_id($orderId);
+    if (!$order) return null;
+    $url = validate_service_delivery_url($url);
+    $title = trim($title) ?: 'مدیریت سرویس';
+    if (mb_strlen($title) > 120) $title = mb_substr($title, 0, 120);
+    db()->prepare('UPDATE orders SET delivery_url=?, delivery_title=? WHERE id=?')->execute([$url, $title, $orderId]);
+    if ($markDelivered) {
+        $fresh = order_by_id($orderId);
+        if ($fresh && normalize_order_status((string)$fresh['status']) !== 'delivered') {
+            $note = trim($note) ?: 'سرویس شما آماده است. از جزئیات سفارش می‌توانید لینک سرویس را باز یا کپی کنید.';
+            deliver_order($orderId, $note);
+        }
+    }
+    add_order_event($orderId, 'delivered', 'لینک سرویس ثبت شد', 'لینک مستقیم تحویل برای مشتری فعال شد', true);
+    return order_by_id($orderId);
+}
+
 function order_public_payload(array $o, bool $is_admin = false): array {
     if (!empty($o['id']) && ($o['payment_method'] ?? '') === 'crypto') { $o = refresh_crypto_order_amount_if_open((int)$o['id']) ?: $o; }
     $name = $o['product_name'].(!empty($o['variant_title']) ? ' - '.$o['variant_title'] : '');
@@ -2806,7 +2845,10 @@ function order_public_payload(array $o, bool $is_admin = false): array {
         'payment_note'=>$o['payment_note'] ?? null, 'customer_note'=>$o['customer_note'] ?? null, 'receipt_file_id'=>$o['receipt_file_id'] ?? null,
         'user_id'=>(int)($o['user_id'] ?? 0), 'telegram_id'=>isset($o['telegram_id'])?(int)$o['telegram_id']:null, 'username'=>$o['username'] ?? null, 'first_name'=>$o['first_name'] ?? null,
         'delivery_type'=>$o['delivery_type'], 'delivery_type_fa'=>delivery_type_fa($o['delivery_type']), 'delivery_text'=>$o['delivery_text'],
-        'has_service_viewer'=>($status === 'delivered' && !empty($o['delivery_url'])), 'service_title'=>trim((string)($o['delivery_title'] ?? '')) ?: 'مدیریت سرویس',
+        'has_service_delivery'=>($status === 'delivered' && !empty($o['delivery_url'])),
+        'has_service_viewer'=>($status === 'delivered' && !empty($o['delivery_url'])), // compatibility with v1.4 clients
+        'service_title'=>trim((string)($o['delivery_title'] ?? '')) ?: 'مدیریت سرویس',
+        'service_url'=>($status === 'delivered' && !empty($o['delivery_url'])) ? (string)$o['delivery_url'] : null,
         'expires_at'=>$o['expires_at'] ?? null,
         'payment_expires_at'=>$pmtExpiresAt,
         'payment_remaining_seconds'=>$pmtRemainingSec,

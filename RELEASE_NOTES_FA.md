@@ -1,35 +1,29 @@
-# BlueGate Platform 1.4.0
+# BlueGate Platform 1.5.0
 
-## Secure Service Viewer
+## Direct Service Delivery
 
-- برای هر سفارش یک **لینک امن سرویس / Subscription** قابل ثبت توسط ادمین اضافه شد.
-- لینک اصلی سرویس در payload کاربر یا UI عمومی ارسال نمی‌شود؛ کاربر فقط یک Ticket کوتاه‌عمر برای Viewer دریافت می‌کند.
-- Viewer قبل از نمایش، مالکیت سفارش، وضعیت `delivered` و وجود لینک سرویس را بررسی می‌کند.
-- URLهای سرویس فقط با HTTPS پذیرفته می‌شوند و مقصدهای private/reserved/localhost برای جلوگیری از SSRF مسدود هستند.
-- درخواست Viewer از سرور BlueGate عبور می‌کند و DNS مقصد به IP عمومی pin می‌شود. لینک‌های داخلی صفحه به URLهای رمز‌شده و موقت Viewer تبدیل می‌شوند.
-- Website: دکمه «🌐 باز کردن سرویس» داخل سفارش اضافه شده و صفحه سرویس در Phone Modal امن باز می‌شود؛ روی موبایل Viewer تمام‌صفحه است.
-- Mini App: همان دکمه داخل جزئیات سفارش اضافه شده و Viewer تمام‌صفحه داخل خود Mini App باز می‌شود؛ کاربر از Mini App خارج نمی‌شود.
-- Admin Website و Admin Mini App هر دو امکان ثبت `delivery_url`، عنوان دکمه و پیام تحویل را برای هر سفارش دارند. ثبت لینک امن، سفارش را در صورت نیاز Delivered می‌کند و بدون افشای URL به کاربر تلگرام اطلاع می‌دهد.
-- تحویل متنی قبلی همچنان برای محصولات غیر VPN و تحویل‌های معمولی حفظ شده است.
+- Secure reverse-proxy Viewer نسخه 1.4 حذف شد. لینک تحویل همان URL مستقیم HTTPS است که ادمین برای سفارش ثبت می‌کند.
+- لینک مستقیم فقط برای سفارش تحویل‌شده و فقط داخل payload حساب مالک همان سفارش نمایش داده می‌شود.
+- کاربر در Website و Mini App دو اکشن دارد: **باز کردن سرویس** و **کپی لینک ساب**.
+- Website لینک را مستقیم داخل Phone Modal باز می‌کند و دکمه‌های Copy، Open Direct، Reload و Close دارد.
+- Mini App لینک را مستقیم داخل Viewer تمام‌صفحه باز می‌کند؛ Overlay به `documentElement` متصل شده و ارتفاعش با Visual Viewport/Telegram viewport تنظیم می‌شود تا پایین صفحه یا داخل layout قبلی گیر نکند.
+- اگر مقصد با `X-Frame-Options` یا `CSP frame-ancestors` نمایش داخل iframe را ببندد، دکمه ↗ همان URL را مستقیماً در مرورگر تلگرام/تب جدید باز می‌کند.
+- URL فقط `https://` پذیرفته می‌شود و localhost / IPهای private-reserved رد می‌شوند.
+- `service_viewer_ticket` برای سازگاری با cache نسخه 1.4 باقی مانده، اما دیگر Ticket/Proxy تولید نمی‌کند و همان لینک مستقیم را به مالک سفارش برمی‌گرداند.
 
-## Database migration
+## علت مشکل Viewer قبلی
 
-دو ستون جدید به جدول `orders` اضافه می‌شود:
+Viewer v1.4 صفحه مقصد را با cURL از خود VPS دریافت و HTML/CSS/redirectها را rewrite می‌کرد. این روش برای لینک‌هایی که Cloudflare/anti-bot دارند، فقط IPv6 هستند، به Cookie/JavaScript/WebSocket وابسته‌اند یا پاسخ متفاوت به درخواست server-side می‌دهند می‌تواند 502 بدهد. در v1.5 این لایه حذف شده و مرورگر کاربر مستقیماً مقصد را باز می‌کند.
 
-- `delivery_url`
-- `delivery_title`
+## Database
 
-Migration در `sudo bluegate --update` به‌صورت خودکار و بدون حذف داده‌های قبلی اجرا می‌شود.
+Migration جدیدی لازم نیست؛ ستون‌های `delivery_url` و `delivery_title` نسخه 1.4 استفاده می‌شوند.
 
-## ارتقا
-
-بعد از Push نسخه جدید روی GitHub:
+## Upgrade
 
 ```bash
 sudo bluegate --update
 sudo bluegate --health
 ```
 
-سپس یک Hard Refresh روی Website انجام بده. برای تست، یک سفارش را از Admin باز کن، «لینک سرویس» را بزن و URL HTTPS پنل/ساب را ثبت کن.
-
-> نکته: Viewer برای صفحه‌های Subscription معمولی و صفحات server-rendered طراحی شده است. اگر صفحه مقصد شدیداً به JavaScript، WebSocket، Cookie یا APIهای cross-origin وابسته باشد ممکن است برای همان پنل نیاز به سازگارسازی اختصاصی داشته باشد.
+بعد از آپدیت Website را Hard Refresh و Mini App را کامل ببند و دوباره باز کن.

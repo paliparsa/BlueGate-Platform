@@ -64,6 +64,7 @@ Website علاوه بر username/password از Telegram Login Widget هم پشت
 محصولات عادی (`product_type=normal`) که از Admin ساخته می‌شوند نیز به‌صورت خودکار در بخش «سرویس‌های بیشتر» Storefront نمایش داده می‌شوند؛ اگر Variant داشته باشند، انتخاب پلن در همان کارت انجام می‌شود.
 
 
-## Secure Service Viewer (v1.4)
+## Direct Service Delivery (v1.5)
 
-Admin can attach a per-order HTTPS service/subscription URL. Customers receive an authenticated short-lived viewer ticket and open the service inside the Website phone modal or inside Telegram Mini App without exposing the original delivery URL in the public order payload. Private/reserved network destinations are blocked.
+Admin can attach a per-order HTTPS subscription/service URL. After delivery, only the authenticated owner receives that URL in their order payload. Website and Mini App can open it directly and the customer can copy the subscription link. The old server-side reverse proxy was removed for compatibility with modern subscription panels and anti-bot/CDN setups.
+

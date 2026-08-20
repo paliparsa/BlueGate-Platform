@@ -1,7 +1,6 @@
 <?php
 if (!ob_start('ob_gzhandler')) { ob_start(); }
 require_once __DIR__ . '/../app/bootstrap.php';
-require_once __DIR__ . '/../app/service_viewer.php';
 try {
     if (!setting('schema_migrated_v3') || !setting('schema_merged_storefront_v1') || !setting('schema_service_viewer_v1')) { migrate(); set_setting('schema_migrated_v3', '1'); set_setting('schema_merged_storefront_v1', '1'); set_setting('schema_service_viewer_v1', '1'); }
 } catch (Throwable $e) {}
@@ -464,13 +463,16 @@ if ($action === 'logout') {
     api_out(['ok'=>true]);
 }
 if ($action === 'my_orders') { api_out(['ok'=>true, 'orders'=>array_map('order_public_payload', user_orders((int)$user['id'], 50))]); }
-if ($action === 'service_viewer_ticket') {
+if ($action === 'service_link' || $action === 'service_viewer_ticket') {
+    // v1.5: return the direct admin-provided URL only to the authenticated owner.
+    // service_viewer_ticket is kept as a compatibility alias for stale v1.4 clients.
     $oid=(int)($input['order_id']??0);
     $order=order_by_id($oid);
     if(!$order || (int)$order['user_id'] !== (int)$user['id']) api_out(['ok'=>false,'error'=>'ORDER_NOT_FOUND','message'=>'سفارش پیدا نشد.'],404);
-    if(normalize_order_status((string)$order['status']) !== 'delivered' || empty($order['delivery_url'])) api_out(['ok'=>false,'error'=>'SERVICE_NOT_READY','message'=>'دسترسی سرویس هنوز برای این سفارش فعال نشده است.'],400);
-    try { bg_sv_validate_url((string)$order['delivery_url']); } catch(Throwable $e) { api_out(['ok'=>false,'error'=>'SERVICE_URL_INVALID','message'=>'لینک سرویس نیاز به اصلاح توسط پشتیبانی دارد.'],400); }
-    api_out(['ok'=>true,'viewer_url'=>bg_sv_public_view_url($oid,(int)$user['id']),'title'=>trim((string)($order['delivery_title']??'')) ?: 'مدیریت سرویس','expires_in'=>900]);
+    if(normalize_order_status((string)$order['status']) !== 'delivered' || empty($order['delivery_url'])) api_out(['ok'=>false,'error'=>'SERVICE_NOT_READY','message'=>'لینک سرویس هنوز برای این سفارش فعال نشده است.'],400);
+    try { $direct=validate_service_delivery_url((string)$order['delivery_url']); }
+    catch(Throwable $e) { api_out(['ok'=>false,'error'=>'SERVICE_URL_INVALID','message'=>'لینک سرویس نیاز به اصلاح توسط پشتیبانی دارد.'],400); }
+    api_out(['ok'=>true,'url'=>$direct,'direct_url'=>$direct,'viewer_url'=>$direct,'title'=>trim((string)($order['delivery_title']??'')) ?: 'مدیریت سرویس']);
 }
 if ($action === 'my_referrals') {
     $stmt = db()->prepare('SELECT id, first_name, username, created_at, referrals_count, total_earned FROM users WHERE referrer_id=? ORDER BY id DESC LIMIT 50');
@@ -859,10 +861,10 @@ if ($action === 'admin_set_service_delivery') {
     $oid=(int)($input['order_id']??0); $url=trim((string)($input['delivery_url']??''));
     $title=trim((string)($input['delivery_title']??'مدیریت سرویس')); $note=trim((string)($input['delivery_note']??''));
     if($oid<=0 || $url==='') api_out(['ok'=>false,'message'=>'شماره سفارش و لینک HTTPS سرویس الزامی است.'],400);
-    try { $order=bg_sv_set_order_delivery($oid,$url,$title,$note,true); }
-    catch(Throwable $e){ $code=$e->getMessage(); $msg=str_contains($code,'HTTPS')?'لینک سرویس باید با https:// شروع شود.':(str_contains($code,'HOST_BLOCKED')?'دامنه لینک سرویس به IP عمومی معتبر resolve نمی‌شود یا آدرس خصوصی است.':'لینک سرویس معتبر نیست یا قابل دسترسی امن نیست.'); api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400); }
+    try { $order=set_order_service_delivery($oid,$url,$title,$note,true); }
+    catch(Throwable $e){ $code=$e->getMessage(); $msg=str_contains($code,'HTTPS')?'لینک سرویس باید با https:// شروع شود.':(str_contains($code,'HOST_BLOCKED')?'آدرس‌های localhost، شبکه خصوصی یا رزروشده برای تحویل سرویس مجاز نیستند.':'لینک سرویس معتبر نیست.'); api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400); }
     if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404);
-    if(!empty($order['telegram_id'])) send_msg((int)$order['telegram_id'], "✅ سرویس سفارش <code>#{$oid}</code> آماده شد.\nبرای مشاهده، وارد «سفارش‌های من» در Mini App شوید و روی دکمه <b>باز کردن سرویس</b> بزنید.", main_menu_keyboard(is_admin((int)$order['telegram_id'])));
+    if(!empty($order['telegram_id'])) send_msg((int)$order['telegram_id'], "✅ سرویس سفارش <code>#{$oid}</code> آماده شد.\nبرای مشاهده یا کپی لینک، وارد «سفارش‌های من» شوید.", main_menu_keyboard(is_admin((int)$order['telegram_id'])));
     api_out(admin_payload());
 }
 if ($action === 'admin_order_note') { require_admin($user); $oid=(int)($input['order_id']??0); $note=trim((string)($input['note']??'')); $order=order_by_id($oid); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); db()->prepare('UPDATE orders SET admin_note=? WHERE id=?')->execute([$note, $oid]); add_order_event($oid, 'note', 'یادداشت داخلی ثبت/ویرایش شد', $note, false); api_out(admin_payload()); }
