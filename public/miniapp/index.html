@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>BlueReferral</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Vazirmatn:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Cache Buster Version: v107-fix-profile-topbar-btn -->
+  <link rel="stylesheet" href="style.css?v=v107-fix-profile-topbar-btn">
+</head>
+<body>
+  <div id="status" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <main id="userApp" class="app-shell" role="main">
+    <header class="topbar glass">
+      <div class="brand-box">
+        <small id="helloText">سلام 👋</small>
+        <h1 id="brandTitle">BlueReferral</h1>
+      </div>
+
+      <nav class="topbar-desktop-nav">
+        <button data-tab="home" class="active"><span>👤</span> پروفایل</button>
+        <button data-tab="shop"><span>🛒</span> فروشگاه</button>
+        <button data-tab="orders"><span>🧾</span> سفارش‌ها</button>
+        <button data-tab="wallet"><span>💰</span> کیف پول</button>
+      </nav>
+
+      <div class="topbar-actions">
+        <button class="auth-top-btn" id="openAuthModalBtn" title="ورود / ثبت نام">🔑 ورود / ثبت‌نام</button>
+        <button class="icon-btn" id="openPalette" title="تنظیم رنگ" aria-label="تنظیم رنگ Mini App">🎨</button>
+      </div>
+    </header>
+
+    <section id="homePage" class="page"></section>
+    <section id="shopPage" class="page hidden"></section>
+    <section id="productPage" class="page hidden"></section>
+    <section id="ordersPage" class="page hidden"></section>
+    <section id="walletPage" class="page hidden"></section>
+
+    <nav class="bottom-nav glass" role="navigation" aria-label="ناوبری پایین">
+      <button data-tab="home" class="active"><span>👤</span>پروفایل</button>
+      <button data-tab="shop"><span>🛒</span>فروشگاه</button>
+      <button data-tab="orders"><span>🧾</span>سفارش‌ها</button>
+      <button data-tab="wallet"><span>💰</span>کیف پول</button>
+    </nav>
+  </main>
+
+  <main id="adminApp" class="app-shell hidden admin-shell">
+    <header class="topbar glass">
+      <div>
+        <small>پنل مدیریت Mini App</small>
+        <h1>BlueReferral Admin</h1>
+      </div>
+      <button class="icon-btn" id="openCmdPalette" title="جستجوی دستور (⌘K)" aria-label="جستجوی دستور">⌘</button>
+      <button class="icon-btn" id="reloadAdmin" aria-label="رفرش پنل">↻</button>
+    </header>
+    <section id="adminStats" class="stats-grid"></section>
+    <nav class="admin-tabs glass">
+      <button data-admin-tab="dashboard" class="active">داشبورد</button>
+      <button data-admin-tab="products">محصولات</button>
+      <button data-admin-tab="categories">دسته‌ها</button>
+      <button data-admin-tab="variants">پلن‌ها</button>
+      <button data-admin-tab="inventory">انبار</button>
+      <button data-admin-tab="orders">سفارش‌ها</button>
+      <button data-admin-tab="withdrawals">برداشت‌ها</button>
+      <button data-admin-tab="coupons">تخفیف</button>
+      <button data-admin-tab="settings">تنظیمات</button>
+      <button data-admin-tab="activity">لاگ</button>
+      <button data-admin-tab="roles">نقش‌ها</button>
+      <button data-admin-tab="backups">بکاپ</button>
+    </nav>
+    <section id="adminContent" class="admin-content"></section>
+  </main>
+
+  <div id="lightbox" class="lightbox"></div>
+  <div id="cartSheet" class="cart-sheet"></div>
+  <button id="cartFab" class="cart-fab hidden"><span>🛒</span><span class="cart-fab-badge">0</span></button>
+  <div id="custDrawer" class="cust-drawer"></div>
+  <div id="previewSheet" class="preview-sheet"></div>
+  <div id="qrSheet" class="qr-sheet"></div>
+  <div id="shareSheet" class="share-sheet"></div>
+  <div id="onboarding" class="onboarding"></div>
+  <div id="palettePopup" class="palette-popup"></div>
+  <div id="cmdPalette" class="cmd-palette"><div class="cmd-inner"><input id="cmdInput" type="text" placeholder="جستجوی دستور یا تب..." autocomplete="off"><div id="cmdList" class="cmd-list"></div></div></div>
+
+  <dialog id="inputDialog" class="dialog-card bottom-sheet">
+    <form method="dialog">
+      <h3 id="dialogTitle">ورودی</h3>
+      <p id="dialogText" class="muted"></p>
+      <textarea id="dialogInput" rows="5"></textarea>
+      <input type="file" id="dialogFileInput" accept="image/*" style="display:none; margin-bottom: 10px; width: 100%;" />
+      <div class="dialog-actions">
+        <button value="cancel" class="secondary">لغو</button>
+        <button id="dialogSubmit" value="ok" class="primary">ثبت</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="editDialog" class="dialog-card wide bottom-sheet">
+    <form method="dialog" id="editForm">
+      <h3 id="editTitle">ویرایش</h3>
+      <div id="editFields" class="form-grid"></div>
+      <div class="dialog-actions">
+        <button value="cancel" class="secondary">لغو</button>
+        <button id="editSubmit" value="ok" class="primary">ذخیره</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="authModal" class="dialog-card auth-modal bottom-sheet">
+    <div class="auth-modal-content">
+      <div class="auth-header">
+        <h3 id="authTitle">ورود / ثبت‌نام</h3>
+        <button type="button" class="close-btn" id="closeAuthModal" aria-label="بستن">✕</button>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-tab="login">ورود</button>
+        <button type="button" class="auth-tab" data-auth-tab="register">ثبت‌نام</button>
+        <button type="button" class="auth-tab" data-auth-tab="telegram">تلگرام ⚡</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <div class="field">
+          <label for="loginUsername">ایمیل یا نام کاربری</label>
+          <input type="text" id="loginUsername" placeholder="مثلاً: user@example.com یا john_doe" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="loginPassword">رمز عبور</label>
+          <input type="password" id="loginPassword" placeholder="******" required autocomplete="current-password" />
+        </div>
+        <div id="loginError" class="auth-error hidden"></div>
+        <button type="submit" class="primary block-btn">ورود به حساب</button>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden">
+        <div class="field">
+          <label for="regUsername">نام کاربری (انگلیسی)</label>
+          <input type="text" id="regUsername" placeholder="مثلاً: john_doe" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="regEmail">ایمیل (جهت ورود و بازیابی)</label>
+          <input type="email" id="regEmail" placeholder="مثلاً: user@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="regFirstName">نام شما</label>
+          <input type="text" id="regFirstName" placeholder="مثلاً: علی" />
+        </div>
+        <div class="field">
+          <label for="regPassword">رمز عبور (حداقل ۶ کاراکتر)</label>
+          <input type="password" id="regPassword" placeholder="******" required autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label for="regRefCode">کد معرف (اختیاری)</label>
+          <input type="text" id="regRefCode" placeholder="کد معرف" />
+        </div>
+        <div id="regError" class="auth-error hidden"></div>
+        <button type="submit" class="primary block-btn">ایجاد حساب کاربری</button>
+      </form>
+
+      <div id="telegramTab" class="auth-form hidden text-center">
+        <p class="muted" style="margin-bottom: 12px; font-size: 13px;">ورود سریع بدون نیاز به رمز عبور با اکانت تلگرام:</p>
+        <div id="tgWidgetContainer"></div>
+      </div>
+
+      <form id="otpVerificationForm" class="auth-form hidden text-center">
+        <div style="margin-bottom: 12px;">
+          <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #fff;">کد تایید ایمیل 📩</h4>
+          <p style="font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5;">
+            کد ۶ رقمی به ایمیل <strong id="otpEmailTarget" style="color: #fff;"></strong> ارسال شد.<br>
+            <span style="color: #f59e0b; font-size: 11px; display: inline-block; margin-top: 4px;">⚠️ (لطفاً پوشه اسپم / Spam ایمیل خود را نیز بررسی کنید)</span>
+          </p>
+        </div>
+        <div class="field">
+          <input type="text" id="otpCodeInput" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]*" style="letter-spacing: 10px; font-size: 24px; font-weight: 900; text-align: center; width: 100%; box-sizing: border-box;" required />
+        </div>
+        <div id="otpError" class="auth-error hidden"></div>
+        <button type="submit" class="primary block-btn">تایید و ورود به حساب</button>
+        <button type="button" id="resendOtpBtn" class="secondary block-btn" style="margin-top: 6px; font-size: 12px;">ارسال مجدد کد تایید</button>
+      </form>
+    </div>
+  </dialog>
+
+  <div id="ptrIndicator" class="ptr-indicator">
+    <svg class="ptr-svg" viewBox="0 0 40 40">
+      <path class="ptr-path" d="M20 4 a16 16 0 1 1 0 32 a16 16 0 1 1 0 -32" />
+    </svg>
+  </div>
+
+  <script>
+    // Dev loader: append dev.init.js when ?dev=1 is present
+    if (location.search.includes('dev=1')) {
+      const s = document.createElement('script');
+      s.src = 'dev.init.js';
+      s.defer = false;
+      document.head.appendChild(s);
+    }
+  </script>
+  <script src="app.js?v=v107-fix-profile-topbar-btn"></script>
+  <!-- <script src="builder.js?v=v51-add-forms"></script> -->
+  <script>
+    // Remove the in-page palette quick-button if present (restore original layout)
+    const _removePaletteQuick = () => { const el = document.getElementById('paletteQuick'); if(el) el.remove(); };
+    document.addEventListener('DOMContentLoaded', _removePaletteQuick);
+    new MutationObserver(_removePaletteQuick).observe(document.body, {childList:true, subtree:true});
+  </script>
+</body>
+</html>

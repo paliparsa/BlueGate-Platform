@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /web/
+Disallow: /admin
+Disallow: /public/backup_*
+Disallow: /*?action=admin_*
+
+Sitemap: https://bluegatestore.online/sitemap.xml
