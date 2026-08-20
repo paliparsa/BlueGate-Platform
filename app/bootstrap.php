@@ -190,7 +190,9 @@ function migrate(): void {
     add_column_if_missing('orders', 'usd_rate_toman', 'DECIMAL(24,6) NULL AFTER price_usd');
     add_column_if_missing('orders', 'usd_rate_source', 'VARCHAR(32) NULL AFTER usd_rate_toman');
     add_column_if_missing('orders', 'usd_rate_updated_at', 'DATETIME NULL AFTER usd_rate_source');
-    add_column_if_missing('orders', 'expires_at', 'DATETIME NULL AFTER delivery_text');
+    add_column_if_missing('orders', 'delivery_url', 'TEXT NULL AFTER delivery_text');
+    add_column_if_missing('orders', 'delivery_title', 'VARCHAR(120) NULL AFTER delivery_url');
+    add_column_if_missing('orders', 'expires_at', 'DATETIME NULL AFTER delivery_title');
     add_column_if_missing('orders', 'payment_expires_at', 'DATETIME NULL AFTER expires_at');
     add_column_if_missing('orders', 'delivered_inventory_id', 'BIGINT UNSIGNED NULL AFTER delivery_text');
     add_column_if_missing('orders', 'customer_note', 'TEXT NULL AFTER payment_note');
@@ -2804,6 +2806,7 @@ function order_public_payload(array $o, bool $is_admin = false): array {
         'payment_note'=>$o['payment_note'] ?? null, 'customer_note'=>$o['customer_note'] ?? null, 'receipt_file_id'=>$o['receipt_file_id'] ?? null,
         'user_id'=>(int)($o['user_id'] ?? 0), 'telegram_id'=>isset($o['telegram_id'])?(int)$o['telegram_id']:null, 'username'=>$o['username'] ?? null, 'first_name'=>$o['first_name'] ?? null,
         'delivery_type'=>$o['delivery_type'], 'delivery_type_fa'=>delivery_type_fa($o['delivery_type']), 'delivery_text'=>$o['delivery_text'],
+        'has_service_viewer'=>($status === 'delivered' && !empty($o['delivery_url'])), 'service_title'=>trim((string)($o['delivery_title'] ?? '')) ?: 'مدیریت سرویس',
         'expires_at'=>$o['expires_at'] ?? null,
         'payment_expires_at'=>$pmtExpiresAt,
         'payment_remaining_seconds'=>$pmtRemainingSec,
@@ -2812,6 +2815,8 @@ function order_public_payload(array $o, bool $is_admin = false): array {
     ];
     if ($is_admin) {
         $payload['admin_note'] = $o['admin_note'] ?? null;
+        $payload['delivery_url'] = $o['delivery_url'] ?? null;
+        $payload['delivery_title'] = $o['delivery_title'] ?? null;
     }
     return $payload;
 }

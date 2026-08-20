@@ -197,6 +197,8 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_note TEXT NULL,
   receipt_file_id VARCHAR(255) NULL,
   delivery_text TEXT NULL,
+  delivery_url TEXT NULL,
+  delivery_title VARCHAR(120) NULL,
   referrer_reward_amount BIGINT NOT NULL DEFAULT 0,
   admin_note TEXT NULL,
   user_hidden TINYINT(1) NOT NULL DEFAULT 0,

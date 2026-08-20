@@ -62,3 +62,8 @@ Category، Product، Variant، Inventory، Coupon، Wallet، Referral و Order l
 Website علاوه بر username/password از Telegram Login Widget هم پشتیبانی می‌کند تا همان کاربری که در Bot/Mini App وجود دارد، با همان Telegram ID وارد سایت شود. برای فعال شدن Widget، دامنه سایت را یک‌بار با `/setdomain` در `@BotFather` برای همان Bot ثبت کن (دامنه بدون `https://`).
 
 محصولات عادی (`product_type=normal`) که از Admin ساخته می‌شوند نیز به‌صورت خودکار در بخش «سرویس‌های بیشتر» Storefront نمایش داده می‌شوند؛ اگر Variant داشته باشند، انتخاب پلن در همان کارت انجام می‌شود.
+
+
+## Secure Service Viewer (v1.4)
+
+Admin can attach a per-order HTTPS service/subscription URL. Customers receive an authenticated short-lived viewer ticket and open the service inside the Website phone modal or inside Telegram Mini App without exposing the original delivery URL in the public order payload. Private/reserved network destinations are blocked.
