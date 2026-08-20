@@ -3945,6 +3945,8 @@ body .card-v2-submit-btn:active {
 .od-sticky-actions .btn-v2 {
   flex: 1 !important;
   border-radius: 16px !important;
+}
+
 /* ===== Presentation Sheet — Bottom Sheet (fixed, no conflicting override) ===== */
 /* NOTE: The previous block here reimplemented this as a centered modal with a   */
 /* completely different layout model, causing conflicting transforms, broken       */
