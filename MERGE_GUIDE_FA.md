@@ -1,92 +1,64 @@
-# راهنمای BlueGate Merged Edition
+# معماری یکپارچه BlueGate Platform
 
-این نسخه حاصل تلفیق **BlueGate Storefront V9** با **BlueReferral** است. BlueReferral هسته‌ی بک‌اند و دیتابیس است و Storefront V9 رابط فروش اصلی.
+BlueGate Platform از **BlueReferral به‌عنوان Backend/API/MySQL** و **BlueGate Storefront V9 به‌عنوان Website اصلی** استفاده می‌کند.
 
-## مسیرهای نهایی
+## از نسخه 1.1.0
 
-- `/` → فروشگاه جدید BlueGate
-- `/web/` → Storefront V9 متصل به API واقعی
-- `/portal/` → پنل کامل کاربر و ادمین BlueReferral
-- `/miniapp/` → Telegram Mini App
-- `/api.php` → API مرکزی
-- `/bot.php` → Webhook ربات
+Website و Portal قدیمی به یک رابط واحد تبدیل شده‌اند:
 
-## چه چیزهایی یکپارچه شده‌اند؟
-
-- یک دیتابیس MySQL برای کاربران، محصولات، Variantها، سفارش‌ها، کیف پول، رفرال، تخفیف و پرداخت
-- Login/Register وب در Storefront
-- لینک رفرال وب `/?ref=CODE` با حفظ Query بعد از Redirect و پرشدن خودکار کد معرف
-- ثبت سفارش واقعی از Storefront به جای ساخت کد سفارش محلی/ارسال مستقیم به تلگرام
-- نمایش سفارش‌ها و وضعیت پرداخت در Drawer حساب کاربری
-- کیف پول، کارت‌به‌کارت، ثبت رسید، کد تخفیف
-- اتصال پرداخت Crypto و Telegram Stars به پنل کامل موجود
-- محصولات VPN از `products + product_variants`
-- Telegram Premium از Variantهای USD
-- Telegram Stars به‌صورت مقدار دلخواه؛ **قیمت نهایی فقط سمت PHP محاسبه می‌شود**
-- تنظیمات Storefront و Stars در پنل ادمین
-- CORS محدود به همان Host یا `WEB_ALLOWED_ORIGIN`
-- اعتبارسنجی MIME/حجم و نام امن برای تصویر رسید
-
-## دیتای اولیه Storefront
-
-در اولین migration نسخه تلفیقی، اگر Catalog مخصوص Storefront قبلاً seed نشده باشد، محصولات زیر ایجاد/تطبیق داده می‌شوند:
-
-- BlueGate Standard: 20GB / 30GB / 50GB / Unlimited 1 User / Unlimited 2 Users
-- BlueGate Pro: 5GB / 10GB / 15GB / 20GB / 25GB
-- BlueGate Emergency: 5GB / 10GB / 15GB / 20GB
-- Telegram Stars
-- Telegram Premium: 3 / 6 / 12 months
-
-Seed فقط یک‌بار اجرا می‌شود (`storefront_catalog_seeded_v1`) تا تغییرات بعدی قیمت از پنل ادمین با اجرای دوباره migration ریست نشوند.
-
-## نصب تازه از Repo جدید
-
-Repo پیشنهادی این نسخه: `paliparsa/BlueGate-Platform` روی branch `main`. بعد از آپلود پروژه، روی Ubuntu/Debian این یک خط را اجرا کن:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/paliparsa/BlueGate-Platform/main/install.sh -o /tmp/bluegate-install.sh && sudo bash /tmp/bluegate-install.sh --full
+```text
+Website (Storefront + Account + Admin)
+              │
+              ├── /account
+              ├── /orders
+              ├── /wallet
+              ├── /referral
+              ├── /profile
+              └── /admin
+              │
+           api.php
+              │
+            MySQL
+              │
+      ┌───────┴────────┐
+      │                │
+ Telegram Mini App    Bot
+ (UI مستقل و حفظ‌شده)
 ```
 
-Installer خودش Packageها، Repo، `config.php`، MariaDB، Nginx، SSL، Migration/Seed، Webhook، Cron و Health Check را انجام می‌دهد. بعد از نصب منوی مدیریت با `sudo bluegate` در دسترس است.
+`/portal/` دیگر UI مستقل ندارد و فقط Redirect compatibility است.
 
-### آپدیت‌های بعدی
+## قابلیت‌های Dashboard جدید Website
 
-بعد از Push نسخه جدید به GitHub:
+- Login/Register داخل Storefront
+- داشبورد حساب و آمار خرید
+- سفارش‌ها + Timeline + Delivery
+- پرداخت Wallet / Card / Crypto / Telegram Stars
+- Coupon و آپلود Receipt
+- Wallet transactions / Withdraw / Spin / Missions
+- Referral link/code و لیست زیرمجموعه‌ها
+- Profile و حذف حساب
+- Admin داخل همان Design System شامل:
+  - Dashboard فروش
+  - مدیریت Order lifecycle و Delivery
+  - Product / Variant / Category
+  - Inventory
+  - Coupons
+  - Withdrawals
+  - Storefront & Payment settings
+  - Rate refresh
+  - Broadcast
+  - Backup
+  - Balance adjustment
 
-```bash
-sudo bluegate --update
-```
+## Mini App
 
-`config.php` و دیتابیس حفظ می‌شوند؛ سپس Permissionها اصلاح، Migration اجرا و Nginx reload می‌شود.
+Mini App در `/miniapp/` از نظر HTML/CSS/JS عمداً مستقل مانده و ظاهر قبلی آن تغییر نکرده؛ فقط همان API و دیتابیس مشترک Website را مصرف می‌کند.
 
-### فایل‌ها و مسیرهای مدیریتی
+## Product Engine
 
-- App: `/var/www/bluegate-platform`
-- Installer state: `/etc/bluegate-platform.env`
-- Installer log: `/var/log/bluegate-platform-install.log`
-- Crypto cron: `/etc/cron.d/bluegate-platform`
-- Manager command: `sudo bluegate`
-
-## نکته قیمت Premium
-
-Variantهای Premium بر پایه USD هستند. برای تبدیل به تومان باید نرخ USDT/ارز در سیستم BlueReferral معتبر باشد. از بخش Crypto/Rate پنل ادمین نرخ‌ها را Refresh یا Manual Rate را تنظیم کن.
-
-## تنظیم Stars
-
-Admin → Settings → General → **Storefront V9**:
-
-- Price basis: Toman یا USDT
-- Price per Star
-- Slider min/max/step
-- Presets
-- Hero و Announcement
-
-حتی اگر JavaScript دستکاری شود، مبلغ سفارش Stars از مقدار انتخابی روی سرور دوباره محاسبه و validate می‌شود.
+Standard / Pro / Emergency / Premium روی `products + product_variants` هستند. Telegram Stars Dynamic Quantity است و مبلغ سمت Server validate و محاسبه می‌شود.
 
 ## Supabase
 
-Storefront جدید دیگر به Supabase وابسته نیست. فایل‌های Supabase و Admin قدیمی Storefront از خروجی نهایی حذف شده‌اند. MySQL + API مرکزی BlueReferral منبع داده است.
-
-## سازگاری
-
-پنل کامل قدیمی BlueReferral عمداً در `/portal/` نگه داشته شده تا امکاناتی مثل مدیریت کامل سفارش، ادمین، Crypto، Stars Payment، Wallet، Referral، Backup و Inventory از بین نروند. Mini App و Bot هم روی همان دیتابیس کار می‌کنند.
+Storefront به Supabase وابسته نیست؛ MySQL + API مرکزی منبع داده واحد هستند.

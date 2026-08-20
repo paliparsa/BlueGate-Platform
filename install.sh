@@ -218,16 +218,17 @@ CLI
 }
 
 run_step() {
-  local title="$1" fn="$2"
+  local title="$1" fn="$2" code
   echo
   line
   info "$title"
   line
-  if "$fn"; then
+  "$fn"
+  code=$?
+  if [[ $code -eq 0 ]]; then
     ok "$title finished"
     return 0
   fi
-  local code=$?
   fail "$title failed with exit code $code"
   echo "Log: $LOG_FILE"
   return "$code"
@@ -385,12 +386,52 @@ step_nginx() {
   require_root
   [[ -d "$APP_DIR/public" ]] || { fail "Public directory missing: $APP_DIR/public"; return 1; }
   validate_domain "$DOMAIN" || { fail "Invalid DOMAIN: $DOMAIN"; return 1; }
-  local php_sock nginx_conf
+  local php_sock nginx_conf cert_dir ssl_extra
   php_sock="$(find_php_sock)"
   [[ -n "$php_sock" ]] || { fail "PHP-FPM socket not found."; return 1; }
   nginx_conf="/etc/nginx/sites-available/${NGINX_SITE}"
+  cert_dir="/etc/letsencrypt/live/${DOMAIN}"
 
-  cat > "$nginx_conf" <<NGINX
+  if [[ -f "${cert_dir}/fullchain.pem" && -f "${cert_dir}/privkey.pem" ]]; then
+    ssl_extra=""
+    [[ -f /etc/letsencrypt/options-ssl-nginx.conf ]] && ssl_extra+=$'\n    include /etc/letsencrypt/options-ssl-nginx.conf;'
+    [[ -f /etc/letsencrypt/ssl-dhparams.pem ]] && ssl_extra+=$'\n    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;'
+    cat > "$nginx_conf" <<NGINX
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name ${DOMAIN};
+
+    ssl_certificate ${cert_dir}/fullchain.pem;
+    ssl_certificate_key ${cert_dir}/privkey.pem;${ssl_extra}
+
+    root ${APP_DIR}/public;
+    index index.php index.html;
+    client_max_body_size 20M;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /install.php { deny all; }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:${php_sock};
+    }
+
+    location ~ /\. { deny all; }
+}
+NGINX
+  else
+    cat > "$nginx_conf" <<NGINX
 server {
     listen 80;
     listen [::]:80;
@@ -408,7 +449,6 @@ server {
     location = /install.php { deny all; }
 
     location ~ \.php$ {
-        try_files \$uri =404;
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:${php_sock};
     }
@@ -416,6 +456,7 @@ server {
     location ~ /\. { deny all; }
 }
 NGINX
+  fi
 
   ln -sfn "$nginx_conf" "/etc/nginx/sites-enabled/${NGINX_SITE}" || return 1
   rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
@@ -472,11 +513,11 @@ step_healthcheck() {
   php -l "$APP_DIR/public/bot.php" || return 1
   php -l "$APP_DIR/app/bootstrap.php" || return 1
   if [[ "${ENABLE_SSL,,}" == "yes" || "${ENABLE_SSL,,}" == "y" ]]; then
-    curl -fsS --max-time 15 "https://${DOMAIN}/api.php?action=storefront" >/tmp/bluegate-health.json || return 1
+    curl -fsS --max-time 15 --resolve "${DOMAIN}:443:127.0.0.1" "https://${DOMAIN}/api.php?action=storefront" >/tmp/bluegate-health.json || return 1
   else
     curl -fsS --max-time 15 -H "Host: ${DOMAIN}" "http://127.0.0.1/api.php?action=storefront" >/tmp/bluegate-health.json || return 1
   fi
-  grep -q '"ok"' /tmp/bluegate-health.json || { cat /tmp/bluegate-health.json; return 1; }
+  grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' /tmp/bluegate-health.json || { cat /tmp/bluegate-health.json; return 1; }
   rm -f /tmp/bluegate-health.json
 }
 
@@ -493,7 +534,7 @@ step_update() {
   fi
   step_permissions || return 1
   step_migrate || return 1
-  nginx -t && systemctl reload nginx || return 1
+  step_nginx || return 1
   ok "Updated to latest GitHub version."
 }
 
@@ -504,7 +545,7 @@ step_status() {
   echo "Repo URL:     $REPO_URL"
   echo "Domain:       ${DOMAIN:-not set}"
   echo "Storefront:   ${DOMAIN:+https://${DOMAIN}/}"
-  echo "Portal:       ${DOMAIN:+https://${DOMAIN}/portal/}"
+  echo "Account:      ${DOMAIN:+https://${DOMAIN}/account}"
   echo "Mini App:     ${DOMAIN:+https://${DOMAIN}/miniapp/}"
   echo "Env file:     $ENV_FILE"
   echo "Log file:     $LOG_FILE"
@@ -545,7 +586,7 @@ full_install() {
   echo
   ok "$PROJECT_NAME installed successfully"
   echo "Storefront: https://${DOMAIN}/"
-  echo "Portal:     https://${DOMAIN}/portal/"
+  echo "Account:    https://${DOMAIN}/account"
   echo "Mini App:   https://${DOMAIN}/miniapp/"
   echo "Manager:    sudo ${MANAGER_CMD}"
   pause

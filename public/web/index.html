@@ -10,6 +10,7 @@
   <link rel="icon" href="icon-192.png">
   <link rel="stylesheet" href="css/store.css">
   <link rel="stylesheet" href="css/account.css">
+  <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
   <div id="announcement" class="announcement hidden"></div>
@@ -18,10 +19,14 @@
     <div class="shell header-inner">
       <a class="brand" href="#top" aria-label="BlueGate home"><img src="assets/logo.png" alt="BlueGate" class="brand-wordmark"><span class="sr-only" id="brandName">BlueGate</span><span class="sr-only" id="brandSubtitle">Digital Services</span></a>
       <nav class="desktop-nav" aria-label="ناوبری اصلی">
-        <a data-nav-link href="#products">سرویس‌ها</a>
-        <a data-nav-link href="#why">مزایا</a>
-        <a data-nav-link href="#reviewsSection">نظرات</a>
-        <a data-nav-link href="#faq">سوالات</a>
+        <a data-store-nav data-nav-link href="#products">سرویس‌ها</a>
+        <a data-store-nav data-nav-link href="#why">مزایا</a>
+        <a data-store-nav data-nav-link href="#reviewsSection">نظرات</a>
+        <a data-store-nav data-nav-link href="#faq">سوالات</a>
+        <button class="member-nav-link hidden" data-member-route="orders" type="button">سفارش‌ها</button>
+        <button class="member-nav-link hidden" data-member-route="wallet" type="button">کیف پول</button>
+        <button class="member-nav-link hidden" data-member-route="referral" type="button">همکاری در فروش</button>
+        <button class="member-nav-link admin-only hidden" data-member-route="admin" type="button">مدیریت</button>
       </nav>
       <div class="header-actions">
         <button id="themeBtn" class="icon-btn" type="button" aria-label="تغییر تم">◐</button>
@@ -31,9 +36,19 @@
       </div>
     </div>
     <div id="mobileMenu" class="mobile-menu hidden">
-      <div class="shell mobile-menu-links"><a href="#products">سرویس‌ها</a><a href="#why">مزایا</a><a href="#reviewsSection">نظرات</a><a href="#faq">سوالات</a><button id="mobileAccountBtn" class="bg-account-btn" type="button">👤 حساب کاربری</button><a id="mobileSupport" target="_blank" rel="noopener">پشتیبانی تلگرام</a></div>
+      <div class="shell mobile-menu-links"><a data-store-nav href="#products">سرویس‌ها</a><a data-store-nav href="#why">مزایا</a><a data-store-nav href="#reviewsSection">نظرات</a><a data-store-nav href="#faq">سوالات</a><button class="member-mobile-link hidden" data-member-route="orders" type="button">📦 سفارش‌ها</button><button class="member-mobile-link hidden" data-member-route="wallet" type="button">💰 کیف پول</button><button class="member-mobile-link hidden" data-member-route="referral" type="button">👥 همکاری در فروش</button><button class="member-mobile-link admin-only hidden" data-member-route="admin" type="button">🛠 مدیریت</button><button id="mobileAccountBtn" class="bg-account-btn" type="button">👤 حساب کاربری</button><a id="mobileSupport" target="_blank" rel="noopener">پشتیبانی تلگرام</a></div>
     </div>
   </header>
+
+  <section id="memberApp" class="member-app hidden" aria-live="polite">
+    <div class="shell member-shell">
+      <aside id="memberSidebar" class="member-sidebar"></aside>
+      <div class="member-main">
+        <div id="memberTopbar" class="member-topbar"></div>
+        <div id="memberContent" class="member-content"></div>
+      </div>
+    </div>
+  </section>
 
   <main id="top">
     <section class="hero shell">
@@ -164,6 +179,13 @@
       </div>
     </section>
 
+    <section id="genericProductsSection" class="section shell generic-products-section hidden">
+      <div class="section-head">
+        <div><span class="kicker">MORE SERVICES</span><h2>سرویس‌های بیشتر BlueGate</h2><p>محصولاتی که از پنل مدیریت اضافه می‌کنی، بدون تغییر کد اینجا نمایش داده می‌شن.</p></div>
+      </div>
+      <div id="genericProductsGrid" class="generic-products-grid"></div>
+    </section>
+
     <section id="why" class="section why-section"><div class="shell"><div class="section-head center-head"><span class="kicker">WHY BLUEGATE</span><h2>خرید راحت، بدون پیچیدگی</h2><p>اطلاعات مهم را همان‌جایی می‌بینی که برای تصمیم گرفتن لازم داری.</p></div><div id="featureGrid" class="feature-grid"></div></div></section>
 
     <section id="comparisonSection" class="section shell hidden"><div class="section-head"><div><span class="kicker">COMPARE</span><h2>مقایسه پلن‌های VPN</h2></div></div><div class="table-wrap"><table id="comparisonTable"></table></div></section>
@@ -175,7 +197,7 @@
     <section id="faq" class="section faq-section"><div class="shell faq-layout"><div class="faq-heading"><span class="kicker">FAQ</span><h2>سوالات متداول</h2><p>جواب کوتاه و واضح برای چیزهایی که قبل از سفارش معمولاً پرسیده می‌شوند.</p><a id="faqSupport" class="btn ghost" target="_blank" rel="noopener">سوال دیگه‌ای داری؟</a></div><div id="faqList" class="faq-list"></div></div></section>
   </main>
 
-  <footer class="footer"><div class="shell footer-inner"><div class="footer-brand"><img src="assets/logo.png" alt="BlueGate"><p id="footerText">سرویس‌های دیجیتال با پشتیبانی واقعی.</p></div><div class="footer-links"><a id="footerChannel" target="_blank" rel="noopener">کانال تلگرام</a><a id="footerSupport" target="_blank" rel="noopener">پشتیبانی</a><a href="../portal/">پنل کامل / Admin</a></div></div></footer>
+  <footer class="footer"><div class="shell footer-inner"><div class="footer-brand"><img src="assets/logo.png" alt="BlueGate"><p id="footerText">سرویس‌های دیجیتال با پشتیبانی واقعی.</p></div><div class="footer-links"><a id="footerChannel" target="_blank" rel="noopener">کانال تلگرام</a><a id="footerSupport" target="_blank" rel="noopener">پشتیبانی</a><button class="footer-dashboard-link" data-member-route="account" type="button">حساب کاربری</button></div></div></footer>
 
   <div id="stickyCheckout" class="sticky-checkout hidden"><div class="sticky-copy"><small id="stickyProduct">انتخاب شما</small><strong id="stickyVariant">—</strong></div><div class="sticky-price"><strong id="stickyPrice">—</strong><small>تومان</small></div><button id="stickyBuy" class="btn primary sticky-cta" type="button"><span>ادامه خرید</span><b>←</b></button></div>
 
@@ -259,6 +281,6 @@
   </aside>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/rates.js"></script><script src="js/pricing.js"></script><script src="js/account.js"></script><script src="js/checkout.js"></script><script src="js/app.js"></script>
+  <script src="js/config.js"></script><script src="js/api.js"></script><script src="js/rates.js"></script><script src="js/pricing.js"></script><script src="js/account.js"></script><script src="js/dashboard.js"></script><script src="js/checkout.js"></script><script src="js/app.js"></script>
 </body>
 </html>

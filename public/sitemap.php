@@ -4,7 +4,12 @@ require_once __DIR__ . '/../app/bootstrap.php';
 header('Content-Type: application/xml; charset=utf-8');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
-$baseUrl = 'https://bluegatestore.online';
+$baseUrl = rtrim((string)app_config('PUBLIC_BASE_URL', ''), '/');
+if ($baseUrl === '') {
+    $host = preg_replace('/[^A-Za-z0-9.:-]/', '', (string)($_SERVER['HTTP_HOST'] ?? 'localhost'));
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $baseUrl = $scheme . '://' . $host;
+}
 ?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Homepage -->
