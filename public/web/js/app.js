@@ -1,6 +1,6 @@
 (function(){
 const $=id=>document.getElementById(id);
-const state={settings:null,content:null,rates:null,vpnPlans:[],vpnPackages:[],premium:[],starsProduct:null,genericProducts:[],stars:1000,activeProduct:'vpn',selectedVpnPlan:null,selectedVpnPackage:null,selectedPremium:null,stickyAction:null};
+const state={settings:null,content:null,rates:null,vpnPlans:[],vpnPackages:[],premium:[],starsProduct:null,genericProducts:[],shopCategories:[],genericOpen:false,activeGenericCategory:null,stars:1000,activeProduct:'vpn',selectedVpnPlan:null,selectedVpnPackage:null,selectedPremium:null,stickyAction:null};
 const fallback={brand_name:'BlueGate',brand_subtitle:'Digital Services',hero_title:'سرویس‌های دیجیتال، ساده و سریع',hero_text:'VPN، تلگرام استارز و تلگرام پرمیوم با قیمت شفاف و ثبت سفارش واقعی.',telegram_support:'BlueGateSupport',telegram_channel:'BllueGate',announcement_enabled:true,announcement_text:'سفارش‌ها، کیف پول و رفرال حالا در یک حساب BlueGate یکپارچه شده‌اند.',footer_text:'سرویس‌های دیجیتال با پشتیبانی واقعی.',stars_price_basis:'toman',star_sell_per_unit_usdt:.018,star_sell_per_unit_toman:3456,slider_min:50,slider_max:10000,slider_step:25,slider_presets:[100,500,1000,2500,5000],smart_rounding_enabled:true,round_small:5000,round_medium:10000,round_large:20000,fallback_usdt_toman:192000,show_reviews:true,show_tutorials:false,show_comparison:true};
 function fmt(n,d=0){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:d})}
 function crypto(n,d){return n==null?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:d})}
@@ -13,6 +13,7 @@ async function load(){
   const d=await BGApi.storefront();
   state.settings={...fallback,...(d.storefront_settings||{})};state.content=d.storefront_content||{};state.rates=d.storefront_rates||{usdt_toman:state.settings.fallback_usdt_toman,stale:true};
   const products=d.shop_products||[];
+  state.shopCategories=(d.shop_categories||[]).filter(c=>Number(c.is_active)!==0).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)||Number(a.id)-Number(b.id));
   const vpns=products.filter(p=>productType(p)==='vpn');
   state.vpnPlans=vpns.map((p,i)=>({id:p.id,product_id:p.id,slug:planSlug(p),title:p.name,subtitle:p.short_description||'',note:p.config?.note||p.full_description||'',theme:p.config?.theme||(['green','purple','blue'][i%3]),icon:p.config?.icon||'🛡️',sort_order:i+1}));
   state.vpnPackages=[];vpns.forEach(p=>(p.variants||[]).forEach((v,i)=>state.vpnPackages.push({id:v.id,variant_id:v.id,product_id:p.id,plan_id:p.id,label:v.title,price_toman:Number(v.price||0),sort_order:v.sort_order||i+1})));
@@ -37,12 +38,48 @@ function renderPremium(){const w=$('premiumPlans');w.innerHTML='';if(!state.prem
 function updatePremiumSummary(){const p=state.selectedPremium;if(!p){$('premiumSelectedLabel').textContent='هنوز انتخاب نشده';$('premiumSelectedPrice').textContent='—';$('premiumBuy').disabled=true;return}$('premiumSelectedLabel').textContent=p.label;$('premiumSelectedPrice').textContent=fmt(p.price_toman);$('premiumBuy').disabled=false}
 function premiumCheckout(){const p=state.selectedPremium;if(!p)return;BGCheckout.open({scope:'premium',product:'Telegram Premium',variant:p.label,toman:p.price_toman,rates:state.rates,productId:p.product_id,variantId:p.variant_id})}
 function renderContent(){const c=state.content||{};const f=$('featureGrid');f.innerHTML='';(c.features||[]).slice(0,6).forEach(x=>f.insertAdjacentHTML('beforeend',`<article class="feature-card"><div class="feature-icon">${esc(x.icon||'✓')}</div><h3>${esc(x.title||'')}</h3><p>${esc(x.text||'')}</p></article>`));const q=$('faqList');q.innerHTML='';(c.faq||[]).forEach(x=>{const d=document.createElement('div');d.className='faq-item';d.innerHTML=`<button class="faq-q" type="button"><span>${esc(x.q)}</span><b>+</b></button><div class="faq-a hidden">${esc(x.a)}</div>`;d.querySelector('button').addEventListener('click',()=>{d.classList.toggle('open');d.querySelector('.faq-a').classList.toggle('hidden')});q.appendChild(d)});if(!q.children.length)q.innerHTML='<div class="empty-state">سوالی ثبت نشده؛ از پشتیبانی بپرس.</div>';const reviews=c.reviews||[];if(state.settings.show_reviews&&reviews.length){$('reviewsSection').classList.remove('hidden');$('reviewsGrid').innerHTML=reviews.map(x=>`<article class="review-card"><div class="review-quote">“</div><div class="stars">${'★'.repeat(Number(x.rating||5))}</div><h3>${esc(x.name||'مشتری BlueGate')}</h3><p>${esc(x.text||'')}</p></article>`).join('')}}
-function renderGenericProducts(){
-  const section=$('genericProductsSection'),grid=$('genericProductsGrid');
-  if(!section||!grid)return;
+function genericCategories(){
   const products=state.genericProducts||[];
-  if(!products.length){section.classList.add('hidden');grid.innerHTML='';return}
-  section.classList.remove('hidden');grid.innerHTML='';
+  const activeCats=state.shopCategories||[];
+  const activeIds=new Set(activeCats.map(c=>Number(c.id)));
+  const usedIds=new Set(products.map(p=>Number(p.category_id||0)).filter(id=>id&&activeIds.has(id)));
+  const cats=activeCats.filter(c=>usedIds.has(Number(c.id))).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)||Number(a.id)-Number(b.id));
+  // Products without an active category remain reachable under a clean fallback bucket.
+  if(products.some(p=>!activeIds.has(Number(p.category_id||0))))cats.push({id:0,title:'سایر',emoji:'🛍️',sort_order:999999,is_active:1});
+  return cats;
+}
+function genericProductInCategory(p,categoryId){
+  if(String(categoryId)==='all')return true;
+  const id=Number(categoryId||0),pid=Number(p.category_id||0);
+  if(id===0){const activeIds=new Set((state.shopCategories||[]).map(c=>Number(c.id)));return !activeIds.has(pid)}
+  return pid===id;
+}
+function setGenericOpen(open){
+  state.genericOpen=!!open;
+  const section=$('genericProductsSection'),collapse=$('genericProductsCollapse'),toggle=$('genericProductsToggle'),label=$('genericProductsToggleLabel');
+  if(!section||!collapse||!toggle)return;
+  section.classList.toggle('is-open',state.genericOpen);
+  toggle.setAttribute('aria-expanded',String(state.genericOpen));
+  collapse.setAttribute('aria-hidden',String(!state.genericOpen));collapse.inert=!state.genericOpen;
+  if(label)label.textContent=state.genericOpen?'بستن سرویس‌ها':'مشاهده سرویس‌ها';
+}
+function renderGenericCategoryNav(){
+  const nav=$('genericCategoryNav');if(!nav)return;
+  const cats=genericCategories();
+  if(!cats.length){nav.innerHTML='';state.activeGenericCategory=null;return}
+  const valid=new Set(cats.map(c=>String(c.id)));
+  if(state.activeGenericCategory===null||(state.activeGenericCategory!=='all'&&!valid.has(String(state.activeGenericCategory))))state.activeGenericCategory=Number(cats[0].id);
+  nav.innerHTML=cats.map(c=>{const count=(state.genericProducts||[]).filter(p=>genericProductInCategory(p,c.id)).length;return `<button type="button" class="generic-category-chip ${Number(c.id)===Number(state.activeGenericCategory)?'active':''}" data-generic-category="${Number(c.id)}" role="tab" aria-selected="${Number(c.id)===Number(state.activeGenericCategory)}"><span>${esc(c.emoji||'🛍️')}</span><b>${esc(c.title)}</b><small>${count}</small></button>`}).join('')+`<button type="button" class="generic-category-chip all ${state.activeGenericCategory==='all'?'active':''}" data-generic-category="all" role="tab" aria-selected="${state.activeGenericCategory==='all'}"><span>✦</span><b>همه</b><small>${(state.genericProducts||[]).length}</small></button>`;
+  nav.querySelectorAll('[data-generic-category]').forEach(btn=>btn.addEventListener('click',()=>{
+    state.activeGenericCategory=btn.dataset.genericCategory==='all'?'all':Number(btn.dataset.genericCategory);
+    renderGenericCategoryNav();renderGenericProductGrid();
+  }));
+}
+function renderGenericProductGrid(){
+  const grid=$('genericProductsGrid'),empty=$('genericProductsEmpty');if(!grid)return;
+  const source=state.genericProducts||[];
+  const products=source.filter(p=>genericProductInCategory(p,state.activeGenericCategory));
+  grid.innerHTML='';empty?.classList.toggle('hidden',products.length>0);
   products.forEach((p,index)=>{
     const variants=(p.variants||[]).filter(v=>Number(v.is_active)!==0);
     const emoji=p.category_emoji||p.config?.icon||'🛍️';
@@ -62,18 +99,26 @@ function renderGenericProducts(){
       selected=variants.find(v=>String(v.id)===String(chip.dataset.variant))||selected;
       price.textContent=fmt(selected?.price??p.price);
     }));
-    select?.addEventListener('change',()=>{
-      selected=variants.find(v=>String(v.id)===String(select.value))||selected;
-      price.textContent=fmt(selected?.price??p.price);
-    });
+    select?.addEventListener('change',()=>{selected=variants.find(v=>String(v.id)===String(select.value))||selected;price.textContent=fmt(selected?.price??p.price)});
     buy.addEventListener('click',()=>BGCheckout.open({scope:'generic',product:p.name,variant:selected?.title||p.delivery_type_fa||'سفارش مستقیم',toman:Number(selected?.price??p.price??0),rates:state.rates,productId:p.id,variantId:selected?.id||null,icon:emoji,badge:p.category_title||'BlueGate Service'}));
     grid.appendChild(card);
   });
 }
+function renderGenericProducts(){
+  const section=$('genericProductsSection'),grid=$('genericProductsGrid');
+  if(!section||!grid)return;
+  const products=state.genericProducts||[];
+  if(!products.length){section.classList.add('hidden');grid.innerHTML='';return}
+  section.classList.remove('hidden');
+  // Always starts collapsed on every page load. We deliberately do not persist it.
+  state.genericOpen=false;
+  renderGenericCategoryNav();renderGenericProductGrid();setGenericOpen(false);
+}
+
 function renderDynamicPrices(){renderStars();renderPremium();if(state.selectedVpnPackage)updateVpnSelection();syncSticky()}
 function activateProduct(product,scroll=false){state.activeProduct=product;const map={vpn:'vpnPanel',stars:'starsPanel',premium:'premiumPanel'};document.querySelectorAll('.product-tab').forEach(x=>x.classList.toggle('active',x.dataset.product===product));document.querySelectorAll('.product-panel').forEach(x=>x.classList.toggle('active',x.id===map[product]));document.querySelectorAll('#serviceNav button').forEach(x=>x.classList.toggle('active',x.dataset.service===product));syncSticky();if(scroll)$('products').scrollIntoView({behavior:'smooth',block:'start'})}
 function syncSticky(){const bar=$('stickyCheckout');let product='',variant='',price=0,action=null;if(state.activeProduct==='vpn'&&state.selectedVpnPackage){product=state.selectedVpnPlan.title;variant=state.selectedVpnPackage.label;price=state.selectedVpnPackage.price_toman;action=vpnCheckout}else if(state.activeProduct==='stars'&&state.starsProduct){product='Telegram Stars';variant=fmt(state.stars)+' Stars';price=BGPricing.stars(state.stars,state.settings,state.rates||{usdt_toman:safeRate()});action=starsCheckout}else if(state.activeProduct==='premium'&&state.selectedPremium){product='Telegram Premium';variant=state.selectedPremium.label;price=state.selectedPremium.price_toman;action=premiumCheckout}state.stickyAction=action;if(!action){bar.classList.add('hidden');return}$('stickyProduct').textContent=product;$('stickyVariant').textContent=variant;$('stickyPrice').textContent=fmt(price);bar.classList.remove('hidden')}
-function bind(){document.querySelectorAll('.product-tab').forEach(b=>b.addEventListener('click',()=>activateProduct(b.dataset.product,true)));document.querySelectorAll('#serviceNav button').forEach(b=>b.addEventListener('click',()=>activateProduct(b.dataset.service,true)));$('changeVpnPlan').addEventListener('click',()=>{const stage=$('vpnPackageStage');stage.classList.add('hidden');state.selectedVpnPlan=null;state.selectedVpnPackage=null;renderVpn();syncSticky();$('vpnPlans').scrollIntoView({behavior:'smooth',block:'center'})});$('vpnBuy').addEventListener('click',vpnCheckout);$('premiumBuy').addEventListener('click',premiumCheckout);$('starsSlider').addEventListener('input',e=>{state.stars=Number(e.target.value);$('starsInput').value=state.stars;renderStars()});$('starsInput').addEventListener('change',e=>{let v=Number(e.target.value||state.settings.slider_min);v=Math.min(state.settings.slider_max,Math.max(state.settings.slider_min,v));v=state.settings.slider_min+Math.round((v-state.settings.slider_min)/state.settings.slider_step)*state.settings.slider_step;state.stars=v;$('starsInput').value=$('starsSlider').value=v;renderStars()});$('starsMinus').addEventListener('click',()=>{state.stars=Math.max(state.settings.slider_min,state.stars-state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsPlus').addEventListener('click',()=>{state.stars=Math.min(state.settings.slider_max,state.stars+state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsBuy').addEventListener('click',starsCheckout);$('stickyBuy').addEventListener('click',()=>state.stickyAction?.());$('themeBtn').addEventListener('click',()=>{document.body.classList.toggle('light');localStorage.setItem('bg_theme',document.body.classList.contains('light')?'light':'dark')});if(localStorage.getItem('bg_theme')==='light')document.body.classList.add('light');$('mobileMenuBtn').addEventListener('click',()=>$('mobileMenu').classList.toggle('hidden'));$('reviewsPrev')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:380,behavior:'smooth'}));$('reviewsNext')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:-380,behavior:'smooth'}));const header=$('siteHeader');const onScroll=()=>header?.classList.toggle('scrolled',window.scrollY>24);onScroll();window.addEventListener('scroll',onScroll,{passive:true})}
+function bind(){$('genericProductsToggle')?.addEventListener('click',()=>setGenericOpen(!state.genericOpen));document.querySelectorAll('.product-tab').forEach(b=>b.addEventListener('click',()=>activateProduct(b.dataset.product,true)));document.querySelectorAll('#serviceNav button').forEach(b=>b.addEventListener('click',()=>activateProduct(b.dataset.service,true)));$('changeVpnPlan').addEventListener('click',()=>{const stage=$('vpnPackageStage');stage.classList.add('hidden');state.selectedVpnPlan=null;state.selectedVpnPackage=null;renderVpn();syncSticky();$('vpnPlans').scrollIntoView({behavior:'smooth',block:'center'})});$('vpnBuy').addEventListener('click',vpnCheckout);$('premiumBuy').addEventListener('click',premiumCheckout);$('starsSlider').addEventListener('input',e=>{state.stars=Number(e.target.value);$('starsInput').value=state.stars;renderStars()});$('starsInput').addEventListener('change',e=>{let v=Number(e.target.value||state.settings.slider_min);v=Math.min(state.settings.slider_max,Math.max(state.settings.slider_min,v));v=state.settings.slider_min+Math.round((v-state.settings.slider_min)/state.settings.slider_step)*state.settings.slider_step;state.stars=v;$('starsInput').value=$('starsSlider').value=v;renderStars()});$('starsMinus').addEventListener('click',()=>{state.stars=Math.max(state.settings.slider_min,state.stars-state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsPlus').addEventListener('click',()=>{state.stars=Math.min(state.settings.slider_max,state.stars+state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsBuy').addEventListener('click',starsCheckout);$('stickyBuy').addEventListener('click',()=>state.stickyAction?.());$('themeBtn').addEventListener('click',()=>{document.body.classList.toggle('light');localStorage.setItem('bg_theme',document.body.classList.contains('light')?'light':'dark')});if(localStorage.getItem('bg_theme')==='light')document.body.classList.add('light');$('mobileMenuBtn').addEventListener('click',()=>$('mobileMenu').classList.toggle('hidden'));$('reviewsPrev')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:380,behavior:'smooth'}));$('reviewsNext')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:-380,behavior:'smooth'}));const header=$('siteHeader');const onScroll=()=>header?.classList.toggle('scrolled',window.scrollY>24);onScroll();window.addEventListener('scroll',onScroll,{passive:true})}
 async function init(){try{await load();renderShell();renderRates();renderVpn();setupStars();renderPremium();renderGenericProducts();renderContent();bind();window.BGStoreState=state;await window.BGAccount?.init?.();await window.BGDashboard?.init?.();setInterval(refreshRates,Math.max(30,Number(BG_CONFIG.RATE_REFRESH_SECONDS||60))*1000)}catch(e){console.error(e);document.body.insertAdjacentHTML('afterbegin','<div class="bg-fatal">اتصال فروشگاه به بک‌اند برقرار نشد. تنظیمات config.php و دیتابیس را بررسی کن.</div>')}}
 document.addEventListener('DOMContentLoaded',init);
 })();

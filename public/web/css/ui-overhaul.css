@@ -1,4 +1,4 @@
-/* BlueGate Platform v1.2 — Website UI Overhaul
+/* BlueGate Platform v1.2+ — Website UI Overhaul
    Website-only. Telegram Mini App intentionally remains independent. */
 
 :root{
@@ -740,4 +740,259 @@
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* =========================================================
+   BlueGate Platform v1.3 — Catalog accordion + MiniApp-inspired payments
+   ========================================================= */
+
+/* More services is intentionally collapsed on every page load. */
+.generic-products-section{
+  padding-top:46px;
+  padding-bottom:34px;
+}
+.generic-products-toggle{
+  width:100%;
+  min-height:126px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  padding:24px 26px;
+  border:1px solid rgba(118,181,237,.18);
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 8% 10%,rgba(48,162,255,.13),transparent 34%),
+    linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  color:var(--text);
+  text-align:right;
+  font:inherit;
+  cursor:pointer;
+  box-shadow:0 22px 62px rgba(0,0,0,.13);
+  transition:transform .25s var(--app-ease),border-color .25s ease,box-shadow .25s ease,background .25s ease;
+}
+.generic-toggle-copy{display:block;min-width:0}
+.generic-toggle-copy>.kicker{display:block;margin-bottom:6px}
+.generic-toggle-copy>strong{display:block;font-size:clamp(27px,3.5vw,42px);line-height:1.22;letter-spacing:-.03em}
+.generic-toggle-copy>small{display:block;margin-top:9px;color:var(--muted2);font-size:14px;line-height:1.8;font-weight:650}
+.generic-toggle-action{
+  flex:0 0 auto;
+  min-width:176px;
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:11px;
+  padding:0 18px;
+  border:1px solid rgba(59,159,255,.25);
+  border-radius:17px;
+  background:rgba(59,159,255,.085);
+  color:var(--blue2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.generic-toggle-action b{font-size:13px;font-weight:900}
+.generic-toggle-action i{font-style:normal;font-size:24px;line-height:1;transition:transform .32s var(--app-ease)}
+.generic-products-section.is-open .generic-products-toggle{border-color:rgba(59,159,255,.34);box-shadow:0 24px 70px rgba(0,0,0,.16),0 0 0 4px rgba(59,159,255,.025)}
+.generic-products-section.is-open .generic-toggle-action i{transform:rotate(180deg)}
+.generic-products-collapse{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .48s var(--app-ease),opacity .28s ease}
+.generic-products-collapse-inner{min-height:0;overflow:hidden}
+.generic-products-section.is-open .generic-products-collapse{grid-template-rows:1fr;opacity:1}
+.generic-products-toolbar{
+  display:grid;
+  grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr);
+  gap:28px;
+  align-items:end;
+  padding:30px 4px 20px;
+}
+.generic-products-toolbar h2{margin:6px 0 0;font-size:26px;line-height:1.35}
+.generic-products-toolbar p{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.8}
+.generic-category-nav{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:9px;min-width:0}
+.generic-category-chip{
+  min-height:48px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 13px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:rgba(255,255,255,.025);
+  color:var(--muted2);
+  font:inherit;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.generic-category-chip span{font-size:17px}
+.generic-category-chip b{font-size:12px;font-weight:850;white-space:nowrap}
+.generic-category-chip small{min-width:23px;height:23px;display:grid;place-items:center;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.055);color:var(--muted);font-size:9px;font-weight:900}
+.generic-category-chip.active{border-color:rgba(59,159,255,.42);background:linear-gradient(135deg,rgba(59,159,255,.14),rgba(0,242,254,.055));color:var(--text);box-shadow:0 9px 28px rgba(23,129,224,.08)}
+.generic-category-chip.active small{background:rgba(59,159,255,.16);color:#a9d8ff}
+.generic-category-chip.all{border-style:dashed}
+.generic-products-empty{padding:34px 20px;text-align:center;border:1px dashed var(--line);border-radius:22px;color:var(--muted);font-size:13px}
+
+/* Payment flow: intentionally follows the visual grammar of the Mini App while
+   keeping the Website implementation independent. */
+.member-paybox.miniapp-inspired{
+  margin-top:20px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 18px 46px rgba(0,0,0,.12);
+  overflow:hidden;
+}
+.miniapp-inspired .paybox-head{margin-bottom:16px}
+.miniapp-inspired .paybox-head h4{font-size:20px}
+.miniapp-inspired .paybox-head p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.65}
+.miniapp-inspired .paybox-total strong{font-size:19px;color:#fff}
+.web-payment-prompt>p,.web-payment-subtitle{margin:0 0 11px;color:var(--muted);font-size:13px;line-height:1.7}
+.web-payment-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.web-pay-method{
+  position:relative;
+  min-height:82px;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:19px;
+  background:rgba(14,23,38,.72);
+  color:#fff;
+  text-align:right;
+  font:inherit;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.16);
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.web-pay-method>span:nth-child(2){min-width:0}
+.web-pay-method b{display:block;font-size:13px;font-weight:900;line-height:1.4}
+.web-pay-method small{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.5;font-weight:650}
+.web-pay-method>i{font-style:normal;color:var(--muted);font-size:16px}
+.web-pay-method-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:rgba(255,255,255,.055);font-size:20px}
+.web-pay-method.wallet{border-color:rgba(34,197,94,.20)}
+.web-pay-method.wallet .web-pay-method-icon{background:rgba(34,197,94,.10)}
+.web-pay-method.card{border-color:rgba(29,155,240,.20)}
+.web-pay-method.card .web-pay-method-icon{background:rgba(29,155,240,.10)}
+.web-pay-method.stars{border-color:rgba(245,158,11,.22)}
+.web-pay-method.stars .web-pay-method-icon{background:rgba(245,158,11,.10)}
+.web-pay-method.crypto{border-color:rgba(139,92,246,.24)}
+.web-pay-method.crypto .web-pay-method-icon{background:rgba(139,92,246,.11)}
+.web-pay-method:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.55)}
+.web-card-v2-container,.web-crypto-v2-container,.web-wallet-v2,.web-stars-v2{display:flex;flex-direction:column;gap:14px;margin-top:6px;animation:bgReveal .28s ease both}
+.web-payment-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.web-payment-panel-title{display:flex;align-items:center;gap:8px;color:#00f2fe}
+.web-payment-panel-title span{font-size:17px;font-weight:900}
+.web-payment-panel-title b{font-size:20px}
+.web-reset-payment{
+  min-height:38px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 13px;
+  border:1px solid rgba(0,242,254,.35);
+  border-radius:12px;
+  background:rgba(0,242,254,.07);
+  color:#00e6ef;
+  font:inherit;
+  font-size:11px;
+  font-weight:850;
+  cursor:pointer;
+}
+.web-bank-card,.web-crypto-invoice{
+  padding:18px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:22px;
+  background:rgba(14,23,38,.86);
+  box-shadow:0 10px 30px rgba(0,0,0,.24);
+}
+.web-bank-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:13px;font-weight:800}
+.web-bank-card-head b{font-size:22px}
+.web-bank-card code{display:block;margin:16px 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:clamp(17px,2.1vw,22px);font-weight:900;letter-spacing:2px;text-align:center;direction:ltr;color:#fff;white-space:normal;word-break:break-word}
+.web-bank-owner{font-size:13px;color:#fff}
+.web-bank-sheba{margin-top:7px;color:var(--muted);font-size:12px;direction:ltr;text-align:right}
+.web-copy-primary,.web-payment-submit,.web-check-payment{
+  min-height:48px;
+  border:0;
+  border-radius:15px;
+  font:inherit;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+}
+.web-copy-primary,.web-payment-submit{width:100%;margin-top:12px;background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#00111c;box-shadow:0 8px 24px rgba(0,196,255,.19)}
+.web-receipt-form,.web-crypto-txid{display:grid;gap:12px}
+.web-receipt-form label,.web-crypto-txid label{display:grid;gap:7px;color:var(--muted);font-size:12px;font-weight:750}
+.web-receipt-form input[type="text"],.web-receipt-form input:not([type]),.web-crypto-txid input{
+  width:100%;min-height:50px;padding:13px 15px;border:1px solid rgba(255,255,255,.13);border-radius:16px;background:rgba(14,23,38,.84);color:#fff;font:inherit;font-size:13px;outline:none
+}
+.web-receipt-form input:focus,.web-crypto-txid input:focus{border-color:#00dbe5;box-shadow:0 0 0 4px rgba(0,242,254,.06)}
+.web-upload-label small{font-size:10px;color:var(--muted)}
+.web-upload-box{position:relative;min-height:84px;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border:1px dashed rgba(255,255,255,.20);border-radius:18px;background:rgba(14,23,38,.58);overflow:hidden;cursor:pointer}
+.web-upload-box b{font-size:22px}.web-upload-box em{font-style:normal;color:var(--muted);font-size:12px}
+.web-upload-box input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.web-crypto-wallet-list{display:flex;flex-direction:column;gap:10px}
+.web-crypto-wallet-card{
+  width:100%;min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border:1px solid rgba(255,255,255,.11);border-radius:20px;background:rgba(14,23,38,.86);color:#fff;text-align:right;font:inherit;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18)
+}
+.web-crypto-rate{color:#00e8f0;font-size:12px;font-weight:900;white-space:nowrap}
+.web-crypto-wallet-info{display:flex;align-items:center;gap:11px}.web-crypto-wallet-info>span{display:flex;flex-direction:column;align-items:flex-end}.web-crypto-wallet-info b{font-size:14px}.web-crypto-wallet-info small{margin-top:3px;color:var(--muted);font-size:10px}.web-crypto-wallet-info i{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);font-style:normal;font-size:19px}
+.web-crypto-amount{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid rgba(0,242,254,.22);border-radius:14px;background:rgba(0,242,254,.065);font-size:12px;color:var(--muted)}
+.web-crypto-amount b{color:#00edf5;font-size:14px}
+.web-crypto-invoice>label{display:block;margin:14px 0 7px;color:var(--muted);font-size:12px;font-weight:750}
+.web-crypto-address{padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(0,0,0,.34);text-align:center;direction:ltr}
+.web-crypto-address code{color:#00edf5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:800;word-break:break-all;white-space:normal}
+.web-payment-status{margin:0;text-align:center;font-size:12px;font-weight:750}.web-payment-status.pending{color:#fde68a}.web-payment-status.success{color:#86efac}.web-payment-status.error{color:#fecaca}
+.web-check-payment{align-self:center;padding:0 18px;border:1px solid rgba(0,242,254,.25);background:rgba(0,242,254,.06);color:#00e8f0}
+.web-wallet-v2,.web-stars-v2{padding:18px;border:1px solid rgba(255,255,255,.10);border-radius:22px;background:rgba(14,23,38,.78)}
+.web-wallet-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.web-wallet-summary>div{padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.025)}
+.web-wallet-summary small{display:block;color:var(--muted);font-size:10px}.web-wallet-summary strong{display:block;margin-top:6px;font-size:16px}
+.web-wallet-v2>p,.web-stars-v2>p{margin:0;color:var(--muted);font-size:12px;line-height:1.8}
+.web-stars-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid rgba(245,158,11,.20);border-radius:16px;background:rgba(245,158,11,.055)}
+.web-stars-summary span{font-size:12px;color:var(--muted2)}.web-stars-summary strong{font-size:17px;color:#ffd27a}
+.compact-coupon{margin-top:16px;padding-top:15px;border-top:1px solid rgba(255,255,255,.08);grid-template-columns:minmax(0,1fr) auto;align-items:end}
+.compact-coupon label{margin:0}.compact-coupon .mini-action{min-height:47px}
+
+@media (hover:hover) and (pointer:fine){
+  .generic-products-toggle:hover{transform:translateY(-2px);border-color:rgba(59,159,255,.30);box-shadow:0 28px 72px rgba(0,0,0,.17)}
+  .generic-category-chip:hover{transform:translateY(-1px);border-color:rgba(59,159,255,.28);background:rgba(59,159,255,.05)}
+  .web-pay-method:not(:disabled):hover,.web-crypto-wallet-card:hover{transform:translateY(-2px);border-color:#00dce6;background:rgba(18,30,50,.92);box-shadow:0 13px 32px rgba(0,0,0,.23)}
+}
+
+@media (max-width:1100px){
+  .generic-products-toolbar{grid-template-columns:1fr;gap:16px;align-items:start}
+  .generic-category-nav{justify-content:flex-start}
+  .web-payment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media (max-width:820px){
+  .generic-products-toggle{min-height:112px;padding:20px;border-radius:25px}
+  .generic-toggle-copy>strong{font-size:30px}.generic-toggle-copy>small{font-size:12px}
+  .generic-toggle-action{min-width:150px;min-height:49px;padding-inline:13px}
+  .generic-products-toolbar{padding:22px 0 15px}
+  .generic-category-nav{width:100%;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;padding:2px 0 7px;scroll-snap-type:x proximity}
+  .generic-category-nav::-webkit-scrollbar{display:none}
+  .generic-category-chip{flex:0 0 auto;scroll-snap-align:start}
+  .member-paybox.miniapp-inspired{padding:16px;border-radius:21px}
+  .web-payment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .web-pay-method{min-height:78px}
+}
+
+@media (max-width:560px){
+  .generic-products-section{padding-top:28px;padding-bottom:22px}
+  .generic-products-toggle{min-height:0;display:block;padding:18px;border-radius:22px}
+  .generic-toggle-copy>strong{font-size:25px}.generic-toggle-copy>small{font-size:12px;line-height:1.7}
+  .generic-toggle-action{width:100%;min-width:0;margin-top:15px;justify-content:space-between;padding-inline:15px}
+  .generic-products-toolbar h2{font-size:21px}.generic-products-toolbar p{font-size:12px}
+  .generic-category-chip{min-height:45px;padding:7px 11px}.generic-category-chip b{font-size:11px}
+  .web-payment-grid{grid-template-columns:1fr}
+  .web-pay-method{min-height:70px}
+  .web-payment-topbar{align-items:flex-start;flex-direction:column-reverse}.web-reset-payment{width:100%;justify-content:center}
+  .web-payment-panel-title{width:100%;justify-content:space-between}.web-payment-panel-title span{font-size:16px}
+  .web-bank-card{padding:15px;border-radius:19px}.web-bank-card code{font-size:16px;letter-spacing:1.4px}
+  .web-crypto-wallet-card{display:grid;grid-template-columns:1fr;gap:9px}.web-crypto-rate{white-space:normal}.web-crypto-wallet-info{justify-content:space-between}
+  .web-crypto-amount{display:block}.web-crypto-amount b{display:block;margin-top:6px;direction:ltr;text-align:left}
+  .web-wallet-summary{grid-template-columns:1fr}
+  .web-stars-summary{display:block}.web-stars-summary strong{display:block;margin-top:8px}
+  .compact-coupon{grid-template-columns:1fr}.compact-coupon .mini-action{width:100%}
 }

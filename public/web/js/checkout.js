@@ -1,16 +1,29 @@
 (function(){
-const $=id=>document.getElementById(id);let order=null,lastFocus=null,busy=false;
-function money(n){return Number(n||0).toLocaleString('en-US')+' تومان'}
-function cryptoFmt(n,d){return n==null?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d>1?Math.min(2,d):0})}
-function scopeInfo(o){if(o.scope==='vpn')return {icon:'🛡️',badge:'BluePing VPN',className:'vpn',highlights:['سفارش واقعی','پیگیری وضعیت','پشتیبانی سرویس']};if(o.scope==='stars')return {icon:'⭐',badge:'Telegram Stars',className:'stars',highlights:['قیمت سمت سرور','مقدار دلخواه','پیگیری سفارش']};if(o.scope==='generic')return {icon:o.icon||'🛍️',badge:o.badge||'BlueGate Service',className:'generic',highlights:['ثبت سفارش واقعی','پیگیری از حساب','پشتیبانی BlueGate']};return {icon:'✦',badge:'Telegram Premium',className:'premium',highlights:['اشتراک رسمی','ثبت در حساب','پشتیبانی کامل']}}
-function render(){if(!order)return;const info=scopeInfo(order),modal=$('checkoutModal');modal.dataset.scope=info.className;$('checkoutProductIcon').dataset.scope=info.className;$('checkoutProductIcon').innerHTML=`<span>${info.icon}</span>`;$('scopeBadge').textContent=info.badge;$('scopeBadge').dataset.scope=info.className;$('productHighlights').innerHTML=info.highlights.map(x=>`<span><i>✓</i>${x}</span>`).join('');$('receiptId').textContent=order.realOrderId?'#'+order.realOrderId:'پس از ثبت';$('receiptProduct').textContent=order.product;$('receiptVariant').textContent=order.variant;$('receiptSubtotal').textContent=money(order.toman);$('receiptTotal').textContent=Number(order.toman).toLocaleString('en-US');const a=BGRates.amounts(order.toman,order.rates||{usdt_toman:192000});$('receiptUsdt').textContent=cryptoFmt(a.usdt,2)+' USDT';$('receiptTrx').textContent=cryptoFmt(a.trx,2)+' TRX';$('receiptTon').textContent=cryptoFmt(a.ton,3)+' TON';$('receiptRate').textContent=money(order.rates?.usdt_toman||192000);$('receiptTime').textContent=new Date().toLocaleString('fa-IR');$('discountRow').classList.add('hidden');$('checkoutSaving').classList.add('hidden');const btn=$('sendTelegram');btn.innerHTML='<span>'+(busy?'در حال ثبت سفارش...':'ثبت سفارش در BlueGate')+'</span><b>←</b>';btn.disabled=busy}
-function open(data){lastFocus=document.activeElement;busy=false;order={...data,realOrderId:null};$('discountInput').value='';$('discountMessage').textContent='';$('discountPanel').classList.add('hidden');$('discountToggle').setAttribute('aria-expanded','false');$('discountToggle').querySelector('b').textContent='＋';render();$('checkoutModal').classList.remove('hidden');document.body.style.overflow='hidden';setTimeout(()=>$('modalClose')?.focus(),60)}
-function close(){$('checkoutModal').classList.add('hidden');document.body.style.overflow='';lastFocus?.focus?.()}
-function toggleDiscount(){const panel=$('discountPanel'),willOpen=panel.classList.contains('hidden');panel.classList.toggle('hidden',!willOpen);$('discountToggle').setAttribute('aria-expanded',String(willOpen));$('discountToggle').querySelector('b').textContent=willOpen?'−':'＋';if(willOpen)setTimeout(()=>$('discountInput').focus(),80)}
-function apply(){const code=$('discountInput').value.trim().toUpperCase();if(!code){$('discountMessage').textContent='اول کد تخفیف را وارد کن.';return}$('discountInput').value=code;$('discountMessage').textContent='✓ کد هنگام ثبت سفارش روی سرور بررسی می‌شود.'}
-function receiptText(){if(!order)return'';return ['🧾 سفارش BlueGate','',order.realOrderId?'شماره سفارش: #'+order.realOrderId:'سفارش هنوز ثبت نشده','محصول: '+order.product,'انتخاب: '+order.variant,'مبلغ: '+money(order.toman)].join('\n')}
-async function copyText(text,button,done,original){try{await navigator.clipboard.writeText(text);if(button){button.textContent=done;setTimeout(()=>button.textContent=original,1200)}}catch(_){}}
-async function submit(){if(!order||busy)return;busy=true;render();try{const code=$('discountInput').value.trim().toUpperCase();const created=await BGAccount.submitOrder({productId:order.productId,variantId:order.variantId,starsCount:order.starsCount},code);if(created){order.realOrderId=created.id;render();close()}}catch(e){}finally{busy=false;if(!$('checkoutModal').classList.contains('hidden'))render()}}
-document.addEventListener('DOMContentLoaded',()=>{$('modalClose').addEventListener('click',close);document.querySelector("[data-close='1']").addEventListener('click',close);$('discountToggle').addEventListener('click',toggleDiscount);$('discountApply').addEventListener('click',apply);$('copyReceipt').addEventListener('click',()=>copyText(receiptText(),$('copyReceipt'),'کپی شد ✓','کپی جزئیات سفارش'));$('copyOrderId').addEventListener('click',()=>order?.realOrderId&&copyText(String(order.realOrderId),$('copyOrderId'),'✓','کپی'));$('sendTelegram').addEventListener('click',e=>{e.preventDefault();submit()});$('discountInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apply()}});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('checkoutModal').classList.contains('hidden'))close()})});
+'use strict';
+let busy=false;
+
+async function open(data){
+  if(!data||busy)return null;
+  const spec={
+    productId:Number(data.productId||0),
+    variantId:data.variantId?Number(data.variantId):null,
+    starsCount:data.starsCount?Number(data.starsCount):null
+  };
+  if(!spec.productId){
+    window.BGAccount?.toast?.('محصول معتبر نیست.','error');
+    return null;
+  }
+  busy=true;
+  try{
+    // v1.3+: no intermediate confirmation modal. A valid selection creates the
+    // order directly; guests are sent through the existing auth flow and the
+    // pending order is continued automatically after login/register.
+    return await window.BGAccount?.submitOrder?.(spec,'');
+  } finally {
+    busy=false;
+  }
+}
+
+function close(){ /* compatibility no-op: checkout confirmation modal removed */ }
 window.BGCheckout={open,close};
 })();

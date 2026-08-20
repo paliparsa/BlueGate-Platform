@@ -169,22 +169,32 @@
           <div id="starsPresets" class="presets"></div><div class="config-hint"><span>✦</span><p>با تغییر تعداد، قیمت نهایی و معادل USDT / TRX / TON همان لحظه به‌روزرسانی می‌شود.</p></div>
           <div class="receive-summary"><div><span>مقدار دریافتی</span><strong><b id="starsReceive">—</b> Stars</strong></div><div><span>حداقل سفارش</span><strong><b id="starsMinimum">—</b> Stars</strong></div></div>
           <div class="primary-price-card"><span>قیمت نهایی</span><div class="hero-price"><strong id="starsToman">—</strong><small>تومان</small></div><div class="secondary-currencies"><span><b id="starsUsdt">—</b> USDT</span><span><b id="starsTrx">—</b> TRX</span><span><b id="starsTon">—</b> TON</span></div></div>
-          <button id="starsBuy" class="btn primary xl full purchase-cta" type="button"><span>ثبت سفارش Stars</span><b>←</b></button><div class="purchase-reassurance centered"><span>✓ بررسی سفارش قبل از ارسال</span><span>✓ اتصال مستقیم به تلگرام</span></div>
+          <button id="starsBuy" class="btn primary xl full purchase-cta" type="button"><span>ثبت سفارش Stars</span><b>←</b></button><div class="purchase-reassurance centered"><span>✓ ثبت مستقیم سفارش</span><span>✓ پیگیری داخل حساب</span></div>
         </div>
       </div>
 
       <div id="premiumPanel" class="product-panel">
         <div class="panel-intro"><div><span class="kicker">TELEGRAM PREMIUM</span><h3>مدت اشتراک رو انتخاب کن</h3><p>یک پلن را انتخاب کن؛ قیمت اصلی تومان است و معادل ارزها زیر آن نمایش داده می‌شود.</p></div><span class="step-badge">یک انتخاب</span></div>
         <div id="premiumPlans" class="premium-grid"></div>
-        <div class="premium-action-wrap"><div class="selection-summary" id="premiumSelectionSummary"><div><span>پلن انتخاب‌شده</span><strong id="premiumSelectedLabel">هنوز انتخاب نشده</strong></div><div class="selection-price"><span id="premiumSelectedPrice">—</span><small>تومان</small></div><button id="premiumBuy" class="btn primary" type="button" disabled>ادامه خرید</button></div><div class="purchase-reassurance"><span>✓ قیمت نهایی به تومان</span><span>✓ معادل USDT / TRX / TON</span></div></div>
+        <div class="premium-action-wrap"><div class="selection-summary" id="premiumSelectionSummary"><div><span>پلن انتخاب‌شده</span><strong id="premiumSelectedLabel">هنوز انتخاب نشده</strong></div><div class="selection-price"><span id="premiumSelectedPrice">—</span><small>تومان</small></div><button id="premiumBuy" class="btn primary" type="button" disabled>ثبت سفارش</button></div><div class="purchase-reassurance"><span>✓ قیمت نهایی به تومان</span><span>✓ معادل USDT / TRX / TON</span></div></div>
       </div>
     </section>
 
     <section id="genericProductsSection" class="section shell generic-products-section hidden">
-      <div class="section-head">
-        <div><span class="kicker">MORE SERVICES</span><h2>سرویس‌های بیشتر BlueGate</h2><p>اشتراک‌ها و سرویس‌های بیشتر؛ با انتخاب سریع پلن، قیمت شفاف و ثبت سفارش مستقیم.</p></div>
+      <button id="genericProductsToggle" class="generic-products-toggle" type="button" aria-expanded="false" aria-controls="genericProductsCollapse">
+        <span class="generic-toggle-copy"><span class="kicker">MORE SERVICES</span><strong>سرویس‌های بیشتر BlueGate</strong><small>اشتراک‌ها، هوش مصنوعی، موسیقی و سرویس‌های دیجیتال بیشتر</small></span>
+        <span class="generic-toggle-action"><b id="genericProductsToggleLabel">مشاهده سرویس‌ها</b><i aria-hidden="true">⌄</i></span>
+      </button>
+      <div id="genericProductsCollapse" class="generic-products-collapse" aria-hidden="true" inert>
+        <div class="generic-products-collapse-inner">
+          <div class="generic-products-toolbar">
+            <div><span class="kicker">CATEGORIES</span><h2>دسته‌بندی سرویس‌ها</h2><p>یک دسته را انتخاب کن تا فقط همان محصولات نمایش داده شوند.</p></div>
+            <div id="genericCategoryNav" class="generic-category-nav" role="tablist" aria-label="دسته‌بندی سرویس‌های بیشتر"></div>
+          </div>
+          <div id="genericProductsGrid" class="generic-products-grid"></div>
+          <div id="genericProductsEmpty" class="generic-products-empty hidden">در این دسته فعلاً محصول فعالی وجود ندارد.</div>
+        </div>
       </div>
-      <div id="genericProductsGrid" class="generic-products-grid"></div>
     </section>
 
     <section id="why" class="section why-section"><div class="shell"><div class="section-head center-head"><span class="kicker">WHY BLUEGATE</span><h2>خرید راحت، بدون پیچیدگی</h2><p>اطلاعات مهم را همان‌جایی می‌بینی که برای تصمیم گرفتن لازم داری.</p></div><div id="featureGrid" class="feature-grid"></div></div></section>
@@ -200,79 +210,7 @@
 
   <footer class="footer"><div class="shell footer-inner"><div class="footer-brand"><img src="assets/logo.png" alt="BlueGate"><p id="footerText">سرویس‌های دیجیتال با پشتیبانی واقعی.</p></div><div class="footer-links"><a id="footerChannel" target="_blank" rel="noopener">کانال تلگرام</a><a id="footerSupport" target="_blank" rel="noopener">پشتیبانی</a><button class="footer-dashboard-link" data-member-route="account" type="button">حساب کاربری</button></div></div></footer>
 
-  <div id="stickyCheckout" class="sticky-checkout hidden"><div class="sticky-copy"><small id="stickyProduct">انتخاب شما</small><strong id="stickyVariant">—</strong></div><div class="sticky-price"><strong id="stickyPrice">—</strong><small>تومان</small></div><button id="stickyBuy" class="btn primary sticky-cta" type="button"><span>ادامه خرید</span><b>←</b></button></div>
-
-  <div id="checkoutModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
-    <div class="modal-backdrop" data-close="1"></div>
-    <div class="modal-card checkout-card-v8">
-      <div class="modal-grabber"></div>
-      <button id="modalClose" class="modal-close" type="button" aria-label="بستن">×</button>
-
-      <div class="checkout-steps" aria-label="مراحل سفارش">
-        <div class="checkout-step done"><span>1</span><b>انتخاب</b></div>
-        <i></i>
-        <div class="checkout-step active"><span>2</span><b>تأیید سفارش</b></div>
-        <i></i>
-        <div class="checkout-step"><span>3</span><b>پرداخت</b></div>
-      </div>
-
-      <div class="checkout-success-head">
-        <div class="checkout-ready-icon" aria-hidden="true"><span>✓</span></div>
-        <div>
-          <span class="checkout-status-label">آماده ثبت سفارش واقعی</span>
-          <h3 id="checkoutTitle">یک قدم تا تکمیل سفارش</h3>
-          <p>جزئیات انتخابت را بررسی کن؛ سفارش در حساب BlueGate ثبت می‌شود و بعد روش پرداخت را انتخاب می‌کنی.</p>
-        </div>
-      </div>
-
-      <section class="checkout-product-summary">
-        <div id="checkoutProductIcon" class="checkout-product-icon" aria-hidden="true"><img src="assets/logo-mark.png" alt=""></div>
-        <div class="checkout-product-copy">
-          <small>محصول انتخاب‌شده</small>
-          <strong id="receiptProduct">—</strong>
-          <span id="receiptVariant">—</span>
-        </div>
-        <div id="scopeBadge" class="scope-badge">BlueGate</div>
-      </section>
-
-      <div id="productHighlights" class="checkout-highlights"></div>
-
-      <section class="checkout-price-panel">
-        <div class="checkout-price-eyebrow">مبلغ نهایی</div>
-        <div class="checkout-grand-total"><strong id="receiptTotal">—</strong><span>تومان</span></div>
-        <div id="checkoutSaving" class="checkout-saving hidden"></div>
-        <div class="receipt-crypto"><span id="receiptUsdt">—</span><span id="receiptTrx">—</span><span id="receiptTon">—</span></div>
-      </section>
-
-      <section class="checkout-details-card">
-        <div class="checkout-detail-row"><span>قیمت پایه</span><strong id="receiptSubtotal">—</strong></div>
-        <div id="discountRow" class="checkout-detail-row discount-applied hidden"><span>تخفیف</span><strong id="receiptDiscount">—</strong></div>
-        <div class="checkout-detail-row order-id-line"><span>کد سفارش</span><div><strong id="receiptId">—</strong><button id="copyOrderId" type="button" class="mini-copy" aria-label="کپی کد سفارش">کپی</button></div></div>
-        <div class="checkout-detail-row subtle"><span>زمان ایجاد</span><strong id="receiptTime">—</strong></div>
-      </section>
-
-      <div class="discount-collapsible">
-        <button id="discountToggle" class="discount-toggle" type="button" aria-expanded="false"><span>کد تخفیف داری؟</span><b>＋</b></button>
-        <div id="discountPanel" class="discount-panel hidden">
-          <div class="discount-box"><label>کد تخفیف<input id="discountInput" type="text" placeholder="مثلاً WELCOME10" autocomplete="off"></label><button id="discountApply" class="btn ghost small" type="button">اعمال</button></div>
-          <div id="discountMessage" class="discount-message"></div>
-        </div>
-      </div>
-
-      <div class="checkout-trust-v8">
-        <div><span>✓</span><p><b>قیمت شفاف</b><small>مبلغ نهایی قبل از ارسال مشخص است</small></p></div>
-        <div><span>◉</span><p><b>ثبت در حساب</b><small>شماره سفارش واقعی و قابل پیگیری می‌گیری</small></p></div>
-        <div><span>⚡</span><p><b>پرداخت یکپارچه</b><small>کیف پول، کارت و روش‌های فعال روی همان سفارش</small></p></div>
-      </div>
-
-      <div class="modal-actions checkout-actions-v8">
-        <button id="copyReceipt" class="btn ghost" type="button">کپی جزئیات سفارش</button>
-        <button id="sendTelegram" class="btn primary telegram-cta" type="button"><span>ثبت سفارش در BlueGate</span><b>←</b></button>
-      </div>
-      <p class="telegram-hint">بعد از ثبت، سفارش داخل حساب کاربری باز می‌شود تا روش پرداخت را انتخاب کنی.</p>
-      <div class="receipt-rate-note">نرخ مرجع تتر هنگام ثبت: <b id="receiptRate">—</b></div>
-    </div>
-  </div>
+  <div id="stickyCheckout" class="sticky-checkout hidden"><div class="sticky-copy"><small id="stickyProduct">انتخاب شما</small><strong id="stickyVariant">—</strong></div><div class="sticky-price"><strong id="stickyPrice">—</strong><small>تومان</small></div><button id="stickyBuy" class="btn primary sticky-cta" type="button"><span>ثبت سفارش</span><b>←</b></button></div>
 
 
   <div id="accountBackdrop" class="bg-drawer-backdrop"></div>

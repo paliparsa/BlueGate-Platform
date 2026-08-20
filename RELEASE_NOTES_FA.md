@@ -1,35 +1,29 @@
-# BlueGate Platform 1.2.0
+# BlueGate Platform 1.3.0
 
-## Website UI Overhaul
+## تغییرات اصلی
 
-- بازطراحی کامل بخش «سرویس‌های بیشتر» با Product Card واقعی، قیمت واضح، Badge، Variant Chip و CTA مستقل.
-- رفع باگ CSS نسخه 1.1 که باعث می‌شد استایل محصولات Generic به‌خاطر `\\n`های literal درست parse نشود.
-- بازطراحی مقیاس بصری کل Website App: Dashboard، Orders، Wallet، Referral، Profile و بخش‌های مدیریتی خواناتر شده‌اند.
-- افزایش Typography، spacing، touch targetها، radius و hierarchy اطلاعات در کل پنل کاربر.
-- Dashboard جدید با Hero، کارت‌های آماری بزرگ‌تر و Quick Actionهای خرید، سفارش، کیف پول و همکاری در فروش.
-- Orders با کارت‌های بزرگ‌تر، Status واضح‌تر، Timeline خواناتر و Payment UI جدید.
-- روش‌های پرداخت به Payment Cardهای مجزا با آیکون، توضیح، وضعیت انتخاب و پنل جزئیات تبدیل شدند.
-- Wallet دارای Balance Hero، summaryهای واضح‌تر و ساختار خواناتر تراکنش/برداشت/ماموریت شده است.
-- Referral و Profile از Design System جدید Website استفاده می‌کنند و دیگر ظاهر ریز و فشرده ندارند.
+- سکشن **سرویس‌های بیشتر** در هر بار بارگذاری سایت به‌صورت پیش‌فرض بسته است و فقط با کلیک کاربر به شکل Accordion نرم باز می‌شود.
+- دسته‌بندی سرویس‌های بیشتر مستقیماً از `product_categories` دیتابیس و API Storefront خوانده می‌شود؛ ترتیب دسته‌ها از `sort_order` پنل مدیریت می‌آید و فقط دسته‌هایی که محصول عمومی فعال دارند نمایش داده می‌شوند.
+- انتخاب دسته‌بندی به صورت Chip/Tab اضافه شده؛ دسته اول پیش‌فرض است و گزینه «همه» نیز در دسترس است. روی موبایل Category Bar به صورت اسکرول افقی نمایش داده می‌شود.
+- Popup قدیمی تأیید سفارش از Website حذف شد. دکمه «ثبت سفارش» بعد از validation مستقیماً Order واقعی می‌سازد و کاربر را به سفارش‌ها می‌برد. اگر کاربر وارد نشده باشد فقط فرآیند Login انجام می‌شود و سفارش Pending بعد از ورود ادامه پیدا می‌کند.
+- رابط انتخاب و انجام پرداخت در صفحه سفارش‌ها با زبان بصری Mini App بازطراحی شد: کارت‌های کیف پول، کارت‌به‌کارت، Telegram Stars و Crypto، پنل کارت بانکی/رسید، انتخاب ولت Crypto، TXID و تغییر روش پرداخت.
+- ترتیب دسته‌بندی در Admin قابل تنظیم است و همان مقدار در Website استفاده می‌شود.
+- Responsive کاتالوگ و Payment UI برای Desktop/Tablet/Mobile تکمیل شد.
+- Mini App عمداً بدون تغییر فایل و ظاهر باقی مانده است.
 
-## Responsive / Mobile / Tablet
+## سازگاری
 
-- Mobile-first pass کامل برای Website و Member App.
-- Bottom Navigation مخصوص حساب روی موبایل با safe-area support.
-- Card list برای سفارش‌ها و چینش تک‌ستونه برای فرم‌ها روی موبایل.
-- CTAها و کنترل‌ها حداقل touch target بزرگ‌تر دارند.
-- Tablet layout مستقل: محصولات Generic دو ستونه، Dashboard stats دو در دو و payment cards دو ستونه.
-- Breakpointهای جدا برای 1100px، 820px، 560px و 390px.
-- انیمیشن‌ها با `prefers-reduced-motion` سازگارند.
+- Database migration جدیدی برای این نسخه لازم نیست؛ `product_categories.sort_order` و mapping محصول/دسته از قبل در BlueGate Platform موجود بوده‌اند.
+- Backend/API و دیتابیس مشترک با Mini App باقی مانده‌اند.
+- Service Worker cache به `bluegate-platform-v1.3.0` ارتقا پیدا کرده است.
 
-## Motion & polish
+## ارتقا
 
-- Entrance animation نرم برای Product Cardها و پنل‌های Dashboard.
-- Hover lift و border/glow subtle برای کارت‌ها و CTAها در دستگاه‌های pointer-based.
-- Reveal animation برای جزئیات روش پرداخت.
-- Motion روی موبایل به تعاملات touch وابسته نشده و hover-only effectها فقط روی دستگاه مناسب فعال می‌شوند.
+بعد از Push نسخه جدید روی GitHub:
 
-## Mini App
+```bash
+sudo bluegate --update
+sudo bluegate --health
+```
 
-- ظاهر و فایل‌های Telegram Mini App عمداً بدون تغییر باقی مانده‌اند.
-- Mini App همچنان Frontend مستقل خودش را دارد و فقط Backend/Data مشترک است.
+اگر مرورگر نسخه قدیمی CSS/JS را نشان داد یک Hard Refresh انجام بده.
