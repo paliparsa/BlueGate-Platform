@@ -81,27 +81,35 @@ async function copyServiceUrl(orderId,directUrl=''){
   }catch(e){toast(e.message||'کپی لینک انجام نشد.','error')}
 }
 async function openServiceViewer(orderId,directUrl='',title='مدیریت سرویس'){
+  let loadingTimer=null,frameLoaded=false;
   try{
     setBusy(true);
     const url=await resolveServiceUrl(orderId,directUrl);
     if(!/^https:\/\//i.test(url)) throw new Error('لینک سرویس معتبر نیست.');
     document.getElementById('bgServiceViewer')?.remove();
-    const modal=document.createElement('div');
+    const modal=document.createElement('dialog');
     modal.id='bgServiceViewer';modal.className='service-viewer-overlay direct-service-viewer';
-    modal.innerHTML=`<div class="service-viewer-device" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-      <div class="service-viewer-toolbar"><div class="service-viewer-dots"><i></i><i></i><i></i></div><div class="service-viewer-title"><span>🔗</span><b>${esc(title)}</b><small>DIRECT SUB LINK</small></div><div class="service-viewer-tools"><button type="button" data-service-copy title="کپی لینک">⧉</button><button type="button" data-service-external title="باز کردن مستقیم">↗</button><button type="button" data-service-reload title="بارگذاری دوباره">↻</button><button type="button" data-service-close title="بستن">×</button></div></div>
-      <div class="service-viewer-screen"><div class="service-viewer-loading"><div><b>در حال باز کردن لینک مستقیم…</b><small>اگر سایت مقصد اجازه نمایش داخل پنجره ندهد، از دکمه ↗ استفاده کن.</small></div></div><iframe src="${esc(url)}" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads" referrerpolicy="no-referrer" loading="eager"></iframe></div>
+    modal.innerHTML=`<div class="service-viewer-device" role="document" aria-label="${esc(title)}">
+      <div class="service-viewer-toolbar"><div class="service-viewer-dots"><i></i><i></i><i></i></div><div class="service-viewer-title"><span>🔗</span><b>${esc(title)}</b><small>SUBSCRIPTION VIEWER</small></div><div class="service-viewer-tools"><button type="button" data-service-copy title="کپی لینک">⧉</button><button type="button" data-service-external title="باز کردن مستقیم">↗</button><button type="button" data-service-reload title="بارگذاری دوباره">↻</button><button type="button" data-service-close title="بستن">×</button></div></div>
+      <div class="service-viewer-screen"><div class="service-viewer-loading"><div><b>در حال باز کردن سرویس…</b><small>اگر نمایش داخلی توسط مقصد محدود باشد، دکمه ↗ همیشه لینک اصلی را مستقیم باز می‌کند.</small></div></div><iframe title="${esc(title)}" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation allow-storage-access-by-user-activation" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="service-viewer-fallback"><b>صفحه داخل پنجره باز نشد؟</b><span>ممکن است سایت مقصد نمایش داخل iframe را محدود کرده باشد.</span><div><button type="button" data-service-copy>📋 کپی لینک</button><button type="button" data-service-external>↗ باز کردن مستقیم</button></div></div></div>
     </div>`;
     document.body.appendChild(modal);document.body.classList.add('service-viewer-open');
-    const fr=modal.querySelector('iframe'),loading=modal.querySelector('.service-viewer-loading');
-    fr.addEventListener('load',()=>loading?.classList.add('done'));
-    const close=()=>{modal.remove();document.body.classList.remove('service-viewer-open')};
+    if(typeof modal.showModal==='function') modal.showModal(); else modal.setAttribute('open','');
+    const fr=modal.querySelector('iframe'),loading=modal.querySelector('.service-viewer-loading'),fallback=modal.querySelector('.service-viewer-fallback');
+    const reveal=()=>{loading?.classList.add('done');fallback?.classList.remove('visible')};
+    const softFallback=()=>{loading?.classList.add('done');fallback?.classList.add('visible')};
+    fr.addEventListener('load',()=>{frameLoaded=true;clearTimeout(loadingTimer);reveal()},{once:false});
+    // Some subscription panels keep the document load event pending. Never leave the customer behind a spinner.
+    loadingTimer=setTimeout(()=>{loading?.classList.add('done')},1800);
+    fr.src=url;
+    const close=()=>{clearTimeout(loadingTimer);try{modal.close()}catch{};modal.remove();document.body.classList.remove('service-viewer-open')};
     modal.querySelector('[data-service-close]').onclick=close;
-    modal.querySelector('[data-service-reload]').onclick=()=>{loading?.classList.remove('done');fr.src=url};
-    modal.querySelector('[data-service-copy]').onclick=()=>copyServiceUrl(orderId,url);
-    modal.querySelector('[data-service-external]').onclick=()=>window.open(url,'_blank','noopener,noreferrer');
-    modal.addEventListener('click',e=>{if(e.target===modal)close()});
-    document.addEventListener('keydown',function escClose(e){if(e.key==='Escape'&&document.getElementById('bgServiceViewer')){close();document.removeEventListener('keydown',escClose)}});
+    modal.querySelector('[data-service-reload]').onclick=()=>{clearTimeout(loadingTimer);fallback?.classList.remove('visible');loading?.classList.remove('done');fr.src='about:blank';requestAnimationFrame(()=>{fr.src=url;loadingTimer=setTimeout(()=>loading?.classList.add('done'),1800)})};
+    modal.querySelectorAll('[data-service-copy]').forEach(btn=>btn.onclick=()=>copyServiceUrl(orderId,url));
+    modal.querySelectorAll('[data-service-external]').forEach(btn=>btn.onclick=()=>window.open(url,'_blank','noopener,noreferrer'));
+    modal.addEventListener('cancel',e=>{e.preventDefault();close()});
+    // If the frame remains visually empty, expose a non-blocking fallback instead of an endless loader.
+    setTimeout(()=>{if(document.body.contains(modal)&&!frameLoaded&&fr.clientHeight>0){fallback?.classList.add('hint-ready')}},5000);
   }catch(e){toast(e.message||'باز کردن سرویس ممکن نشد.','error')}finally{setBusy(false)}
 }
 

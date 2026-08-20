@@ -762,24 +762,31 @@ async function copyMiniServiceUrl(orderId,directUrl=''){
   }catch(e){showStatus(e.message||'کپی لینک انجام نشد','error')}
 }
 async function openDirectServiceViewer(orderId,directUrl='',title='مدیریت سرویس'){
-  let resizeHandler=null;
+  let loadingTimer=null,frameLoaded=false;
   try{
     showStatus('در حال باز کردن سرویس…');
     const url=await resolveMiniServiceUrl(orderId,directUrl);
     if(!/^https:\/\//i.test(url)) throw new Error('لینک سرویس معتبر نیست.');
     document.getElementById('miniDirectServiceViewer')?.remove();
-    const ov=document.createElement('div');ov.id='miniDirectServiceViewer';ov.className='mini-service-viewer direct';
-    ov.innerHTML=`<div class="mini-service-head"><button type="button" data-service-close aria-label="بستن">✕</button><div><b>🔗 ${esc(title)}</b><small>DIRECT SUB LINK</small></div><div class="mini-service-actions"><button type="button" data-service-copy aria-label="کپی لینک">⧉</button><button type="button" data-service-external aria-label="باز کردن مستقیم">↗</button><button type="button" data-service-refresh aria-label="بارگذاری دوباره">↻</button></div></div><div class="mini-service-frame"><div class="mini-service-loading"><div><b>در حال نمایش لینک مستقیم…</b><small>اگر صفحه مقصد نمایش داخلی را مسدود کرده، دکمه ↗ را بزن.</small></div></div><iframe src="${esc(url)}" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads" referrerpolicy="no-referrer"></iframe></div>`;
-    document.documentElement.appendChild(ov);document.documentElement.classList.add('mini-service-open');document.body.classList.add('mini-service-open');
-    const fit=()=>{const vh=Math.round(window.visualViewport?.height||tg?.viewportStableHeight||window.innerHeight||document.documentElement.clientHeight);ov.style.height=vh+'px';ov.style.width='100vw';ov.style.top=(window.visualViewport?.offsetTop||0)+'px';};fit();
-    resizeHandler=fit;window.visualViewport?.addEventListener('resize',resizeHandler);window.addEventListener('resize',resizeHandler);
-    const fr=ov.querySelector('iframe'),ld=ov.querySelector('.mini-service-loading');fr.addEventListener('load',()=>ld?.classList.add('done'));
-    const close=()=>{window.visualViewport?.removeEventListener('resize',resizeHandler);window.removeEventListener('resize',resizeHandler);ov.remove();document.documentElement.classList.remove('mini-service-open');document.body.classList.remove('mini-service-open')};
+    const ov=document.createElement('dialog');
+    ov.id='miniDirectServiceViewer';ov.className='mini-service-viewer direct';
+    ov.innerHTML=`<div class="mini-service-head"><button type="button" data-service-close aria-label="بستن">✕</button><div><b>🔗 ${esc(title)}</b><small>SUBSCRIPTION VIEWER</small></div><div class="mini-service-actions"><button type="button" data-service-copy aria-label="کپی لینک">⧉</button><button type="button" data-service-external aria-label="باز کردن مستقیم">↗</button><button type="button" data-service-refresh aria-label="بارگذاری دوباره">↻</button></div></div><div class="mini-service-frame"><div class="mini-service-loading"><div><b>در حال نمایش سرویس…</b><small>اگر مقصد نمایش داخلی را محدود کرده باشد، با ↗ همان لینک اصلی را باز کن.</small></div></div><iframe title="${esc(title)}" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-pointer-lock allow-presentation allow-top-navigation-by-user-activation allow-storage-access-by-user-activation" allow="clipboard-read; clipboard-write; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="mini-service-fallback"><b>نمایش داخلی در دسترس نیست؟</b><span>لینک ساب همچنان قابل کپی یا باز شدن مستقیم است.</span><div><button type="button" data-service-copy>📋 کپی لینک</button><button type="button" data-service-external>↗ باز کردن مستقیم</button></div></div></div>`;
+    document.body.appendChild(ov);
+    document.documentElement.classList.add('mini-service-open');document.body.classList.add('mini-service-open');
+    try{tg?.expand?.();tg?.disableVerticalSwipes?.()}catch{}
+    if(typeof ov.showModal==='function')ov.showModal();else ov.setAttribute('open','');
+    const fr=ov.querySelector('iframe'),ld=ov.querySelector('.mini-service-loading'),fb=ov.querySelector('.mini-service-fallback');
+    fr.addEventListener('load',()=>{frameLoaded=true;clearTimeout(loadingTimer);ld?.classList.add('done');fb?.classList.remove('visible')});
+    loadingTimer=setTimeout(()=>ld?.classList.add('done'),1500);
+    fr.src=url;
+    const close=()=>{clearTimeout(loadingTimer);try{tg?.enableVerticalSwipes?.()}catch{};try{ov.close()}catch{};ov.remove();document.documentElement.classList.remove('mini-service-open');document.body.classList.remove('mini-service-open')};
     ov.querySelector('[data-service-close]').onclick=close;
-    ov.querySelector('[data-service-refresh]').onclick=()=>{ld?.classList.remove('done');fr.src=url};
-    ov.querySelector('[data-service-copy]').onclick=()=>copyMiniServiceUrl(orderId,url);
-    ov.querySelector('[data-service-external]').onclick=()=>{if(tg?.openLink)tg.openLink(url);else window.open(url,'_blank','noopener,noreferrer')};
-  }catch(e){if(resizeHandler){window.visualViewport?.removeEventListener('resize',resizeHandler);window.removeEventListener('resize',resizeHandler)}showStatus(e.message||'باز کردن سرویس ممکن نشد','error')}
+    ov.querySelector('[data-service-refresh]').onclick=()=>{clearTimeout(loadingTimer);fb?.classList.remove('visible');ld?.classList.remove('done');fr.src='about:blank';requestAnimationFrame(()=>{fr.src=url;loadingTimer=setTimeout(()=>ld?.classList.add('done'),1500)})};
+    ov.querySelectorAll('[data-service-copy]').forEach(btn=>btn.onclick=()=>copyMiniServiceUrl(orderId,url));
+    ov.querySelectorAll('[data-service-external]').forEach(btn=>btn.onclick=()=>{if(tg?.openLink)tg.openLink(url);else window.open(url,'_blank','noopener,noreferrer')});
+    ov.addEventListener('cancel',e=>{e.preventDefault();close()});
+    setTimeout(()=>{if(document.body.contains(ov)&&!frameLoaded)fb?.classList.add('hint-ready')},4500);
+  }catch(e){showStatus(e.message||'باز کردن سرویس ممکن نشد','error')}
 }
 
 function orderDetailHtml(o){
