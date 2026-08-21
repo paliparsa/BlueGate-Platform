@@ -19,15 +19,13 @@ function handle_update(array $update): void {
 
 
 function handle_pre_checkout(array $q): void {
-    $ok=(bool)validate_stars_precheckout($q);$data=['pre_checkout_query_id'=>$q['id'],'ok'=>$ok];if(!$ok)$data['error_message']='فاکتور یا مبلغ پرداخت معتبر نیست. لطفاً سفارش را دوباره باز کنید.';tg('answerPreCheckoutQuery',$data);
+    $ok=(bool)(validate_topup_stars_precheckout($q) ?: validate_stars_precheckout($q));$data=['pre_checkout_query_id'=>$q['id'],'ok'=>$ok];if(!$ok)$data['error_message']='فاکتور یا مبلغ پرداخت معتبر نیست. لطفاً دوباره تلاش کنید.';tg('answerPreCheckoutQuery',$data);
 }
 function handle_successful_payment(int $chat_id, array $payment): void {
     $payload=(string)($payment['invoice_payload'] ?? '');
+    if(str_starts_with($payload,'topup_')){$t=confirm_topup_stars_payment($payload,$payment,$chat_id);if($t){send_msg($chat_id,"✅ اعتبار BlueGate شارژ شد.\nمبلغ: <b>".money((int)$t['amount'])."</b>",main_menu_keyboard(is_full_admin($chat_id)));notify_admins("⭐️ شارژ اعتبار با Stars تایید شد\nTop-up: <code>#{$t['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>".money((int)$t['amount'])."</b>");}return;}
     $order=confirm_stars_payment($payload, $payment, $chat_id);
-    if ($order) {
-        send_msg($chat_id, "✅ پرداخت Stars سفارش <code>#{$order['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($chat_id)));
-        notify_admins("⭐️ پرداخت Telegram Stars تایید شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>{$order['stars_amount']} Stars</b>");
-    }
+    if ($order) {send_msg($chat_id, "✅ پرداخت Stars سفارش <code>#{$order['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($chat_id)));notify_admins("⭐️ پرداخت Telegram Stars تایید شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>{$order['stars_amount']} Stars</b>");}
 }
 
 function send_home_message(int $chat_id, array $user, bool $withKeyboard=true): void {

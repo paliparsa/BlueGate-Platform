@@ -109,6 +109,19 @@ function migrate(): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
 
+    db()->exec('CREATE TABLE IF NOT EXISTS credit_topups (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, amount BIGINT NOT NULL,
+        status VARCHAR(32) NOT NULL DEFAULT \'pending_payment\', payment_method VARCHAR(32) NULL, payment_details LONGTEXT NULL,
+        receipt_file_id VARCHAR(255) NULL, crypto_wallet_id BIGINT UNSIGNED NULL, crypto_amount DECIMAL(24,8) NULL,
+        crypto_asset VARCHAR(32) NULL, crypto_network VARCHAR(32) NULL, tx_hash VARCHAR(255) NULL,
+        stars_amount INT NOT NULL DEFAULT 0, stars_charge_id VARCHAR(255) NULL, stars_provider_charge_id VARCHAR(255) NULL,
+        admin_note TEXT NULL, credited_at DATETIME NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX(user_id), INDEX(status), INDEX(payment_method), INDEX(created_at),
+        UNIQUE KEY uq_credit_topups_stars_charge (stars_charge_id), UNIQUE KEY uq_credit_topups_tx_hash (tx_hash),
+        CONSTRAINT fk_credit_topup_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
     // Safe upgrade path from older BlueGate ReferralWallet versions.
     add_column_if_missing('users', 'last_name', 'VARCHAR(255) NULL AFTER first_name');
     add_column_if_missing('users', 'ref_rewarded', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER referrer_id');
@@ -213,6 +226,11 @@ function migrate(): void {
     seed_setting('storefront_show_comparison', '1');
     seed_setting('catalog_v2_storefront_enabled', '0');
     seed_setting('catalog_v2_applied_at', '');
+    seed_setting('credit_topup_enabled', '1');
+    seed_setting('credit_topup_min', '50000');
+    seed_setting('credit_topup_max', '5000000');
+    seed_setting('credit_topup_presets', [100000,200000,500000]);
+    seed_setting('credit_topup_methods', ['card'=>true,'stars'=>true,'crypto'=>true]);
 
     // Safe Commerce Plus upgrade columns. These commands are idempotent and keep older installs intact.
     add_column_if_missing('product_categories', 'image_url', 'VARCHAR(1024) NULL AFTER emoji');
@@ -2760,6 +2778,49 @@ function order_payable_base(array $order, int $discountAmount = null): int {
 function wallet_transaction(int $userId, int $amount, string $type, string $description, ?int $relatedUserId=null): void {
     db()->prepare('INSERT INTO transactions (user_id,type,amount,description,related_user_id) VALUES (?,?,?,?,?)')->execute([$userId,$type,$amount,$description,$relatedUserId]);
 }
+
+
+/* ===== v2.7 Credit Center / top-up flow ===== */
+function credit_topup_config(): array {
+    $methods=setting_json('credit_topup_methods',['card'=>true,'stars'=>true,'crypto'=>true]);
+    foreach(['card','stars','crypto'] as $k) $methods[$k]=!empty($methods[$k]) && payment_enabled($k);
+    $presets=setting_json('credit_topup_presets',[100000,200000,500000]);
+    $presets=array_values(array_unique(array_filter(array_map('intval',$presets),fn($x)=>$x>0)));
+    sort($presets);
+    return ['enabled'=>setting_bool('credit_topup_enabled',true),'min'=>max(1000,setting_int('credit_topup_min',50000)),'max'=>max(1000,setting_int('credit_topup_max',5000000)),'presets'=>$presets,'methods'=>$methods];
+}
+function credit_topup_by_id(int $id): ?array { $q=db()->prepare('SELECT t.*,u.telegram_id,u.username,u.first_name,u.email FROM credit_topups t JOIN users u ON u.id=t.user_id WHERE t.id=?');$q->execute([$id]);$r=$q->fetch();return $r?:null; }
+function credit_topups_for_user(int $uid,int $limit=20): array { $q=db()->prepare('SELECT * FROM credit_topups WHERE user_id=? ORDER BY id DESC LIMIT '.max(1,min(100,$limit)));$q->execute([$uid]);return $q->fetchAll()?:[]; }
+function credit_topups_for_admin(int $limit=80): array { return db()->query('SELECT t.*,u.telegram_id,u.username,u.first_name FROM credit_topups t JOIN users u ON u.id=t.user_id ORDER BY t.id DESC LIMIT '.max(1,min(200,$limit)))->fetchAll()?:[]; }
+function credit_topup_status_fa(string $s): string { return ['pending_payment'=>'در انتظار پرداخت','receipt_submitted'=>'در انتظار بررسی','reviewing'=>'در حال بررسی','payment_confirmed'=>'شارژ شد','rejected'=>'رد شده','canceled'=>'لغو شده'][$s]??$s; }
+function credit_topup_public(array $t): array {
+    $details=json_decode((string)($t['payment_details']??''),true);if(!is_array($details))$details=[];
+    return ['id'=>(int)$t['id'],'amount'=>(int)$t['amount'],'status'=>(string)$t['status'],'status_fa'=>credit_topup_status_fa((string)$t['status']),'payment_method'=>$t['payment_method']??null,'payment_method_fa'=>payment_method_fa($t['payment_method']??null),'payment_details'=>$details,'receipt_file_id'=>$t['receipt_file_id']??null,'crypto_wallet_id'=>(int)($t['crypto_wallet_id']??0),'crypto_amount'=>isset($t['crypto_amount'])?(float)$t['crypto_amount']:null,'crypto_asset'=>$t['crypto_asset']??null,'crypto_network'=>$t['crypto_network']??null,'tx_hash'=>$t['tx_hash']??null,'stars_amount'=>(int)($t['stars_amount']??0),'credited_at'=>$t['credited_at']??null,'created_at'=>$t['created_at']??null,'username'=>$t['username']??null,'first_name'=>$t['first_name']??null,'telegram_id'=>isset($t['telegram_id'])?(int)$t['telegram_id']:null];
+}
+function credit_topup_validate_amount(int $amount): int { $c=credit_topup_config();if(!$c['enabled'])throw new RuntimeException('TOPUP_DISABLED');if($amount<$c['min'])throw new RuntimeException('TOPUP_BELOW_MIN');if($amount>$c['max'])throw new RuntimeException('TOPUP_ABOVE_MAX');return $amount; }
+function create_credit_topup(int $uid,int $amount): array { $amount=credit_topup_validate_amount($amount);db()->prepare('INSERT INTO credit_topups (user_id,amount,status) VALUES (?,? ,"pending_payment")')->execute([$uid,$amount]);return credit_topup_by_id((int)db()->lastInsertId()); }
+function credit_topup_method_allowed(string $m): bool { $c=credit_topup_config();return in_array($m,['card','stars','crypto'],true)&&!empty($c['methods'][$m]); }
+function set_credit_topup_method(int $id,int $uid,string $method,array $details=[]): array {
+    $t=credit_topup_by_id($id);if(!$t||(int)$t['user_id']!==$uid)throw new RuntimeException('TOPUP_NOT_FOUND');if(!in_array($t['status'],['pending_payment','rejected'],true))throw new RuntimeException('TOPUP_LOCKED');$method=strtolower(trim($method));if(!credit_topup_method_allowed($method))throw new RuntimeException('TOPUP_METHOD_DISABLED');
+    $payload=[];$stars=0;
+    if($method==='card'){$payload=['instructions'=>setting('payment_instructions',''),'accounts'=>parse_card_accounts()];}
+    elseif($method==='stars'){$stars=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));$payload=['stars_amount'=>$stars];}
+    elseif($method==='crypto'){
+        $wid=(int)($details['wallet_id']??0);$w=crypto_wallet_by_id($wid);if(!$w||(int)$w['is_active']!==1)throw new RuntimeException('WALLET_NOT_FOUND');$rate=crypto_rate_toman((string)($w['rate_symbol']?:$w['asset']));if($rate<=0)throw new RuntimeException('CRYPTO_RATE_NOT_AVAILABLE');$markup=max(0,(float)setting('crypto_rate_markup_percent','1'))/100;$expected=round(((int)$t['amount']/$rate)*(1+$markup),6);$meta=crypto_rate_meta((string)($w['rate_symbol']?:$w['asset']));$payload=['wallet_id'=>$wid,'network'=>$w['network'],'asset'=>$w['asset'],'address'=>$w['address'],'expected_amount'=>$expected,'rate_toman'=>$rate,'rate_source'=>$meta['source'],'rate_updated_at'=>$meta['updated_at'],'fee_note'=>'کارمزد شبکه با پرداخت‌کننده است. مبلغ درج‌شده باید کامل به مقصد برسد.'];
+        db()->prepare('UPDATE credit_topups SET crypto_wallet_id=?,crypto_amount=?,crypto_asset=?,crypto_network=?,tx_hash=NULL WHERE id=?')->execute([$wid,(string)$expected,$w['asset'],$w['network'],$id]);
+    }
+    db()->prepare('UPDATE credit_topups SET status="pending_payment",payment_method=?,payment_details=?,stars_amount=? WHERE id=?')->execute([$method,json_encode($payload,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$stars,$id]);return credit_topup_by_id($id);
+}
+function submit_credit_topup_receipt(int $id,int $uid,string $note='',?string $fileId=null): array { $t=credit_topup_by_id($id);if(!$t||(int)$t['user_id']!==$uid)throw new RuntimeException('TOPUP_NOT_FOUND');if(($t['payment_method']??'')!=='card'||!in_array($t['status'],['pending_payment','rejected'],true))throw new RuntimeException('TOPUP_LOCKED');$d=json_decode((string)($t['payment_details']??''),true);if(!is_array($d))$d=[];$d['note']=trim($note);db()->prepare('UPDATE credit_topups SET status="receipt_submitted",payment_details=?,receipt_file_id=? WHERE id=?')->execute([json_encode($d,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$fileId,$id]);return credit_topup_by_id($id); }
+function submit_credit_topup_crypto_hash(int $id,int $uid,string $hash): array { $hash=trim($hash);if($hash==='')throw new RuntimeException('TX_HASH_EMPTY');$t=credit_topup_by_id($id);if(!$t||(int)$t['user_id']!==$uid)throw new RuntimeException('TOPUP_NOT_FOUND');if(($t['payment_method']??'')!=='crypto'||!in_array($t['status'],['pending_payment','rejected'],true))throw new RuntimeException('TOPUP_LOCKED');try{db()->prepare('UPDATE credit_topups SET tx_hash=?,status="receipt_submitted" WHERE id=?')->execute([$hash,$id]);}catch(Throwable $e){throw new RuntimeException('TX_HASH_ALREADY_USED');}return credit_topup_by_id($id); }
+function credit_topup_credit_once(int $id,string $adminNote=''): ?array {
+    $pdo=db();$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM credit_topups WHERE id=? FOR UPDATE');$q->execute([$id]);$t=$q->fetch();if(!$t){$pdo->rollBack();return null;}if(!empty($t['credited_at'])){$pdo->commit();return credit_topup_by_id($id);}if(!in_array($t['status'],['receipt_submitted','reviewing','pending_payment'],true))throw new RuntimeException('TOPUP_STATE_INVALID');$uid=(int)$t['user_id'];$q=$pdo->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');$q->execute([$uid]);if(!$q->fetch())throw new RuntimeException('USER_NOT_FOUND');$pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([(int)$t['amount'],$uid]);$pdo->prepare('INSERT INTO transactions (user_id,type,amount,description) VALUES (?,"credit_topup",?,?)')->execute([$uid,(int)$t['amount'],'شارژ اعتبار #'.$id]);$pdo->prepare('UPDATE credit_topups SET status="payment_confirmed",credited_at=NOW(),admin_note=? WHERE id=? AND credited_at IS NULL')->execute([$adminNote?:null,$id]);$pdo->commit();return credit_topup_by_id($id);}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+}
+function reject_credit_topup(int $id,string $note=''): ?array { $t=credit_topup_by_id($id);if(!$t)return null;if(!empty($t['credited_at']))throw new RuntimeException('TOPUP_ALREADY_CREDITED');db()->prepare('UPDATE credit_topups SET status="rejected",admin_note=? WHERE id=?')->execute([$note?:null,$id]);return credit_topup_by_id($id); }
+function cancel_credit_topup(int $id,int $uid): bool { $t=credit_topup_by_id($id);if(!$t||(int)$t['user_id']!==$uid||!in_array($t['status'],['pending_payment','rejected'],true))return false;db()->prepare('UPDATE credit_topups SET status="canceled" WHERE id=?')->execute([$id]);return true; }
+function send_stars_invoice_for_topup(array $t): array { if(!credit_topup_method_allowed('stars'))throw new RuntimeException('STARS_DISABLED');$stars=(int)($t['stars_amount']??0);if($stars<=0)$stars=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));$payload='topup_'.$t['id'].'_stars_'.$stars;return tg('sendInvoice',['chat_id'=>(int)$t['telegram_id'],'title'=>'شارژ اعتبار BlueGate','description'=>'افزایش اعتبار حساب به مبلغ '.money((int)$t['amount']),'payload'=>$payload,'provider_token'=>'','currency'=>'XTR','prices'=>json_encode([['label'=>'Credit top-up #'.$t['id'],'amount'=>$stars]],JSON_UNESCAPED_UNICODE),'start_parameter'=>'bluegate_topup_'.$t['id']]); }
+function validate_topup_stars_precheckout(array $q): array|false { $p=(string)($q['invoice_payload']??'');if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$p,$m))return false;$t=credit_topup_by_id((int)$m[1]);if(!$t)return false;$required=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));if((int)($q['from']['id']??0)!==(int)$t['telegram_id']||(int)$m[2]!==$required||(int)($q['total_amount']??0)!==$required||strtoupper((string)($q['currency']??''))!=='XTR')return false;if(!in_array($t['status'],['pending_payment','receipt_submitted','reviewing'],true))return false;return $t; }
+function confirm_topup_stars_payment(string $payload,array $payment,int $chatId=0): ?array { if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$payload,$m))return null;$id=(int)$m[1];$charge=trim((string)($payment['telegram_payment_charge_id']??''));$provider=trim((string)($payment['provider_payment_charge_id']??''));$total=(int)($payment['total_amount']??0);if($charge===''||strtoupper((string)($payment['currency']??''))!=='XTR')return null;$pdo=db();$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT t.*,u.telegram_id FROM credit_topups t JOIN users u ON u.id=t.user_id WHERE t.id=? FOR UPDATE');$q->execute([$id]);$t=$q->fetch();if(!$t||($chatId>0&&(int)$t['telegram_id']!==$chatId)){$pdo->rollBack();return null;}$required=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));if((int)$m[2]!==$required||$total!==$required){$pdo->rollBack();return null;}if(!empty($t['credited_at'])){$pdo->commit();return credit_topup_by_id($id);}$dup=$pdo->prepare('SELECT id FROM credit_topups WHERE stars_charge_id=? AND id<>? LIMIT 1');$dup->execute([$charge,$id]);if($dup->fetch()){$pdo->rollBack();return null;}$dup2=$pdo->prepare('SELECT id FROM orders WHERE stars_charge_id=? LIMIT 1');$dup2->execute([$charge]);if($dup2->fetch()){$pdo->rollBack();return null;}$pdo->prepare('UPDATE credit_topups SET payment_method="stars",stars_amount=?,stars_charge_id=?,stars_provider_charge_id=?,payment_details=?,status="reviewing" WHERE id=?')->execute([$required,$charge,$provider?:null,json_encode($payment,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$id]);$pdo->commit();return credit_topup_credit_once($id,'تایید خودکار Telegram Stars');}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();error_log('[Stars topup] '.$e->getMessage());return null;} }
 function apply_wallet_to_order(int $orderId, int $userId): array {
     $pdo=db();$pdo->beginTransaction();try{
         $q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order||(int)$order['user_id']!==$userId)throw new RuntimeException('ORDER_NOT_FOUND');

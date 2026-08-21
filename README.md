@@ -1,3 +1,5 @@
+> **v2.7.0 Credit Center:** مرکز اعتبار Website و Mini App بازطراحی شده و شارژ واقعی اعتبار با کارت، Telegram Stars و رمزارز به همراه تاریخچه، بررسی ادمین و تنظیمات min/max/presets اضافه شده است.
+
 > **v2.5.0 Auth & Account Navigation:** نوار ورود/ثبت‌نام Website از نو طراحی شده؛ Guest دو CTA واضح «ورود / ساخت حساب» دارد و بعد از ورود Header به Quick Credit + Account Menu تبدیل می‌شود. Auth حالا Modal/Bottom Sheet یکپارچه با Telegram Login، Password UX، بازیابی مرحله‌ای، OTP شش‌رقمی، Remember Session امن، Profile Completion و Telegram Link اختیاری است.
 
 > **v2.4.0 Account Center:** پروفایل Website و Mini App به Account Center یکپارچه ارتقا پیدا کرده، «کیف پول» کاربر به **اعتبار BlueGate** تبدیل شده و امکان برداشت موجودی از تمام مسیرهای اجرایی پروژه حذف شده است. سوابق تاریخی برداشت فقط برای Audit/Backup در دیتابیس نگهداری می‌شوند و هیچ عملیات جدیدی روی آن‌ها وجود ندارد.
@@ -12,7 +14,7 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.5.0**  
+> نسخه فعلی: **v2.7.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
@@ -1206,3 +1208,14 @@ The storefront, account/auth UI, dashboard/admin and Mini App now use a larger u
 ## v2.6.0 Referral Center Refresh
 
 Referral/partner experience redesigned for Web and Mini App with a compact hero, unified stats, referral-tier progress, share sheet, QR, advanced custom-code section and compact referral list.
+
+
+## v2.7.0 Credit Center
+
+- مرکز اعتبار یکپارچه در Web و Mini App
+- شارژ حساب با مبلغ پیشنهادی یا دلخواه
+- کارت به کارت با رسید، Telegram Stars و پرداخت رمزارز/ثبت TXID
+- افزایش موجودی idempotent پس از تایید پرداخت
+- وضعیت و تاریخچه درخواست‌های شارژ
+- تنظیمات ادمین برای فعال/غیرفعال، حداقل/حداکثر، presetها و روش‌های پرداخت
+- بررسی و تایید/رد شارژهای دستی در Admin

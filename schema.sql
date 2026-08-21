@@ -499,3 +499,31 @@ CREATE TABLE IF NOT EXISTS swapwallet_invoices (
   INDEX(order_id),
   CONSTRAINT fk_swapwallet_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- v2.7.0 Credit Center: auditable account top-ups. Wallet/credit itself remains non-withdrawable.
+CREATE TABLE IF NOT EXISTS credit_topups (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  amount BIGINT NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'pending_payment',
+  payment_method VARCHAR(32) NULL,
+  payment_details LONGTEXT NULL,
+  receipt_file_id VARCHAR(255) NULL,
+  crypto_wallet_id BIGINT UNSIGNED NULL,
+  crypto_amount DECIMAL(24,8) NULL,
+  crypto_asset VARCHAR(32) NULL,
+  crypto_network VARCHAR(32) NULL,
+  tx_hash VARCHAR(255) NULL,
+  stars_amount INT NOT NULL DEFAULT 0,
+  stars_charge_id VARCHAR(255) NULL,
+  stars_provider_charge_id VARCHAR(255) NULL,
+  admin_note TEXT NULL,
+  credited_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX(user_id), INDEX(status), INDEX(payment_method), INDEX(created_at),
+  UNIQUE KEY uq_credit_topups_stars_charge (stars_charge_id),
+  UNIQUE KEY uq_credit_topups_tx_hash (tx_hash),
+  CONSTRAINT fk_credit_topup_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
