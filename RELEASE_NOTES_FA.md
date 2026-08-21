@@ -1,9 +1,15 @@
-# BlueGate Platform 1.5.2
+# BlueGate Platform 1.6.0
 
-Hotfix ظاهری Service Viewer در Telegram Mini App.
+آپدیت جریان خرید و تجربه موبایل Website.
 
-- Phone Viewer سایت و Mini App اکنون یک زبان طراحی دارند.
-- ابعاد Viewer در Telegram responsive و centered شده است.
-- Viewer دیگر تمام صفحه را به شکل خام نمی‌گیرد و داخل flow سفارش هم قرار نمی‌گیرد.
-- Copy / Open Direct / Reload / Close حفظ شده‌اند.
-- fallback بزرگ حذف شده تا روی صفحه Subscription نیفتد.
+- رفع hardening اسکرول افقی و فضای سیاه اضافه در موبایل.
+- بازگشت تایید نهایی پیش از ثبت سفارش برای تمام خریدهای Website.
+- طراحی فاکتور تایید بر پایه UI موفق Telegram Mini App.
+- انتخاب پکیج VPN مستقیماً داخل فاکتور تایید سفارش؛ مرحله قدیمی Package Stage بازنشسته شد.
+- انتخاب Variant محصولات عمومی و Premium داخل همان Confirmation Modal.
+- امکان تنظیم تعداد Stars داخل فاکتور پیش از ثبت سفارش.
+- کد تخفیف اختیاری داخل تایید سفارش و اعمال بعد از ایجاد Order.
+- صفحه سفارش‌ها به Accordion تبدیل شد و تمام سفارش‌ها به صورت پیش‌فرض بسته هستند.
+- Timeline، پرداخت، لینک سرویس و اکشن‌ها فقط با باز کردن سفارش نمایش داده می‌شوند.
+- Cache نسخه Website به 1.6.0 ارتقا یافت.
+- Mini App در این Release از نظر جریان سفارش تغییری ندارد.

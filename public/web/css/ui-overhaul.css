@@ -1013,3 +1013,110 @@ body.service-viewer-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.service-viewer-overlay,.service-viewer-device,.service-viewer-loading:before{animation:none!important}.service-open-btn:after{display:none}}
 
 .service-copy-btn{border-color:rgba(84,170,255,.24)!important;background:rgba(84,170,255,.08)!important}.service-copy-btn:hover{background:rgba(84,170,255,.14)!important}
+
+/* ======================================================================
+   BlueGate Platform v1.6.0 — purchase confirmation, order accordions,
+   and hardening against horizontal mobile overflow.
+   ====================================================================== */
+
+/* Mobile overflow guard: keep intentional inner carousels scrollable while
+   preventing decorative/fixed layers from widening the page itself. */
+html,body{width:100%;max-width:100%;overflow-x:clip!important;overscroll-behavior-x:none}
+body>*{max-width:100%}
+#top,.member-app,.site-header,.footer,.generic-products-section,.products-section,.why-section,.reviews-section,.faq-section{max-width:100%;overflow-x:clip}
+.shell,.member-shell,.member-main,.member-content,.product-panel,.generic-products-collapse-inner,.generic-products-grid,.member-card,.member-order{min-width:0;max-width:100%}
+.generic-products-section::before,.generic-product-card::after,.wallet-balance-hero::after{contain:paint}
+.generic-products-section,.wallet-balance-hero,.member-hero,.member-topbar{overflow:hidden}
+.reviews-carousel,.generic-category-nav,.admin-tabs,.table-wrap{overscroll-behavior-inline:contain;max-width:100%}
+img,svg,video,canvas,iframe{max-width:100%}
+
+/* Old in-page VPN package stage is retired in v1.6.0. Package selection now
+   happens inside the purchase confirmation modal. */
+#vpnPackageStage{display:none!important}
+.vpn-choice-icon img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.vpn-choice-pills{display:flex;flex-wrap:wrap;gap:8px}
+.vpn-choice-pills span:last-child{color:var(--blue2)}
+.generic-direct-note.plan-preview{display:grid;gap:4px;align-content:center}
+.generic-direct-note.plan-preview b{color:var(--text);font-size:13px}
+.generic-direct-note.plan-preview span{color:var(--muted);font-size:11px;line-height:1.7}
+
+/* Purchase confirmation — intentionally mirrors the Telegram Mini App
+   invoice language while remaining responsive on the Website. */
+html.purchase-confirm-open,body.purchase-confirm-open{overflow:hidden!important;overscroll-behavior:none!important}
+.purchase-confirm-overlay{
+  position:fixed;inset:0;z-index:2147483000;width:100%;height:100dvh;max-width:none;max-height:none;
+  margin:0;padding:max(14px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  border:0;background:rgba(2,6,15,.84);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);
+  color:#f8fbff;box-sizing:border-box;place-items:center;overflow:hidden
+}
+.purchase-confirm-overlay[open]{display:grid}
+.purchase-confirm-overlay::backdrop{background:rgba(2,6,15,.84);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
+.purchase-confirm-card{
+  width:min(448px,100%);max-height:min(900px,calc(100dvh - 28px));overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  border:1px solid rgba(0,242,254,.30);border-radius:27px;padding:20px;
+  background:linear-gradient(180deg,#0d1728 0%,#070d18 100%);
+  box-shadow:0 26px 80px rgba(0,0,0,.68),0 0 38px rgba(0,242,254,.12);
+  display:flex;flex-direction:column;gap:14px;direction:rtl;animation:purchasePop .28s cubic-bezier(.16,1,.3,1) both
+}
+@keyframes purchasePop{from{opacity:0;transform:scale(.94) translateY(20px)}to{opacity:1;transform:none}}
+.purchase-confirm-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:13px;border-bottom:1px solid rgba(255,255,255,.08)}
+.purchase-confirm-close{width:38px;height:38px;flex:0 0 auto;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#9fb0c3;font-size:16px;cursor:pointer}
+.purchase-confirm-close:hover{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.32);color:#fecaca}
+.purchase-confirm-brand{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-width:0;text-align:right}
+.purchase-confirm-brand h3{margin:0;color:#fff;font-size:16px;font-weight:900}
+.purchase-confirm-brand p{margin:3px 0 0;color:#00f2fe;font-size:11px;font-weight:750}
+.purchase-confirm-avatar{width:50px;height:50px;flex:0 0 50px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:rgba(0,242,254,.09);border:2px solid #00f2fe;box-shadow:0 0 16px rgba(0,242,254,.28);font-size:23px}
+.purchase-confirm-avatar img{width:100%;height:100%;object-fit:cover}
+.purchase-plan-step{padding:14px;border:1px solid rgba(89,201,255,.16);border-radius:18px;background:rgba(255,255,255,.025)}
+.purchase-step-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:11px}
+.purchase-step-head span{display:block;color:#00f2fe;font-size:10px;font-weight:900;letter-spacing:.04em}
+.purchase-step-head h4{margin:3px 0 0;color:#fff;font-size:14px;line-height:1.5}
+.purchase-step-head>b{padding:6px 9px;border-radius:999px;background:rgba(0,242,254,.08);border:1px solid rgba(0,242,254,.18);color:#a9efff;font-size:10px;white-space:nowrap}
+.purchase-plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.purchase-plan-option{position:relative;min-width:0;min-height:70px;padding:11px 12px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(255,255,255,.035);color:#cbd5e1;text-align:right;cursor:pointer;transition:.18s ease}
+.purchase-plan-option>span{display:block;padding-left:24px;color:#fff;font-size:12px;font-weight:850;white-space:normal;overflow-wrap:anywhere}
+.purchase-plan-option>strong{display:block;margin-top:6px;color:#facc15;font-size:14px;font-weight:900}
+.purchase-plan-option>strong small{color:#9fb0c3;font-size:9px}
+.purchase-plan-option>i{position:absolute;left:10px;top:10px;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);color:transparent;font-style:normal;font-size:11px}
+.purchase-plan-option>em{position:absolute;left:8px;bottom:7px;color:#68e3b3;font-size:8px;font-style:normal;font-weight:800}
+.purchase-plan-option.active{border-color:rgba(0,242,254,.52);background:linear-gradient(145deg,rgba(0,242,254,.12),rgba(29,155,240,.055));box-shadow:0 0 0 3px rgba(0,242,254,.045),inset 0 0 24px rgba(0,242,254,.025)}
+.purchase-plan-option.active>i{background:#00f2fe;color:#04111a}
+.purchase-confirm-specs{display:grid;gap:10px;padding:3px 1px}
+.purchase-confirm-specs>div{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:12.5px}
+.purchase-confirm-specs span{color:#94a3b8;font-weight:650}
+.purchase-confirm-specs b{max-width:58%;color:#f1f5f9;font-size:12.5px;text-align:left;overflow-wrap:anywhere}
+.purchase-confirm-specs b.cyan{color:#00f2fe}.purchase-confirm-specs b.green{color:#4ade80}
+.purchase-confirm-desc{padding:12px;border:1px solid rgba(255,255,255,.075);border-radius:14px;background:rgba(255,255,255,.027)}
+.purchase-confirm-desc>b{display:block;margin-bottom:6px;color:#00f2fe;font-size:11.5px}.purchase-confirm-desc p{margin:0;color:#cbd5e1;font-size:11.5px;line-height:1.75;white-space:pre-line}
+.purchase-confirm-price{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1.5px dashed rgba(0,242,254,.42);border-radius:16px;background:rgba(0,242,254,.035)}
+.purchase-confirm-price>span{color:#cbd5e1;font-size:12.5px;font-weight:750}.purchase-confirm-price>div{display:flex;align-items:baseline;gap:6px;direction:ltr}.purchase-confirm-price s{color:#7f8fa2;font-size:11px}.purchase-confirm-price strong{color:#facc15;font-size:21px;font-weight:950}.purchase-confirm-price small{color:#9fb0c3;font-size:9px}
+.purchase-confirm-guarantee{padding:10px 13px;border:1px solid rgba(34,197,94,.24);border-radius:12px;background:rgba(34,197,94,.075);color:#4ade80;text-align:center;font-size:11px;font-weight:750;line-height:1.6}
+.purchase-confirm-coupon{display:grid;gap:7px;color:#aab8c8;font-size:11px;font-weight:750}.purchase-confirm-coupon span small{color:#6f8296;font-weight:650}.purchase-confirm-coupon input{width:100%;min-height:44px;border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:0 12px;background:rgba(255,255,255,.035);color:#fff;outline:none;font:inherit}.purchase-confirm-coupon input:focus{border-color:rgba(0,242,254,.38);box-shadow:0 0 0 3px rgba(0,242,254,.045)}
+.purchase-confirm-actions{position:sticky;bottom:-20px;z-index:2;display:grid;gap:8px;margin:0 -4px -4px;padding:10px 4px 4px;background:linear-gradient(180deg,rgba(7,13,24,0),#070d18 32%)}
+.purchase-confirm-submit,.purchase-confirm-cancel{width:100%;min-height:48px;border-radius:14px;font:inherit;font-weight:900;cursor:pointer}.purchase-confirm-submit{border:0;background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#001017;font-size:13px;box-shadow:0 6px 22px rgba(0,242,254,.28)}.purchase-confirm-submit:disabled{opacity:.6;cursor:wait}.purchase-confirm-cancel{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:#dbe7f2;font-size:12px}
+.purchase-stars-counter{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;gap:8px;direction:ltr}.purchase-stars-counter button{border:1px solid rgba(0,242,254,.23);border-radius:12px;background:rgba(0,242,254,.07);color:#dffaff;font-size:22px;cursor:pointer}.purchase-stars-counter input{width:100%;min-width:0;min-height:46px;border:1px solid rgba(255,255,255,.11);border-radius:12px;background:rgba(255,255,255,.035);color:#fff;text-align:center;font:inherit;font-size:16px;font-weight:900;outline:none}
+.purchase-stars-range{width:100%;margin:12px 0 8px;accent-color:#00dffc}.purchase-stars-presets{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.purchase-stars-presets::-webkit-scrollbar{display:none}.purchase-stars-presets button{flex:0 0 auto;min-height:34px;padding:0 11px;border:1px solid rgba(255,255,255,.09);border-radius:999px;background:rgba(255,255,255,.035);color:#b8c6d5;font:inherit;font-size:10px;font-weight:800}.purchase-stars-presets button.active{border-color:rgba(0,242,254,.4);background:rgba(0,242,254,.1);color:#e8fdff}
+
+/* Orders are compact by default. Details only open on explicit user action. */
+.order-accordion{padding:0!important;overflow:hidden}
+.member-order-summary{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 19px;border:0;background:transparent;color:var(--text);text-align:right;font:inherit;cursor:pointer}
+.member-order-summary-main{min-width:0}.member-order-summary-main>small{display:block;color:var(--muted);font-size:11px}.member-order-summary-main h3{margin:5px 0 7px;font-size:17px;line-height:1.4;overflow-wrap:anywhere}.member-order-summary-meta{display:flex;flex-wrap:wrap;gap:6px}.member-order-summary-meta span{padding:5px 8px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:rgba(255,255,255,.025);color:var(--muted2);font-size:10px;font-weight:700}
+.member-order-summary-side{display:flex;align-items:center;gap:11px;flex:0 0 auto}.order-chevron{width:32px;height:32px;border:1px solid var(--line);border-radius:11px;display:grid;place-items:center;color:var(--muted);font-style:normal;font-size:18px;transition:transform .25s ease,border-color .25s ease,background .25s ease}.order-accordion.is-open .order-chevron{transform:rotate(180deg);border-color:rgba(59,159,255,.26);background:rgba(59,159,255,.07);color:var(--blue2)}
+.member-order-collapse{display:grid;grid-template-rows:0fr;opacity:0;border-top:1px solid transparent;transition:grid-template-rows .3s cubic-bezier(.2,.8,.2,1),opacity .22s ease,border-color .22s ease}.member-order-collapse-inner{min-height:0;overflow:hidden;padding:0 19px;transition:padding .3s ease}.order-accordion.is-open .member-order-collapse{grid-template-rows:1fr;opacity:1;border-top-color:rgba(255,255,255,.065)}.order-accordion.is-open .member-order-collapse-inner{padding:16px 19px 19px}
+.order-accordion:not(.is-open):hover{border-color:rgba(59,159,255,.19);background:linear-gradient(180deg,rgba(59,159,255,.025),rgba(255,255,255,.01))}
+
+@media(max-width:680px){
+  .shell{width:calc(100% - 20px)!important}
+  .purchase-confirm-overlay{padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom))}
+  .purchase-confirm-card{width:100%;max-height:calc(100dvh - 16px);padding:16px;border-radius:23px;gap:12px}
+  .purchase-confirm-brand h3{font-size:14px}.purchase-confirm-brand p{font-size:10px}.purchase-confirm-avatar{width:44px;height:44px;flex-basis:44px}
+  .purchase-plan-grid{grid-template-columns:1fr 1fr}.purchase-plan-option{min-height:65px;padding:10px}.purchase-confirm-specs>div{font-size:11.5px}.purchase-confirm-specs b{font-size:11.5px}
+  .purchase-confirm-price strong{font-size:19px}.purchase-confirm-actions{bottom:-16px}
+  .member-order-summary{align-items:flex-start;padding:15px 14px;gap:10px}.member-order-summary-main h3{font-size:15px}.member-order-summary-side{flex-direction:column;align-items:flex-end;gap:8px}.member-order-summary-side .member-status{white-space:nowrap}.member-order-collapse-inner{padding-inline:14px}.order-accordion.is-open .member-order-collapse-inner{padding:14px}
+  .member-shell,.member-main,.member-content{width:100%;max-width:100%;min-width:0}
+}
+@media(max-width:390px){.purchase-plan-grid{grid-template-columns:1fr}.purchase-confirm-card{padding:14px}.purchase-confirm-price{padding:12px}.purchase-confirm-price>span{font-size:11px}.purchase-confirm-header{gap:8px}.purchase-confirm-brand{gap:8px}.purchase-confirm-avatar{width:40px;height:40px;flex-basis:40px}.purchase-confirm-close{width:34px;height:34px}}
+@media(prefers-reduced-motion:reduce){.purchase-confirm-card,.member-order-collapse,.member-order-collapse-inner,.order-chevron{animation:none!important;transition:none!important}}
+
+@supports not (overflow:clip){html,body{overflow-x:hidden!important}}
+@media(max-width:680px){.service-viewer-overlay{width:100%!important;max-width:100%!important}.service-viewer-device{width:min(410px,100%)!important}}
