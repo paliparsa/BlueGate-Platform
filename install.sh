@@ -320,7 +320,6 @@ step_config() {
 \$DB_PASS = '$(php_escape "$DB_PASS")';
 
 \$START_REWARD = 2000;
-\$MIN_WITHDRAW = 50000;
 \$PURCHASE_REWARD = 10000;
 \$MISSION_1_TARGET = 1;
 \$MISSION_1_REWARD = 3000;
@@ -330,10 +329,10 @@ step_config() {
 \$MISSION_3_REWARD = 25000;
 \$SPIN_REFERRALS_PER_CHANCE = 5;
 \$SPIN_REWARDS = [
-    ['title' => '💰 ۳,۰۰۰ تومان اعتبار کیف پول',  'amount' => 3000,  'weight' => 35],
-    ['title' => '💰 ۵,۰۰۰ تومان اعتبار کیف پول',  'amount' => 5000,  'weight' => 30],
-    ['title' => '💰 ۱۰,۰۰۰ تومان اعتبار کیف پول', 'amount' => 10000, 'weight' => 18],
-    ['title' => '💰 ۲۰,۰۰۰ تومان اعتبار کیف پول', 'amount' => 20000, 'weight' => 7],
+    ['title' => '💰 ۳,۰۰۰ تومان اعتبار BlueGate',  'amount' => 3000,  'weight' => 35],
+    ['title' => '💰 ۵,۰۰۰ تومان اعتبار BlueGate',  'amount' => 5000,  'weight' => 30],
+    ['title' => '💰 ۱۰,۰۰۰ تومان اعتبار BlueGate', 'amount' => 10000, 'weight' => 18],
+    ['title' => '💰 ۲۰,۰۰۰ تومان اعتبار BlueGate', 'amount' => 20000, 'weight' => 7],
     ['title' => '🎁 سرویس تست هدیه',              'amount' => 0,     'weight' => 10, 'notify_admin' => true],
 ];
 \$CUSTOM_CODE_MIN_REFERRALS = 3;

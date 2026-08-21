@@ -129,7 +129,6 @@ function migrate(): void {
     try { db()->exec('INSERT IGNORE INTO referrals (referrer_id, referred_id, reward_amount, created_at) SELECT referrer_id, id, 0, created_at FROM users WHERE referrer_id IS NOT NULL'); } catch (Throwable $e) {}
 
     seed_setting('start_reward', app_config('START_REWARD', 2000));
-    seed_setting('min_withdraw', app_config('MIN_WITHDRAW', 50000));
     seed_setting('purchase_reward', app_config('PURCHASE_REWARD', 10000));
     seed_setting('mission_1_target', app_config('MISSION_1_TARGET', 1));
     seed_setting('mission_1_reward', app_config('MISSION_1_REWARD', 3000));
@@ -342,7 +341,7 @@ function set_setting(string $key, $value): void {
 function seed_payment_methods(): void {
     if (!table_exists('payment_methods')) return;
     $defaults = [
-        ['wallet','کیف پول داخلی','wallet',1, ['description'=>'پرداخت از موجودی کیف پول کاربر'], 1],
+        ['wallet','اعتبار BlueGate','wallet',1, ['description'=>'پرداخت از اعتبار حساب BlueGate'], 1],
         ['card','کارت به کارت','card',1, ['description'=>'پرداخت دستی با ارسال رسید'], 2],
         ['stars','Telegram Stars','stars',0, ['description'=>'پرداخت مستقیم با استار تلگرام'], 3],
         ['crypto','پرداخت رمزارز','crypto',0, ['description'=>'پرداخت با کیف پول دستی و بررسی TXID'], 4],
@@ -396,7 +395,7 @@ function payment_methods_public(?array $user=null): array {
     $cards=parse_card_accounts();
     $rate=max(1, setting_int('stars_rate_toman', 3200));
     return [
-        'wallet'=>['enabled'=>payment_enabled('wallet'), 'title'=>'کیف پول داخلی', 'balance'=>$user?(int)($user['balance']??0):0],
+        'wallet'=>['enabled'=>payment_enabled('wallet'), 'title'=>'اعتبار BlueGate', 'balance'=>$user?(int)($user['balance']??0):0],
         'card'=>['enabled'=>payment_enabled('card'), 'title'=>'کارت به کارت', 'accounts'=>$cards, 'instructions'=>setting('payment_instructions','')],
         'stars'=>['enabled'=>payment_enabled('stars'), 'title'=>'Telegram Stars', 'rate_toman'=>$rate],
         'crypto'=>['enabled'=>payment_enabled('crypto'), 'title'=>'رمزارز', 'gateway'=>'manual_txid', 'wallets'=>crypto_wallets_public(null), 'rate_source'=>setting('crypto_rate_source','auto'), 'markup_percent'=>(float)setting('crypto_rate_markup_percent','1'), 'rate_cache'=>crypto_rate_cache()],
@@ -964,7 +963,7 @@ function order_set_payment_method(int $orderId, int $userId, string $method, arr
     return order_by_id($orderId);
 }
 function payment_method_fa(?string $m): string {
-    return ['wallet'=>'کیف پول داخلی','card'=>'کارت به کارت','stars'=>'Telegram Stars','crypto'=>'رمزارز'][$m ?: ''] ?? 'انتخاب نشده';
+    return ['wallet'=>'اعتبار BlueGate','card'=>'کارت به کارت','stars'=>'Telegram Stars','crypto'=>'رمزارز'][$m ?: ''] ?? 'انتخاب نشده';
 }
 function order_catalog_display_name(array $order): string {
     $parts = array_values(array_filter([
@@ -1845,7 +1844,7 @@ function notify_new_user_signup(array $user, string $sourceStr = '🌐 وب‌س
          . "📲 <b>تلگرام آیدی:</b> {$tgId}\n"
          . "🔗 <b>معرف:</b> {$refStr}\n"
          . "📅 <b>تاریخ ثبت‌نام:</b> <code>{$date}</code>\n"
-         . "🎁 <b>هدیه کیف پول:</b> {$reward}";
+         . "🎁 <b>هدیه اعتبار:</b> {$reward}";
          
     try {
         notify_admins($msg);
@@ -2250,7 +2249,7 @@ function show_sales_report(int $chat_id, $message_id=null): void {
 function admin_keyboard(): string {
     $rows = [
         [['text'=>'🛒 مدیریت فروشگاه'], ['text'=>'📈 آمار کل']],
-        [['text'=>'🏧 برداشت‌ها'], ['text'=>'💸 تغییر موجودی']],
+        [['text'=>'💳 تغییر اعتبار']],
         [['text'=>'🎁 پاداش خرید'], ['text'=>'⚙️ تنظیمات پاداش‌ها']],
         [['text'=>'💾 بکاپ'], ['text'=>'🎨 تنظیم رنگ‌ها']],
         [['text'=>'📢 پیام همگانی']],
@@ -2267,7 +2266,7 @@ function force_join_keyboard(): string {
 }
 function main_text(array $user): string {
     $brand = h(setting('brand_name', app_config('BRAND_NAME', 'BlueGate')));
-    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای استفاده از تمامی امکانات ربات، اعم از فروشگاه، سفارش‌ها و کیف پول، فقط کافیست وارد مینی اپلیکیشن اختصاصی ما شوید.\nلطفاً از دکمه زیر برای باز کردن مینی اپ استفاده کنید 👇\n\n" . vip_line($user);
+    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای استفاده از فروشگاه، سفارش‌ها و اعتبار BlueGate، مینی اپلیکیشن اختصاصی را باز کنید.\nلطفاً از دکمه زیر برای باز کردن مینی اپ استفاده کنید 👇\n\n" . vip_line($user);
 }
 function validate_theme_color(string $color): ?string {
     $color = trim($color);
@@ -2674,7 +2673,7 @@ function apply_wallet_to_order(int $orderId, int $userId): array {
 }
 
 function refund_wallet_for_order(int $orderId,string $reason='بازگشت وجه کیف پول'): void {
-    $pdo=db();$own=!$pdo->inTransaction();if($own)$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order){if($own)$pdo->commit();return;}$wallet=(int)($order['wallet_amount']??0);if($wallet<=0){if($own)$pdo->commit();return;}$userId=(int)$order['user_id'];$q=$pdo->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');$q->execute([$userId]);if(!$q->fetch())throw new RuntimeException('USER_NOT_FOUND');$base=order_payable_base($order);$u=$pdo->prepare('UPDATE orders SET wallet_amount=0,final_amount=? WHERE id=? AND wallet_amount=?');$u->execute([$base,$orderId,$wallet]);if($u->rowCount()!==1){if($own)$pdo->commit();return;}$pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([$wallet,$userId]);wallet_transaction($userId,$wallet,'wallet_refund',$reason.' سفارش #'.$orderId,null);add_order_event($orderId,normalize_order_status((string)$order['status']),'موجودی کیف پول برگشت داده شد',money($wallet),true);if($own)$pdo->commit();}catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();throw $e;}
+    $pdo=db();$own=!$pdo->inTransaction();if($own)$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order){if($own)$pdo->commit();return;}$wallet=(int)($order['wallet_amount']??0);if($wallet<=0){if($own)$pdo->commit();return;}$userId=(int)$order['user_id'];$q=$pdo->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');$q->execute([$userId]);if(!$q->fetch())throw new RuntimeException('USER_NOT_FOUND');$base=order_payable_base($order);$u=$pdo->prepare('UPDATE orders SET wallet_amount=0,final_amount=? WHERE id=? AND wallet_amount=?');$u->execute([$base,$orderId,$wallet]);if($u->rowCount()!==1){if($own)$pdo->commit();return;}$pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([$wallet,$userId]);wallet_transaction($userId,$wallet,'wallet_refund',$reason.' سفارش #'.$orderId,null);add_order_event($orderId,normalize_order_status((string)$order['status']),'اعتبار BlueGate برگشت داده شد',money($wallet),true);if($own)$pdo->commit();}catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();throw $e;}
 }
 
 
@@ -3015,7 +3014,7 @@ function sales_report(): array {
     return ['today'=>$today,'month'=>$month,'pending'=>(int)$pending['c'],'top'=>$top];
 }
 
-/* ===== Batch 2 backend: referrals list, customer 360, withdrawals admin, coupons admin ===== */
+/* ===== Customer 360, referrals and coupon admin helpers ===== */
 function user_referrals_list(int $userId): array {
     $q=db()->prepare('SELECT u.id, u.telegram_id, u.username, u.first_name, u.created_at, r.reward_amount, r.created_at AS joined_at,
         (SELECT COUNT(*) FROM orders o WHERE o.user_id=u.id AND o.status="delivered") AS orders_count,
@@ -3028,28 +3027,8 @@ function admin_customer_view(int $userId): array {
     $orders=admin_orders(null,100,'',false);
     $userOrders=array_values(array_filter($orders, fn($o)=>(int)$o['user_id']===$userId));
     $spent=array_reduce($userOrders, fn($s,$o)=>$s+(int)(($o['status']==='delivered')?$o['final_amount']:0), 0);
-    $withdrawalsQ=db()->prepare('SELECT * FROM withdrawals WHERE user_id=? ORDER BY id DESC LIMIT 50'); $withdrawalsQ->execute([$userId]);
     $txQ=db()->prepare('SELECT * FROM transactions WHERE user_id=? ORDER BY id DESC LIMIT 30'); $txQ->execute([$userId]);
-    return ['user'=>['id'=>(int)$u['id'],'telegram_id'=>(int)$u['telegram_id'],'username'=>$u['username'],'first_name'=>$u['first_name'],'balance'=>(int)$u['balance'],'total_earned'=>(int)$u['total_earned'],'total_withdrawn'=>(int)$u['total_withdrawn'],'referrals_count'=>(int)$u['referrals_count'],'phone_number'=>$u['phone_number'],'created_at'=>$u['created_at']], 'customer_stats'=>customer_stats($userId), 'orders'=>array_map('order_public_payload',$userOrders), 'withdrawals'=>$withdrawalsQ->fetchAll(), 'transactions'=>$txQ->fetchAll(), 'total_spent'=>$spent];
-}
-function admin_list_withdrawals(string $status='all', int $limit=100): array {
-    $sql='SELECT w.*, u.telegram_id, u.username, u.first_name FROM withdrawals w JOIN users u ON u.id=w.user_id';
-    $params=[];
-    if($status!=='all'&&in_array($status,['pending','paid','rejected'],true)){$sql.=' WHERE w.status=?';$params[]=$status;}
-    $sql.=' ORDER BY w.id DESC LIMIT '.(int)$limit;
-    $q=db()->prepare($sql);$q->execute($params);return $q->fetchAll();
-}
-function admin_act_withdrawal(int $withdrawalId, string $action): array {
-    $pdo=db();$pdo->beginTransaction();$notify=null;try{$q=$pdo->prepare('SELECT * FROM withdrawals WHERE id=? FOR UPDATE');$q->execute([$withdrawalId]);$w=$q->fetch();if(!$w)throw new RuntimeException('WITHDRAWAL_NOT_FOUND');if(($w['status']??'')!=='pending')throw new RuntimeException('WITHDRAWAL_ALREADY_PROCESSED');
-        if($action==='paid'){$u=$pdo->prepare('UPDATE withdrawals SET status="paid",updated_at=NOW() WHERE id=? AND status="pending"');$u->execute([$withdrawalId]);if($u->rowCount()!==1)throw new RuntimeException('WITHDRAWAL_ALREADY_PROCESSED');$pdo->prepare('UPDATE users SET total_withdrawn=total_withdrawn+? WHERE id=?')->execute([(int)$w['amount'],(int)$w['user_id']]);$notify=['paid',$w];}
-        elseif($action==='rejected'){$u=$pdo->prepare('UPDATE withdrawals SET status="rejected",updated_at=NOW() WHERE id=? AND status="pending"');$u->execute([$withdrawalId]);if($u->rowCount()!==1)throw new RuntimeException('WITHDRAWAL_ALREADY_PROCESSED');$pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([(int)$w['amount'],(int)$w['user_id']]);wallet_transaction((int)$w['user_id'],(int)$w['amount'],'withdrawal_rejected','برگشت موجودی رد شدن درخواست برداشت',null);$notify=['rejected',$w];}
-        else throw new RuntimeException('INVALID_ACTION');$pdo->commit();
-    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
-    if($notify){[$kind,$w]=$notify;if($kind==='paid')notify_user((int)$w['user_id'],"✅ برداشت شما تایید و پرداخت شد.
-مبلغ: <b>".money((int)$w['amount'])."</b>
-شماره کارت/شبا: <code>".h($w['card_info'])."</code>",main_menu_keyboard(false));else notify_user((int)$w['user_id'],"❌ درخواست برداشت شما رد شد و مبلغ به موجودی برگشت.
-مبلغ: <b>".money((int)$w['amount'])."</b>",main_menu_keyboard(false));}
-    return admin_list_withdrawals('all');
+    return ['user'=>['id'=>(int)$u['id'],'telegram_id'=>(int)$u['telegram_id'],'username'=>$u['username'],'first_name'=>$u['first_name'],'balance'=>(int)$u['balance'],'total_earned'=>(int)$u['total_earned'],'referrals_count'=>(int)$u['referrals_count'],'phone_number'=>$u['phone_number'],'created_at'=>$u['created_at']], 'customer_stats'=>customer_stats($userId), 'orders'=>array_map('order_public_payload',$userOrders), 'transactions'=>$txQ->fetchAll(), 'total_spent'=>$spent];
 }
 
 function admin_list_coupons(): array {
@@ -3086,7 +3065,7 @@ function admin_role(int $telegramId): string {
 }
 function admin_can(int $telegramId, string $perm): bool {
     $role=admin_role($telegramId);if($role==='full')return true;if($role==='none')return false;
-    $map=['orders'=>['dashboard','orders'],'products'=>['dashboard','products','catalog','inventory','coupons'],'finance'=>['dashboard','finance','withdrawals']];return in_array($perm,$map[$role]??[],true);
+    $map=['orders'=>['dashboard','orders'],'products'=>['dashboard','products','catalog','inventory','coupons'],'finance'=>['dashboard','finance']];return in_array($perm,$map[$role]??[],true);
 }
 function log_admin_action(int $adminTid, string $action, string $entityType='', int $entityId=0, string $details=''): void {
     try{ db()->prepare('INSERT INTO admin_activity_log (admin_telegram_id,action,entity_type,entity_id,details) VALUES (?,?,?,?,?)')->execute([$adminTid,$action,$entityType?:null,$entityId?:null,$details?:null]); }catch(Throwable $e){}

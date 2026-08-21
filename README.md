@@ -1,3 +1,5 @@
+> **v2.4.0 Account Center:** پروفایل Website و Mini App به Account Center یکپارچه ارتقا پیدا کرده، «کیف پول» کاربر به **اعتبار BlueGate** تبدیل شده و امکان برداشت موجودی از تمام مسیرهای اجرایی پروژه حذف شده است. سوابق تاریخی برداشت فقط برای Audit/Backup در دیتابیس نگهداری می‌شوند و هیچ عملیات جدیدی روی آن‌ها وجود ندارد.
+
 > **v2.3.1 VPN Popup & Premium Fix:** انتخاب BluePing حالا داخل Popup ریسپانسیو انجام می‌شود و باگ کشیدگی سبز کارت Premium با حذف pseudo-elementهای تداخلی برطرف شده.
 
 > **v2.3.0 Guided Service Flow:** انتخاب سرویس در موبایل به کارت‌های swipe/snap تبدیل شده، سوییچر فقط بعد از ورود به جزئیات Sticky می‌شود و BluePing حالا مسیر واقعی نوع سرویس → پکیج → تایید سفارش دارد.
@@ -8,8 +10,8 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.3.1**  
-> هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
+> نسخه فعلی: **v2.4.0**  
+> هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
 
@@ -56,7 +58,7 @@ Website / Storefront
         │
         ├── Account
         ├── Orders
-        ├── Wallet
+        ├── BlueGate Credit
         ├── Referral
         ├── Profile
         └── Admin
@@ -83,7 +85,7 @@ BlueGate Platform از بخش‌های زیر تشکیل شده:
 - **Storefront Website** برای معرفی و خرید محصولات
 - **Account Dashboard** برای کاربر
 - **Orders** برای مشاهده سفارش، پرداخت و تحویل
-- **Wallet** برای موجودی، تراکنش، برداشت و پاداش
+- **Account Credit** برای اعتبار خرید، تراکنش و پاداش
 - **Referral / Affiliate** برای همکاری در فروش
 - **Admin** برای مدیریت کل فروشگاه
 - **Telegram Mini App** با UI مستقل
@@ -161,7 +163,6 @@ refunded
 - Inventory
 - Users
 - Wallet adjustment
-- Withdrawals
 - Coupons
 - Payment settings
 - Crypto settings
@@ -182,7 +183,7 @@ https://example.com/              Storefront
 https://example.com/web/          Storefront compatibility path
 https://example.com/account       Dashboard کاربر
 https://example.com/orders        سفارش‌ها
-https://example.com/wallet        کیف پول
+https://example.com/wallet        اعتبار حساب
 https://example.com/referral      همکاری در فروش
 https://example.com/profile       پروفایل
 https://example.com/admin         پنل مدیریت Website
@@ -774,7 +775,6 @@ Restore دیتابیس فعلی را با Backup جایگزین می‌کند. �
 - Users
 - Referrals
 - Transactions
-- Withdrawals
 - Missions
 - Spins
 - Payment methods

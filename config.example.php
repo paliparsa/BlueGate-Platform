@@ -24,7 +24,6 @@ $DB_PASS = 'change-this-db-password';
 
 // Rewards in Toman
 $START_REWARD = 2000;
-$MIN_WITHDRAW = 50000;
 $PURCHASE_REWARD = 10000;
 
 // Daily missions
@@ -38,10 +37,10 @@ $MISSION_3_REWARD = 25000;
 // Lucky wheel
 $SPIN_REFERRALS_PER_CHANCE = 5;
 $SPIN_REWARDS = [
-    ['title' => '💰 ۳,۰۰۰ تومان اعتبار کیف پول',  'amount' => 3000,  'weight' => 35],
-    ['title' => '💰 ۵,۰۰۰ تومان اعتبار کیف پول',  'amount' => 5000,  'weight' => 30],
-    ['title' => '💰 ۱۰,۰۰۰ تومان اعتبار کیف پول', 'amount' => 10000, 'weight' => 18],
-    ['title' => '💰 ۲۰,۰۰۰ تومان اعتبار کیف پول', 'amount' => 20000, 'weight' => 7],
+    ['title' => '💰 ۳,۰۰۰ تومان اعتبار BlueGate',  'amount' => 3000,  'weight' => 35],
+    ['title' => '💰 ۵,۰۰۰ تومان اعتبار BlueGate',  'amount' => 5000,  'weight' => 30],
+    ['title' => '💰 ۱۰,۰۰۰ تومان اعتبار BlueGate', 'amount' => 10000, 'weight' => 18],
+    ['title' => '💰 ۲۰,۰۰۰ تومان اعتبار BlueGate', 'amount' => 20000, 'weight' => 7],
     ['title' => '🎁 سرویس تست هدیه',              'amount' => 0,     'weight' => 10, 'notify_admin' => true],
 ];
 

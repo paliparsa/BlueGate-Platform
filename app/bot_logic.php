@@ -162,13 +162,13 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
 
 function handle_keyboard_text(int $chat_id, array $user, string $text): bool {
     $map = [
-        '🏠 صفحه اول'=>'main', '🛒 فروشگاه'=>'u_shop', '🧾 سفارش‌های من'=>'u_orders', '👤 پروفایل و کیف پول'=>'u_wallet',
+        '🏠 صفحه اول'=>'main', '🛒 فروشگاه'=>'u_shop', '🧾 سفارش‌های من'=>'u_orders', '👤 پروفایل و اعتبار'=>'u_wallet',
         '👥 دعوت و درآمد'=>'u_ref', '🏆 لیدربورد'=>'u_leaderboard', '🎯 مأموریت‌ها'=>'u_missions', '🎡 گردونه شانس'=>'u_spin',
-        '🏧 برداشت'=>'u_withdraw', '📞 پشتیبانی'=>'u_support',
+        '📞 پشتیبانی'=>'u_support',
     ];
     $adminMap = [
-        '⚙️ پنل ادمین'=>'adm_home', '🛒 مدیریت فروشگاه'=>'adm_shop', '📈 آمار کل'=>'adm_stats', '🏧 برداشت‌ها'=>'adm_withdrawals',
-        '💸 تغییر موجودی'=>'adm_balance', '🎁 پاداش خرید'=>'adm_purchase', '⚙️ تنظیمات پاداش‌ها'=>'adm_settings', '🎨 تنظیم رنگ‌ها'=>'adm_theme',
+        '⚙️ پنل ادمین'=>'adm_home', '🛒 مدیریت فروشگاه'=>'adm_shop', '📈 آمار کل'=>'adm_stats',
+        '💳 تغییر اعتبار'=>'adm_balance', '🎁 پاداش خرید'=>'adm_purchase', '⚙️ تنظیمات پاداش‌ها'=>'adm_settings', '🎨 تنظیم رنگ‌ها'=>'adm_theme',
         '📢 پیام همگانی'=>'adm_broadcast', '🏆 لیدربورد ادمین'=>'adm_leaderboard', '💾 بکاپ'=>'adm_backup',
     ];
     if (isset($map[$text])) {
@@ -236,8 +236,8 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
         send_or_edit($chat_id, $message_id, $txt, back_main_keyboard()); return;
     }
     if ($data === 'u_wallet') {
-        $txt = "💰 <b>کیف پول شما</b>\n\nموجودی قابل برداشت: <b>".money($user['balance'])."</b>\nکل درآمد: <b>".money($user['total_earned'])."</b>\nکل برداشت موفق: <b>".money($user['total_withdrawn'])."</b>\nشانس گردونه: <b>{$user['spin_balance']}</b>\n\n".vip_line($user);
-        send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>[[['text'=>'🏧 ثبت برداشت', 'callback_data'=>'u_withdraw']], [['text'=>'🔙 بازگشت', 'callback_data'=>'main']]]])); return;
+        $txt = "💳 <b>اعتبار BlueGate</b>\n\nاعتبار قابل استفاده: <b>".money($user['balance'])."</b>\nکل پاداش‌های ثبت‌شده: <b>".money($user['total_earned'])."</b>\nشانس گردونه: <b>{$user['spin_balance']}</b>\n\nℹ️ اعتبار BlueGate برای خرید سرویس‌ها استفاده می‌شود و امکان برداشت نقدی ندارد.\n\n".vip_line($user);
+        send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>[[['text'=>'🛒 مشاهده سرویس‌ها', 'callback_data'=>'u_shop']], [['text'=>'🔙 بازگشت', 'callback_data'=>'main']]]])); return;
     }
     if ($data === 'u_stats') {
         $today = today_referrals((int)$user['id']);
@@ -262,7 +262,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
             $icon = $claimedBefore ? '✅' : ($done ? '🎁' : '⏳');
             $out .= "{$icon} {$m['target']} دعوت امروز = <b>".money($m['reward'])."</b>" . ($claimedBefore ? ' | دریافت شد' : '') . "\n";
         }
-        if ($claimed) $out .= "\n🔥 پاداش‌های جدید به کیف پولت اضافه شد.";
+        if ($claimed) $out .= "\n🔥 پاداش‌های جدید به اعتبار BlueGate اضافه شد.";
         else $out .= "\nهر روز از نو شروع می‌شود؛ دعوت‌های امروزت را زیاد کن.";
         send_or_edit($chat_id, $message_id, $out, back_main_keyboard()); return;
     }
@@ -279,7 +279,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
         if ($amount > 0) add_balance($user['id'], $amount, 'spin_reward', $title, null);
         if (!empty($reward['notify_admin'])) notify_admins("🎡 جایزه نیازمند بررسی\nکاربر: <code>{$chat_id}</code>\nجایزه: <b>".h($title)."</b>");
         $remain = max(0, (int)$user['spin_balance'] - 1);
-        $txt = "🎡 گردونه چرخید...\n\nبرنده شدی: <b>".h($title)."</b>\nشانس باقی‌مانده: <b>{$remain}</b>" . ($amount > 0 ? "\n✅ مبلغ به کیف پولت اضافه شد." : "\nادمین برای تحویل جایزه بررسی می‌کند.");
+        $txt = "🎡 گردونه چرخید...\n\nبرنده شدی: <b>".h($title)."</b>\nشانس باقی‌مانده: <b>{$remain}</b>" . ($amount > 0 ? "\n✅ مبلغ به اعتبار BlueGate اضافه شد." : "\nادمین برای تحویل جایزه بررسی می‌کند.");
         send_or_edit($chat_id, $message_id, $txt, back_main_keyboard()); return;
     }
     if ($data === 'u_custom_code') {
@@ -292,21 +292,10 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     }
     if ($data === 'u_promo') {
         $link = referral_link($user);
-        $caption = "💙 با BlueGate هم اینترنت آزاد داشته باش، هم از دعوت دوستات درآمد بگیر!\n\n👥 با لینک من وارد ربات شو؛ فعالیتت زیرمجموعه من حساب می‌شه.\n🎁 پاداش دعوت، کیف پول، گردونه شانس و برداشت نقدی فعال است.\n\n🔗 {$link}";
+        $caption = "💙 با BlueGate هم اینترنت آزاد داشته باش، هم از دعوت دوستات درآمد بگیر!\n\n👥 با لینک من وارد ربات شو؛ فعالیتت زیرمجموعه من حساب می‌شه.\n🎁 پاداش دعوت، اعتبار BlueGate و گردونه شانس فعال است.\n\n🔗 {$link}";
         $txt = "📣 <b>متن آماده تبلیغ شما</b>\n\n<code>".h($caption)."</code>\n\nلینک اختصاصی:\n<code>{$link}</code>";
         send_or_edit($chat_id, $message_id, $txt, back_main_keyboard()); return;
     }
-    if ($data === 'u_withdraw') {
-        $user = get_user_by_tid($chat_id);
-        $min = setting_int('min_withdraw', 50000);
-        if ((int)$user['balance'] < $min) { send_or_edit($chat_id, $message_id, 'حداقل برداشت <b>'.money($min).'</b> است. موجودی شما: <b>'.money($user['balance']).'</b>', back_main_keyboard()); return; }
-        $pending = db()->prepare('SELECT COUNT(*) c FROM withdrawals WHERE user_id=? AND status="pending"');
-        $pending->execute([$user['id']]);
-        if ((int)$pending->fetch()['c'] > 0) { send_or_edit($chat_id, $message_id, 'شما یک درخواست برداشت در انتظار دارید. بعد از بررسی دوباره می‌توانید درخواست ثبت کنید.', back_main_keyboard()); return; }
-        set_step($chat_id, 'withdraw_card');
-        send_msg($chat_id, "شماره کارت/شبا و نام صاحب حساب را در یک پیام بفرست.\nمبلغ قابل برداشت: <b>".money($user['balance'])."</b>", back_main_keyboard()); return;
-    }
-
     if ($data === 'u_shop') { show_shop_home($chat_id, $message_id); return; }
     if ($data === 'u_orders') { show_user_orders($chat_id, $message_id, (int)$user['id']); return; }
     if ($data === 'shop_featured') { show_shop_category($chat_id, $message_id, 0, true); return; }
@@ -449,19 +438,9 @@ function handle_admin_callback(int $chat_id, $message_id, array $user, string $d
     if (handle_shop_admin_v2_callback($chat_id, $message_id, $user, $data)) return;
     if ($data === 'adm_stats') {
         $u = db()->query('SELECT COUNT(*) c, COALESCE(SUM(balance),0) b, COALESCE(SUM(total_earned),0) e, COALESCE(SUM(referrals_count),0) r, COALESCE(SUM(spin_balance),0) s FROM users')->fetch();
-        $w = db()->query('SELECT COUNT(*) c FROM withdrawals WHERE status="pending"')->fetch();
         $m = db()->query('SELECT COALESCE(SUM(reward_amount),0) s FROM mission_claims WHERE mission_date=CURDATE()')->fetch();
-        $txt = "📈 <b>آمار کل</b>\n\nکاربران: <b>{$u['c']}</b>\nکل دعوت‌ها: <b>{$u['r']}</b>\nموجودی کل کاربران: <b>".money($u['b'])."</b>\nکل درآمد ثبت‌شده: <b>".money($u['e'])."</b>\nشانس‌های فعال گردونه: <b>{$u['s']}</b>\nپاداش مأموریت امروز: <b>".money($m['s'])."</b>\nبرداشت‌های در انتظار: <b>{$w['c']}</b>";
+        $txt = "📈 <b>آمار کل</b>\n\nکاربران: <b>{$u['c']}</b>\nکل دعوت‌ها: <b>{$u['r']}</b>\nموجودی کل کاربران: <b>".money($u['b'])."</b>\nکل درآمد ثبت‌شده: <b>".money($u['e'])."</b>\nشانس‌های فعال گردونه: <b>{$u['s']}</b>\nپاداش مأموریت امروز: <b>".money($m['s'])."</b>";
         send_or_edit($chat_id, $message_id, $txt, admin_keyboard()); return;
-    }
-    if ($data === 'adm_withdrawals') {
-        $rows = db()->query('SELECT w.*, u.telegram_id, u.username FROM withdrawals w JOIN users u ON u.id=w.user_id WHERE w.status="pending" ORDER BY w.id DESC LIMIT 20')->fetchAll();
-        if (!$rows) { send_or_edit($chat_id, $message_id, 'برداشت در انتظار نداریم.', admin_keyboard()); return; }
-        send_or_edit($chat_id, $message_id, '🏧 <b>برداشت‌های در انتظار</b>\nدر پیام‌های بعدی هر برداشت را جدا می‌بینی.', admin_keyboard());
-        foreach ($rows as $w) {
-            send_msg($chat_id, "#{$w['id']} | @".h($w['username'])." | <code>{$w['telegram_id']}</code>\nمبلغ: <b>".money($w['amount'])."</b>\n".h($w['card_info']), json_markup(['inline_keyboard'=>[[['text'=>'✅ پرداخت شد','callback_data'=>'wd_paid_'.$w['id']], ['text'=>'❌ رد شود','callback_data'=>'wd_reject_'.$w['id']]]]]));
-        }
-        return;
     }
     if ($data === 'adm_balance') { set_step($chat_id, 'admin_balance'); send_msg($chat_id, "آیدی عددی تلگرام، مبلغ و توضیح را در یک پیام بفرست.\nمثال:\n<code>497837519 20000 پاداش دستی</code>", admin_keyboard()); return; }
     if ($data === 'adm_purchase') { set_step($chat_id, 'admin_purchase'); send_msg($chat_id, "برای ثبت پاداش خرید، آیدی عددی خریدار و مبلغ پایه را بفرست.\nمثال:\n<code>497837519 10000</code>\nضریب VIP معرف روی مبلغ اعمال می‌شود.", admin_keyboard()); return; }
@@ -569,9 +548,9 @@ email2@test.com | pass2</code>", admin_shop_keyboard()); return; }
 {$timeline}", admin_order_keyboard($oid)); return; }
 
     if ($data === 'adm_settings') {
-        $txt = "⚙️ <b>تنظیمات پاداش‌ها</b>\n\nپاداش دعوت: <b>".money(setting_int('start_reward', 2000))."</b>\nحداقل برداشت: <b>".money(setting_int('min_withdraw', 50000))."</b>\nپاداش پایه خرید: <b>".money(setting_int('purchase_reward', 10000))."</b>\nهر چند دعوت یک گردونه: <b>".setting_int('spin_referrals_per_chance', 5)."</b>\nحداقل دعوت برای کد اختصاصی: <b>".setting_int('custom_code_min_referrals', 3)."</b>";
+        $txt = "⚙️ <b>تنظیمات پاداش‌ها</b>\n\nپاداش دعوت: <b>".money(setting_int('start_reward', 2000))."</b>\nپاداش پایه خرید: <b>".money(setting_int('purchase_reward', 10000))."</b>\nهر چند دعوت یک گردونه: <b>".setting_int('spin_referrals_per_chance', 5)."</b>\nحداقل دعوت برای کد اختصاصی: <b>".setting_int('custom_code_min_referrals', 3)."</b>";
         $kb = json_markup(['inline_keyboard'=>[
-            [['text'=>'پاداش دعوت', 'callback_data'=>'set_start_reward'], ['text'=>'حداقل برداشت', 'callback_data'=>'set_min_withdraw']],
+            [['text'=>'پاداش دعوت', 'callback_data'=>'set_start_reward']],
             [['text'=>'پاداش خرید', 'callback_data'=>'set_purchase_reward'], ['text'=>'هر چند دعوت گردونه', 'callback_data'=>'set_spin_every']],
             [['text'=>'حداقل کد اختصاصی', 'callback_data'=>'set_custom_code_min']],
             [['text'=>(setting_bool('require_contact_auth', false)?'غیرفعال‌کردن احراز شماره':'فعال‌کردن احراز شماره'), 'callback_data'=>'toggle_require_contact_auth'], ['text'=>(setting_bool('notify_new_user', true)?'خاموش‌کردن اعلان عضو جدید':'روشن‌کردن اعلان عضو جدید'), 'callback_data'=>'toggle_notify_new_user']],
@@ -600,19 +579,13 @@ email2@test.com | pass2</code>", admin_shop_keyboard()); return; }
     }
     if ($data === 'set_theme_custom') { set_step($chat_id, 'admin_set_setting', 'theme_color'); send_msg($chat_id, "کد رنگ HEX را بفرست. مثال: <code>#1d9bf0</code>", admin_keyboard()); return; }
     $setMap = [
-        'set_start_reward'=>'start_reward', 'set_min_withdraw'=>'min_withdraw', 'set_purchase_reward'=>'purchase_reward', 'set_spin_every'=>'spin_referrals_per_chance', 'set_custom_code_min'=>'custom_code_min_referrals',
+        'set_start_reward'=>'start_reward', 'set_purchase_reward'=>'purchase_reward', 'set_spin_every'=>'spin_referrals_per_chance', 'set_custom_code_min'=>'custom_code_min_referrals',
         'set_mission1'=>'mission_1', 'set_mission2'=>'mission_2', 'set_mission3'=>'mission_3'
     ];
     if (isset($setMap[$data])) {
         set_step($chat_id, 'admin_set_setting', $setMap[$data]);
         if (str_starts_with($setMap[$data], 'mission_')) send_msg($chat_id, "برای مأموریت، هدف و پاداش را بفرست. مثال:\n<code>3 10000</code>", admin_keyboard());
         else send_msg($chat_id, "عدد جدید را بفرست.", admin_keyboard());
-        return;
-    }
-    if (str_starts_with($data, 'wd_paid_') || str_starts_with($data, 'wd_reject_')) {
-        $isPaid=str_starts_with($data,'wd_paid_');$wid=(int)preg_replace('/\D/','',$data);
-        try{admin_act_withdrawal($wid,$isPaid?'paid':'rejected');send_msg($chat_id,$isPaid?"✅ برداشت #{$wid} پرداخت شد.":"❌ برداشت #{$wid} رد شد و مبلغ برگشت خورد.",admin_keyboard());}
-        catch(Throwable $e){send_msg($chat_id,'این برداشت قبلاً بررسی شده یا پیدا نشد.',admin_keyboard());}
         return;
     }
 }
@@ -710,17 +683,6 @@ function handle_step_input(int $chat_id, array $user, string $text): void {
     $step = $user['step'];
     if ($text === '' && $step !== 'admin_broadcast') { send_msg($chat_id, 'لطفاً متن معتبر بفرست.', main_menu_keyboard(is_full_admin($chat_id))); return; }
 
-    if ($step === 'withdraw_card') {
-        $user = get_user_by_tid($chat_id); $amount = (int)$user['balance'];
-        $min = setting_int('min_withdraw', 50000);
-        if ($amount < $min) { clear_step($chat_id); send_msg($chat_id, 'موجودی شما دیگر به حداقل برداشت نمی‌رسد.', main_menu_keyboard(is_full_admin($chat_id))); return; }
-        db()->prepare('INSERT INTO withdrawals (user_id, amount, card_info) VALUES (?,?,?)')->execute([$user['id'], $amount, $text]);
-        db()->prepare('UPDATE users SET balance=0 WHERE id=?')->execute([$user['id']]);
-        clear_step($chat_id);
-        send_msg($chat_id, "✅ درخواست برداشت ثبت شد.\nمبلغ: <b>".money($amount)."</b>\nبعد از بررسی ادمین اطلاع داده می‌شود.", main_menu_keyboard(is_full_admin($chat_id)));
-        notify_admins("🏧 برداشت جدید\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>".money($amount)."</b>\nاطلاعات:\n".h($text));
-        return;
-    }
     if ($step === 'custom_ref_code') {
         $code = normalize_ref_code($text);
         if (strlen($code) < 4 || strlen($code) > 20) { send_msg($chat_id, 'کد باید بین ۴ تا ۲۰ کاراکتر باشد.', back_main_keyboard()); return; }
@@ -747,7 +709,7 @@ function handle_step_input(int $chat_id, array $user, string $text): void {
     if ($step === 'admin_balance') {
         $parts = preg_split('/\s+/', $text, 3);
         if (count($parts) < 2) { send_msg($chat_id, 'فرمت درست نیست. مثال: <code>497837519 20000 پاداش دستی</code>', admin_keyboard()); return; }
-        [$tid, $amount] = [$parts[0], (int)$parts[1]]; $desc = $parts[2] ?? 'تغییر موجودی توسط ادمین';
+        [$tid, $amount] = [$parts[0], (int)$parts[1]]; $desc = $parts[2] ?? 'تغییر اعتبار توسط ادمین';
         $target = get_user_by_tid((int)$tid);
         if (!$target) { send_msg($chat_id, 'کاربر پیدا نشد.', admin_keyboard()); return; }
         add_balance($target['id'], $amount, 'admin_adjust', $desc, null);
@@ -880,7 +842,7 @@ function handle_step_input(int $chat_id, array $user, string $text): void {
             $idx = substr($key, -1); set_setting("mission_{$idx}_target", max(0, (int)$parts[0])); set_setting("mission_{$idx}_reward", max(0, (int)$parts[1]));
             clear_step($chat_id); send_msg($chat_id, '✅ مأموریت ذخیره شد.', admin_keyboard()); return;
         }
-        $map = ['start_reward'=>'start_reward','min_withdraw'=>'min_withdraw','purchase_reward'=>'purchase_reward','spin_referrals_per_chance'=>'spin_referrals_per_chance','custom_code_min_referrals'=>'custom_code_min_referrals'];
+        $map = ['start_reward'=>'start_reward','purchase_reward'=>'purchase_reward','spin_referrals_per_chance'=>'spin_referrals_per_chance','custom_code_min_referrals'=>'custom_code_min_referrals'];
         if (!isset($map[$key])) { clear_step($chat_id); send_msg($chat_id, 'تنظیم ناشناخته بود.', admin_keyboard()); return; }
         set_setting($map[$key], max(0, (int)$text)); clear_step($chat_id); send_msg($chat_id, '✅ تنظیمات ذخیره شد.', admin_keyboard()); return;
     }
