@@ -100,8 +100,9 @@ try {
     }
 
     if ($mode === 'check_payments' || $mode === 'all') {
-        $paymentResult = blue_ref_check_crypto_payments($limit);
+        $paymentResult=blue_ref_check_crypto_payments($limit);
     }
+    $broadcastResult=process_broadcast_jobs(min(40,$limit*2));
 
     echo json_encode([
         'ok'=>true,
@@ -110,6 +111,7 @@ try {
         'rate_providers'=>$rateResult,
         'nobitex_rates'=>$rateResult, // legacy key
         'payments'=>$paymentResult,
+        'broadcasts'=>$broadcastResult,
         // Legacy keys kept for older diagnostics/UI scripts.
         'checked'=>(int)($paymentResult['checked'] ?? 0),
         'confirmed'=>(int)($paymentResult['confirmed'] ?? 0),
@@ -119,5 +121,5 @@ try {
 } catch (Throwable $e) {
     http_response_code(500);
     error_log('[BlueReferral Crypto Cron] '.$e->getMessage());
-    echo json_encode(['ok'=>false,'engine'=>'manual_crypto_txid_split_cron','error'=>$e->getMessage(),'duration_ms'=>(int)round((microtime(true)-$startedAt)*1000)], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    echo json_encode(['ok'=>false,'engine'=>'manual_crypto_txid_split_cron','error'=>'CRON_FAILED','duration_ms'=>(int)round((microtime(true)-$startedAt)*1000)], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 }

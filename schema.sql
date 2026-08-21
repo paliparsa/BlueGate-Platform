@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS users (
   email_verification_token VARCHAR(64) NULL,
   email_verification_expires_at DATETIME NULL,
   password_hash VARCHAR(255) NULL,
-  auth_token VARCHAR(128) NULL,
+  auth_token VARCHAR(128) NULL, -- deprecated; v2.2 stores only a SHA-256 hash
+  auth_token_hash CHAR(64) NULL,
+  auth_token_expires_at DATETIME NULL,
   first_name VARCHAR(255) NULL,
   last_name VARCHAR(255) NULL,
   ref_code VARCHAR(32) NOT NULL UNIQUE,
@@ -24,11 +26,16 @@ CREATE TABLE IF NOT EXISTS users (
   theme_color VARCHAR(16) NULL,
   phone_number VARCHAR(64) NULL,
   phone_verified_at DATETIME NULL,
+  is_banned TINYINT(1) NOT NULL DEFAULT 0,
+  deleted_at DATETIME NULL,
   start_notified TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX(referrer_id),
   INDEX(auth_token),
+  INDEX(auth_token_hash),
+  INDEX(auth_token_expires_at),
+  INDEX(is_banned),
   CONSTRAINT fk_users_referrer FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -98,6 +105,48 @@ CREATE TABLE IF NOT EXISTS settings (
   setting_key VARCHAR(64) PRIMARY KEY,
   setting_value TEXT NOT NULL,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+  rate_key CHAR(64) PRIMARY KEY,
+  bucket VARCHAR(64) NOT NULL,
+  hits INT NOT NULL DEFAULT 0,
+  window_started_at DATETIME NOT NULL,
+  blocked_until DATETIME NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX(bucket),
+  INDEX(blocked_until)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS broadcast_jobs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  admin_telegram_id BIGINT NOT NULL,
+  text LONGTEXT NULL,
+  telegram_method VARCHAR(32) NOT NULL DEFAULT 'sendMessage',
+  media_field VARCHAR(32) NULL,
+  telegram_file_id VARCHAR(512) NULL,
+  status VARCHAR(24) NOT NULL DEFAULT 'queued',
+  total_count INT NOT NULL DEFAULT 0,
+  sent_count INT NOT NULL DEFAULT 0,
+  failed_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  started_at DATETIME NULL,
+  finished_at DATETIME NULL,
+  INDEX(status), INDEX(created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS broadcast_job_recipients (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  job_id BIGINT UNSIGNED NOT NULL,
+  telegram_id BIGINT NOT NULL,
+  status VARCHAR(16) NOT NULL DEFAULT 'queued',
+  attempts INT NOT NULL DEFAULT 0,
+  last_error VARCHAR(500) NULL,
+  sent_at DATETIME NULL,
+  UNIQUE KEY uq_broadcast_recipient (job_id, telegram_id),
+  INDEX(job_id,status),
+  CONSTRAINT fk_broadcast_recipient_job FOREIGN KEY (job_id) REFERENCES broadcast_jobs(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -200,6 +249,8 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_method VARCHAR(32) NULL,
   payment_details TEXT NULL,
   stars_amount INT NOT NULL DEFAULT 0,
+  stars_charge_id VARCHAR(255) NULL,
+  stars_provider_charge_id VARCHAR(255) NULL,
   coupon_code VARCHAR(64) NULL,
   status VARCHAR(32) NOT NULL DEFAULT 'pending_payment',
   payment_note TEXT NULL,
@@ -215,6 +266,7 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX(user_id),
   INDEX(product_id),
+  UNIQUE KEY uq_orders_stars_charge (stars_charge_id),
   INDEX(status),
   INDEX(user_hidden),
   INDEX(archived_at),

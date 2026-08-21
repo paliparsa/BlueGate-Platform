@@ -11,6 +11,14 @@ function app_config(string $key, $default = null) {
     return $GLOBALS[$key] ?? $default;
 }
 
+function derived_secret(string $purpose,string $explicitKey): string {
+    $explicit=trim((string)app_config($explicitKey,''));if($explicit!=='')return $explicit;
+    $master=trim((string)app_config('WEBHOOK_SECRET',''));if($master==='')return '';
+    return hash_hmac('sha256',$purpose,$master);
+}
+function telegram_webhook_secret(): string { return derived_secret('telegram-webhook','TELEGRAM_WEBHOOK_SECRET'); }
+function swapwallet_callback_secret(): string { return derived_secret('swapwallet-callback','SWAPWALLET_CALLBACK_SECRET'); }
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo === null) {
@@ -69,6 +77,29 @@ function seed_setting(string $key, $value): void {
 function migrate(): void {
     run_sql_file(__DIR__ . '/../schema.sql');
 
+    // v2.2 security-critical tables are also ensured explicitly so an older install
+    // cannot silently lose rate limiting or queued broadcasts if a prior schema step failed.
+    db()->exec('CREATE TABLE IF NOT EXISTS rate_limits (
+        rate_key CHAR(64) PRIMARY KEY, bucket VARCHAR(64) NOT NULL, hits INT NOT NULL DEFAULT 0,
+        window_started_at DATETIME NOT NULL, blocked_until DATETIME NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX(bucket), INDEX(blocked_until)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    db()->exec('CREATE TABLE IF NOT EXISTS broadcast_jobs (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, admin_telegram_id BIGINT NOT NULL,
+        text LONGTEXT NULL, telegram_method VARCHAR(32) NOT NULL DEFAULT \'sendMessage\', media_field VARCHAR(32) NULL,
+        telegram_file_id VARCHAR(512) NULL, status VARCHAR(24) NOT NULL DEFAULT \'queued\',
+        total_count INT NOT NULL DEFAULT 0, sent_count INT NOT NULL DEFAULT 0, failed_count INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, started_at DATETIME NULL, finished_at DATETIME NULL,
+        INDEX(status), INDEX(created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    db()->exec('CREATE TABLE IF NOT EXISTS broadcast_job_recipients (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, job_id BIGINT UNSIGNED NOT NULL, telegram_id BIGINT NOT NULL,
+        status VARCHAR(16) NOT NULL DEFAULT \'queued\', attempts INT NOT NULL DEFAULT 0, last_error VARCHAR(500) NULL, sent_at DATETIME NULL,
+        UNIQUE KEY uq_broadcast_recipient (job_id,telegram_id), INDEX(job_id,status),
+        CONSTRAINT fk_broadcast_recipient_job FOREIGN KEY (job_id) REFERENCES broadcast_jobs(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
     // Safe upgrade path from older BlueGate ReferralWallet versions.
     add_column_if_missing('users', 'last_name', 'VARCHAR(255) NULL AFTER first_name');
     add_column_if_missing('users', 'ref_rewarded', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER referrer_id');
@@ -77,14 +108,21 @@ function migrate(): void {
     add_column_if_missing('users', 'theme_color', 'VARCHAR(16) NULL AFTER step_payload');
     add_column_if_missing('users', 'phone_number', 'VARCHAR(64) NULL AFTER theme_color');
     add_column_if_missing('users', 'phone_verified_at', 'DATETIME NULL AFTER phone_number');
-    add_column_if_missing('users', 'start_notified', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER phone_verified_at');
+    add_column_if_missing('users', 'is_banned', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER phone_verified_at');
+    add_column_if_missing('users', 'deleted_at', 'DATETIME NULL AFTER is_banned');
+    add_column_if_missing('users', 'start_notified', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER deleted_at');
     add_column_if_missing('users', 'password_hash', 'VARCHAR(255) NULL AFTER start_notified');
     add_column_if_missing('users', 'auth_token', 'VARCHAR(128) NULL AFTER password_hash');
-    add_column_if_missing('users', 'web_username', 'VARCHAR(128) NULL AFTER auth_token');
+    add_column_if_missing('users', 'auth_token_hash', 'CHAR(64) NULL AFTER auth_token');
+    add_column_if_missing('users', 'auth_token_expires_at', 'DATETIME NULL AFTER auth_token_hash');
+    add_column_if_missing('users', 'web_username', 'VARCHAR(128) NULL AFTER auth_token_expires_at');
     add_column_if_missing('users', 'email', 'VARCHAR(255) NULL AFTER web_username');
     add_column_if_missing('users', 'email_verified_at', 'DATETIME NULL AFTER email');
     add_column_if_missing('users', 'email_verification_token', 'VARCHAR(64) NULL AFTER email_verified_at');
     add_column_if_missing('users', 'email_verification_expires_at', 'DATETIME NULL AFTER email_verification_token');
+    try { db()->exec('CREATE INDEX idx_users_auth_token_hash ON users(auth_token_hash)'); } catch (Throwable $e) {}
+    try { db()->exec('CREATE INDEX idx_users_auth_token_expires ON users(auth_token_expires_at)'); } catch (Throwable $e) {}
+    try { db()->exec('CREATE INDEX idx_users_is_banned ON users(is_banned)'); } catch (Throwable $e) {}
     try { db()->exec('ALTER TABLE users MODIFY COLUMN telegram_id BIGINT NULL'); } catch (Throwable $e) {}
     try { db()->exec('ALTER TABLE transactions MODIFY COLUMN type VARCHAR(64) NOT NULL'); } catch (Throwable $e) {}
     try { db()->exec("UPDATE users u SET ref_rewarded=1 WHERE referrer_id IS NOT NULL AND EXISTS (SELECT 1 FROM transactions t WHERE t.type='ref_start' AND t.related_user_id=u.id)"); } catch (Throwable $e) {}
@@ -111,6 +149,7 @@ function migrate(): void {
     seed_setting('resend_api_key', app_config('RESEND_API_KEY', ''));
     seed_setting('resend_from_email', app_config('RESEND_FROM_EMAIL', 'onboarding@resend.dev'));
     seed_setting('require_email_verification', '1');
+    seed_setting('auth_token_ttl_hours', app_config('AUTH_TOKEN_TTL_HOURS', 168));
     seed_setting('payment_instructions', app_config('PAYMENT_INSTRUCTIONS', 'لطفاً یکی از روش‌های پرداخت فعال را انتخاب کن. پرداخت کارت‌به‌کارت با ارسال رسید بررسی می‌شود.'));
     seed_setting('payment_methods_enabled', ['wallet'=>true,'card'=>true,'stars'=>false,'crypto'=>false]);
     seed_setting('card_accounts', app_config('CARD_ACCOUNTS', []));
@@ -128,6 +167,10 @@ function migrate(): void {
     seed_setting('swapwallet_base_url', app_config('SWAPPAY_BASE_URL', 'https://swapwallet.app/api'));
     seed_setting('swapwallet_auto_token', app_config('SWAPPAY_AUTO_CONVERSION_TOKEN', 'USDT'));
     seed_setting('swapwallet_usdt_rate_toman', app_config('SWAPPAY_USDT_RATE_TOMAN', 0));
+    if (!setting('security_token_hash_migrated_v220', '')) {
+        try { db()->exec('UPDATE users SET auth_token=NULL, auth_token_hash=NULL, auth_token_expires_at=NULL'); } catch (Throwable $e) {}
+        set_setting('security_token_hash_migrated_v220', date('Y-m-d H:i:s'));
+    }
     seed_setting('swapwallet_rate_markup_percent', app_config('SWAPPAY_RATE_MARKUP_PERCENT', 1));
     seed_setting('swapwallet_ttl_minutes', app_config('SWAPPAY_TTL_MINUTES', 30));
     seed_setting('swapwallet_notify_fail', '1');
@@ -220,6 +263,9 @@ function migrate(): void {
     add_column_if_missing('orders', 'payment_method', 'VARCHAR(32) NULL AFTER final_amount');
     add_column_if_missing('orders', 'payment_details', 'TEXT NULL AFTER payment_method');
     add_column_if_missing('orders', 'stars_amount', 'INT NOT NULL DEFAULT 0 AFTER payment_details');
+    add_column_if_missing('orders', 'stars_charge_id', 'VARCHAR(255) NULL AFTER stars_amount');
+    add_column_if_missing('orders', 'stars_provider_charge_id', 'VARCHAR(255) NULL AFTER stars_charge_id');
+    try { db()->exec('ALTER TABLE orders ADD UNIQUE KEY uq_orders_stars_charge (stars_charge_id)'); } catch (Throwable $e) {}
     add_column_if_missing('orders', 'crypto_amount', 'DECIMAL(24,8) NULL AFTER stars_amount');
     add_column_if_missing('orders', 'crypto_asset', 'VARCHAR(32) NULL AFTER crypto_amount');
     add_column_if_missing('orders', 'crypto_network', 'VARCHAR(32) NULL AFTER crypto_asset');
@@ -839,7 +885,7 @@ function crypto_verify_order(int $orderId): ?array {
         db()->prepare('UPDATE crypto_payment_checks SET confirmed_at=NOW() WHERE id=?')->execute([(int)$check['id']]);
         $paid=mark_order_paid((int)$check['order_id']);
         add_order_event((int)$check['order_id'], 'payment_confirmed', 'پرداخت رمزارز تایید شد', strtoupper($check['asset']).' / TXID: '.$check['tx_hash'], true);
-        if($paid){ send_msg((int)$paid['telegram_id'], "✅ پرداخت رمزارز سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_admin($paid['telegram_id']))); notify_admins("✅ پرداخت رمزارز تایید شد\nسفارش: <code>#{$paid['id']}</code>\nکاربر: <code>{$paid['telegram_id']}</code>\nTXID: <code>".h($check['tx_hash'])."</code>"); }
+        if($paid){ send_msg((int)$paid['telegram_id'], "✅ پرداخت رمزارز سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($paid['telegram_id']))); notify_admins("✅ پرداخت رمزارز تایید شد\nسفارش: <code>#{$paid['id']}</code>\nکاربر: <code>{$paid['telegram_id']}</code>\nTXID: <code>".h($check['tx_hash'])."</code>"); }
     }
     return get_crypto_check_by_order($orderId);
 }
@@ -946,16 +992,29 @@ function send_stars_invoice_for_order(array $order): array {
         'start_parameter'=>'blue_ref_order_'.$order['id'],
     ]);
 }
-function confirm_stars_payment(string $payload, array $payment=[]): ?array {
-    if (!preg_match('/^order_(\d+)_stars_(\d+)$/', $payload, $m)) return null;
-    $orderId=(int)$m[1]; $stars=(int)$m[2];
-    $order=order_by_id($orderId); if (!$order) return null;
-    if (normalize_order_status($order['status']) === 'delivered') return $order;
-    db()->prepare('UPDATE orders SET payment_method="stars", stars_amount=?, payment_details=? WHERE id=?')->execute([$stars,json_encode($payment, JSON_UNESCAPED_UNICODE),$orderId]);
-    $paid=mark_order_paid($orderId);
-    add_order_event($orderId, 'payment_confirmed', 'پرداخت با Telegram Stars تایید شد', $stars.' Stars', true);
-    return $paid;
+function stars_required_for_order(array $order): int {
+    $stored=(int)($order['stars_amount']??0);if($stored>0)return $stored;
+    return max(1,(int)ceil((int)$order['final_amount']/max(1,setting_int('stars_rate_toman',3200))));
 }
+function validate_stars_precheckout(array $q): array|false {
+    $payload=(string)($q['invoice_payload']??'');if(!preg_match('/^order_(\d+)_stars_(\d+)$/',$payload,$m))return false;
+    $order=order_by_id((int)$m[1]);if(!$order)return false;$fromId=(int)($q['from']['id']??0);$payloadStars=(int)$m[2];$required=stars_required_for_order($order);
+    if($fromId<=0||(int)$order['telegram_id']!==$fromId)return false;
+    if($payloadStars!==$required||strtoupper((string)($q['currency']??''))!=='XTR'||(int)($q['total_amount']??0)!==$required)return false;
+    if(!in_array(normalize_order_status((string)$order['status']),['pending_payment','receipt_submitted','reviewing'],true))return false;
+    return $order;
+}
+function confirm_stars_payment(string $payload,array $payment=[],int $chatId=0): ?array {
+    if(!preg_match('/^order_(\d+)_stars_(\d+)$/',$payload,$m))return null;$orderId=(int)$m[1];$payloadStars=(int)$m[2];
+    $currency=strtoupper((string)($payment['currency']??''));$total=(int)($payment['total_amount']??0);$charge=trim((string)($payment['telegram_payment_charge_id']??''));$provider=trim((string)($payment['provider_payment_charge_id']??''));if($currency!=='XTR'||$charge==='')return null;
+    $pdo=db();$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order||($chatId>0&&(int)$order['telegram_id']!==$chatId)){$pdo->rollBack();return null;}$required=stars_required_for_order($order);if($payloadStars!==$required||$total!==$required){$pdo->rollBack();return null;}
+        $status=normalize_order_status((string)$order['status']);if(in_array($status,['payment_confirmed','preparing','delivered'],true)){if(!empty($order['stars_charge_id'])&&!hash_equals((string)$order['stars_charge_id'],$charge)){$pdo->rollBack();error_log('[Stars payment] second charge for paid order '.$orderId);return null;}$pdo->commit();return $order;}if(!in_array($status,['pending_payment','receipt_submitted','reviewing'],true)){$pdo->rollBack();return null;}
+        $dup=$pdo->prepare('SELECT id FROM orders WHERE stars_charge_id=? AND id<>? LIMIT 1');$dup->execute([$charge,$orderId]);if($dup->fetch()){$pdo->rollBack();return null;}
+        $pdo->prepare('UPDATE orders SET payment_method="stars",stars_amount=?,stars_charge_id=?,stars_provider_charge_id=?,payment_details=? WHERE id=?')->execute([$required,$charge,$provider?:null,json_encode($payment,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$orderId]);
+        $paid=mark_order_paid($orderId);if(!$paid)throw new RuntimeException('ORDER_PAYMENT_STATE_INVALID');$pdo->commit();return order_by_id($orderId);
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();error_log('[Stars payment] '.$e->getMessage());return null;}
+}
+
 
 
 function swapwallet_username(): string {
@@ -1094,7 +1153,7 @@ function swapwallet_callback_url(int $orderId=0): string {
     if ($base === '') $base = rtrim((string)app_config('MINIAPP_URL', ''), '/');
     if (str_ends_with($base, '/miniapp')) $base = substr($base, 0, -8);
     if ($base === '') return '';
-    $secret = app_config('WEBHOOK_SECRET', '');
+    $secret = swapwallet_callback_secret();
     return $base . '/swapwallet_callback.php' . ($secret ? ('?secret='.rawurlencode($secret)) : '') . ($orderId ? ((strpos($base,'?')===false && !$secret)?'?':'&').'order_id='.$orderId : '');
 }
 function get_swapwallet_invoice_by_order(int $orderId): ?array {
@@ -1263,10 +1322,9 @@ function swapwallet_refresh_invoice(int $orderId): ?array {
             db()->prepare('UPDATE swapwallet_invoices SET status=?, payment_url=?, request_url=?, raw_response=?, check_count=check_count+1, last_checked_at=NOW(), fail_reason=NULL WHERE id=?')->execute([$status,$paymentUrl,$url,json_encode($response,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),(int)$inv['id']]);
             if ($status === 'PAID' || $status === 'PAID_CONFIRMED' || $status === 'COMPLETED') {
                 db()->prepare('UPDATE swapwallet_invoices SET status="PAID", paid_at=NOW() WHERE id=?')->execute([(int)$inv['id']]);
-                $paid = mark_order_paid($orderId);
-                add_order_event($orderId, 'payment_confirmed', 'پرداخت SwapWallet تایید شد', 'Invoice: '.$inv['invoice_id'], true);
-                if ($paid) {
-                    send_msg((int)$paid['telegram_id'], "✅ پرداخت سواپ‌ولت سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_admin($paid['telegram_id'])));
+                $paid=mark_order_paid($orderId);
+                if($paid){
+                    send_msg((int)$paid['telegram_id'], "✅ پرداخت سواپ‌ولت سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($paid['telegram_id'])));
                     notify_admins("✅ پرداخت SwapWallet تایید شد\nسفارش: <code>#{$paid['id']}</code>\nکاربر: <code>{$paid['telegram_id']}</code>\nInvoice: <code>".h($inv['invoice_id'])."</code>");
                 }
             }
@@ -1309,19 +1367,37 @@ function tg(string $method, array $data = []) {
 
 function h($value): string { return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function money($amount): string { $a = (int)$amount; if ($a === 0) return 'رایگان'; return number_format($a) . ' تومان'; }
+function security_client_ip(): string { return trim((string)($_SERVER['REMOTE_ADDR'] ?? 'unknown')) ?: 'unknown'; }
+function security_rate_limit(string $bucket, string $identity, int $maxHits, int $windowSeconds, int $blockSeconds=0): array {
+    if (!table_exists('rate_limits')) return ['allowed'=>true,'retry_after'=>0];
+    $maxHits=max(1,$maxHits);$windowSeconds=max(1,$windowSeconds);$blockSeconds=max(0,$blockSeconds);
+    $key=hash('sha256',$bucket.'|'.$identity);$pdo=db();$own=!$pdo->inTransaction();if($own)$pdo->beginTransaction();
+    try{
+        $q=$pdo->prepare('SELECT * FROM rate_limits WHERE rate_key=? FOR UPDATE');$q->execute([$key]);$r=$q->fetch();$now=time();
+        if($r && !empty($r['blocked_until']) && strtotime($r['blocked_until'])>$now){$retry=max(1,strtotime($r['blocked_until'])-$now);if($own)$pdo->commit();return ['allowed'=>false,'retry_after'=>$retry];}
+        $start=$r?strtotime((string)$r['window_started_at']):0;$hits=(int)($r['hits']??0);
+        if(!$r || !$start || $start+$windowSeconds<=$now){$hits=1;$start=$now;$blocked=null;}
+        else{$hits++;$blocked=($hits>$maxHits && $blockSeconds>0)?date('Y-m-d H:i:s',$now+$blockSeconds):null;}
+        if(!$r)$pdo->prepare('INSERT INTO rate_limits (rate_key,bucket,hits,window_started_at,blocked_until) VALUES (?,?,?,?,?)')->execute([$key,$bucket,$hits,date('Y-m-d H:i:s',$start),$blocked]);
+        else $pdo->prepare('UPDATE rate_limits SET bucket=?,hits=?,window_started_at=?,blocked_until=? WHERE rate_key=?')->execute([$bucket,$hits,date('Y-m-d H:i:s',$start),$blocked,$key]);
+        $allowed=$hits<=$maxHits && !$blocked;$retry=$allowed?0:max(1,($blocked?strtotime($blocked):($start+$windowSeconds))-$now);if($own)$pdo->commit();return ['allowed'=>$allowed,'retry_after'=>$retry];
+    }catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();error_log('[Security RateLimit] '.$e->getMessage());return ['allowed'=>true,'retry_after'=>0];}
+}
+function security_rate_limit_clear(string $bucket,string $identity): void { if(!table_exists('rate_limits'))return;try{db()->prepare('DELETE FROM rate_limits WHERE rate_key=?')->execute([hash('sha256',$bucket.'|'.$identity)]);}catch(Throwable $e){} }
+function user_is_blocked(array $u): bool { return !empty($u['is_banned']) || !empty($u['deleted_at']); }
+function is_full_admin($userOrId): bool {
+    $id=is_array($userOrId)?(int)($userOrId['telegram_id']??0):(int)$userOrId;if($id<=0)return false;
+    if(in_array($id,array_map('intval',app_config('ADMIN_IDS',[])),true))return true;
+    if(table_exists('admin_roles')){try{$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=? LIMIT 1');$q->execute([$id]);$r=$q->fetch();return $r&&($r['role']??'none')==='full';}catch(Throwable $e){}}
+    return false;
+}
 function is_admin($userOrId): bool {
-    if (is_array($userOrId)) {
-        $tid = (int)($userOrId['telegram_id'] ?? 0);
-        $username = strtolower((string)($userOrId['username'] ?? ''));
-        if (!empty($userOrId['is_admin'])) return true;
-        if ($username && in_array($username, array_map('strtolower', app_config('ADMIN_USERNAMES', ['admin'])), true)) return true;
-        $id = $tid;
-    } else {
-        $id = (int)$userOrId;
-    }
-    if (!$id) return false;
-    $admins = app_config('ADMIN_IDS', []);
-    return in_array((int)$id, array_map('intval', $admins), true);
+    $id=is_array($userOrId)?(int)($userOrId['telegram_id']??0):(int)$userOrId;
+    if($id<=0)return false;
+    $admins=array_map('intval',app_config('ADMIN_IDS',[]));
+    if(in_array($id,$admins,true))return true;
+    if(table_exists('admin_roles')){try{$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=? LIMIT 1');$q->execute([$id]);$r=$q->fetch();return $r && ($r['role']??'none')!=='none';}catch(Throwable $e){}}
+    return false;
 }
 function display_name(array $u): string {
     if (!empty($u['username'])) return '@' . $u['username'];
@@ -1358,14 +1434,13 @@ function get_user_by_ref($code) {
     $q->execute([$code]);
     return $q->fetch();
 }
-function generate_auth_token(): string {
-    return bin2hex(random_bytes(32));
-}
+function generate_auth_token(): string { return bin2hex(random_bytes(32)); }
+function auth_token_hash(string $token): string { return hash('sha256',$token); }
 function get_user_by_token(?string $token): array|false {
-    if (empty($token) || strlen($token) < 16) return false;
-    $q = db()->prepare('SELECT * FROM users WHERE auth_token=? AND auth_token IS NOT NULL AND auth_token != ""');
-    $q->execute([$token]);
-    return $q->fetch() ?: false;
+    if (empty($token) || strlen($token) < 32) return false;
+    $hash=auth_token_hash($token);
+    $q=db()->prepare('SELECT * FROM users WHERE auth_token_hash=? AND auth_token_expires_at>NOW() AND is_banned=0 AND deleted_at IS NULL');
+    $q->execute([$hash]);return $q->fetch()?:false;
 }
 function get_user_by_web_username(string $username): array|false {
     $username = strtolower(trim($username));
@@ -1389,10 +1464,11 @@ function get_user_by_email_or_username(string $identifier): array|false {
     return $q->fetch() ?: false;
 }
 function issue_user_auth_token(int $userId): string {
-    $token = generate_auth_token();
-    db()->prepare('UPDATE users SET auth_token=? WHERE id=?')->execute([$token, $userId]);
+    $token=generate_auth_token();$ttl=max(1,setting_int('auth_token_ttl_hours',168));$exp=date('Y-m-d H:i:s',time()+$ttl*3600);
+    db()->prepare('UPDATE users SET auth_token=NULL,auth_token_hash=?,auth_token_expires_at=? WHERE id=? AND is_banned=0 AND deleted_at IS NULL')->execute([auth_token_hash($token),$exp,$userId]);
     return $token;
 }
+function revoke_user_auth_token(int $userId): void { db()->prepare('UPDATE users SET auth_token=NULL,auth_token_hash=NULL,auth_token_expires_at=NULL WHERE id=?')->execute([$userId]); }
 function verify_telegram_login_widget(array $authData): array|false {
     $token = app_config('BOT_TOKEN');
     if (empty($authData['hash']) || empty($authData['id']) || empty($authData['auth_date'])) return false;
@@ -1416,7 +1492,7 @@ function create_web_user(string $username, string $password, ?string $firstName 
     $hash = password_hash($password, PASSWORD_DEFAULT);
     
     $requireVerif = setting_bool('require_email_verification', true) && !empty($cleanEmail);
-    $token = $requireVerif ? null : generate_auth_token();
+    $token = null;
     $firstName = trim($firstName ?: $cleanUsername);
     
     $referrerId = null;
@@ -1493,11 +1569,11 @@ function send_email_otp(array $user): array {
         return ['ok' => false, 'error' => 'NO_EMAIL', 'message' => 'آدرس ایمیل وارد نشده است.'];
     }
     
-    $otp = (string)rand(100000, 999999);
+    $otp = (string)random_int(100000, 999999);
     $expiresAt = date('Y-m-d H:i:s', time() + 900);
     
     db()->prepare('UPDATE users SET email_verification_token=?, email_verification_expires_at=? WHERE id=?')
-        ->execute([$otp, $expiresAt, (int)$user['id']]);
+        ->execute([password_hash($otp, PASSWORD_DEFAULT), $expiresAt, (int)$user['id']]);
         
     $brand = setting('brand_name', app_config('BRAND_NAME', 'BlueGate'));
     $subject = "کد تایید حساب کاربری {$brand}";
@@ -1521,7 +1597,7 @@ function verify_email_otp(int $userId, string $otp): bool {
     $user = get_user_by_id($userId);
     if (!$user || empty($user['email_verification_token'])) return false;
     
-    if (trim((string)$user['email_verification_token']) !== trim((string)$otp)) return false;
+    if (!password_verify(trim((string)$otp), (string)$user['email_verification_token'])) return false;
     
     if (!empty($user['email_verification_expires_at']) && strtotime($user['email_verification_expires_at']) < time()) {
         return false;
@@ -1538,11 +1614,11 @@ function send_password_reset_otp(array $user): array {
         return ['ok' => false, 'error' => 'NO_EMAIL', 'message' => 'آدرس ایمیل برای این حساب ثبت نشده است.'];
     }
     
-    $otp = (string)rand(100000, 999999);
+    $otp = (string)random_int(100000, 999999);
     $expiresAt = date('Y-m-d H:i:s', time() + 900);
     
     db()->prepare('UPDATE users SET email_verification_token=?, email_verification_expires_at=? WHERE id=?')
-        ->execute([$otp, $expiresAt, (int)$user['id']]);
+        ->execute([password_hash($otp, PASSWORD_DEFAULT), $expiresAt, (int)$user['id']]);
         
     $brand = setting('brand_name', app_config('BRAND_NAME', 'BlueGate'));
     $subject = "کد بازیابی رمز عبور {$brand}";
@@ -1566,11 +1642,11 @@ function reset_password_with_otp(int $userId, string $otp, string $newPassword):
     $user = get_user_by_id($userId);
     if (!$user || empty($user['email_verification_token'])) return false;
     
-    if (trim((string)$user['email_verification_token']) !== trim((string)$otp)) return false;
+    if (!password_verify(trim((string)$otp), (string)$user['email_verification_token'])) return false;
     if (!empty($user['email_verification_expires_at']) && strtotime($user['email_verification_expires_at']) < time()) return false;
     
     $hash = password_hash($newPassword, PASSWORD_BCRYPT);
-    db()->prepare('UPDATE users SET password_hash=?, email_verified_at=COALESCE(email_verified_at, NOW()), email_verification_token=NULL, email_verification_expires_at=NULL, auth_token=NULL WHERE id=?')
+    db()->prepare('UPDATE users SET password_hash=?, email_verified_at=COALESCE(email_verified_at, NOW()), email_verification_token=NULL, email_verification_expires_at=NULL, auth_token=NULL, auth_token_hash=NULL, auth_token_expires_at=NULL WHERE id=?')
         ->execute([$hash, $userId]);
         
     return true;
@@ -1579,9 +1655,7 @@ function reset_password_with_otp(int $userId, string $otp, string $newPassword):
 function delete_user_account(int $userId): bool {
     $user = get_user_by_id($userId);
     if (!$user) return false;
-    
-    db()->prepare('UPDATE users SET email=NULL, web_username=NULL, password_hash=NULL, auth_token=NULL, phone=NULL, email_verification_token=NULL, email_verification_expires_at=NULL, first_name="حساب حذف شده", last_name="", username=NULL, balance=0 WHERE id=?')
-        ->execute([$userId]);
+    db()->prepare('UPDATE users SET email=NULL,web_username=NULL,password_hash=NULL,auth_token=NULL,auth_token_hash=NULL,auth_token_expires_at=NULL,phone_number=NULL,phone_verified_at=NULL,email_verification_token=NULL,email_verification_expires_at=NULL,first_name="حساب حذف شده",last_name="",username=NULL,balance=0 WHERE id=?')->execute([$userId]);
     return true;
 }
 
@@ -1595,7 +1669,7 @@ function admin_update_user_profile(int $userId, array $data): bool {
     if (isset($data['first_name'])) { $fields[] = 'first_name=?'; $params[] = trim((string)$data['first_name']); }
     if (isset($data['last_name'])) { $fields[] = 'last_name=?'; $params[] = trim((string)$data['last_name']); }
     if (array_key_exists('email', $data)) { $fields[] = 'email=?'; $params[] = !empty($data['email']) ? strtolower(trim((string)$data['email'])) : null; }
-    if (array_key_exists('phone', $data)) { $fields[] = 'phone=?'; $params[] = !empty($data['phone']) ? trim((string)$data['phone']) : null; }
+    if (array_key_exists('phone', $data)) { $fields[] = 'phone_number=?'; $params[] = !empty($data['phone']) ? trim((string)$data['phone']) : null; }
     if (array_key_exists('web_username', $data)) { $fields[] = 'web_username=?'; $params[] = !empty($data['web_username']) ? strtolower(trim((string)$data['web_username'])) : null; }
     if (isset($data['balance'])) { $fields[] = 'balance=?'; $params[] = (float)$data['balance']; }
     
@@ -1695,9 +1769,8 @@ function claim_available_missions(array $user): array {
         $target = (int)$m['target']; $reward = (int)$m['reward'];
         if ($target <= 0 || $reward <= 0 || $todayCount < $target) continue;
         if (is_mission_claimed((int)$user['id'], $date, $target)) continue;
-        db()->prepare('INSERT INTO mission_claims (user_id, mission_date, target_count, reward_amount) VALUES (?,?,?,?)')->execute([$user['id'], $date, $target, $reward]);
-        add_balance($user['id'], $reward, 'mission_reward', "پاداش مأموریت روزانه {$target} دعوت", null);
-        $claimed[] = $m;
+        $q=db()->prepare('INSERT IGNORE INTO mission_claims (user_id, mission_date, target_count, reward_amount) VALUES (?,?,?,?)');$q->execute([$user['id'],$date,$target,$reward]);
+        if($q->rowCount()===1){add_balance($user['id'],$reward,'mission_reward',"پاداش مأموریت روزانه {$target} دعوت",null);$claimed[]=$m;}
     }
     return [$todayCount, $claimed];
 }
@@ -1730,15 +1803,8 @@ function is_joined_channel(int $telegram_id): bool {
     return !in_array($status, ['left', 'kicked'], true);
 }
 function notify_admins(string $text): void {
-    $ids = array_map('intval', app_config('ADMIN_IDS', []));
-    try {
-        $dbAdmins = db()->query("SELECT telegram_id FROM users WHERE (is_admin=1 OR role='admin') AND telegram_id IS NOT NULL AND telegram_id > 0 AND telegram_id < 9000000000")->fetchAll(PDO::FETCH_COLUMN);
-        foreach ($dbAdmins as $aid) {
-            $aid = (int)$aid;
-            if ($aid > 0 && !in_array($aid, $ids, true)) $ids[] = $aid;
-        }
-    } catch (Throwable $e) {}
-
+    $ids=array_map('intval',app_config('ADMIN_IDS',[]));
+    if(table_exists('admin_roles')){try{$dbAdmins=db()->query("SELECT telegram_id FROM admin_roles WHERE role<>'none' AND telegram_id>0 AND telegram_id<9000000000")->fetchAll(PDO::FETCH_COLUMN);foreach($dbAdmins as $aid){$aid=(int)$aid;if($aid>0&&!in_array($aid,$ids,true))$ids[]=$aid;}}catch(Throwable $e){error_log('[Notify Admin lookup] '.$e->getMessage());}}
     foreach ($ids as $aid) {
         if ($aid > 0) {
             try {
@@ -1788,23 +1854,25 @@ function notify_new_user_signup(array $user, string $sourceStr = '🌐 وب‌س
     }
 }
 function try_reward_referrer(array $user): void {
-    if (empty($user['referrer_id']) || (int)$user['ref_rewarded'] === 1) return;
-    if (!is_joined_channel((int)$user['telegram_id'])) return;
-    $referrer = get_user_by_id((int)$user['referrer_id']);
-    if (!$referrer) return;
-    $startReward = setting_int('start_reward', 2000);
-    db()->prepare('UPDATE users SET ref_rewarded=1 WHERE id=?')->execute([$user['id']]);
-    db()->prepare('INSERT IGNORE INTO referrals (referrer_id, referred_id, reward_amount) VALUES (?,?,?)')->execute([$referrer['id'], $user['id'], $startReward]);
-    db()->prepare('UPDATE users SET referrals_count = referrals_count + 1 WHERE id=?')->execute([$referrer['id']]);
-    if ($startReward > 0) add_balance($referrer['id'], $startReward, 'ref_start', 'پاداش استارت زیرمجموعه جدید', $user['id']);
-    $referrer = get_user_by_id((int)$referrer['id']);
-    $spinEvery = max(1, setting_int('spin_referrals_per_chance', 5));
-    $spinText = '';
-    if (((int)$referrer['referrals_count'] % $spinEvery) === 0) {
-        db()->prepare('UPDATE users SET spin_balance=spin_balance+1 WHERE id=?')->execute([$referrer['id']]);
-        $spinText = "\n🎡 یک شانس گردونه هم گرفتی!";
-    }
-    send_msg($referrer['telegram_id'], '🎉 یک کاربر جدید با لینک دعوت شما وارد شد.' . ($startReward > 0 ? "\n💰 پاداش: <b>".money($startReward).'</b>' : '') . $spinText, main_menu_keyboard(is_admin($referrer['telegram_id'])));
+    if(empty($user['referrer_id'])||(int)($user['ref_rewarded']??0)===1||user_is_blocked($user))return;
+    if(!is_joined_channel((int)$user['telegram_id']))return;
+    $pdo=db();$pdo->beginTransaction();$notify=null;
+    try{
+        $q=$pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');$q->execute([(int)$user['id']]);$locked=$q->fetch();
+        if(!$locked||empty($locked['referrer_id'])||(int)$locked['ref_rewarded']===1){$pdo->commit();return;}
+        $refId=(int)$locked['referrer_id'];$q=$pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');$q->execute([$refId]);$ref=$q->fetch();if(!$ref||user_is_blocked($ref)){$pdo->commit();return;}
+        $reward=setting_int('start_reward',2000);
+        $u=$pdo->prepare('UPDATE users SET ref_rewarded=1 WHERE id=? AND ref_rewarded=0');$u->execute([(int)$locked['id']]);if($u->rowCount()!==1){$pdo->commit();return;}
+        $pdo->prepare('INSERT IGNORE INTO referrals (referrer_id,referred_id,reward_amount) VALUES (?,?,?)')->execute([$refId,(int)$locked['id'],$reward]);
+        $pdo->prepare('UPDATE users SET referrals_count=referrals_count+1 WHERE id=?')->execute([$refId]);
+        if($reward>0)add_balance($refId,$reward,'ref_start','پاداش استارت زیرمجموعه جدید',(int)$locked['id']);
+        $q=$pdo->prepare('SELECT * FROM users WHERE id=?');$q->execute([$refId]);$ref=$q->fetch();$spinEvery=max(1,setting_int('spin_referrals_per_chance',5));$spin=false;
+        if(((int)$ref['referrals_count']%$spinEvery)===0){$pdo->prepare('UPDATE users SET spin_balance=spin_balance+1 WHERE id=?')->execute([$refId]);$spin=true;}
+        $pdo->commit();$notify=[$ref,$reward,$spin];
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+    if($notify){[$ref,$reward,$spin]=$notify;$spinText=$spin?"
+🎡 یک شانس گردونه هم گرفتی!":'';send_msg((int)$ref['telegram_id'],'🎉 یک کاربر جدید با لینک دعوت شما وارد شد.'.($reward>0?"
+💰 پاداش: <b>".money($reward).'</b>':'').$spinText,main_menu_keyboard(is_full_admin((int)$ref['telegram_id'])));}
 }
 
 function send_msg($chat_id, string $text, ?string $replyMarkup = null, array $extra = []): void {
@@ -2594,68 +2662,34 @@ function wallet_transaction(int $userId, int $amount, string $type, string $desc
     db()->prepare('INSERT INTO transactions (user_id,type,amount,description,related_user_id) VALUES (?,?,?,?,?)')->execute([$userId,$type,$amount,$description,$relatedUserId]);
 }
 function apply_wallet_to_order(int $orderId, int $userId): array {
-    $order = order_by_id($orderId);
-    if (!$order || (int)$order['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
-    $status = normalize_order_status((string)$order['status']);
-    if (!in_array($status, ['pending_payment','rejected'], true)) throw new RuntimeException('ORDER_LOCKED');
-    $user = get_user_by_id($userId);
-    $balance = (int)($user['balance'] ?? 0);
-    if ($balance <= 0) throw new RuntimeException('NO_WALLET_BALANCE');
-    $base = order_payable_base($order);
-    $already = (int)($order['wallet_amount'] ?? 0);
-    $remaining = max(0, $base - $already);
-    if ($remaining <= 0) return $order;
-    $use = min($balance, $remaining);
-    db()->prepare('UPDATE users SET balance=balance-? WHERE id=? AND balance>=?')->execute([$use,$userId,$use]);
-    wallet_transaction($userId, -$use, 'wallet_payment', 'پرداخت از کیف پول برای سفارش #'.$orderId, null);
-    $newWallet = $already + $use;
-    $newFinal = max(0, $base - $newWallet);
-    $sql = "UPDATE orders SET wallet_amount=?, final_amount=?, payment_method=COALESCE(payment_method,'wallet')";
-    $params = [$newWallet, $newFinal];
-    if ($newFinal === 0) { $sql .= ', status="payment_confirmed", paid_at=NOW()'; }
-    $sql .= ' WHERE id=?'; $params[] = $orderId;
-    db()->prepare($sql)->execute($params);
-    add_order_event($orderId, $newFinal === 0 ? 'payment_confirmed' : $status, 'پرداخت از کیف پول ثبت شد', 'مبلغ استفاده‌شده: '.money($use), true);
-    return order_by_id($orderId);
-}
-function refund_wallet_for_order(int $orderId, string $reason='بازگشت وجه کیف پول'): void {
-    $order = order_by_id($orderId);
-    if (!$order) return;
-    $wallet = (int)($order['wallet_amount'] ?? 0);
-    if ($wallet <= 0) return;
-    $userId = (int)$order['user_id'];
-    db()->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([$wallet,$userId]);
-    wallet_transaction($userId, $wallet, 'wallet_refund', $reason.' سفارش #'.$orderId, null);
-    $base = order_payable_base($order);
-    db()->prepare('UPDATE orders SET wallet_amount=0, final_amount=? WHERE id=?')->execute([$base,$orderId]);
-    add_order_event($orderId, normalize_order_status((string)$order['status']), 'موجودی کیف پول برگشت داده شد', money($wallet), true);
+    $pdo=db();$pdo->beginTransaction();try{
+        $q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order||(int)$order['user_id']!==$userId)throw new RuntimeException('ORDER_NOT_FOUND');
+        $status=normalize_order_status((string)$order['status']);if(!in_array($status,['pending_payment','rejected'],true))throw new RuntimeException('ORDER_LOCKED');
+        $q=$pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');$q->execute([$userId]);$user=$q->fetch();$balance=(int)($user['balance']??0);if($balance<=0)throw new RuntimeException('NO_WALLET_BALANCE');
+        $base=order_payable_base($order);$already=(int)($order['wallet_amount']??0);$remaining=max(0,$base-$already);if($remaining<=0){$pdo->commit();return $order;}$use=min($balance,$remaining);
+        $u=$pdo->prepare('UPDATE users SET balance=balance-? WHERE id=? AND balance>=?');$u->execute([$use,$userId,$use]);if($u->rowCount()!==1)throw new RuntimeException('NO_WALLET_BALANCE');wallet_transaction($userId,-$use,'wallet_payment','پرداخت از کیف پول برای سفارش #'.$orderId,null);
+        $newWallet=$already+$use;$newFinal=max(0,$base-$newWallet);$sql='UPDATE orders SET wallet_amount=?,final_amount=?,payment_method=COALESCE(payment_method,"wallet")';$params=[$newWallet,$newFinal];if($newFinal===0)$sql.=',status="payment_confirmed",paid_at=COALESCE(paid_at,NOW())';$sql.=' WHERE id=?';$params[]=$orderId;$pdo->prepare($sql)->execute($params);
+        add_order_event($orderId,$newFinal===0?'payment_confirmed':$status,'پرداخت از کیف پول ثبت شد','مبلغ استفاده‌شده: '.money($use),true);$pdo->commit();return order_by_id($orderId);
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
 }
 
-function apply_coupon_to_order(int $orderId, int $userId, string $code): array {
-    $order=order_by_id($orderId);
-    if (!$order || (int)$order['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
-    if (normalize_order_status($order['status']) !== 'pending_payment') throw new RuntimeException('ORDER_LOCKED');
-    $coupon=coupon_by_code($code);
-    $discount=calculate_coupon_discount($coupon, (int)$order['amount'], $userId, (int)($order['product_id']??0));
-    $base=max(0, (int)$order['amount'] - $discount);
-    $wallet=(int)($order['wallet_amount'] ?? 0);
-    if ($wallet > $base) {
-        $refund = $wallet - $base;
-        db()->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([$refund,$userId]);
-        wallet_transaction($userId, $refund, 'wallet_refund', 'اصلاح پرداخت کیف پول بعد از کد تخفیف سفارش #'.$orderId, null);
-        $wallet = $base;
-        add_order_event($orderId, 'pending_payment', 'بخشی از کیف پول برگشت خورد', money($refund), true);
-    }
-    $final=max(0, $base - $wallet);
-    $sql='UPDATE orders SET coupon_code=?, discount_amount=?, wallet_amount=?, final_amount=?';
-    $params=[$coupon['code'],$discount,$wallet,$final];
-    if ($final === 0) { $sql .= ', status="payment_confirmed", paid_at=NOW()'; }
-    $sql.=' WHERE id=?'; $params[]=$orderId;
-    db()->prepare($sql)->execute($params);
-    increment_coupon_use((int)$coupon['id']);
-    add_order_event($orderId, $final===0?'payment_confirmed':'pending_payment', 'کد تخفیف اعمال شد', $coupon['code'].' / '.money($discount));
-    return order_by_id($orderId);
+function refund_wallet_for_order(int $orderId,string $reason='بازگشت وجه کیف پول'): void {
+    $pdo=db();$own=!$pdo->inTransaction();if($own)$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order){if($own)$pdo->commit();return;}$wallet=(int)($order['wallet_amount']??0);if($wallet<=0){if($own)$pdo->commit();return;}$userId=(int)$order['user_id'];$q=$pdo->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');$q->execute([$userId]);if(!$q->fetch())throw new RuntimeException('USER_NOT_FOUND');$base=order_payable_base($order);$u=$pdo->prepare('UPDATE orders SET wallet_amount=0,final_amount=? WHERE id=? AND wallet_amount=?');$u->execute([$base,$orderId,$wallet]);if($u->rowCount()!==1){if($own)$pdo->commit();return;}$pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([$wallet,$userId]);wallet_transaction($userId,$wallet,'wallet_refund',$reason.' سفارش #'.$orderId,null);add_order_event($orderId,normalize_order_status((string)$order['status']),'موجودی کیف پول برگشت داده شد',money($wallet),true);if($own)$pdo->commit();}catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();throw $e;}
 }
+
+
+function apply_coupon_to_order(int $orderId, int $userId, string $code): array {
+    $code=normalize_coupon_code($code);$pdo=db();$pdo->beginTransaction();try{
+        $q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order||(int)$order['user_id']!==$userId)throw new RuntimeException('ORDER_NOT_FOUND');if(normalize_order_status((string)$order['status'])!=='pending_payment')throw new RuntimeException('ORDER_LOCKED');
+        if(!empty($order['coupon_code'])){if(strtolower((string)$order['coupon_code'])===strtolower($code)){$pdo->commit();return order_by_id($orderId);}throw new RuntimeException('برای این سفارش قبلاً کد تخفیف ثبت شده است.');}
+        $q=$pdo->prepare('SELECT * FROM coupons WHERE code=? FOR UPDATE');$q->execute([$code]);$coupon=$q->fetch();$discount=calculate_coupon_discount($coupon,(int)$order['amount'],$userId,(int)($order['product_id']??0));
+        $base=max(0,(int)$order['amount']-$discount);$wallet=(int)($order['wallet_amount']??0);if($wallet>$base){$refund=$wallet-$base;$pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([$refund,$userId]);wallet_transaction($userId,$refund,'wallet_refund','اصلاح پرداخت کیف پول بعد از کد تخفیف سفارش #'.$orderId,null);$wallet=$base;add_order_event($orderId,'pending_payment','بخشی از کیف پول برگشت خورد',money($refund),true);}
+        $final=max(0,$base-$wallet);$sql='UPDATE orders SET coupon_code=?,discount_amount=?,wallet_amount=?,final_amount=?';$params=[$coupon['code'],$discount,$wallet,$final];if($final===0)$sql.=',status="payment_confirmed",paid_at=COALESCE(paid_at,NOW())';$sql.=' WHERE id=?';$params[]=$orderId;$pdo->prepare($sql)->execute($params);
+        $inc=$pdo->prepare('UPDATE coupons SET used_count=used_count+1 WHERE id=? AND (max_uses=0 OR used_count<max_uses)');$inc->execute([(int)$coupon['id']]);if($inc->rowCount()!==1)throw new RuntimeException('ظرفیت استفاده از این کد تخفیف به پایان رسیده است.');
+        add_order_event($orderId,$final===0?'payment_confirmed':'pending_payment','کد تخفیف اعمال شد',$coupon['code'].' / '.money($discount));$pdo->commit();return order_by_id($orderId);
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+}
+
 function update_order_status(int $orderId, string $status, string $title='', string $note='', bool $public=true): ?array {
     $status = normalize_order_status($status);
     if (in_array($status, ['rejected','canceled','refunded'], true)) refund_wallet_for_order($orderId, 'بازگشت خودکار کیف پول');
@@ -2742,8 +2776,14 @@ function hard_delete_cleanup_orders(?int $olderDays=null): int {
     return $count;
 }
 function mark_order_paid(int $orderId): ?array {
-    $order=order_by_id($orderId); if (!$order) return null;
-    return update_order_status($orderId, 'payment_confirmed', 'پرداخت تایید شد', '', true);
+    $order=order_by_id($orderId);if(!$order)return null;$status=normalize_order_status((string)$order['status']);
+    if(in_array($status,['payment_confirmed','preparing','delivered'],true))return $order;
+    if(!in_array($status,['pending_payment','receipt_submitted','reviewing'],true))return null;
+    // Accept legacy aliases only when they normalize to an allowed unpaid state.
+    $q=db()->prepare('UPDATE orders SET status="payment_confirmed",paid_at=COALESCE(paid_at,NOW()) WHERE id=? AND status IN ("pending_payment","pending","receipt_submitted","pending_review","reviewing","review")');$q->execute([$orderId]);
+    if($q->rowCount()===1){add_order_event($orderId,'payment_confirmed','پرداخت تایید شد','',true);return order_by_id($orderId);}
+    $fresh=order_by_id($orderId);if($fresh&&in_array(normalize_order_status((string)$fresh['status']),['payment_confirmed','preparing','delivered'],true))return $fresh;
+    return null;
 }
 function mark_order_preparing(int $orderId): ?array {
     return update_order_status($orderId, 'preparing', 'سفارش در حال آماده‌سازی است', '', true);
@@ -2774,23 +2814,56 @@ function delivery_template_for_order(array $order, string $rawDelivery): string 
     ]);
 }
 function deliver_order(int $orderId, string $deliveryText): ?array {
-    $order=order_by_id($orderId); if (!$order) return null;
-    if (normalize_order_status($order['status']) === 'delivered') return $order;
-    $formatted = delivery_template_for_order($order, $deliveryText);
-    $reward=0;
-    if (!empty($order['referrer_id']) && (int)$order['referrer_reward_amount'] === 0) {
-        $ref=get_user_by_id((int)$order['referrer_id']);
-        if ($ref) {
-            $base = ($order['commission_type'] === 'percent') ? (int)floor((int)$order['final_amount'] * (int)$order['commission_value'] / 100) : (($order['commission_type'] === 'fixed') ? (int)$order['commission_value'] : 0);
-            if ($base > 0) {
-                $vip=vip_info((int)$ref['referrals_count']); $reward=(int)round($base * (float)$vip['multiplier']);
-                add_balance((int)$ref['id'], $reward, 'shop_commission', 'پورسانت سفارش #'.$orderId, (int)$order['user_id']);
-                send_msg((int)$ref['telegram_id'], "🎁 زیرمجموعه شما خرید انجام داد و سفارش تحویل شد.\nپورسانت: <b>".money($reward)."</b>\nسفارش: <code>#{$orderId}</code>", main_menu_keyboard(is_admin((int)$ref['telegram_id'])));
+    $pdo=db();
+    $pdo->beginTransaction();
+    $notifyRef=null;
+    try {
+        // Serialize delivery so the same order cannot pay referral commission twice.
+        $lock=$pdo->prepare('SELECT id,status,referrer_id,referrer_reward_amount,user_id,final_amount FROM orders WHERE id=? FOR UPDATE');
+        $lock->execute([$orderId]);
+        $locked=$lock->fetch();
+        if(!$locked){$pdo->commit();return null;}
+        if(normalize_order_status((string)$locked['status'])==='delivered'){$pdo->commit();return order_by_id($orderId);}
+
+        $order=order_by_id($orderId);
+        if(!$order)throw new RuntimeException('ORDER_NOT_FOUND');
+        $formatted=delivery_template_for_order($order,$deliveryText);
+        $reward=(int)($locked['referrer_reward_amount']??0);
+
+        if(!empty($locked['referrer_id'])&&$reward===0){
+            $rq=$pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');
+            $rq->execute([(int)$locked['referrer_id']]);
+            $ref=$rq->fetch();
+            if($ref&&!user_is_blocked($ref)){
+                $base=(($order['commission_type']??'none')==='percent')
+                    ? (int)floor((int)$locked['final_amount']*(int)($order['commission_value']??0)/100)
+                    : ((($order['commission_type']??'none')==='fixed')?(int)($order['commission_value']??0):0);
+                if($base>0){
+                    $vip=vip_info((int)$ref['referrals_count']);
+                    $reward=(int)round($base*(float)$vip['multiplier']);
+                    if($reward>0){
+                        add_balance((int)$ref['id'],$reward,'shop_commission','پورسانت سفارش #'.$orderId,(int)$locked['user_id']);
+                        $notifyRef=['telegram_id'=>(int)$ref['telegram_id'],'reward'=>$reward];
+                    }
+                }
             }
         }
+
+        $u=$pdo->prepare('UPDATE orders SET status="delivered",delivery_text=?,referrer_reward_amount=?,delivered_at=NOW() WHERE id=? AND status<>"delivered"');
+        $u->execute([$formatted,$reward,$orderId]);
+        if($u->rowCount()!==1)throw new RuntimeException('ORDER_DELIVERY_RACE');
+        add_order_event($orderId,'delivered','سفارش تحویل داده شد','تحویل دستی/نیمه‌اتوماتیک انجام شد',true);
+        $pdo->commit();
+    } catch(Throwable $e) {
+        if($pdo->inTransaction())$pdo->rollBack();
+        throw $e;
     }
-    db()->prepare('UPDATE orders SET status="delivered", delivery_text=?, referrer_reward_amount=?, delivered_at=NOW() WHERE id=?')->execute([$formatted,$reward,$orderId]);
-    add_order_event($orderId, 'delivered', 'سفارش تحویل داده شد', 'تحویل دستی/نیمه‌اتوماتیک انجام شد', true);
+
+    if($notifyRef){
+        try {
+            send_msg((int)$notifyRef['telegram_id'],"🎁 زیرمجموعه شما خرید انجام داد و سفارش تحویل شد.\nپورسانت: <b>".money((int)$notifyRef['reward'])."</b>\nسفارش: <code>#{$orderId}</code>",main_menu_keyboard(is_full_admin((int)$notifyRef['telegram_id'])));
+        } catch(Throwable $e) { error_log('[Referral commission notify] '.$e->getMessage()); }
+    }
     return order_by_id($orderId);
 }
 function auto_deliver_order(int $orderId): ?array {
@@ -2967,19 +3040,18 @@ function admin_list_withdrawals(string $status='all', int $limit=100): array {
     $q=db()->prepare($sql);$q->execute($params);return $q->fetchAll();
 }
 function admin_act_withdrawal(int $withdrawalId, string $action): array {
-    $q=db()->prepare('SELECT * FROM withdrawals WHERE id=?');$q->execute([$withdrawalId]);$w=$q->fetch();
-    if(!$w) throw new RuntimeException('WITHDRAWAL_NOT_FOUND');
-    if($action==='paid'){
-        db()->prepare('UPDATE withdrawals SET status="paid", updated_at=NOW() WHERE id=?')->execute([$withdrawalId]);
-        notify_user((int)$w['user_id'],"✅ برداشت شما تایید و پرداخت شد.\nمبلغ: <b>".money((int)$w['amount'])."</b>\nشماره کارت/شبا: <code>".h($w['card_info'])."</code>", main_menu_keyboard(false));
-    } elseif($action==='rejected'){
-        db()->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([(int)$w['amount'],(int)$w['user_id']]);
-        db()->prepare('UPDATE withdrawals SET status="rejected", updated_at=NOW() WHERE id=?')->execute([$withdrawalId]);
-        wallet_transaction((int)$w['user_id'],(int)$w['amount'],'withdrawal_rejected','برگشت موجودی رد شدن درخواست برداشت',null);
-        notify_user((int)$w['user_id'],"❌ درخواست برداشت شما رد شد و مبلغ به موجودی برگشت.\nمبلغ: <b>".money((int)$w['amount'])."</b>", main_menu_keyboard(false));
-    } else throw new RuntimeException('INVALID_ACTION');
+    $pdo=db();$pdo->beginTransaction();$notify=null;try{$q=$pdo->prepare('SELECT * FROM withdrawals WHERE id=? FOR UPDATE');$q->execute([$withdrawalId]);$w=$q->fetch();if(!$w)throw new RuntimeException('WITHDRAWAL_NOT_FOUND');if(($w['status']??'')!=='pending')throw new RuntimeException('WITHDRAWAL_ALREADY_PROCESSED');
+        if($action==='paid'){$u=$pdo->prepare('UPDATE withdrawals SET status="paid",updated_at=NOW() WHERE id=? AND status="pending"');$u->execute([$withdrawalId]);if($u->rowCount()!==1)throw new RuntimeException('WITHDRAWAL_ALREADY_PROCESSED');$pdo->prepare('UPDATE users SET total_withdrawn=total_withdrawn+? WHERE id=?')->execute([(int)$w['amount'],(int)$w['user_id']]);$notify=['paid',$w];}
+        elseif($action==='rejected'){$u=$pdo->prepare('UPDATE withdrawals SET status="rejected",updated_at=NOW() WHERE id=? AND status="pending"');$u->execute([$withdrawalId]);if($u->rowCount()!==1)throw new RuntimeException('WITHDRAWAL_ALREADY_PROCESSED');$pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([(int)$w['amount'],(int)$w['user_id']]);wallet_transaction((int)$w['user_id'],(int)$w['amount'],'withdrawal_rejected','برگشت موجودی رد شدن درخواست برداشت',null);$notify=['rejected',$w];}
+        else throw new RuntimeException('INVALID_ACTION');$pdo->commit();
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+    if($notify){[$kind,$w]=$notify;if($kind==='paid')notify_user((int)$w['user_id'],"✅ برداشت شما تایید و پرداخت شد.
+مبلغ: <b>".money((int)$w['amount'])."</b>
+شماره کارت/شبا: <code>".h($w['card_info'])."</code>",main_menu_keyboard(false));else notify_user((int)$w['user_id'],"❌ درخواست برداشت شما رد شد و مبلغ به موجودی برگشت.
+مبلغ: <b>".money((int)$w['amount'])."</b>",main_menu_keyboard(false));}
     return admin_list_withdrawals('all');
 }
+
 function admin_list_coupons(): array {
     return db()->query('SELECT * FROM coupons ORDER BY id DESC LIMIT 200')->fetchAll();
 }
@@ -3009,16 +3081,12 @@ function admin_delete_coupon(int $couponId): array {
 
 /* ===== Batch 3 backend: activity log, admin roles, flash sale, achievements, reorder, advanced search ===== */
 function admin_role(int $telegramId): string {
-    $q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=?');$q->execute([$telegramId]);$r=$q->fetch();
-    if($r) return $r['role'];
-    return is_admin($telegramId) ? 'full' : 'none';
+    if(in_array($telegramId,array_map('intval',app_config('ADMIN_IDS',[])),true))return 'full';
+    if(!table_exists('admin_roles'))return 'none';$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=?');$q->execute([$telegramId]);$r=$q->fetch();return $r?((string)$r['role']):'none';
 }
 function admin_can(int $telegramId, string $perm): bool {
-    $role=admin_role($telegramId);
-    if($role==='full') return true;
-    if($role==='none') return false;
-    $map=['orders'=>['orders','withdrawals','dashboard'],'products'=>['products','categories','variants','inventory','coupons'],'finance'=>['withdrawals','dashboard']];
-    return in_array($perm, $map[$role] ?? [], true);
+    $role=admin_role($telegramId);if($role==='full')return true;if($role==='none')return false;
+    $map=['orders'=>['dashboard','orders'],'products'=>['dashboard','products','catalog','inventory','coupons'],'finance'=>['dashboard','finance','withdrawals']];return in_array($perm,$map[$role]??[],true);
 }
 function log_admin_action(int $adminTid, string $action, string $entityType='', int $entityId=0, string $details=''): void {
     try{ db()->prepare('INSERT INTO admin_activity_log (admin_telegram_id,action,entity_type,entity_id,details) VALUES (?,?,?,?,?)')->execute([$adminTid,$action,$entityType?:null,$entityId?:null,$details?:null]); }catch(Throwable $e){}
@@ -3037,6 +3105,36 @@ function admin_set_role(int $telegramId, string $role, string $displayName=''): 
 function admin_remove_role(int $telegramId): array {
     db()->prepare('DELETE FROM admin_roles WHERE telegram_id=?')->execute([$telegramId]);
     return admin_list_roles();
+}
+function queue_broadcast_job(int $adminTid,string $text,string $method='sendMessage',?string $field=null,?string $fileId=null): array {
+    $pdo=db();$pdo->beginTransaction();try{$ids=$pdo->query('SELECT telegram_id FROM users WHERE telegram_id IS NOT NULL AND telegram_id>0 AND telegram_id<9000000000 AND is_banned=0 AND deleted_at IS NULL')->fetchAll(PDO::FETCH_COLUMN);$ids=array_values(array_unique(array_map('intval',$ids)));$q=$pdo->prepare('INSERT INTO broadcast_jobs (admin_telegram_id,text,telegram_method,media_field,telegram_file_id,total_count) VALUES (?,?,?,?,?,?)');$q->execute([$adminTid,$text,$method,$field,$fileId,count($ids)]);$jobId=(int)$pdo->lastInsertId();$ins=$pdo->prepare('INSERT IGNORE INTO broadcast_job_recipients (job_id,telegram_id) VALUES (?,?)');foreach($ids as $tid)if($tid>0)$ins->execute([$jobId,$tid]);$pdo->commit();return ['id'=>$jobId,'total_count'=>count($ids),'status'=>'queued'];}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+}
+function process_broadcast_jobs(int $limit=40): array {
+    if(!table_exists('broadcast_jobs')||!table_exists('broadcast_job_recipients'))return ['processed'=>0,'sent'=>0,'failed'=>0];
+    $limit=max(1,min(100,$limit));$pdo=db();$locked=false;
+    try{
+        $l=$pdo->query("SELECT GET_LOCK('bluegate_broadcast_worker',0) l")->fetch();$locked=!empty($l['l']);
+        if(!$locked)return ['processed'=>0,'sent'=>0,'failed'=>0,'busy'=>true];
+        $job=$pdo->query('SELECT * FROM broadcast_jobs WHERE status IN ("queued","running") ORDER BY id ASC LIMIT 1')->fetch();
+        if(!$job)return ['processed'=>0,'sent'=>0,'failed'=>0];
+        $jobId=(int)$job['id'];$pdo->prepare('UPDATE broadcast_jobs SET status="running",started_at=COALESCE(started_at,NOW()) WHERE id=?')->execute([$jobId]);
+        $q=$pdo->prepare('SELECT * FROM broadcast_job_recipients WHERE job_id=? AND status="queued" ORDER BY id ASC LIMIT ?');$q->bindValue(1,$jobId,PDO::PARAM_INT);$q->bindValue(2,$limit,PDO::PARAM_INT);$q->execute();$rows=$q->fetchAll();$sent=0;$failed=0;
+        foreach($rows as $r){
+            $data=['chat_id'=>(int)$r['telegram_id'],'parse_mode'=>'HTML','disable_web_page_preview'=>true];$method=(string)$job['telegram_method'];
+            if(!empty($job['telegram_file_id'])&&!empty($job['media_field'])){$data[(string)$job['media_field']]=$job['telegram_file_id'];if(trim((string)$job['text'])!=='')$data['caption']=$job['text'];unset($data['disable_web_page_preview']);}
+            else{$data['text']=(string)$job['text'];}
+            $res=tg($method,$data);
+            if(!empty($res['ok'])){$u=$pdo->prepare('UPDATE broadcast_job_recipients SET status="sent",attempts=attempts+1,sent_at=NOW(),last_error=NULL WHERE id=? AND status="queued"');$u->execute([(int)$r['id']]);if($u->rowCount()===1)$sent++;}
+            else{$err=mb_substr((string)($res['description']??'Telegram send failed'),0,500);$u=$pdo->prepare('UPDATE broadcast_job_recipients SET status="failed",attempts=attempts+1,last_error=? WHERE id=? AND status="queued"');$u->execute([$err,(int)$r['id']]);if($u->rowCount()===1)$failed++;}
+            usleep(50000);
+        }
+        $pdo->prepare('UPDATE broadcast_jobs SET sent_count=sent_count+?,failed_count=failed_count+? WHERE id=?')->execute([$sent,$failed,$jobId]);
+        $leftQ=$pdo->prepare('SELECT COUNT(*) c FROM broadcast_job_recipients WHERE job_id=? AND status="queued"');$leftQ->execute([$jobId]);$left=(int)$leftQ->fetch()['c'];
+        if($left===0)$pdo->prepare('UPDATE broadcast_jobs SET status="done",finished_at=NOW() WHERE id=?')->execute([$jobId]);
+        return ['processed'=>count($rows),'sent'=>$sent,'failed'=>$failed,'remaining'=>$left,'job_id'=>$jobId];
+    } finally {
+        if($locked){try{$pdo->query("SELECT RELEASE_LOCK('bluegate_broadcast_worker')");}catch(Throwable $e){}}
+    }
 }
 function admin_reorder_products(array $orderedIds): array {
     foreach($orderedIds as $i=>$id){ db()->prepare('UPDATE products SET sort_order=? WHERE id=?')->execute([(int)$i+1,(int)$id]); }
@@ -3386,7 +3484,7 @@ function send_document_file($chat_id, string $path, string $caption=''): array {
     ]);
 }
 function blue_backup_send_to_admin(int $telegram_id): array {
-    if (!is_admin($telegram_id)) throw new RuntimeException('ADMIN_ONLY');
+    if(!is_full_admin($telegram_id))throw new RuntimeException('ADMIN_ONLY');
     $b = blue_backup_create();
     $res = send_document_file($telegram_id, $b['path'], "💾 <b>BlueReferral backup</b>\nFile: <code>{$b['filename']}</code>\nRows: <b>{$b['rows']}</b>\nTables: <b>{$b['tables']}</b>");
     if (empty($res['ok'])) throw new RuntimeException('TELEGRAM_SEND_BACKUP_FAILED: '.($res['description'] ?? 'unknown'));

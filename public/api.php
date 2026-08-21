@@ -1,9 +1,6 @@
 <?php
 if (!ob_start('ob_gzhandler')) { ob_start(); }
 require_once __DIR__ . '/../app/bootstrap.php';
-try {
-    if (!setting('schema_migrated_v3') || !setting('schema_merged_storefront_v1') || !setting('schema_service_viewer_v1') || !setting('schema_catalog_v2')) { migrate(); set_setting('schema_migrated_v3', '1'); set_setting('schema_merged_storefront_v1', '1'); set_setting('schema_service_viewer_v1', '1'); set_setting('schema_catalog_v2', '1'); }
-} catch (Throwable $e) {}
 header('Content-Type: application/json; charset=utf-8');
 header('Vary: Accept-Encoding');
 $requestOrigin = trim((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
@@ -13,6 +10,7 @@ if ($requestOrigin !== '') {
     $requestHost = strtolower(preg_replace('/:\d+$/', '', (string)($_SERVER['HTTP_HOST'] ?? '')));
     if (($allowedOrigin !== '' && rtrim($requestOrigin, '/') === rtrim($allowedOrigin, '/')) || ($originHost !== '' && $originHost === $requestHost)) {
         header('Access-Control-Allow-Origin: '.$requestOrigin);
+        header('Access-Control-Allow-Credentials: true');
     }
 }
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -34,6 +32,25 @@ register_shutdown_function(function(){
     }
 });
 function request_json(): array { $raw = file_get_contents('php://input'); $data = json_decode($raw ?: '{}', true); return is_array($data) ? $data : []; }
+function api_rate_limit(string $bucket,string $identity,int $max,int $window,int $block=0): void {$r=security_rate_limit($bucket,security_client_ip().'|'.$identity,$max,$window,$block);if(empty($r['allowed'])){header('Retry-After: '.(int)$r['retry_after']);api_out(['ok'=>false,'error'=>'RATE_LIMITED','message'=>'تعداد تلاش‌ها بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.','retry_after'=>(int)$r['retry_after']],429);}}
+function api_exception_code(Throwable $e,string $fallback='REQUEST_FAILED'): string {
+    $raw=trim((string)$e->getMessage());
+    if(preg_match('/^[A-Z][A-Z0-9_]{2,80}$/',$raw))return $raw;
+    error_log('[BlueGate API handled exception] '.$raw);
+    return $fallback;
+}
+function api_exception_message(Throwable $e,string $fallback): string {
+    $raw=trim((string)$e->getMessage());
+    $unsafe=$raw===''||mb_strlen($raw)>240||preg_match('/SQLSTATE|PDO|HTTP_FAILED|CURL|\bBODY\b|stack trace|\.php:\d+/i',$raw);
+    if(!$unsafe && $e instanceof RuntimeException && !preg_match('/^[A-Z][A-Z0-9_]{2,80}$/',$raw))return $raw;
+    if($unsafe)error_log('[BlueGate API hidden exception] '.$raw);
+    return $fallback;
+}
+function api_cookie_token(): string { return trim((string)($_COOKIE['bg_session']??'')); }
+function api_set_session_cookie(string $token): void {$secure=(!empty($_SERVER['HTTPS'])&&strtolower((string)$_SERVER['HTTPS'])!=='off')||((string)($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https');$origin=trim((string)app_config('WEB_ALLOWED_ORIGIN',''));$apiHost=strtolower((string)($_SERVER['HTTP_HOST']??''));$originHost=strtolower((string)(parse_url($origin,PHP_URL_HOST)?:''));$sameSite=($originHost&&$apiHost&&!str_contains($apiHost,$originHost)&&!str_contains($originHost,preg_replace('/:\d+$/','',$apiHost)))?'None':'Lax';setcookie('bg_session',$token,['expires'=>time()+max(1,setting_int('auth_token_ttl_hours',168))*3600,'path'=>'/','secure'=>$secure,'httponly'=>true,'samesite'=>$sameSite]);}
+function api_clear_session_cookie(): void { setcookie('bg_session','',['expires'=>time()-3600,'path'=>'/','secure'=>!empty($_SERVER['HTTPS']),'httponly'=>true,'samesite'=>'Lax']); }
+function api_issue_session(int $userId): void {$t=issue_user_auth_token($userId);api_set_session_cookie($t);}
+
 function get_authenticated_user(string $initData, ?string $authToken = null): array|false {
     if (!empty($initData)) {
         $validated = verify_webapp_init_data($initData);
@@ -43,19 +60,13 @@ function get_authenticated_user(string $initData, ?string $authToken = null): ar
                 $user = create_or_update_user($tgUser, null);
                 if (is_joined_channel((int)$tgUser['id'])) try_reward_referrer($user);
                 $fullUser = get_user_by_tid((int)$tgUser['id']);
-                if ($fullUser) {
-                    if (empty($fullUser['auth_token'])) {
-                        $token = issue_user_auth_token((int)$fullUser['id']);
-                        $fullUser['auth_token'] = $token;
-                    }
-                    return $fullUser;
-                }
+                if ($fullUser && !user_is_blocked($fullUser)) return $fullUser;
             }
         }
     }
     if (!empty($authToken)) {
         $user = get_user_by_token($authToken);
-        if ($user) {
+        if ($user && !user_is_blocked($user)) {
             if (setting_bool('require_email_verification', true) && !empty($user['email']) && empty($user['email_verified_at'])) {
                 return false;
             }
@@ -252,9 +263,11 @@ function dashboard_payload(array $user): array {
     $products = array_map(fn($p)=>product_payload($p, true), storefront_shop_products());
     return ['ok'=>true, 'bot_username'=>app_config('BOT_USERNAME',''), 'brand'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'theme_color'=>setting('theme_color', app_config('DEFAULT_THEME_COLOR', '#1d9bf0')), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'start_reward'=>setting_int('start_reward', 2000), 'min_withdraw'=>setting_int('min_withdraw', 50000), 'spin_every'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards'=>spin_rewards_public(), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'custom_code_min'=>setting_int('custom_code_min_referrals', 3), 'is_admin'=>is_admin($user), 'user'=>user_payload($user), 'missions'=>$missions, 'leaderboard'=>array_map(function($r){ return ['name'=>strip_tags(display_name($r)), 'referrals'=>(int)$r['referrals_count'], 'earned'=>(int)$r['total_earned']]; }, top_users(10)), 'transactions'=>$tx->fetchAll(), 'withdrawals'=>$wd->fetchAll(), 'shop_categories'=>array_map('category_payload', shop_categories(true)), 'shop_products'=>$products, 'catalog'=>catalog_public_payload(), 'orders'=>array_map('order_public_payload', user_orders((int)$user['id'], 20)), 'payment_methods'=>payment_methods_public($user), 'payment_instructions'=>setting('payment_instructions', 'لطفاً پرداخت را انجام دهید و رسید را ارسال کنید.'), 'storefront_settings'=>storefront_settings_payload(), 'storefront_content'=>storefront_content_payload(), 'storefront_rates'=>storefront_rates_payload(), 'achievements'=>user_achievements($user)];
 }
-function require_admin(array $user): void { if (!is_admin($user)) api_out(['ok'=>false,'error'=>'ADMIN_ONLY','message'=>'دسترسی ادمین لازم است.'], 403); }
+function require_admin(array $user): void { if (!is_admin($user)) api_out(['ok'=>false,'error'=>'ADMIN_ONLY','message'=>'دسترسی ادمین لازم است.'],403); }
+function require_admin_perm(array $user,string $perm): void { require_admin($user);if(!admin_can((int)$user['telegram_id'],$perm))api_out(['ok'=>false,'error'=>'ADMIN_PERMISSION_DENIED','message'=>'نقش ادمین شما اجازه این عملیات را نمی‌دهد.'],403);}
 function admin_payload(): array {
-    return ['ok'=>true,
+    $admin=$GLOBALS['BG_CURRENT_USER']??null;$tid=is_array($admin)?(int)($admin['telegram_id']??0):0;$role=$tid?admin_role($tid):'full';
+    $payload=['ok'=>true,
         'report'=>sales_report(),
         'cleanup'=>['all'=>cleanup_orders_count(), 'older_7'=>cleanup_orders_count(7), 'older_30'=>cleanup_orders_count(30), 'archived'=>archived_orders_count()],
         'orders'=>array_map(fn($o)=>order_public_payload($o, true), admin_orders(null, 80)),
@@ -262,8 +275,8 @@ function admin_payload(): array {
         'categories'=>array_map('category_payload', shop_categories(false)),
         'inventory'=>inventory_items_for_admin(150),
         'variants'=>db()->query('SELECT v.*, p.name product_name FROM product_variants v JOIN products p ON p.id=v.product_id ORDER BY v.id DESC LIMIT 150')->fetchAll(),
-        'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta()],
-        'settings'=>['payment_instructions'=>setting('payment_instructions',''), 'payment_methods_enabled'=>setting_json('payment_methods_enabled', ['wallet'=>true,'card'=>true,'stars'=>false,'crypto'=>false]), 'payment_methods'=>payment_methods_public(null), 'card_accounts_text'=>card_accounts_lines(), 'stars_rate_toman'=>setting_int('stars_rate_toman', 3200), 'crypto_wallets_text'=>crypto_wallets_lines(), 'crypto_manual_rates_text'=>crypto_manual_rates_lines(), 'crypto_rate_source'=>setting('crypto_rate_source','auto'), 'crypto_rate_markup_percent'=>(float)setting('crypto_rate_markup_percent','1'), 'crypto_notify_rate_fail'=>setting_bool('crypto_notify_rate_fail', true), 'crypto_rate_refresh_interval_seconds'=>setting_int('crypto_rate_refresh_interval_seconds', 600), 'crypto_rate_cache'=>crypto_rate_cache(), 'crypto_rate_last_result'=>setting_json('crypto_rate_last_result', []), 'crypto_rate_provider_priority'=>setting('crypto_rate_provider_priority','wallex,ramzinex,nobitex'), 'theme_color'=>setting('theme_color','#1d9bf0'), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'spin_referrals_per_chance'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards_text'=>spin_rewards_lines(), 'backup_last_created_at'=>setting('backup_last_created_at',''), 'backup_last_restored_at'=>setting('backup_last_restored_at',''), 'brand_name'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'min_withdraw'=>setting_int('min_withdraw',50000), 'start_reward'=>setting_int('start_reward',2000), 'storefront_brand_subtitle'=>setting('storefront_brand_subtitle','Digital Services'), 'storefront_hero_title'=>setting('storefront_hero_title','سرویس‌های دیجیتال، ساده و سریع'), 'storefront_hero_text'=>setting('storefront_hero_text',''), 'storefront_announcement_enabled'=>setting_bool('storefront_announcement_enabled',true), 'storefront_announcement_text'=>setting('storefront_announcement_text',''), 'storefront_star_sell_per_unit_toman'=>(float)setting('storefront_star_sell_per_unit_toman','3456'), 'storefront_star_sell_per_unit_usdt'=>(float)setting('storefront_star_sell_per_unit_usdt','0.018'), 'storefront_stars_price_basis'=>setting('storefront_stars_price_basis','toman'), 'storefront_stars_min'=>setting_int('storefront_stars_min',50), 'storefront_stars_max'=>setting_int('storefront_stars_max',10000), 'storefront_stars_step'=>setting_int('storefront_stars_step',25), 'storefront_stars_presets'=>setting_json('storefront_stars_presets',[100,500,1000,2500,5000]), 'default_base_currency'=>setting('default_base_currency', 'USDT'), 'resend_api_key'=>setting('resend_api_key',''), 'resend_from_email'=>setting('resend_from_email','onboarding@resend.dev'), 'require_email_verification'=>setting_bool('require_email_verification', true), 'vip_tier_rates'=>setting_json('vip_tier_rates', [])],
+        'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)(($GLOBALS['BG_CURRENT_USER']['telegram_id']??0)))],
+        'settings'=>['payment_instructions'=>setting('payment_instructions',''), 'payment_methods_enabled'=>setting_json('payment_methods_enabled', ['wallet'=>true,'card'=>true,'stars'=>false,'crypto'=>false]), 'payment_methods'=>payment_methods_public(null), 'card_accounts_text'=>card_accounts_lines(), 'stars_rate_toman'=>setting_int('stars_rate_toman', 3200), 'crypto_wallets_text'=>crypto_wallets_lines(), 'crypto_manual_rates_text'=>crypto_manual_rates_lines(), 'crypto_rate_source'=>setting('crypto_rate_source','auto'), 'crypto_rate_markup_percent'=>(float)setting('crypto_rate_markup_percent','1'), 'crypto_notify_rate_fail'=>setting_bool('crypto_notify_rate_fail', true), 'crypto_rate_refresh_interval_seconds'=>setting_int('crypto_rate_refresh_interval_seconds', 600), 'crypto_rate_cache'=>crypto_rate_cache(), 'crypto_rate_last_result'=>setting_json('crypto_rate_last_result', []), 'crypto_rate_provider_priority'=>setting('crypto_rate_provider_priority','wallex,ramzinex,nobitex'), 'theme_color'=>setting('theme_color','#1d9bf0'), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'spin_referrals_per_chance'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards_text'=>spin_rewards_lines(), 'backup_last_created_at'=>setting('backup_last_created_at',''), 'backup_last_restored_at'=>setting('backup_last_restored_at',''), 'brand_name'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'min_withdraw'=>setting_int('min_withdraw',50000), 'start_reward'=>setting_int('start_reward',2000), 'storefront_brand_subtitle'=>setting('storefront_brand_subtitle','Digital Services'), 'storefront_hero_title'=>setting('storefront_hero_title','سرویس‌های دیجیتال، ساده و سریع'), 'storefront_hero_text'=>setting('storefront_hero_text',''), 'storefront_announcement_enabled'=>setting_bool('storefront_announcement_enabled',true), 'storefront_announcement_text'=>setting('storefront_announcement_text',''), 'storefront_star_sell_per_unit_toman'=>(float)setting('storefront_star_sell_per_unit_toman','3456'), 'storefront_star_sell_per_unit_usdt'=>(float)setting('storefront_star_sell_per_unit_usdt','0.018'), 'storefront_stars_price_basis'=>setting('storefront_stars_price_basis','toman'), 'storefront_stars_min'=>setting_int('storefront_stars_min',50), 'storefront_stars_max'=>setting_int('storefront_stars_max',10000), 'storefront_stars_step'=>setting_int('storefront_stars_step',25), 'storefront_stars_presets'=>setting_json('storefront_stars_presets',[100,500,1000,2500,5000]), 'default_base_currency'=>setting('default_base_currency', 'USDT'), 'resend_api_key'=>'', 'resend_api_key_configured'=>setting('resend_api_key','')!=='', 'resend_api_key_masked'=>swapwallet_mask_key(setting('resend_api_key','')), 'resend_from_email'=>setting('resend_from_email','onboarding@resend.dev'), 'require_email_verification'=>setting_bool('require_email_verification', true), 'vip_tier_rates'=>setting_json('vip_tier_rates', [])],
         'backups'=>blue_backup_list(),
         'withdrawals'=>admin_list_withdrawals('all'),
         'coupons'=>admin_list_coupons(),
@@ -271,15 +284,20 @@ function admin_payload(): array {
         'admin_roles'=>admin_list_roles(),
         'forecast'=>admin_revenue_forecast()
     ];
+    if($role==='full')return $payload;
+    $payload['settings']=[];$payload['backups']=[];$payload['activity_log']=[];$payload['admin_roles']=[];
+    if($role==='orders'){ $payload['products']=[];$payload['categories']=[];$payload['inventory']=[];$payload['variants']=[];$payload['catalog_admin']=[];$payload['withdrawals']=[];$payload['coupons']=[]; }
+    elseif($role==='products'){ $payload['orders']=[];$payload['cleanup']=[];$payload['withdrawals']=[]; }
+    elseif($role==='finance'){ $payload['orders']=[];$payload['products']=[];$payload['categories']=[];$payload['inventory']=[];$payload['variants']=[];$payload['catalog_admin']=[];$payload['coupons']=[]; }
+    return $payload;
 }
 function bool_input($v): int { return in_array(strtolower((string)$v), ['1','true','yes','on'], true) ? 1 : 0; }
 
-$input = array_merge($_GET, $_POST, request_json());
-$action = $input['action'] ?? ($_GET['action'] ?? 'me');
-$initData = $input['initData'] ?? ($_GET['initData'] ?? '');
-$authToken = $input['authToken'] ?? ($_GET['authToken'] ?? ($_SERVER['HTTP_X_WEB_TOKEN'] ?? ''));
+$method=strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET'));$input=$method==='GET'?$_GET:array_merge($_POST,request_json());$action=(string)($input['action']??'me');$initData=(string)($input['initData']??'');$authToken=api_cookie_token();if($authToken==='')$authToken=trim((string)($_SERVER['HTTP_X_WEB_TOKEN']??''));if($authToken===''&&$method!=='GET')$authToken=trim((string)($input['authToken']??''));
+if($method==='POST'&&api_cookie_token()!==''&&$initData===''&&trim((string)($_SERVER['HTTP_X_WEB_TOKEN']??''))===''){$origin=trim((string)($_SERVER['HTTP_ORIGIN']??''));$originHost=strtolower((string)(parse_url($origin,PHP_URL_HOST)?:''));$host=strtolower(preg_replace('/:\d+$/','',(string)($_SERVER['HTTP_HOST']??'')));$allowed=trim((string)app_config('WEB_ALLOWED_ORIGIN',''));$originOk=$origin!==''&&(($allowed!==''&&rtrim($origin,'/')===rtrim($allowed,'/'))||($originHost!==''&&$originHost===$host));$ct=strtolower((string)($_SERVER['CONTENT_TYPE']??''));if(!$originOk||!str_starts_with($ct,'application/json'))api_out(['ok'=>false,'error'=>'CSRF_CHECK_FAILED','message'=>'درخواست امنیتی معتبر نیست.'],403);}
 
 if ($action === 'register') {
+    api_rate_limit('register','ip',5,900,900);
     $username = trim((string)($input['username'] ?? ''));
     $email = trim((string)($input['email'] ?? ''));
     $password = (string)($input['password'] ?? '');
@@ -292,9 +310,10 @@ if ($action === 'register') {
     if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         api_out(['ok'=>false, 'error'=>'INVALID_EMAIL', 'message'=>'آدرس ایمیل معتبر نیست.'], 400);
     }
-    if (mb_strlen($password) < 6) {
-        api_out(['ok'=>false, 'error'=>'INVALID_PASSWORD', 'message'=>'رمز عبور باید حداقل ۶ کاراکتر باشد.'], 400);
+    if (mb_strlen($password) < 8) {
+        api_out(['ok'=>false,'error'=>'INVALID_PASSWORD','message'=>'رمز عبور باید حداقل ۸ کاراکتر باشد.'],400);
     }
+    $reserved=array_map('strtolower',array_merge(['admin','administrator','root','support','system'],(array)app_config('ADMIN_USERNAMES',[])));if(in_array(strtolower($username),$reserved,true))api_out(['ok'=>false,'error'=>'RESERVED_USERNAME','message'=>'این نام کاربری قابل ثبت نیست.'],400);
     if (get_user_by_web_username($username)) {
         api_out(['ok'=>false, 'error'=>'USERNAME_TAKEN', 'message'=>'این نام کاربری قبلاً ثبت شده است.'], 400);
     }
@@ -315,12 +334,13 @@ if ($action === 'register') {
         ]);
     }
     
-    api_out(dashboard_payload($user) + ['auth_token' => $user['auth_token']]);
+    api_issue_session((int)$user['id']);api_out(dashboard_payload(get_user_by_id((int)$user['id'])));
 }
 
 if ($action === 'verify_email_otp') {
     $userId = (int)($input['user_id'] ?? 0);
     $otp = trim((string)($input['otp'] ?? ($input['otp_code'] ?? '')));
+    api_rate_limit('verify_email_otp',(string)$userId,8,900,900);
     if ($userId <= 0 || strlen($otp) < 4) {
         api_out(['ok'=>false, 'error'=>'INVALID_OTP', 'message'=>'کد تایید وارد شده معتبر نیست.'], 400);
     }
@@ -328,14 +348,14 @@ if ($action === 'verify_email_otp') {
         api_out(['ok'=>false, 'error'=>'OTP_VERIFICATION_FAILED', 'message'=>'کد تایید اشتباه است یا منقضی شده است.'], 400);
     }
     $user = get_user_by_id($userId);
-    $token = issue_user_auth_token((int)$user['id']);
-    $user['auth_token'] = $token;
+    api_issue_session((int)$user['id']);
     notify_new_user_signup($user, '🌐 وب‌سایت (ایمیل تایید شد)');
-    api_out(dashboard_payload($user) + ['auth_token' => $token, 'message' => 'ایمیل شما با موفقیت تایید شد! 🎉']);
+    api_out(dashboard_payload($user)+['message'=>'ایمیل شما با موفقیت تایید شد! 🎉']);
 }
 
 if ($action === 'resend_email_otp') {
     $userId = (int)($input['user_id'] ?? 0);
+    api_rate_limit('resend_email_otp',(string)$userId,5,900,900);
     $user = get_user_by_id($userId);
     if (!$user || empty($user['email'])) {
         api_out(['ok'=>false, 'error'=>'USER_NOT_FOUND', 'message'=>'کاربر یا ایمیل پیدا نشد.'], 400);
@@ -344,16 +364,17 @@ if ($action === 'resend_email_otp') {
     if (!empty($res['ok'])) {
         api_out(['ok'=>true, 'message'=>'کد تایید جدید به ایمیل شما ارسال شد.']);
     } else {
-        api_out(['ok'=>false, 'error'=>'SEND_FAILED', 'message'=>$res['message'] ?? 'ارسال ایمیل ناموفق بود.'], 500);
+        error_log('[Email OTP resend] '.json_encode($res,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)); api_out(['ok'=>false,'error'=>'SEND_FAILED','message'=>'ارسال ایمیل ناموفق بود. کمی بعد دوباره تلاش کنید.'],500);
     }
 }
 
 if ($action === 'login') {
     $identifier = trim((string)($input['username'] ?? ($input['identifier'] ?? '')));
     $password = (string)($input['password'] ?? '');
+    api_rate_limit('login',strtolower($identifier),10,900,900);
 
     $user = get_user_by_email_or_username($identifier);
-    if (!$user || empty($user['password_hash']) || !password_verify($password, $user['password_hash'])) {
+    if (!$user || user_is_blocked($user) || empty($user['password_hash']) || !password_verify($password, $user['password_hash'])) {
         api_out(['ok'=>false, 'error'=>'INVALID_CREDENTIALS', 'message'=>'ایمیل/نام کاربری یا رمز عبور اشتباه است.'], 400);
     }
     
@@ -370,53 +391,23 @@ if ($action === 'login') {
         ], 403);
     }
 
-    $token = issue_user_auth_token((int)$user['id']);
-    $user['auth_token'] = $token;
-    api_out(dashboard_payload($user) + ['auth_token' => $token]);
+    security_rate_limit_clear('login',security_client_ip().'|'.strtolower($identifier));api_issue_session((int)$user['id']);api_out(dashboard_payload($user));
 }
 
 if ($action === 'forgot_password_request') {
-    $identifier = trim((string)($input['email'] ?? ($input['identifier'] ?? '')));
-    if ($identifier === '') {
-        api_out(['ok'=>false, 'error'=>'EMPTY_IDENTIFIER', 'message'=>'لطفاً ایمیل یا نام کاربری خود را وارد کنید.'], 400);
-    }
-    $user = get_user_by_email_or_username($identifier);
-    if (!$user || empty($user['email'])) {
-        api_out(['ok'=>false, 'error'=>'USER_NOT_FOUND', 'message'=>'حسابی با این اطلاعات یا ایمیل پیدا نشد.'], 404);
-    }
-    $res = send_password_reset_otp($user);
-    if (!empty($res['ok'])) {
-        api_out([
-            'ok' => true,
-            'user_id' => (int)$user['id'],
-            'email' => $user['email'],
-            'message' => 'کد ۶ رقمی بازیابی رمز عبور به ایمیل شما ارسال شد.'
-        ]);
-    } else {
-        api_out(['ok'=>false, 'error'=>'SEND_FAILED', 'message'=>$res['message'] ?? 'ارسال ایمیل بازیابی ناموفق بود.'], 500);
-    }
+    $identifier=trim((string)($input['email']??($input['identifier']??'')));if($identifier==='')api_out(['ok'=>false,'error'=>'EMPTY_IDENTIFIER','message'=>'لطفاً ایمیل یا نام کاربری خود را وارد کنید.'],400);api_rate_limit('forgot_password',strtolower($identifier),5,3600,1800);
+    $user=get_user_by_email_or_username($identifier);if($user&&!user_is_blocked($user)&&!empty($user['email'])){try{send_password_reset_otp($user);}catch(Throwable $e){error_log('[Password reset send] '.$e->getMessage());}}
+    api_out(['ok'=>true,'message'=>'اگر حسابی با این مشخصات وجود داشته باشد، کد بازیابی به ایمیل آن ارسال می‌شود.']);
 }
 
 if ($action === 'reset_password_submit') {
-    $userId = (int)($input['user_id'] ?? 0);
-    $otp = trim((string)($input['otp'] ?? ''));
-    $newPassword = (string)($input['new_password'] ?? '');
-
-    if ($userId <= 0 || strlen($otp) < 4) {
-        api_out(['ok'=>false, 'error'=>'INVALID_OTP', 'message'=>'کد تایید وارد شده معتبر نیست.'], 400);
-    }
-    if (mb_strlen($newPassword) < 6) {
-        api_out(['ok'=>false, 'error'=>'INVALID_PASSWORD', 'message'=>'رمز عبور جدید باید حداقل ۶ کاراکتر باشد.'], 400);
-    }
-    if (!reset_password_with_otp($userId, $otp, $newPassword)) {
-        api_out(['ok'=>false, 'error'=>'RESET_FAILED', 'message'=>'کد تایید اشتباه است یا منقضی شده است.'], 400);
-    }
-    $user = get_user_by_id($userId);
-    $token = issue_user_auth_token((int)$user['id']);
-    api_out(['ok'=>true, 'message'=>'رمز عبور شما با موفقیت تغییر کرد! اکنون وارد شده‌اید.', 'auth_token'=>$token] + dashboard_payload($user));
+    $identifier=trim((string)($input['identifier']??$input['email']??''));$otp=trim((string)($input['otp']??''));$newPassword=(string)($input['new_password']??'');api_rate_limit('reset_password',strtolower($identifier),8,900,900);
+    if($identifier===''||strlen($otp)<4)api_out(['ok'=>false,'error'=>'INVALID_OTP','message'=>'کد تایید وارد شده معتبر نیست.'],400);if(mb_strlen($newPassword)<8)api_out(['ok'=>false,'error'=>'INVALID_PASSWORD','message'=>'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.'],400);
+    $u=get_user_by_email_or_username($identifier);if(!$u||user_is_blocked($u)||!reset_password_with_otp((int)$u['id'],$otp,$newPassword))api_out(['ok'=>false,'error'=>'RESET_FAILED','message'=>'کد تایید اشتباه است یا منقضی شده است.'],400);api_issue_session((int)$u['id']);api_out(['ok'=>true,'message'=>'رمز عبور شما با موفقیت تغییر کرد! اکنون وارد شده‌اید.']+dashboard_payload(get_user_by_id((int)$u['id'])));
 }
 
 if ($action === 'telegram_login') {
+    api_rate_limit('telegram_login','ip',20,900,900);
     $authData = is_array($input['auth_data'] ?? null) ? $input['auth_data'] : [];
     $verified = verify_telegram_login_widget($authData);
     if (!$verified) {
@@ -428,9 +419,7 @@ if ($action === 'telegram_login') {
         'first_name' => $verified['first_name'] ?? null,
         'last_name' => $verified['last_name'] ?? null,
     ], null);
-    $token = issue_user_auth_token((int)$user['id']);
-    $user['auth_token'] = $token;
-    api_out(dashboard_payload($user) + ['auth_token' => $token]);
+    if(user_is_blocked($user))api_out(['ok'=>false,'error'=>'ACCOUNT_BLOCKED','message'=>'این حساب مسدود شده است.'],403);api_issue_session((int)$user['id']);api_out(dashboard_payload($user));
 }
 
 $user = get_authenticated_user((string)$initData, (string)$authToken);
@@ -439,8 +428,7 @@ if ($action === 'me') {
     if (!$user) {
         api_out(guest_dashboard_payload());
     } else {
-        $token = $user['auth_token'] ?? issue_user_auth_token((int)$user['id']);
-        api_out(dashboard_payload($user) + ['auth_token' => $token]);
+        api_out(dashboard_payload($user));
     }
 }
 
@@ -465,12 +453,15 @@ if ($action === 'storefront') {
 if (!$user) {
     api_out(['ok'=>false, 'error'=>'AUTH_REQUIRED', 'message'=>'برای انجام این عملیات باید وارد حساب کاربری خود شوید.'], 401);
 }
+$GLOBALS['BG_CURRENT_USER']=$user;
+function admin_action_perm(string $a): string {if(in_array($a,['admin_summary'],true))return 'dashboard';if(str_starts_with($a,'admin_catalog_')||in_array($a,['admin_add_inventory','admin_update_inventory','admin_delete_inventory','admin_hard_delete_inventory','admin_add_coupon','admin_update_coupon','admin_toggle_coupon','admin_delete_coupon'],true))return 'products';if(in_array($a,['admin_withdraw_action','admin_add_balance'],true))return 'finance';if(in_array($a,['admin_search_orders','admin_archive_order','admin_delete_order','admin_cleanup_orders','admin_order_status','admin_deliver_order','admin_set_service_delivery','admin_order_note'],true))return 'orders';return 'full';}
+if(str_starts_with($action,'admin_'))require_admin_perm($user,admin_action_perm($action));
 
 if ($action === 'logout') {
     if (!empty($user['id'])) {
-        db()->prepare('UPDATE users SET auth_token=NULL WHERE id=?')->execute([(int)$user['id']]);
+        revoke_user_auth_token((int)$user['id']);
     }
-    api_out(['ok'=>true]);
+    api_clear_session_cookie();api_out(['ok'=>true]);
 }
 if ($action === 'my_orders') { api_out(['ok'=>true, 'orders'=>array_map('order_public_payload', user_orders((int)$user['id'], 50))]); }
 if ($action === 'service_link' || $action === 'service_viewer_ticket') {
@@ -494,13 +485,13 @@ if ($action === 'spin') { $user=get_user_by_id((int)$user['id']); if ((int)$user
 if ($action === 'withdraw') { $user=get_user_by_id((int)$user['id']); $card=trim((string)($input['card_info']??'')); if(mb_strlen($card)<8) api_out(['ok'=>false,'error'=>'INVALID_CARD_INFO','message'=>'اطلاعات کارت/شبا کامل نیست.'],400); $min=setting_int('min_withdraw',50000); if((int)$user['balance']<$min) api_out(['ok'=>false,'error'=>'LOW_BALANCE','message'=>'موجودی به حداقل برداشت نمی‌رسد.'],400); $pending=db()->prepare('SELECT COUNT(*) c FROM withdrawals WHERE user_id=? AND status="pending"'); $pending->execute([$user['id']]); if((int)$pending->fetch()['c']>0) api_out(['ok'=>false,'error'=>'PENDING_WITHDRAWAL','message'=>'یک برداشت در انتظار دارید.'],400); $amount=(int)$user['balance']; db()->prepare('INSERT INTO withdrawals (user_id, amount, card_info) VALUES (?,?,?)')->execute([$user['id'],$amount,$card]); db()->prepare('UPDATE users SET balance=0 WHERE id=?')->execute([$user['id']]); notify_admins("🏧 برداشت جدید\nکاربر: <code>".h($user['first_name']??$user['username']??$user['id'])."</code>\nمبلغ: <b>".money($amount)."</b>\nاطلاعات:\n".h($card)); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['withdraw_amount'=>$amount]); }
 if ($action === 'custom_code') { $code=normalize_ref_code((string)($input['code']??'')); $min=setting_int('custom_code_min_referrals',3); if((int)$user['referrals_count']<$min) api_out(['ok'=>false,'error'=>'NOT_ENOUGH_REFERRALS','message'=>"حداقل {$min} زیرمجموعه لازم است."],400); if(strlen($code)<4||strlen($code)>20) api_out(['ok'=>false,'error'=>'INVALID_CODE','message'=>'کد باید ۴ تا ۲۰ کاراکتر باشد.'],400); $exists=get_user_by_ref($code); if($exists && (int)$exists['id'] !== (int)$user['id']) api_out(['ok'=>false,'error'=>'CODE_TAKEN','message'=>'این کد قبلاً گرفته شده.'],400); db()->prepare('UPDATE users SET ref_code=? WHERE id=?')->execute([$code,$user['id']]); api_out(dashboard_payload(get_user_by_id((int)$user['id']))); }
 
-if ($action === 'create_order') { $productId=(int)($input['product_id']??0); $variantId=!empty($input['variant_id'])?(int)$input['variant_id']:null; $starsCount=isset($input['stars_count'])?(int)$input['stars_count']:null; try{ $order=create_storefront_order((int)$user['id'],$productId,$variantId,$starsCount); if(!empty($input['use_wallet'])) { try { $order=apply_wallet_to_order((int)$order['id'], (int)$user['id']); } catch(Throwable $we) {} } $wallet=(int)($order['wallet_amount'] ?? 0); $sourceStr = (!empty($authToken) || !empty($input['is_web'])) ? 'وب‌سایت 🌐' : 'Mini App 📱'; $userStr = !empty($user['telegram_id']) ? "<code>{$user['telegram_id']}</code>" : "<code>#{$user['id']} (".h($user['username']??$user['email']??'وب').")</code>"; notify_admins("🧾 سفارش جدید از {$sourceStr}\nسفارش: <code>#{$order['id']}</code>\nکاربر: {$userStr}\nمحصول: <b>".h(order_catalog_display_name($order))."</b>\nمبلغ قابل پرداخت: <b>".money($order['final_amount'])."</b>".($wallet>0?"\nپرداخت از کیف پول: <b>".money($wallet)."</b>":"")); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'محصول یا پلن پیدا نشد یا غیرفعال است.'],404); } }
-if ($action === 'apply_wallet') { try{ $order=apply_wallet_to_order((int)($input['order_id']??0),(int)$user['id']); if(normalize_order_status($order['status'])==='payment_confirmed') notify_admins("💰 پرداخت کامل با کیف پول\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>".h($user['username']??$user['telegram_id']??$user['id'])."</code>\nمحصول: <b>".h(order_catalog_display_name($order))."</b>"); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'امکان استفاده از کیف پول برای این سفارش نیست یا موجودی کافی نیست.'],400); } }
-if ($action === 'select_payment_method') { try{ $order=order_set_payment_method((int)($input['order_id']??0),(int)$user['id'],(string)($input['method']??''), is_array($input['details']??null)?$input['details']:[]); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'روش پرداخت قابل ثبت نیست یا سفارش پیدا نشد.'],400); } }
-if ($action === 'start_stars_invoice') { try{ $order=order_set_payment_method((int)($input['order_id']??0),(int)$user['id'],'stars',[]); $res=send_stars_invoice_for_order($order); if(empty($res['ok'])) api_out(['ok'=>false,'error'=>'STARS_INVOICE_FAILED','message'=>'ارسال فاکتور Stars ممکن نشد. تنظیمات بات یا تلگرام را بررسی کن.'],400); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload(order_by_id((int)$order['id'])), 'stars_invoice_sent'=>true]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'امکان ساخت فاکتور Stars نیست.'],400); } }
-if ($action === 'select_crypto_wallet' || $action === 'start_crypto_payment') { try{ $order=start_crypto_payment((int)($input['order_id']??0),(int)$user['id'],(int)($input['wallet_id']??0)); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'امکان انتخاب کیف پول رمزارز نیست. نرخ/ولت را در پنل ادمین بررسی کن.'],400); } }
-if ($action === 'submit_crypto_hash') { try{ $order=submit_crypto_hash((int)($input['order_id']??0),(int)$user['id'],(string)($input['tx_hash']??'')); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ثبت TXID انجام نشد. هش را بررسی کن.'],400); } }
-if ($action === 'check_crypto_payment') { try{ crypto_verify_order((int)($input['order_id']??0)); api_out(dashboard_payload(get_user_by_id((int)$user['id']))); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'بررسی پرداخت انجام نشد؛ کمی بعد دوباره تلاش کن.'],400); } }
+if ($action === 'create_order') { $productId=(int)($input['product_id']??0); $variantId=!empty($input['variant_id'])?(int)$input['variant_id']:null; $starsCount=isset($input['stars_count'])?(int)$input['stars_count']:null; try{ $order=create_storefront_order((int)$user['id'],$productId,$variantId,$starsCount); if(!empty($input['use_wallet'])) { try { $order=apply_wallet_to_order((int)$order['id'], (int)$user['id']); } catch(Throwable $we) {} } $wallet=(int)($order['wallet_amount'] ?? 0); $sourceStr = (!empty($authToken) || !empty($input['is_web'])) ? 'وب‌سایت 🌐' : 'Mini App 📱'; $userStr = !empty($user['telegram_id']) ? "<code>{$user['telegram_id']}</code>" : "<code>#{$user['id']} (".h($user['username']??$user['email']??'وب').")</code>"; notify_admins("🧾 سفارش جدید از {$sourceStr}\nسفارش: <code>#{$order['id']}</code>\nکاربر: {$userStr}\nمحصول: <b>".h(order_catalog_display_name($order))."</b>\nمبلغ قابل پرداخت: <b>".money($order['final_amount'])."</b>".($wallet>0?"\nپرداخت از کیف پول: <b>".money($wallet)."</b>":"")); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'محصول یا پلن پیدا نشد یا غیرفعال است.'],404); } }
+if ($action === 'apply_wallet') { try{ $order=apply_wallet_to_order((int)($input['order_id']??0),(int)$user['id']); if(normalize_order_status($order['status'])==='payment_confirmed') notify_admins("💰 پرداخت کامل با کیف پول\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>".h($user['username']??$user['telegram_id']??$user['id'])."</code>\nمحصول: <b>".h(order_catalog_display_name($order))."</b>"); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'امکان استفاده از کیف پول برای این سفارش نیست یا موجودی کافی نیست.'],400); } }
+if ($action === 'select_payment_method') { try{ $order=order_set_payment_method((int)($input['order_id']??0),(int)$user['id'],(string)($input['method']??''), is_array($input['details']??null)?$input['details']:[]); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'روش پرداخت قابل ثبت نیست یا سفارش پیدا نشد.'],400); } }
+if ($action === 'start_stars_invoice') { try{ $order=order_set_payment_method((int)($input['order_id']??0),(int)$user['id'],'stars',[]); $res=send_stars_invoice_for_order($order); if(empty($res['ok'])) api_out(['ok'=>false,'error'=>'STARS_INVOICE_FAILED','message'=>'ارسال فاکتور Stars ممکن نشد. تنظیمات بات یا تلگرام را بررسی کن.'],400); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload(order_by_id((int)$order['id'])), 'stars_invoice_sent'=>true]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'امکان ساخت فاکتور Stars نیست.'],400); } }
+if ($action === 'select_crypto_wallet' || $action === 'start_crypto_payment') { try{ $order=start_crypto_payment((int)($input['order_id']??0),(int)$user['id'],(int)($input['wallet_id']??0)); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'امکان انتخاب کیف پول رمزارز نیست. نرخ/ولت را در پنل ادمین بررسی کن.'],400); } }
+if ($action === 'submit_crypto_hash') { try{ $order=submit_crypto_hash((int)($input['order_id']??0),(int)$user['id'],(string)($input['tx_hash']??'')); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ثبت TXID انجام نشد. هش را بررسی کن.'],400); } }
+if ($action === 'check_crypto_payment') { try{ $oid=(int)($input['order_id']??0);$o=order_by_id($oid);if(!$o||(int)$o['user_id']!==(int)$user['id'])throw new RuntimeException('ORDER_NOT_FOUND');crypto_verify_order($oid); api_out(dashboard_payload(get_user_by_id((int)$user['id']))); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'بررسی پرداخت انجام نشد؛ کمی بعد دوباره تلاش کن.'],400); } }
 if ($action === 'apply_coupon') { try{ $order=apply_coupon_to_order((int)($input['order_id']??0),(int)$user['id'],(string)($input['code']??'')); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>'INVALID_COUPON','message'=>'کد تخفیف معتبر نیست یا برای این سفارش قابل استفاده نیست.'],400); } }
 if ($action === 'submit_receipt') { $orderId=(int)($input['order_id']??0); $note=trim((string)($input['note']??'')); if(mb_strlen($note)<3) api_out(['ok'=>false,'error'=>'EMPTY_RECEIPT','message'=>'توضیح رسید پرداخت را کامل‌تر بنویس.'],400); $fileId = null; if (!empty($input['receipt_b64'])) { $raw=(string)$input['receipt_b64']; if (strlen($raw) > 8*1024*1024) api_out(['ok'=>false,'error'=>'RECEIPT_TOO_LARGE','message'=>'حجم رسید بیشتر از حد مجاز است.'],400); if (!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,#i',$raw,$mm)) api_out(['ok'=>false,'error'=>'INVALID_RECEIPT_TYPE','message'=>'فرمت رسید باید JPG، PNG یا WEBP باشد.'],400); $b64=preg_replace('#^data:image/(jpeg|jpg|png|webp);base64,#i','',$raw); $bin=base64_decode($b64,true); if ($bin && strlen($bin)>100 && strlen($bin)<=5*1024*1024) { $fi=new finfo(FILEINFO_MIME_TYPE); $mime=$fi->buffer($bin); $ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null; if(!$ext) api_out(['ok'=>false,'error'=>'INVALID_RECEIPT_CONTENT','message'=>'محتوای فایل تصویر معتبر نیست.'],400); $dir=__DIR__.'/uploads/receipts/'.date('Ymd'); if(!is_dir($dir)) @mkdir($dir,0775,true); $relative='uploads/receipts/'.date('Ymd').'/r_'.bin2hex(random_bytes(12)).'.'.$ext; file_put_contents(__DIR__.'/'.$relative,$bin,LOCK_EX); $fileId=$relative; } } try{ $order=submit_order_receipt($orderId,(int)$user['id'],$note,$fileId); $sourceStr = (!empty($authToken) || !empty($input['is_web'])) ? 'وب‌سایت 🌐' : 'Mini App 📱'; $adminText = order_admin_card($order)."\n\nرسید/توضیح پرداخت از {$sourceStr}:\n".h($note); foreach (app_config('ADMIN_IDS', []) as $aid) { if ($fileId) { if (str_starts_with($fileId, 'uploads/')) { $path = __DIR__ . '/' . $fileId; if (file_exists($path)) { tg('sendPhoto', ['chat_id' => $aid, 'photo' => new CURLFile($path), 'caption' => $adminText, 'parse_mode' => 'HTML']); } else { send_msg($aid, $adminText); } } else { tg('sendPhoto', ['chat_id' => $aid, 'photo' => $fileId, 'caption' => $adminText, 'parse_mode' => 'HTML']); } } else { send_msg($aid, $adminText); } } api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>'ORDER_NOT_FOUND','message'=>'سفارش پیدا نشد یا قابل پرداخت نیست.'],400); } }
 if ($action === 'customer_order_note') { $orderId=(int)($input['order_id']??0); $note=trim((string)($input['note']??'')); if(mb_strlen($note)<2) api_out(['ok'=>false,'error'=>'EMPTY_NOTE','message'=>'یادداشت را کامل‌تر بنویس.'],400); try{ $order=update_order_customer_note($orderId,(int)$user['id'],$note); $sourceStr = (!empty($authToken) || !empty($input['is_web'])) ? 'وب‌سایت 🌐' : 'Mini App 📱'; notify_admins("📝 یادداشت مشتری از {$sourceStr} برای سفارش <code>#{$orderId}</code>\nکاربر: <code>".h($user['username']??$user['telegram_id']??$user['id'])."</code>\n\n".h($note)); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>'ORDER_NOT_FOUND','message'=>'سفارش پیدا نشد.'],400); } }
@@ -508,6 +499,7 @@ if ($action === 'cancel_order') { $orderId=(int)($input['order_id']??0); $order=
 if ($action === 'hide_order') { $orderId=(int)($input['order_id']??0); if(!hide_user_order($orderId,(int)$user['id'])) api_out(['ok'=>false,'error'=>'ORDER_LOCKED','message'=>'فقط سفارش‌های لغوشده، ردشده یا مرجوع‌شده قابل حذف از لیست هستند.'],400); api_out(dashboard_payload(get_user_by_id((int)$user['id']))); }
 if ($action === 'clear_canceled_orders') { $count=hide_user_cleanup_orders((int)$user['id']); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['cleared'=>$count]); }
 
+if(in_array($action,["admin_add_product", "admin_update_product", "admin_toggle_product", "admin_delete_product", "admin_hard_delete_product", "admin_add_category", "admin_update_category", "admin_delete_category", "admin_hard_delete_category", "admin_reorder_products", "admin_reorder_categories", "admin_add_variant", "admin_update_variant", "admin_delete_variant", "admin_hard_delete_variant"],true))api_out(['ok'=>false,'error'=>'LEGACY_API_DISABLED','message'=>'مدیریت مستقیم Products/Variants قدیمی غیرفعال شده؛ از Catalog Studio استفاده کنید.'],410);
 // Admin Mini Panel actions
 if ($action === 'admin_summary') { require_admin($user); api_out(admin_payload()); }
 if ($action === 'admin_catalog_preview') {
@@ -518,13 +510,13 @@ if ($action === 'admin_catalog_apply') {
     require_admin($user);
     if (strtoupper(trim((string)($input['confirm'] ?? ''))) !== 'APPLY') api_out(['ok'=>false,'message'=>'برای اعمال Migration باید Preview را تأیید کنی.'],400);
     try { $result=catalog_apply_legacy_mapping(); log_admin_action((int)$user['telegram_id'],'catalog_v2_apply','catalog',0,'legacy mapping applied'); api_out(admin_payload()+['catalog_result'=>$result]); }
-    catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'اعمال کاتالوگ انجام نشد؛ دیتای Legacy دست‌نخورده باقی ماند.'],400); }
+    catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'اعمال کاتالوگ انجام نشد؛ دیتای Legacy دست‌نخورده باقی ماند.'],400); }
 }
 if ($action === 'admin_catalog_apply_one') {
     require_admin($user); $legacyId=(int)($input['legacy_product_id']??0);
     if($legacyId<=0 || strtoupper(trim((string)($input['confirm']??'')))!=='APPLY') api_out(['ok'=>false,'message'=>'تأیید این مورد لازم است.'],400);
     try{$result=catalog_apply_legacy_product($legacyId);log_admin_action((int)$user['telegram_id'],'catalog_v2_apply_one','product',$legacyId,'manual mapping');api_out(admin_payload()+['catalog_result'=>$result]);}
-    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'نگاشت دستی این مورد انجام نشد.'],400);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'نگاشت دستی این مورد انجام نشد.'],400);}
 }
 if ($action === 'admin_catalog_move_group') {
     require_admin($user); $gid=(int)($input['group_id']??0); $sid=(int)($input['service_id']??0);
@@ -537,48 +529,48 @@ if ($action === 'admin_catalog_move_plan') {
     catalog_move_plan($pid,$gid); log_admin_action((int)$user['telegram_id'],'catalog_move_plan','service_plan',$pid,'to group '.$gid); api_out(admin_payload());
 }
 if ($action === 'admin_catalog_save_category') {
-    require_admin($user); try{$id=catalog_save_category($input);log_admin_action((int)$user['telegram_id'],'catalog_save_category','store_category',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ذخیره دسته فروشگاه ناموفق بود.'],400);}
+    require_admin($user); try{$id=catalog_save_category($input);log_admin_action((int)$user['telegram_id'],'catalog_save_category','store_category',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ذخیره دسته فروشگاه ناموفق بود.'],400);}
 }
 if ($action === 'admin_catalog_add_service') {
-    require_admin($user); try{$id=catalog_create_service($input);log_admin_action((int)$user['telegram_id'],'catalog_add_service','service',$id,(string)($input['name']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت سرویس ناموفق بود.'],400);}
+    require_admin($user); try{$id=catalog_create_service($input);log_admin_action((int)$user['telegram_id'],'catalog_add_service','service',$id,(string)($input['name']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ساخت سرویس ناموفق بود.'],400);}
 }
 if ($action === 'admin_catalog_add_group') {
-    require_admin($user); try{$id=catalog_create_group($input);log_admin_action((int)$user['telegram_id'],'catalog_add_group','service_group',$id,(string)($input['name']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت زیرسرویس ناموفق بود.'],400);}
+    require_admin($user); try{$id=catalog_create_group($input);log_admin_action((int)$user['telegram_id'],'catalog_add_group','service_group',$id,(string)($input['name']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ساخت زیرسرویس ناموفق بود.'],400);}
 }
 if ($action === 'admin_catalog_add_plan') {
-    require_admin($user); try{$id=catalog_create_plan($input);log_admin_action((int)$user['telegram_id'],'catalog_add_plan','service_plan',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت پلن ناموفق بود.'],400);}
+    require_admin($user); try{$id=catalog_create_plan($input);log_admin_action((int)$user['telegram_id'],'catalog_add_plan','service_plan',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ساخت پلن ناموفق بود.'],400);}
 }
 if ($action === 'admin_catalog_save_blueprint') {
     require_admin($user);
-    try{$r=catalog_save_blueprint($input);log_admin_action((int)$user['telegram_id'],'catalog_save_blueprint','service',(int)($r['service_id']??0),'wizard create/edit');api_out(admin_payload()+['catalog_result'=>$r]);}
-    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره سرویس انجام نشد.'],400);}
+    try{$input['_admin_tid']=(int)$user['telegram_id'];$r=catalog_save_blueprint($input);log_admin_action((int)$user['telegram_id'],'catalog_save_blueprint','service',(int)($r['service_id']??0),'wizard create/edit');api_out(admin_payload()+['catalog_result'=>$r]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'ذخیره سرویس انجام نشد.')],400);}
 }
 if ($action === 'admin_catalog_undo') {
     require_admin($user);
-    try{$meta=catalog_undo_meta();$r=catalog_undo_last();log_admin_action((int)$user['telegram_id'],'catalog_undo','service',(int)($r['service_id']??0),'undo last catalog change');api_out(admin_payload()+['catalog_undo_result'=>$r,'catalog_undo_meta'=>$meta]);}
-    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'بازگشت تغییر انجام نشد.'],400);}
+    try{$meta=catalog_undo_meta((int)$user['telegram_id']);$r=catalog_undo_last((int)$user['telegram_id']);log_admin_action((int)$user['telegram_id'],'catalog_undo','service',(int)($r['service_id']??0),'undo last catalog change');api_out(admin_payload()+['catalog_undo_result'=>$r,'catalog_undo_meta'=>$meta]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'بازگشت تغییر انجام نشد.')],400);}
 }
 if ($action === 'admin_catalog_save_service') {
     require_admin($user);
     try{$id=catalog_save_service($input);log_admin_action((int)$user['telegram_id'],'catalog_save_service','service',$id,(string)($input['name']??''));api_out(admin_payload()+['catalog_saved_id'=>$id]);}
-    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره سرویس انجام نشد.'],400);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'ذخیره سرویس انجام نشد.')],400);}
 }
 if ($action === 'admin_catalog_save_group') {
     require_admin($user);
     try{$id=catalog_save_group($input);log_admin_action((int)$user['telegram_id'],'catalog_save_group','service_group',$id,(string)($input['name']??''));api_out(admin_payload()+['catalog_saved_id'=>$id]);}
-    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره زیرسرویس انجام نشد.'],400);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'ذخیره زیرسرویس انجام نشد.')],400);}
 }
 if ($action === 'admin_catalog_save_plan') {
     require_admin($user);
     try{$id=catalog_save_plan($input);log_admin_action((int)$user['telegram_id'],'catalog_save_plan','service_plan',$id,(string)($input['title']??''));api_out(admin_payload()+['catalog_saved_id'=>$id]);}
-    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره پلن انجام نشد.'],400);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'ذخیره پلن انجام نشد.')],400);}
 }
 if ($action === 'admin_catalog_toggle_service') {
     require_admin($user);$id=(int)($input['service_id']??0);$q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$id]);$s=$q->fetch();if(!$s)api_out(['ok'=>false,'message'=>'سرویس پیدا نشد.'],404);
     $active=(int)$s['is_active']?0:1;catalog_save_service(['id'=>$id,'name'=>$s['name'],'category_id'=>$s['category_id'],'description'=>$s['description'],'image_url'=>$s['image_url'],'theme'=>$s['theme'],'badge'=>$s['badge'],'is_featured'=>$s['is_featured'],'is_active'=>$active,'sort_order'=>$s['sort_order']]);log_admin_action((int)$user['telegram_id'],'catalog_toggle_service','service',$id,$active?'enabled':'disabled');api_out(admin_payload());
 }
 if ($action === 'admin_catalog_fast_create') {
-    require_admin($user); try{$r=catalog_fast_create($input);log_admin_action((int)$user['telegram_id'],'catalog_fast_create','catalog',(int)($r['service_id']??0),(string)($input['service_name']??''));api_out(admin_payload()+['fast_create'=>$r]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت سریع کاتالوگ ناموفق بود.'],400);}
+    require_admin($user); try{$input['_admin_tid']=(int)$user['telegram_id'];$r=catalog_fast_create($input);log_admin_action((int)$user['telegram_id'],'catalog_fast_create','catalog',(int)($r['service_id']??0),(string)($input['service_name']??''));api_out(admin_payload()+['fast_create'=>$r]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ساخت سریع کاتالوگ ناموفق بود.'],400);}
 }
 if ($action === 'admin_purchase_reward') {
     require_admin($user);
@@ -608,7 +600,7 @@ if ($action === 'admin_purchase_reward') {
         'chat_id' => $referrer['telegram_id'],
         'text' => "🎁 زیرمجموعه شما خرید انجام داد.\nپورسانت: <b>".number_format($amount)." تومان</b>\nسطح شما: {$vip['emoji']} {$vip['fa']}",
         'parse_mode' => 'HTML',
-        'reply_markup' => json_encode(main_menu_keyboard(is_admin($referrer['telegram_id'])))
+        'reply_markup' => json_encode(main_menu_keyboard(is_full_admin($referrer['telegram_id'])))
     ]);
 
     api_out(admin_payload() + ['message' => $msgAdmin, 'amount' => $amount, 'referrer' => $refName]);
@@ -622,134 +614,11 @@ if ($action === 'admin_save_vip_rates') {
     }
     api_out(admin_payload() + ['message' => 'نرخ‌های VIP با موفقیت به روز شد.']);
 }
-if ($action === 'admin_broadcast') { 
-    require_admin($user); 
-    $text = trim((string)($input['text'] ?? '')); 
-    if ($text === '' && empty($input['media_b64'])) api_out(['ok'=>false, 'message'=>'متن پیام یا فایل الزامی است.'], 400); 
-    
-    $ids = db()->query('SELECT telegram_id FROM users')->fetchAll(PDO::FETCH_COLUMN); 
-    
-    $adminTid = $user['telegram_id'];
-    $fileId = null;
-    $method = 'sendMessage';
-    $field = 'text';
-
-    if (!empty($input['media_b64'])) {
-        $parts = explode(',', $input['media_b64']);
-        $b64 = count($parts) === 2 ? $parts[1] : $parts[0];
-        $decoded = base64_decode($b64);
-        if ($decoded) {
-            $filename = !empty($input['filename']) ? preg_replace('/[^a-zA-Z0-9.\-_]/', '', $input['filename']) : 'file.dat';
-            if (!$filename) $filename = 'media.file';
-            
-            $tmpPath = sys_get_temp_dir() . '/' . uniqid('bc_') . '_' . $filename;
-            file_put_contents($tmpPath, $decoded);
-            
-            $mime = mime_content_type($tmpPath) ?: 'application/octet-stream';
-            $method = 'sendDocument';
-            $field = 'document';
-            if (strpos($mime, 'image/') === 0 && strpos($mime, 'svg') === false && strpos($mime, 'gif') === false) {
-                $method = 'sendPhoto';
-                $field = 'photo';
-            } elseif (strpos($mime, 'video/') === 0 || strpos($mime, 'gif') !== false) {
-                $method = 'sendVideo';
-                $field = 'video';
-            }
-
-            $token = app_config('BOT_TOKEN');
-            $url = "https://api.telegram.org/bot{$token}/{$method}";
-            
-            $postFields = [
-                'chat_id' => $adminTid,
-                $field => new CURLFile($tmpPath, $mime, $filename),
-                'parse_mode' => 'HTML'
-            ];
-            if ($text !== '') $postFields['caption'] = $text;
-
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => $postFields
-            ]);
-            $res = curl_exec($ch);
-            curl_close($ch);
-            
-            @unlink($tmpPath); // Delete immediately
-            
-            $resData = json_decode($res ?: '{}', true);
-            if (!empty($resData['ok']) && !empty($resData['result']['message_id'])) {
-                $msg = $resData['result'];
-                if (isset($msg['photo'])) {
-                    $fileId = end($msg['photo'])['file_id'];
-                    $method = 'sendPhoto';
-                    $field = 'photo';
-                } elseif (isset($msg['video'])) {
-                    $fileId = $msg['video']['file_id'];
-                    $method = 'sendVideo';
-                    $field = 'video';
-                } elseif (isset($msg['document'])) {
-                    $fileId = $msg['document']['file_id'];
-                    $method = 'sendDocument';
-                    $field = 'document';
-                }
-                
-                // Admin already got the message + file, so remove admin from target list
-                $ids = array_filter($ids, fn($id) => $id != $adminTid);
-            } else {
-                api_out(['ok'=>false, 'message'=>'آپلود فایل به تلگرام شکست خورد.'], 500);
-            }
-        } else {
-            api_out(['ok'=>false, 'message'=>'فایل نامعتبر است.'], 400);
-        }
-    }
-
-    $count = count($ids) + ($fileId ? 1 : 0);
-    
-    $response = admin_payload();
-    $response['ok'] = true;
-    $response['message'] = "ارسال پیام همگانی به {$count} نفر شروع شد.";
-    
-    ignore_user_abort(true);
-    set_time_limit(0);
-    
-    if (function_exists('fastcgi_finish_request')) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        session_write_close();
-        fastcgi_finish_request();
-    } else {
-        header('Content-Type: application/json; charset=utf-8');
-        header('Connection: close');
-        ob_start();
-        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $size = ob_get_length();
-        header("Content-Length: $size");
-        ob_end_flush();
-        @ob_flush();
-        flush();
-        session_write_close();
-    }
-    
-    foreach ($ids as $tid) { 
-        if ($fileId) {
-            $data = ['chat_id'=>$tid, $field=>$fileId, 'parse_mode'=>'HTML'];
-            if ($text !== '') $data['caption'] = $text;
-            tg($method, $data);
-        } else {
-            tg('sendMessage', ['chat_id'=>$tid, 'text'=>$text, 'parse_mode'=>'HTML', 'disable_web_page_preview'=>true]); 
-        }
-        usleep(45000); 
-    } 
-    exit;
+if ($action === 'admin_broadcast') {
+    require_admin($user);$text=trim((string)($input['text']??''));if($text===''&&empty($input['media_b64']))api_out(['ok'=>false,'message'=>'متن پیام یا فایل الزامی است.'],400);$fileId=null;$method='sendMessage';$field=null;
+    if(!empty($input['media_b64'])){$parts=explode(',',(string)$input['media_b64']);$decoded=base64_decode(count($parts)===2?$parts[1]:$parts[0],true);if($decoded===false||strlen($decoded)>20*1024*1024)api_out(['ok'=>false,'message'=>'فایل نامعتبر یا بیش از حد بزرگ است.'],400);$filename=preg_replace('/[^a-zA-Z0-9.\-_]/','',(string)($input['filename']??'file.dat'))?:'file.dat';$tmp=sys_get_temp_dir().'/bg_bc_'.bin2hex(random_bytes(6)).'_'.$filename;file_put_contents($tmp,$decoded);$mime=mime_content_type($tmp)?:'application/octet-stream';$method=str_starts_with($mime,'image/')&&!str_contains($mime,'svg')&&!str_contains($mime,'gif')?'sendPhoto':((str_starts_with($mime,'video/')||str_contains($mime,'gif'))?'sendVideo':'sendDocument');$field=['sendPhoto'=>'photo','sendVideo'=>'video','sendDocument'=>'document'][$method];$res=tg($method,['chat_id'=>(int)$user['telegram_id'],$field=>new CURLFile($tmp,$mime,$filename),'caption'=>$text,'parse_mode'=>'HTML']);@unlink($tmp);if(empty($res['ok']))api_out(['ok'=>false,'message'=>'آپلود فایل به تلگرام شکست خورد.'],500);$msg=$res['result']??[];if($field==='photo'){$ph=$msg['photo']??[];$last=$ph?end($ph):null;$fileId=$last['file_id']??null;}else $fileId=$msg[$field]['file_id']??null;if(!$fileId)api_out(['ok'=>false,'message'=>'شناسه فایل تلگرام دریافت نشد.'],500);}
+    $job=queue_broadcast_job((int)$user['telegram_id'],$text,$method,$field,$fileId);log_admin_action((int)$user['telegram_id'],'broadcast_queue','broadcast_job',(int)$job['id'],$job['total_count'].' recipients');api_out(admin_payload()+['broadcast_job'=>$job,'message'=>'ارسال همگانی در صف قرار گرفت و توسط Cron پردازش می‌شود.']);
 }
-if ($action === 'get_receipt_url') { $orderId=(int)($input['order_id']??0); $order=order_by_id($orderId); if(!$order) api_out(['ok'=>false,'error'=>'ORDER_NOT_FOUND','message'=>'سفارش پیدا نشد.'],404); if (!is_admin((int)$user['telegram_id']) && (int)$order['user_id'] !== (int)$user['id']) { api_out(['ok'=>false,'error'=>'FORBIDDEN','message'=>'دسترسی ندارید.'],403); } $fid=trim((string)($order['receipt_file_id']??'')); if($fid==='') api_out(['ok'=>false,'error'=>'NO_RECEIPT_IMAGE','message'=>'این سفارش رسید عکس ندارد.'],400); if (str_starts_with($fid, 'uploads/') || str_starts_with($fid, 'http')) { $url = str_starts_with($fid, 'http') ? $fid : public_url_for_path($fid); } else { $url=telegram_file_to_public_url($fid,'receipts'); } if(!$url) api_out(['ok'=>false,'error'=>'FILE_FETCH_FAILED','message'=>'دریافت فایل رسید ناموفق بود.'],500); api_out(['ok'=>true,'url'=>$url]); }
-if ($action === 'my_referrals') { $refList=user_referrals_list((int)$user['id']); api_out(['ok'=>true,'referrals'=>$refList]); }
-if ($action === 'admin_customer_view') { require_admin($user); $uid=(int)($input['user_id']??0); if(!$uid) api_out(['ok'=>false,'error'=>'USER_ID_REQUIRED','message'=>'user_id الزامی است.'],400); try{ $cv=admin_customer_view($uid); api_out(['ok'=>true]+$cv); }catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'کاربر پیدا نشد.'],404); } }
-if ($action === 'admin_withdraw_action') { require_admin($user); $wid=(int)($input['withdrawal_id']??0); $act=(string)($input['action_type']??$input['act']??''); try{ $list=admin_act_withdrawal($wid,$act); api_out(['ok'=>true,'withdrawals'=>$list]); }catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()],400); } }
-if ($action === 'admin_add_coupon') { require_admin($user); try{ $list=admin_add_coupon((string)($input['code']??''),(string)($input['type']??'percent'),(int)($input['value']??0),(int)($input['max_uses']??0),(string)($input['expires_at']??'')); api_out(['ok'=>true,'coupons'=>$list]); }catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()==='CODE_TAKEN'?'این کد قبلاً استفاده شده.':'خطا در ساخت کد تخفیف.'],400); } }
-if ($action === 'admin_update_coupon') { require_admin($user); $cid=(int)($input['coupon_id']??0); $fields=[]; foreach(['code','type','value','max_uses','is_active','expires_at'] as $f){ if(array_key_exists($f,$input)) $fields[$f]=$input[$f]; } try{ $list=admin_update_coupon($cid,$fields); api_out(['ok'=>true,'coupons'=>$list]); }catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'خطا در ویرایش کد تخفیف.'],400); } }
-if ($action === 'admin_delete_coupon') { require_admin($user); $cid=(int)($input['coupon_id']??0); log_admin_action((int)$user['telegram_id'],'delete_coupon','coupon',$cid); try{ $list=admin_delete_coupon($cid); api_out(['ok'=>true,'coupons'=>$list]); }catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'خطا در حذف کد تخفیف.'],400); } }
 if ($action === 'admin_reorder_products') { require_admin($user); $ids=is_array($input['ordered_ids']??null)?array_map('intval',$input['ordered_ids']):[]; log_admin_action((int)$user['telegram_id'],'reorder_products','products',0,count($ids).' items'); $list=admin_reorder_products($ids); api_out(['ok'=>true,'products'=>$list]); }
 if ($action === 'admin_reorder_categories') { require_admin($user); $ids=is_array($input['ordered_ids']??null)?array_map('intval',$input['ordered_ids']):[]; log_admin_action((int)$user['telegram_id'],'reorder_categories','categories',0,count($ids).' items'); $list=admin_reorder_categories($ids); api_out(['ok'=>true,'categories'=>$list]); }
 if ($action === 'admin_search_orders') { require_admin($user); $s=(string)($input['search']??''); $st=(string)($input['status']??'all'); $list=admin_search_orders($s,$st,80); api_out(['ok'=>true,'orders'=>array_map('order_public_payload',$list)]); }
@@ -797,7 +666,7 @@ if ($action === 'admin_save_settings') {
     if(isset($input['crypto_rate_provider_priority'])) set_setting('crypto_rate_provider_priority', preg_replace('/[^a-z,]/', '', strtolower((string)$input['crypto_rate_provider_priority'])) ?: 'wallex,ramzinex,nobitex');
     if(isset($input['require_contact_auth'])) set_setting('require_contact_auth', bool_input($input['require_contact_auth'])?'1':'0');
     if(isset($input['notify_new_user'])) set_setting('notify_new_user', bool_input($input['notify_new_user'])?'1':'0');
-    if(isset($input['resend_api_key'])) set_setting('resend_api_key', trim((string)$input['resend_api_key']));
+    if(isset($input['resend_api_key'])&&trim((string)$input['resend_api_key'])!=='') set_setting('resend_api_key',trim((string)$input['resend_api_key']));
     if(isset($input['resend_from_email'])) set_setting('resend_from_email', trim((string)$input['resend_from_email']));
     if(isset($input['require_email_verification'])) set_setting('require_email_verification', bool_input($input['require_email_verification'])?'1':'0');
     if(isset($input['spin_referrals_per_chance'])) set_setting('spin_referrals_per_chance', max(1,(int)$input['spin_referrals_per_chance']));
@@ -850,7 +719,7 @@ if ($action === 'admin_refresh_crypto_rates') {
         $result = crypto_refresh_rates_from_providers(true);
         api_out(admin_payload() + ['rate_refresh'=>$result, 'message'=>'نرخ‌ها رفرش شدند و قیمت‌های دلاری محصول‌ها هم به‌روز شد.']);
     } catch (Throwable $e) {
-        api_out(admin_payload() + ['ok'=>false, 'error'=>$e->getMessage(), 'message'=>'رفرش نرخ نوبیتکس انجام نشد؛ نرخ cache یا دستی استفاده می‌شود.'], 400);
+        api_out(admin_payload() + ['ok'=>false, 'error'=>api_exception_code($e), 'message'=>'رفرش نرخ نوبیتکس انجام نشد؛ نرخ cache یا دستی استفاده می‌شود.'], 400);
     }
 }
 
@@ -946,61 +815,37 @@ if ($action === 'admin_archive_order') { require_admin($user); $oid=(int)($input
 if ($action === 'admin_delete_order') { require_admin($user); $oid=(int)($input['order_id']??0); if(!hard_delete_order($oid,true)) api_out(['ok'=>false,'message'=>'حذف کامل فقط برای سفارش‌های لغو/رد/مرجوع‌شده مجاز است.'],400); api_out(admin_payload()); }
 if ($action === 'admin_cleanup_orders') { require_admin($user); $days = array_key_exists('older_days',$input) && $input['older_days'] !== '' ? max(0,(int)$input['older_days']) : null; $count=hard_delete_cleanup_orders($days); api_out(admin_payload() + ['deleted'=>$count]); }
 if ($action === 'admin_order_status') { require_admin($user); $oid=(int)($input['order_id']??0); $status=(string)($input['status']??''); if(!in_array(normalize_order_status($status),['reviewing','payment_confirmed','preparing','rejected','canceled','refunded'],true)) api_out(['ok'=>false,'message'=>'وضعیت معتبر نیست.'],400); $order=update_order_status($oid,$status,order_status_fa($status),(string)($input['note']??''),true); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); api_out(admin_payload()); }
-if ($action === 'admin_deliver_order') { require_admin($user); $oid=(int)($input['order_id']??0); $delivery=trim((string)($input['delivery']??'')); if($delivery==='') api_out(['ok'=>false,'message'=>'متن تحویل خالی است.'],400); $order=deliver_order($oid,$delivery); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); send_msg($order['telegram_id'], "📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h($order['product_name'])."</b>\n\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>", main_menu_keyboard(is_admin($order['telegram_id']))); api_out(admin_payload()); }
+if ($action === 'admin_deliver_order') { require_admin($user); $oid=(int)($input['order_id']??0); $delivery=trim((string)($input['delivery']??'')); if($delivery==='') api_out(['ok'=>false,'message'=>'متن تحویل خالی است.'],400); $order=deliver_order($oid,$delivery); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); send_msg($order['telegram_id'], "📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h($order['product_name'])."</b>\n\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>", main_menu_keyboard(is_full_admin($order['telegram_id']))); api_out(admin_payload()); }
 if ($action === 'admin_set_service_delivery') {
     require_admin($user);
     $oid=(int)($input['order_id']??0); $url=trim((string)($input['delivery_url']??''));
     $title=trim((string)($input['delivery_title']??'مدیریت سرویس')); $note=trim((string)($input['delivery_note']??''));
     if($oid<=0 || $url==='') api_out(['ok'=>false,'message'=>'شماره سفارش و لینک HTTPS سرویس الزامی است.'],400);
     try { $order=set_order_service_delivery($oid,$url,$title,$note,true); }
-    catch(Throwable $e){ $code=$e->getMessage(); $msg=str_contains($code,'HTTPS')?'لینک سرویس باید با https:// شروع شود.':(str_contains($code,'HOST_BLOCKED')?'آدرس‌های localhost، شبکه خصوصی یا رزروشده برای تحویل سرویس مجاز نیستند.':'لینک سرویس معتبر نیست.'); api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400); }
+    catch(Throwable $e){ $code=api_exception_code($e,'SERVICE_URL_INVALID'); $msg=str_contains($code,'HTTPS')?'لینک سرویس باید با https:// شروع شود.':(str_contains($code,'HOST_BLOCKED')?'آدرس‌های localhost، شبکه خصوصی یا رزروشده برای تحویل سرویس مجاز نیستند.':'لینک سرویس معتبر نیست.'); api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400); }
     if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404);
-    if(!empty($order['telegram_id'])) send_msg((int)$order['telegram_id'], "✅ سرویس سفارش <code>#{$oid}</code> آماده شد.\nبرای مشاهده یا کپی لینک، وارد «سفارش‌های من» شوید.", main_menu_keyboard(is_admin((int)$order['telegram_id'])));
+    if(!empty($order['telegram_id'])) send_msg((int)$order['telegram_id'], "✅ سرویس سفارش <code>#{$oid}</code> آماده شد.\nبرای مشاهده یا کپی لینک، وارد «سفارش‌های من» شوید.", main_menu_keyboard(is_full_admin((int)$order['telegram_id'])));
     api_out(admin_payload());
 }
 if ($action === 'admin_order_note') { require_admin($user); $oid=(int)($input['order_id']??0); $note=trim((string)($input['note']??'')); $order=order_by_id($oid); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); db()->prepare('UPDATE orders SET admin_note=? WHERE id=?')->execute([$note, $oid]); add_order_event($oid, 'note', 'یادداشت داخلی ثبت/ویرایش شد', $note, false); api_out(admin_payload()); }
 
 if ($action === 'admin_add_balance') { require_admin($user); $tid=(int)($input['telegram_id']??0); $amount=(int)($input['amount']??0); if($tid<=0 || $amount===0) api_out(['ok'=>false,'message'=>'مبلغ و آیدی نامعتبر'],400); $u=get_user_by_tid($tid); if(!$u) api_out(['ok'=>false,'message'=>'کاربر پیدا نشد'],404); add_balance((int)$u['id'], $amount, 'admin_adjust', 'تغییر موجودی توسط ادمین', null); api_out(admin_payload()); }
-if ($action === 'admin_ban_user') { require_admin($user); $tid=(int)($input['telegram_id']??0); if($tid<=0) api_out(['ok'=>false,'message'=>'آیدی نامعتبر'],400); db()->prepare('UPDATE users SET is_banned=1 WHERE telegram_id=?')->execute([$tid]); api_out(admin_payload()); }
+if ($action === 'admin_ban_user') { require_admin($user); $tid=(int)($input['telegram_id']??0); if($tid<=0) api_out(['ok'=>false,'message'=>'آیدی نامعتبر'],400); db()->prepare('UPDATE users SET is_banned=1,auth_token=NULL,auth_token_hash=NULL,auth_token_expires_at=NULL WHERE telegram_id=?')->execute([$tid]); api_out(admin_payload()); }
 
 if ($action === 'delete_my_account') {
-    $webToken = $_SERVER['HTTP_X_WEB_TOKEN'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : null);
-    $initData = (string)($input['initData'] ?? '');
-    $user = get_authenticated_user($initData, $webToken);
-    if (!$user) {
-        api_out(['ok'=>false, 'error'=>'UNAUTHORIZED', 'message'=>'نشست شما منقضی شده است.'], 401);
-    }
     delete_user_account((int)$user['id']);
-    api_out(['ok'=>true, 'message'=>'حساب کاربری شما و اطلاعات مرتبط با موفقیت به طور کامل حذف شد.']);
+    api_clear_session_cookie();api_out(['ok'=>true,'message'=>'دسترسی حساب و اطلاعات هویتی شما حذف شد؛ سوابق سفارش برای حسابداری به‌صورت ناشناس نگهداری می‌شود.']);
 }
 
 if ($action === 'admin_get_user') {
-    $webToken = $_SERVER['HTTP_X_WEB_TOKEN'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : null);
-    $initData = (string)($input['initData'] ?? '');
-    $authUser = get_authenticated_user($initData, $webToken);
-    if (!$authUser || !is_admin((int)($authUser['telegram_id'] ?? 0))) {
-        api_out(['ok'=>false, 'error'=>'ADMIN_ONLY', 'message'=>'دسترسی غیرمجاز.'], 403);
-    }
-    $targetUserId = (int)($input['user_id'] ?? 0);
-    $targetUser = get_user_by_id($targetUserId);
-    if (!$targetUser) api_out(['ok'=>false, 'error'=>'USER_NOT_FOUND', 'message'=>'کاربر یافت نشد.'], 404);
-    api_out(['ok'=>true, 'user'=>$targetUser]);
+    $targetUserId=(int)($input['user_id']??0);$targetUser=get_user_by_id($targetUserId);if(!$targetUser)api_out(['ok'=>false,'error'=>'USER_NOT_FOUND','message'=>'کاربر یافت نشد.'],404);
+    $safe=$targetUser;unset($safe['password_hash'],$safe['auth_token'],$safe['auth_token_hash'],$safe['email_verification_token']);api_out(['ok'=>true,'user'=>$safe]);
 }
 
 if ($action === 'admin_edit_user') {
-    $webToken = $_SERVER['HTTP_X_WEB_TOKEN'] ?? (isset($_SERVER['HTTP_AUTHORIZATION']) ? str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']) : null);
-    $initData = (string)($input['initData'] ?? '');
-    $authUser = get_authenticated_user($initData, $webToken);
-    if (!$authUser || !is_admin((int)($authUser['telegram_id'] ?? 0))) {
-        api_out(['ok'=>false, 'error'=>'ADMIN_ONLY', 'message'=>'دسترسی غیرمجاز.'], 403);
-    }
-    $targetUserId = (int)($input['user_id'] ?? 0);
-    if ($targetUserId <= 0) {
-        api_out(['ok'=>false, 'error'=>'INVALID_USER_ID', 'message'=>'شناسه کاربر معتبر نیست.'], 400);
-    }
-    admin_update_user_profile($targetUserId, $input);
-    $updatedUser = get_user_by_id($targetUserId);
-    api_out(['ok'=>true, 'user'=>$updatedUser, 'message'=>'اطلاعات کاربر با موفقیت بروزرسانی شد.']);
+    $targetUserId=(int)($input['user_id']??0);if($targetUserId<=0)api_out(['ok'=>false,'error'=>'INVALID_USER_ID','message'=>'شناسه کاربر معتبر نیست.'],400);
+    admin_update_user_profile($targetUserId,$input);$updatedUser=get_user_by_id($targetUserId);$safe=$updatedUser?:[];unset($safe['password_hash'],$safe['auth_token'],$safe['auth_token_hash'],$safe['email_verification_token']);api_out(['ok'=>true,'user'=>$safe,'message'=>'اطلاعات کاربر با موفقیت بروزرسانی شد.']);
 }
+
 
 api_out(['ok'=>false, 'error'=>'UNKNOWN_ACTION'], 404);

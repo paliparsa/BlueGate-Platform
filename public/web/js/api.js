@@ -1,18 +1,16 @@
 (function(){
   const cfg=()=>window.BG_CONFIG||{};
-  const TOKEN='bg_web_token';
-  function token(){return localStorage.getItem(TOKEN)||''}
-  function setToken(v){if(v)localStorage.setItem(TOKEN,v);else localStorage.removeItem(TOKEN)}
+  function token(){return ''}
+  function setToken(_v){localStorage.removeItem('bg_web_token');sessionStorage.removeItem('bg_web_token_session')}
   async function call(action,body={},method='POST'){
     const url=new URL(cfg().API_URL||'../api.php',location.href);
     const headers={'Accept':'application/json','Content-Type':'application/json'};
-    const t=token(); if(t) headers['X-Web-Token']=t;
-    let opts={method,headers,cache:'no-store',credentials:'same-origin'};
+    const t='';
+    let opts={method,headers,cache:'no-store',credentials:'include'};
     if(method==='GET') Object.entries({action,...body}).forEach(([k,v])=>url.searchParams.set(k,String(v)));
-    else opts.body=JSON.stringify({action,...body,authToken:t||undefined,is_web:1});
+    else opts.body=JSON.stringify({action,...body,is_web:1});
     const r=await fetch(url,opts); let data={};
     try{data=await r.json()}catch(_){data={ok:false,message:'پاسخ نامعتبر از سرور'}}
-    if(data.auth_token)setToken(data.auth_token);
     if(!r.ok||data.ok===false){const e=new Error(data.message||data.error||('HTTP '+r.status));e.code=data.error;e.data=data;throw e}
     return data;
   }

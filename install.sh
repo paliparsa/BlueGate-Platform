@@ -27,6 +27,8 @@ DB_NAME="${DB_NAME:-bluegate_platform}"
 DB_USER="${DB_USER:-bluegate_user}"
 DB_PASS="${DB_PASS:-}"
 WEBHOOK_SECRET="${WEBHOOK_SECRET:-}"
+TELEGRAM_WEBHOOK_SECRET="${TELEGRAM_WEBHOOK_SECRET:-}"
+SWAPWALLET_CALLBACK_SECRET="${SWAPWALLET_CALLBACK_SECRET:-}"
 THEME_COLOR="${THEME_COLOR:-#1d9bf0}"
 BRAND_NAME="${BRAND_NAME:-BlueGate}"
 FORCE_JOIN_CHANNEL="${FORCE_JOIN_CHANNEL:-}"
@@ -59,6 +61,12 @@ require_root() {
 
 rand_hex() {
   openssl rand -hex "${1:-16}" 2>/dev/null || date +%s%N | sha256sum | cut -c1-$(( ${1:-16} * 2 ))
+}
+
+derive_webhook_secret() {
+  local purpose="$1"
+  [[ -n "${WEBHOOK_SECRET:-}" ]] || return 1
+  printf '%s' "$purpose" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" 2>/dev/null | awk '{print $NF}'
 }
 
 ask_value() {
@@ -98,7 +106,7 @@ save_env() {
   umask 077
   {
     echo "# BlueGate Platform manager state - generated automatically"
-    for var in DOMAIN BOT_TOKEN BOT_USERNAME ADMIN_IDS SUPPORT_USERNAME REPO_URL APP_DIR DB_NAME DB_USER DB_PASS WEBHOOK_SECRET THEME_COLOR BRAND_NAME FORCE_JOIN_CHANNEL ENABLE_SSL SSL_EMAIL RESEND_API_KEY RESEND_FROM_EMAIL; do
+    for var in DOMAIN BOT_TOKEN BOT_USERNAME ADMIN_IDS SUPPORT_USERNAME REPO_URL APP_DIR DB_NAME DB_USER DB_PASS WEBHOOK_SECRET TELEGRAM_WEBHOOK_SECRET SWAPWALLET_CALLBACK_SECRET THEME_COLOR BRAND_NAME FORCE_JOIN_CHANNEL ENABLE_SSL SSL_EMAIL RESEND_API_KEY RESEND_FROM_EMAIL; do
       printf '%s=%q\n' "$var" "${!var:-}"
     done
   } > "$ENV_FILE"
@@ -142,6 +150,8 @@ try_extract_php_config() {
   [[ -z "$DB_USER" ]] && DB_USER="$(extract_string DB_USER)"
   [[ -z "$DB_PASS" ]] && DB_PASS="$(extract_string DB_PASS)"
   [[ -z "$WEBHOOK_SECRET" ]] && WEBHOOK_SECRET="$(extract_string WEBHOOK_SECRET)"
+  [[ -z "$TELEGRAM_WEBHOOK_SECRET" ]] && TELEGRAM_WEBHOOK_SECRET="$(extract_string TELEGRAM_WEBHOOK_SECRET)"
+  [[ -z "$SWAPWALLET_CALLBACK_SECRET" ]] && SWAPWALLET_CALLBACK_SECRET="$(extract_string SWAPWALLET_CALLBACK_SECRET)"
   [[ -z "$THEME_COLOR" ]] && THEME_COLOR="$(extract_string DEFAULT_THEME_COLOR)"
   [[ -z "$BRAND_NAME" ]] && BRAND_NAME="$(extract_string BRAND_NAME)"
   [[ -z "$FORCE_JOIN_CHANNEL" ]] && FORCE_JOIN_CHANNEL="$(extract_string FORCE_JOIN_CHANNEL)"
@@ -157,6 +167,8 @@ collect_settings() {
   try_extract_php_config
   [[ -z "$DB_PASS" ]] && DB_PASS="$(rand_hex 16)"
   [[ -z "$WEBHOOK_SECRET" ]] && WEBHOOK_SECRET="$(rand_hex 20)"
+  [[ -z "$TELEGRAM_WEBHOOK_SECRET" ]] && TELEGRAM_WEBHOOK_SECRET="$(rand_hex 20)"
+  [[ -z "$SWAPWALLET_CALLBACK_SECRET" ]] && SWAPWALLET_CALLBACK_SECRET="$(rand_hex 20)"
 
   ask_value DOMAIN "Domain without https (example: shop.example.com)"
   ask_value BOT_TOKEN "Telegram bot token" "" yes
@@ -168,7 +180,7 @@ collect_settings() {
   ask_value DB_NAME "Database name" "bluegate_platform"
   ask_value DB_USER "Database user" "bluegate_user"
   ask_value DB_PASS "Database password" "" yes
-  ask_value WEBHOOK_SECRET "Webhook secret" "" yes
+  ask_value WEBHOOK_SECRET "Webhook master secret" "" yes
   ask_value BRAND_NAME "Brand name" "BlueGate"
   ask_value THEME_COLOR "Default theme color" "#1d9bf0"
   ask_optional FORCE_JOIN_CHANNEL "Force-join channel (example: @BlueGate)"
@@ -277,6 +289,8 @@ step_config() {
   validate_db_identifier "$DB_USER" || { fail "Invalid DB_USER"; return 1; }
   [[ -n "$DB_PASS" ]] || DB_PASS="$(rand_hex 16)"
   [[ -n "$WEBHOOK_SECRET" ]] || WEBHOOK_SECRET="$(rand_hex 20)"
+  [[ -n "$TELEGRAM_WEBHOOK_SECRET" ]] || TELEGRAM_WEBHOOK_SECRET="$(rand_hex 20)"
+  [[ -n "$SWAPWALLET_CALLBACK_SECRET" ]] || SWAPWALLET_CALLBACK_SECRET="$(rand_hex 20)"
 
   local admin_array public_base mini_url
   admin_array="$(admin_array_php)"
@@ -295,6 +309,8 @@ step_config() {
 
 \$PUBLIC_BASE_URL = '$(php_escape "$public_base")';
 \$WEBHOOK_SECRET = '$(php_escape "$WEBHOOK_SECRET")';
+\$TELEGRAM_WEBHOOK_SECRET = '$(php_escape "$TELEGRAM_WEBHOOK_SECRET")';
+\$SWAPWALLET_CALLBACK_SECRET = '$(php_escape "$SWAPWALLET_CALLBACK_SECRET")';
 \$MINIAPP_URL = '$(php_escape "$mini_url")';
 \$WEB_ALLOWED_ORIGIN = '';
 

@@ -1,7 +1,11 @@
+> **Security build note:** this archive is the Verified-35 variant of v2.2.0. Five previously unverified controls are intentionally excluded; see `RELEASE-NOTES-v2.2.0.md`.
+
 # BlueGate Platform
 
-> نسخه فعلی: **v2.1.0**  
+> نسخه فعلی: **v2.2.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
+
+> **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
 
 ---
 

@@ -11,6 +11,8 @@ $TIMEZONE = 'Europe/Istanbul';
 // Public URLs after installation
 $PUBLIC_BASE_URL = 'https://your-domain.com'; // no trailing slash
 $WEBHOOK_SECRET = 'change-this-random-string';
+$TELEGRAM_WEBHOOK_SECRET = 'change-this-second-random-string'; // Telegram secret_token header only
+$SWAPWALLET_CALLBACK_SECRET = 'change-this-third-random-string'; // SwapWallet callback URL only
 $MINIAPP_URL = 'https://your-domain.com/miniapp/';
 $WEB_ALLOWED_ORIGIN = ''; // optional: only needed if the storefront is hosted on another origin
 

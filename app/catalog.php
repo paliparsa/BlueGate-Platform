@@ -459,21 +459,22 @@ function catalog_service_blueprint_snapshot(int $serviceId): ?array {
     }
     return null;
 }
-function catalog_undo_meta(): array {
-    $raw=setting('catalog_v21_undo_json','');if(!$raw)return ['available'=>false];
+function catalog_undo_key(int $adminTid=0): string { return 'catalog_v21_undo_'.($adminTid>0?$adminTid:'system'); }
+function catalog_undo_meta(int $adminTid=0): array {
+    $raw=setting(catalog_undo_key($adminTid),'');if(!$raw)return ['available'=>false];
     $u=json_decode($raw,true);if(!is_array($u)||empty($u['service_id']))return ['available'=>false];
     return ['available'=>true,'type'=>$u['type']??'restore','service_id'=>(int)$u['service_id'],'service_name'=>$u['service_name']??'سرویس','at'=>$u['at']??''];
 }
-function catalog_undo_last(): array {
-    $raw=setting('catalog_v21_undo_json','');$u=$raw?json_decode($raw,true):null;
+function catalog_undo_last(int $adminTid=0): array {
+    $raw=setting(catalog_undo_key($adminTid),'');$u=$raw?json_decode($raw,true):null;
     if(!is_array($u)||empty($u['service_id']))throw new RuntimeException('تغییر قابل بازگشتی وجود ندارد.');
     $sid=(int)$u['service_id'];
     if(($u['type']??'restore')==='deactivate')catalog_soft_disable_service($sid);
     else{
         $bp=$u['blueprint']??null;if(!is_array($bp))throw new RuntimeException('نسخه قبلی سرویس برای بازگشت موجود نیست.');
-        catalog_save_blueprint(['blueprint'=>$bp,'skip_undo'=>1]);
+        catalog_save_blueprint(['blueprint'=>$bp,'skip_undo'=>1,'_admin_tid'=>$adminTid]);
     }
-    set_setting('catalog_v21_undo_json','');
+    set_setting(catalog_undo_key($adminTid),'');
     return ['ok'=>true,'service_id'=>$sid];
 }
 
@@ -482,7 +483,7 @@ function catalog_save_blueprint(array $d): array {
     if(is_string($bp)){$bp=json_decode($bp,true);if(!is_array($bp))throw new RuntimeException('اطلاعات ویرایش کاتالوگ معتبر نیست.');}
     if(!is_array($bp))throw new RuntimeException('اطلاعات کاتالوگ ناقص است.');
     $serviceId=(int)($bp['id']??0);$mode=(string)($bp['mode']??'grouped');$groups=is_array($bp['groups']??null)?$bp['groups']:[];
-    $skipUndo=!empty($d['skip_undo']);$undoBefore=(!$skipUndo&&$serviceId>0)?catalog_service_blueprint_snapshot($serviceId):null;$wasNew=$serviceId<=0;
+    $skipUndo=!empty($d['skip_undo']);$adminTid=(int)($d['_admin_tid']??0);$undoBefore=(!$skipUndo&&$serviceId>0)?catalog_service_blueprint_snapshot($serviceId):null;$wasNew=$serviceId<=0;
     db()->beginTransaction();
     try{
         $serviceId=catalog_save_service($bp+['id'=>$serviceId]);
@@ -511,10 +512,10 @@ function catalog_save_blueprint(array $d): array {
         db()->commit();
         if(!$skipUndo){
             $undo=$undoBefore?['type'=>'restore','service_id'=>$serviceId,'service_name'=>$undoBefore['name']??($bp['name']??'سرویس'),'blueprint'=>$undoBefore,'at'=>date('Y-m-d H:i:s')]:['type'=>'deactivate','service_id'=>$serviceId,'service_name'=>$bp['name']??'سرویس','at'=>date('Y-m-d H:i:s')];
-            set_setting('catalog_v21_undo_json',json_encode($undo,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            set_setting(catalog_undo_key($adminTid),json_encode($undo,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
         }
     }catch(Throwable $e){if(db()->inTransaction())db()->rollBack();throw $e;}
-    return ['ok'=>true,'service_id'=>$serviceId,'created_groups'=>$madeGroups,'created_plans'=>$madePlans,'catalog'=>catalog_public_payload(),'undo'=>catalog_undo_meta()];
+    return ['ok'=>true,'service_id'=>$serviceId,'created_groups'=>$madeGroups,'created_plans'=>$madePlans,'catalog'=>catalog_public_payload(),'undo'=>catalog_undo_meta($adminTid)];
 }
 
 function catalog_fast_create(array $d): array {
@@ -535,6 +536,6 @@ function catalog_fast_create(array $d): array {
     }
     $visible=array_values(array_filter($groups,fn($g)=>empty($g['is_default'])));$mode=count($visible)?'grouped':'direct';
     if($mode==='direct'&&count($groups)>1)throw new RuntimeException('برای پلن مستقیم فقط یک خط Plans/مستقیم وارد کن.');
-    $r=catalog_save_blueprint(['blueprint'=>['id'=>0,'name'=>$name,'category_id'=>$categoryId,'description'=>$d['description']??'','image_url'=>$d['image_url']??'','theme'=>$d['theme']??'blue','badge'=>$d['badge']??'','is_featured'=>0,'is_active'=>1,'mode'=>$mode,'groups'=>$groups]]);
+    $r=catalog_save_blueprint(['_admin_tid'=>(int)($d['_admin_tid']??0),'blueprint'=>['id'=>0,'name'=>$name,'category_id'=>$categoryId,'description'=>$d['description']??'','image_url'=>$d['image_url']??'','theme'=>$d['theme']??'blue','badge'=>$d['badge']??'','is_featured'=>0,'is_active'=>1,'mode'=>$mode,'groups'=>$groups]]);
     return $r+['groups'=>count($groups),'plans'=>$planCount];
 }

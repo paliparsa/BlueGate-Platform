@@ -231,14 +231,13 @@ function showStatus(text,type='success'){
   _statusTimer=setTimeout(()=>el.classList.add('hidden'),3500);
 }
 async function api(action,payload={}){
-  const authToken = localStorage.getItem('web_token') || '';
-  const body = JSON.stringify({action,initData,authToken,...payload});
+  const body = JSON.stringify({action,initData,...payload});
   const headers = {'Content-Type':'application/json'};
   const candidateEndpoints = ['../api.php', 'api.php', '/api.php'];
   let res = null, data = null, fetchErr = null;
   for (const ep of candidateEndpoints) {
     try {
-      const r = await fetch(ep, {method:'POST', headers, body});
+      const r = await fetch(ep, {method:'POST', headers, body, credentials:'include'});
       if (r.status !== 404) {
         res = r;
         data = await r.json().catch(()=>({}));
@@ -3211,12 +3210,10 @@ function renderTelegramWidget() {
 window.onTelegramWidgetAuth = async function(user) {
   try {
     const res = await api('telegram_login', { auth_data: user });
-    if (res.auth_token) {
-      localStorage.setItem('web_token', res.auth_token);
-      showStatus('ورود با تلگرام موفقیت‌آمیز بود! 🎉');
-      closeAuthModal();
-      location.reload();
-    }
+    localStorage.removeItem('web_token');sessionStorage.removeItem('web_token_session');
+    showStatus('ورود با تلگرام موفقیت‌آمیز بود! 🎉');
+    closeAuthModal();
+    location.reload();
   } catch (err) {
     showStatus(err.message || 'خطا در ورود با تلگرام', 'error');
   }
@@ -3231,7 +3228,7 @@ function initAuthHandlers() {
     if (btn._isGuest === false) {
       if (confirm('آیا می‌خواهید از حساب کاربری خود خارج شوید؟')) {
         try { await api('logout'); } catch(e) {}
-        localStorage.removeItem('web_token');
+        sessionStorage.removeItem('web_token_session');localStorage.removeItem('web_token');
         location.reload();
       }
     } else {
@@ -3271,12 +3268,10 @@ function initAuthHandlers() {
 
     try {
       const res = await api('login', { username, password });
-      if (res.auth_token) {
-        localStorage.setItem('web_token', res.auth_token);
-        showStatus('ورود موفقیت‌آمیز بود!');
-        closeAuthModal();
-        location.reload();
-      }
+      localStorage.removeItem('web_token');sessionStorage.removeItem('web_token_session');
+      showStatus('ورود موفقیت‌آمیز بود!');
+      closeAuthModal();
+      location.reload();
     } catch (err) {
       if (err.requires_email_verification || err.error === 'EMAIL_VERIFICATION_REQUIRED') {
         showOtpVerificationScreen(err.user_id, err.email, err.message);
@@ -3305,12 +3300,10 @@ function initAuthHandlers() {
         showOtpVerificationScreen(res.user_id, res.email, res.message);
         return;
       }
-      if (res.auth_token) {
-        localStorage.setItem('web_token', res.auth_token);
-        showStatus('حساب کاربری با موفقیت ساخته شد 🎉');
-        closeAuthModal();
-        location.reload();
-      }
+      localStorage.removeItem('web_token');sessionStorage.removeItem('web_token_session');
+      showStatus('حساب کاربری با موفقیت ساخته شد 🎉');
+      closeAuthModal();
+      location.reload();
     } catch (err) {
       if (errEl) {
         errEl.textContent = err.message || 'خطا در ثبت‌نام';
@@ -3332,12 +3325,10 @@ function initAuthHandlers() {
 
     try {
       const res = await api('verify_email_otp', { user_id: pendingVerifUserId, otp });
-      if (res.auth_token) {
-        localStorage.setItem('web_token', res.auth_token);
-        showStatus('ایمیل شما تایید شد! 🎉');
-        closeAuthModal();
-        location.reload();
-      }
+      localStorage.removeItem('web_token');sessionStorage.removeItem('web_token_session');
+      showStatus('ایمیل شما تایید شد! 🎉');
+      closeAuthModal();
+      location.reload();
     } catch (err) {
       if (errEl) {
         errEl.textContent = err.message || 'کد تایید نامعتبر است';
