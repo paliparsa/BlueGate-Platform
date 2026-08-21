@@ -1201,3 +1201,8 @@ The storefront, account/auth UI, dashboard/admin and Mini App now use a larger u
 - Accounts without an email can add one with verification of the new address.
 - Web and Mini App use the same secure email-change flow.
 - Pending email-change OTPs are purpose-separated from signup/password-reset OTPs and rate limited.
+
+
+## v2.6.0 Referral Center Refresh
+
+Referral/partner experience redesigned for Web and Mini App with a compact hero, unified stats, referral-tier progress, share sheet, QR, advanced custom-code section and compact referral list.

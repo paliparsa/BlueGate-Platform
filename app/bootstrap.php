@@ -1826,10 +1826,10 @@ function vip_info(int $referrals): array {
     $s = $rates['silver'] ?? ['name'=>'Silver', 'fa'=>'سیلور', 'emoji'=>'🥈', 'min_ref'=>10, 'multiplier'=>1.10];
     $b = $rates['bronze'] ?? ['name'=>'Bronze', 'fa'=>'برنز', 'emoji'=>'🥉', 'min_ref'=>0, 'multiplier'=>1.00];
 
-    if ($referrals >= (int)($d['min_ref'] ?? 100)) return ['name'=>$d['name']??'Diamond', 'fa'=>$d['fa']??'دایموند', 'emoji'=>$d['emoji']??'💎', 'next'=>null, 'multiplier'=>(float)($d['multiplier']??1.5)];
-    if ($referrals >= (int)($g['min_ref'] ?? 50))  return ['name'=>$g['name']??'Gold', 'fa'=>$g['fa']??'گلد', 'emoji'=>$g['emoji']??'🥇', 'next'=>(int)($d['min_ref']??100), 'multiplier'=>(float)($g['multiplier']??1.25)];
-    if ($referrals >= (int)($s['min_ref'] ?? 10))  return ['name'=>$s['name']??'Silver', 'fa'=>$s['fa']??'سیلور', 'emoji'=>$s['emoji']??'🥈', 'next'=>(int)($g['min_ref']??50), 'multiplier'=>(float)($s['multiplier']??1.1)];
-    return ['name'=>$b['name']??'Bronze', 'fa'=>$b['fa']??'برنز', 'emoji'=>$b['emoji']??'🥉', 'next'=>(int)($s['min_ref']??10), 'multiplier'=>(float)($b['multiplier']??1.0)];
+    if ($referrals >= (int)($d['min_ref'] ?? 100)) return ['name'=>$d['name']??'Diamond', 'fa'=>$d['fa']??'دایموند', 'emoji'=>$d['emoji']??'💎', 'min_ref'=>(int)($d['min_ref']??100), 'next'=>null, 'next_name'=>null, 'next_fa'=>null, 'next_emoji'=>null, 'multiplier'=>(float)($d['multiplier']??1.5)];
+    if ($referrals >= (int)($g['min_ref'] ?? 50))  return ['name'=>$g['name']??'Gold', 'fa'=>$g['fa']??'گلد', 'emoji'=>$g['emoji']??'🥇', 'min_ref'=>(int)($g['min_ref']??50), 'next'=>(int)($d['min_ref']??100), 'next_name'=>$d['name']??'Diamond', 'next_fa'=>$d['fa']??'دایموند', 'next_emoji'=>$d['emoji']??'💎', 'multiplier'=>(float)($g['multiplier']??1.25)];
+    if ($referrals >= (int)($s['min_ref'] ?? 10))  return ['name'=>$s['name']??'Silver', 'fa'=>$s['fa']??'سیلور', 'emoji'=>$s['emoji']??'🥈', 'min_ref'=>(int)($s['min_ref']??10), 'next'=>(int)($g['min_ref']??50), 'next_name'=>$g['name']??'Gold', 'next_fa'=>$g['fa']??'گلد', 'next_emoji'=>$g['emoji']??'🥇', 'multiplier'=>(float)($s['multiplier']??1.1)];
+    return ['name'=>$b['name']??'Bronze', 'fa'=>$b['fa']??'برنز', 'emoji'=>$b['emoji']??'🥉', 'min_ref'=>(int)($b['min_ref']??0), 'next'=>(int)($s['min_ref']??10), 'next_name'=>$s['name']??'Silver', 'next_fa'=>$s['fa']??'سیلور', 'next_emoji'=>$s['emoji']??'🥈', 'multiplier'=>(float)($b['multiplier']??1.0)];
 }
 function vip_line(array $user): string {
     $vip = vip_info((int)$user['referrals_count']);
