@@ -1,8 +1,12 @@
+> **v2.3.0 Guided Service Flow:** انتخاب سرویس در موبایل به کارت‌های swipe/snap تبدیل شده، سوییچر فقط بعد از ورود به جزئیات Sticky می‌شود و BluePing حالا مسیر واقعی نوع سرویس → پکیج → تایید سفارش دارد.
+
 > **Security build note:** this archive is the Verified-35 variant of v2.2.0. Five previously unverified controls are intentionally excluded; see `RELEASE-NOTES-v2.2.0.md`.
+> **v2.3.0 Service Navigation UX:** انتخاب کارت سرویس در Storefront حالا مستقیماً با offset صحیح زیر Header/Service Switcher به جزئیات همان سرویس اسکرول می‌کند؛ مخصوصاً روی موبایل دیگر کاربر بالای بخش محصولات رها نمی‌شود.
+>
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.2.1**  
+> نسخه فعلی: **v2.3.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.

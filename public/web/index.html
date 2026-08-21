@@ -8,11 +8,11 @@
   <meta name="description" content="فروشگاه سرویس‌های دیجیتال BlueGate؛ VPN، Telegram Stars و Telegram Premium">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
-  <link rel="stylesheet" href="css/store.css?v=2.2.1">
-  <link rel="stylesheet" href="css/account.css?v=2.2.1">
-  <link rel="stylesheet" href="css/dashboard.css?v=2.2.1">
-  <link rel="stylesheet" href="css/ui-overhaul.css?v=2.2.1">
-  <link rel="stylesheet" href="css/admin-v18.css?v=2.2.1">
+  <link rel="stylesheet" href="css/store.css?v=2.3.0">
+  <link rel="stylesheet" href="css/account.css?v=2.3.0">
+  <link rel="stylesheet" href="css/dashboard.css?v=2.3.0">
+  <link rel="stylesheet" href="css/ui-overhaul.css?v=2.3.0">
+  <link rel="stylesheet" href="css/admin-v18.css?v=2.3.0">
 </head>
 <body>
   <div id="announcement" class="announcement hidden"></div>
@@ -86,16 +86,19 @@
     <section id="products" class="section shell products-section">
       <div class="section-head center-head"><span class="kicker">OUR SERVICES</span><h2>سرویس موردنظرت رو انتخاب کن</h2><p>فقط چیزی که لازم داری را انتخاب کن؛ جزئیات و قیمت همان سرویس نمایش داده می‌شود.</p></div>
 
+      <div class="service-flow" aria-label="مسیر خرید"><span class="active"><b>۱</b> انتخاب سرویس</span><i>←</i><span><b>۲</b> انتخاب گزینه</span><i>←</i><span><b>۳</b> تایید سفارش</span></div>
+
       <div class="product-tabs" role="tablist" aria-label="محصولات">
         <button class="product-tab active" data-target="vpnPanel" data-product="vpn" type="button"><span class="tab-badge">انتخاب پلن</span><span class="tab-icon vpn-icon">🛡️</span><span class="tab-copy"><strong>BluePing VPN</strong><small>اینترنت پایدار برای استفاده روزمره تا حرفه‌ای</small></span><b>مشاهده پلن‌ها ←</b></button>
         <button class="product-tab" data-target="starsPanel" data-product="stars" type="button"><span class="tab-badge gold">تعداد دلخواه</span><span class="tab-icon stars-icon">⭐</span><span class="tab-copy"><strong>Telegram Stars</strong><small>تعداد دلخواه با محاسبه لحظه‌ای قیمت</small></span><b>انتخاب تعداد ←</b></button>
         <button class="product-tab" data-target="premiumPanel" data-product="premium" type="button"><span class="tab-badge purple">۳ • ۶ • ۱۲ ماهه</span><span class="tab-icon premium-icon">✈️</span><span class="tab-copy"><strong>Telegram Premium</strong><small>اشتراک ۳، ۶ و ۱۲ ماهه تلگرام</small></span><b>مشاهده پلن‌ها ←</b></button>
       </div>
+      <div class="service-swipe-hint" aria-hidden="true"><span>↔</span> کارت‌ها رو بکش و سرویس دیگه رو ببین</div>
 
-      <div class="service-nav-wrap"><div class="service-nav" id="serviceNav"><button class="active" data-service="vpn">VPN</button><button data-service="stars">Stars</button><button data-service="premium">Premium</button></div></div>
+      <div class="service-nav-wrap" aria-hidden="true"><div class="service-nav" id="serviceNav" role="tablist" aria-label="تعویض سریع سرویس"><button class="active" data-service="vpn" role="tab">VPN</button><button data-service="stars" role="tab">Stars</button><button data-service="premium" role="tab">Premium</button></div></div>
 
       <div id="vpnPanel" class="product-panel active">
-        <div class="panel-intro"><div><span class="kicker">BLUEPING VPN</span><h3>نوع سرویس رو انتخاب کن</h3><p>پکیج و مبلغ نهایی داخل فاکتور تایید سفارش انتخاب می‌شود؛ تمیزتر و سریع‌تر.</p></div><span class="step-badge">انتخاب + تایید</span></div>
+        <div class="panel-intro"><div><span class="kicker">BLUEPING VPN</span><h3>نوع سرویس رو انتخاب کن</h3><p>پکیج و مبلغ نهایی داخل فاکتور تایید سفارش انتخاب می‌شود؛ تمیزتر و سریع‌تر.</p></div><span class="step-badge">مرحله ۲ از ۴</span></div>
         <div id="vpnPlans" class="vpn-plan-picker"></div>
         <div id="vpnPackageStage" class="vpn-package-stage hidden" data-theme="blue">
           <div class="vpn-stage-ambient" aria-hidden="true"></div>
@@ -174,7 +177,7 @@
       </div>
 
       <div id="premiumPanel" class="product-panel">
-        <div class="panel-intro"><div><span class="kicker">TELEGRAM PREMIUM</span><h3>مدت اشتراک رو انتخاب کن</h3><p>یک پلن را انتخاب کن؛ قیمت اصلی تومان است و معادل ارزها زیر آن نمایش داده می‌شود.</p></div><span class="step-badge">یک انتخاب</span></div>
+        <div class="panel-intro"><div><span class="kicker">TELEGRAM PREMIUM</span><h3>مدت اشتراک رو انتخاب کن</h3><p>یک پلن را انتخاب کن؛ قیمت اصلی تومان است و معادل ارزها زیر آن نمایش داده می‌شود.</p></div><span class="step-badge">مرحله ۲ از ۳</span></div>
         <div id="premiumPlans" class="premium-grid"></div>
         <div class="premium-action-wrap"><div class="selection-summary" id="premiumSelectionSummary"><div><span>پلن انتخاب‌شده</span><strong id="premiumSelectedLabel">هنوز انتخاب نشده</strong></div><div class="selection-price"><span id="premiumSelectedPrice">—</span><small>تومان</small></div><button id="premiumBuy" class="btn primary" type="button" disabled>ثبت سفارش</button></div><div class="purchase-reassurance"><span>✓ قیمت نهایی به تومان</span><span>✓ معادل USDT / TRX / TON</span></div></div>
       </div>
@@ -220,6 +223,6 @@
   </aside>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="js/config.js?v=2.2.1"></script><script src="js/api.js?v=2.2.1"></script><script src="js/rates.js?v=2.2.1"></script><script src="js/pricing.js?v=2.2.1"></script><script src="js/account.js?v=2.2.1"></script><script src="js/admin.js?v=2.2.1"></script><script src="js/dashboard.js?v=2.2.1"></script><script src="js/checkout.js?v=2.2.1"></script><script src="js/app.js?v=2.2.1"></script>
+  <script src="js/config.js?v=2.3.0"></script><script src="js/api.js?v=2.3.0"></script><script src="js/rates.js?v=2.3.0"></script><script src="js/pricing.js?v=2.3.0"></script><script src="js/account.js?v=2.3.0"></script><script src="js/admin.js?v=2.3.0"></script><script src="js/dashboard.js?v=2.3.0"></script><script src="js/checkout.js?v=2.3.0"></script><script src="js/app.js?v=2.3.0"></script>
 </body>
 </html>
