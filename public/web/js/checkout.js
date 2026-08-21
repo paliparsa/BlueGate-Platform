@@ -13,7 +13,8 @@ function normalize(data){
     duration_days:Number(v.duration_days||0),
     description:String(v.description||''),
     old_price:Number(v.old_price||0),
-    discount_percent:Number(v.discount_percent||0)
+    discount_percent:Number(v.discount_percent||0),
+    product_id:Number(v.product_id||0)
   })).filter(v=>v.id);
   let selectedId=Number(data.variantId||data.selectedVariantId||0)||null;
   if(!selectedId&&variants.length) selectedId=variants[0].id;
@@ -86,7 +87,7 @@ async function confirm(){
   if(busy)return;
   const v=selectedVariant();
   if(current.variants.length&&!v){window.BGAccount?.toast?.('اول یک پلن انتخاب کن.','warn');return}
-  const spec={productId:current.productId,variantId:v?.id||null,starsCount:current.scope==='stars'?current.starsCount:null};
+  const spec={productId:Number(v?.product_id||current.productId),variantId:v?.id||null,starsCount:current.scope==='stars'?current.starsCount:null};
   const coupon=modal.querySelector('#purchaseCoupon')?.value?.trim()||'';
   busy=true;const btn=modal.querySelector('[data-pc-submit]');if(btn){btn.disabled=true;btn.textContent='در حال ثبت سفارش…'}
   try{

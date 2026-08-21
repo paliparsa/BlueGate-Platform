@@ -315,7 +315,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
         try {
             $order = create_shop_order((int)$user['id'], $pid, $vid);
             show_order_invoice($chat_id, $message_id, $order);
-            notify_admins("🧾 سفارش جدید ثبت شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمحصول: <b>".h($order['product_name'].(!empty($order['variant_title'])?' - '.$order['variant_title']:'' ))."</b>\nمبلغ: <b>".money($order['final_amount'])."</b>");
+            notify_admins("🧾 سفارش جدید ثبت شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمحصول: <b>".h(order_catalog_display_name($order))."</b>\nمبلغ: <b>".money($order['final_amount'])."</b>");
         } catch (Throwable $e) { send_or_edit($chat_id, $message_id, 'محصول/پلن پیدا نشد یا غیرفعال است.', back_main_keyboard()); }
         return;
     }
@@ -551,7 +551,7 @@ email2@test.com | pass2</code>", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_prepare_')) { $oid=(int)substr($data,12); $o=mark_order_preparing($oid); if ($o) { send_msg($o['telegram_id'], "📦 سفارش <code>#{$oid}</code> در حال آماده‌سازی است.", main_menu_keyboard(is_admin($o['telegram_id']))); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_auto_deliver_')) { $oid=(int)substr($data,17); $o=auto_deliver_order($oid); if ($o) { send_msg($o['telegram_id'], "📦 سفارش شما تحویل داده شد.
 سفارش: <code>#{$oid}</code>
-محصول: <b>".h($o['product_name'].(!empty($o['variant_title'])?' - '.$o['variant_title']:'' ))."</b>
+محصول: <b>".h(order_catalog_display_name($o))."</b>
 
 اطلاعات تحویل:
 <code>".h($o['delivery_text'])."</code>", main_menu_keyboard(is_admin($o['telegram_id']))); show_admin_order($chat_id, $message_id, $oid); } else send_msg($chat_id, 'موجودی آماده برای این سفارش پیدا نشد. از تحویل دستی استفاده کن.', admin_order_keyboard($oid)); return; }
@@ -801,7 +801,7 @@ function handle_step_input(int $chat_id, array $user, string $text): void {
 
 "; $kb=[];
         foreach ($orders as $o) {
-            $name = $o['product_name'].(!empty($o['variant_title']) ? ' - '.$o['variant_title'] : '');
+            $name = order_catalog_display_name($o);
             $out .= "#{$o['id']} | @".h($o['username'] ?: '---')." | ".h($name)." | ".order_status_fa($o['status'])."
 ";
             $kb[] = [['text'=>'مدیریت #'.$o['id'], 'callback_data'=>'ord_view_'.$o['id']]];

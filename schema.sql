@@ -182,6 +182,12 @@ CREATE TABLE IF NOT EXISTS orders (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT UNSIGNED NOT NULL,
   product_id BIGINT UNSIGNED NOT NULL,
+  catalog_service_id BIGINT UNSIGNED NULL,
+  catalog_group_id BIGINT UNSIGNED NULL,
+  catalog_plan_id BIGINT UNSIGNED NULL,
+  service_name_snapshot VARCHAR(255) NULL,
+  group_name_snapshot VARCHAR(255) NULL,
+  plan_name_snapshot VARCHAR(255) NULL,
   amount BIGINT NOT NULL DEFAULT 0,
   discount_amount BIGINT NOT NULL DEFAULT 0,
   wallet_amount BIGINT NOT NULL DEFAULT 0,
@@ -237,6 +243,87 @@ CREATE TABLE IF NOT EXISTS product_variants (
   INDEX(product_id),
   INDEX(is_active),
   CONSTRAINT fk_product_variants_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Catalog v2: normalized store hierarchy. Legacy product tables stay intact for compatibility.
+CREATE TABLE IF NOT EXISTS store_categories (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  legacy_category_id BIGINT UNSIGNED NULL UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(128) NOT NULL,
+  emoji VARCHAR(16) NULL,
+  image_url VARCHAR(1024) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX(is_active), INDEX(sort_order), UNIQUE KEY uq_store_categories_slug (slug)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS services (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  category_id BIGINT UNSIGNED NULL,
+  legacy_product_id BIGINT UNSIGNED NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(128) NOT NULL,
+  description TEXT NULL,
+  image_url VARCHAR(1024) NULL,
+  theme VARCHAR(64) NULL,
+  badge VARCHAR(128) NULL,
+  config_json LONGTEXT NULL,
+  is_featured TINYINT(1) NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX(category_id), INDEX(is_active), INDEX(sort_order), UNIQUE KEY uq_services_slug (slug),
+  CONSTRAINT fk_services_store_category FOREIGN KEY (category_id) REFERENCES store_categories(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS service_groups (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  service_id BIGINT UNSIGNED NOT NULL,
+  legacy_product_id BIGINT UNSIGNED NULL,
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(128) NOT NULL,
+  description TEXT NULL,
+  image_url VARCHAR(1024) NULL,
+  config_json LONGTEXT NULL,
+  is_default TINYINT(1) NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX(service_id), INDEX(legacy_product_id), INDEX(is_default), INDEX(is_active),
+  UNIQUE KEY uq_service_group_slug (service_id,slug),
+  CONSTRAINT fk_service_groups_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS service_plans (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  group_id BIGINT UNSIGNED NOT NULL,
+  legacy_product_id BIGINT UNSIGNED NULL,
+  legacy_variant_id BIGINT UNSIGNED NULL UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  price BIGINT NOT NULL DEFAULT 0,
+  price_currency VARCHAR(8) NOT NULL DEFAULT 'IRT',
+  price_usd DECIMAL(14,4) NULL,
+  price_rate_toman DECIMAL(24,6) NULL,
+  price_rate_source VARCHAR(32) NULL,
+  price_rate_updated_at DATETIME NULL,
+  duration_days INT NOT NULL DEFAULT 0,
+  discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  description TEXT NULL,
+  delivery_type VARCHAR(32) NOT NULL DEFAULT 'manual',
+  commission_type VARCHAR(16) NOT NULL DEFAULT 'none',
+  commission_value BIGINT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX(group_id), INDEX(legacy_product_id), INDEX(is_active), INDEX(sort_order),
+  CONSTRAINT fk_service_plans_group FOREIGN KEY (group_id) REFERENCES service_groups(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS inventory_items (

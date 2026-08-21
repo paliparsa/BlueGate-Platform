@@ -41,7 +41,7 @@ if ($baseUrl === '') {
 
   // Active Products
   try {
-      $products = shop_products(null, true);
+      $products = function_exists('storefront_shop_products') ? storefront_shop_products() : shop_products(null, true);
       foreach ($products as $p) {
           $date = !empty($p['updated_at']) ? date('Y-m-d', strtotime($p['updated_at'])) : date('Y-m-d');
           echo "  <url>\n";

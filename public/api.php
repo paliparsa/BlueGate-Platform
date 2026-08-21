@@ -2,7 +2,7 @@
 if (!ob_start('ob_gzhandler')) { ob_start(); }
 require_once __DIR__ . '/../app/bootstrap.php';
 try {
-    if (!setting('schema_migrated_v3') || !setting('schema_merged_storefront_v1') || !setting('schema_service_viewer_v1')) { migrate(); set_setting('schema_migrated_v3', '1'); set_setting('schema_merged_storefront_v1', '1'); set_setting('schema_service_viewer_v1', '1'); }
+    if (!setting('schema_migrated_v3') || !setting('schema_merged_storefront_v1') || !setting('schema_service_viewer_v1') || !setting('schema_catalog_v2')) { migrate(); set_setting('schema_migrated_v3', '1'); set_setting('schema_merged_storefront_v1', '1'); set_setting('schema_service_viewer_v1', '1'); set_setting('schema_catalog_v2', '1'); }
 } catch (Throwable $e) {}
 header('Content-Type: application/json; charset=utf-8');
 header('Vary: Accept-Encoding');
@@ -79,7 +79,7 @@ function guest_dashboard_payload(): array {
         if (is_array($json)) return $json;
     }
 
-    $products = array_map(fn($p)=>product_payload($p, true), shop_products(null, true));
+    $products = array_map(fn($p)=>product_payload($p, true), storefront_shop_products());
     $payload = [
         'ok' => true,
         'is_guest' => true,
@@ -120,6 +120,7 @@ function guest_dashboard_payload(): array {
         'withdrawals' => [],
         'shop_categories' => array_map('category_payload', shop_categories(true)),
         'shop_products' => $products,
+        'catalog' => catalog_public_payload(),
         'orders' => [],
         'payment_methods' => payment_methods_public(null),
         'payment_instructions' => setting('payment_instructions', 'لطفاً پرداخت را انجام دهید و رسید را ارسال کنید.'),
@@ -132,6 +133,10 @@ function guest_dashboard_payload(): array {
     return $payload;
 }
 function product_payload(array $p, bool $activeVariants=true): array {
+    if (array_key_exists('__catalog_variant_ids', $p)) {
+        $variantRows=[];
+        foreach((array)$p['__catalog_variant_ids'] as $vid){$v=product_variant((int)$vid);if($v&&(!$activeVariants||(int)$v['is_active']===1))$variantRows[]=$v;}
+    } else $variantRows=product_variants((int)$p['id'], $activeVariants);
     $variants = array_map(function($v){
         $pm = price_meta_public($v);
         $vDiscount = (float)($v['discount_percent'] ?? 0);
@@ -153,7 +158,7 @@ function product_payload(array $p, bool $activeVariants=true): array {
             'sort_order' => (int)($v['sort_order'] ?? 0),
             'is_active' => (int)($v['is_active'] ?? 1)
         ];
-    }, product_variants((int)$p['id'], $activeVariants));
+    }, $variantRows);
 
     $pm = price_meta_public($p);
     $rawPPrice = (int)$pm['toman'];
@@ -244,8 +249,8 @@ function dashboard_payload(array $user): array {
     foreach (mission_rows() as $m) $missions[] = ['target'=>(int)$m['target'], 'reward'=>(int)$m['reward'], 'done'=>$todayCount >= (int)$m['target'], 'claimed'=>is_mission_claimed((int)$user['id'], $today, (int)$m['target'])];
     $tx = db()->prepare('SELECT type, amount, description, created_at FROM transactions WHERE user_id=? ORDER BY id DESC LIMIT 15'); $tx->execute([$user['id']]);
     $wd = db()->prepare('SELECT amount, status, created_at FROM withdrawals WHERE user_id=? ORDER BY id DESC LIMIT 10'); $wd->execute([$user['id']]);
-    $products = array_map(fn($p)=>product_payload($p, true), shop_products(null, true));
-    return ['ok'=>true, 'bot_username'=>app_config('BOT_USERNAME',''), 'brand'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'theme_color'=>setting('theme_color', app_config('DEFAULT_THEME_COLOR', '#1d9bf0')), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'start_reward'=>setting_int('start_reward', 2000), 'min_withdraw'=>setting_int('min_withdraw', 50000), 'spin_every'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards'=>spin_rewards_public(), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'custom_code_min'=>setting_int('custom_code_min_referrals', 3), 'is_admin'=>is_admin($user), 'user'=>user_payload($user), 'missions'=>$missions, 'leaderboard'=>array_map(function($r){ return ['name'=>strip_tags(display_name($r)), 'referrals'=>(int)$r['referrals_count'], 'earned'=>(int)$r['total_earned']]; }, top_users(10)), 'transactions'=>$tx->fetchAll(), 'withdrawals'=>$wd->fetchAll(), 'shop_categories'=>array_map('category_payload', shop_categories(true)), 'shop_products'=>$products, 'orders'=>array_map('order_public_payload', user_orders((int)$user['id'], 20)), 'payment_methods'=>payment_methods_public($user), 'payment_instructions'=>setting('payment_instructions', 'لطفاً پرداخت را انجام دهید و رسید را ارسال کنید.'), 'storefront_settings'=>storefront_settings_payload(), 'storefront_content'=>storefront_content_payload(), 'storefront_rates'=>storefront_rates_payload(), 'achievements'=>user_achievements($user)];
+    $products = array_map(fn($p)=>product_payload($p, true), storefront_shop_products());
+    return ['ok'=>true, 'bot_username'=>app_config('BOT_USERNAME',''), 'brand'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'theme_color'=>setting('theme_color', app_config('DEFAULT_THEME_COLOR', '#1d9bf0')), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'start_reward'=>setting_int('start_reward', 2000), 'min_withdraw'=>setting_int('min_withdraw', 50000), 'spin_every'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards'=>spin_rewards_public(), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'custom_code_min'=>setting_int('custom_code_min_referrals', 3), 'is_admin'=>is_admin($user), 'user'=>user_payload($user), 'missions'=>$missions, 'leaderboard'=>array_map(function($r){ return ['name'=>strip_tags(display_name($r)), 'referrals'=>(int)$r['referrals_count'], 'earned'=>(int)$r['total_earned']]; }, top_users(10)), 'transactions'=>$tx->fetchAll(), 'withdrawals'=>$wd->fetchAll(), 'shop_categories'=>array_map('category_payload', shop_categories(true)), 'shop_products'=>$products, 'catalog'=>catalog_public_payload(), 'orders'=>array_map('order_public_payload', user_orders((int)$user['id'], 20)), 'payment_methods'=>payment_methods_public($user), 'payment_instructions'=>setting('payment_instructions', 'لطفاً پرداخت را انجام دهید و رسید را ارسال کنید.'), 'storefront_settings'=>storefront_settings_payload(), 'storefront_content'=>storefront_content_payload(), 'storefront_rates'=>storefront_rates_payload(), 'achievements'=>user_achievements($user)];
 }
 function require_admin(array $user): void { if (!is_admin($user)) api_out(['ok'=>false,'error'=>'ADMIN_ONLY','message'=>'دسترسی ادمین لازم است.'], 403); }
 function admin_payload(): array {
@@ -257,6 +262,7 @@ function admin_payload(): array {
         'categories'=>array_map('category_payload', shop_categories(false)),
         'inventory'=>inventory_items_for_admin(150),
         'variants'=>db()->query('SELECT v.*, p.name product_name FROM product_variants v JOIN products p ON p.id=v.product_id ORDER BY v.id DESC LIMIT 150')->fetchAll(),
+        'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload()],
         'settings'=>['payment_instructions'=>setting('payment_instructions',''), 'payment_methods_enabled'=>setting_json('payment_methods_enabled', ['wallet'=>true,'card'=>true,'stars'=>false,'crypto'=>false]), 'payment_methods'=>payment_methods_public(null), 'card_accounts_text'=>card_accounts_lines(), 'stars_rate_toman'=>setting_int('stars_rate_toman', 3200), 'crypto_wallets_text'=>crypto_wallets_lines(), 'crypto_manual_rates_text'=>crypto_manual_rates_lines(), 'crypto_rate_source'=>setting('crypto_rate_source','auto'), 'crypto_rate_markup_percent'=>(float)setting('crypto_rate_markup_percent','1'), 'crypto_notify_rate_fail'=>setting_bool('crypto_notify_rate_fail', true), 'crypto_rate_refresh_interval_seconds'=>setting_int('crypto_rate_refresh_interval_seconds', 600), 'crypto_rate_cache'=>crypto_rate_cache(), 'crypto_rate_last_result'=>setting_json('crypto_rate_last_result', []), 'crypto_rate_provider_priority'=>setting('crypto_rate_provider_priority','wallex,ramzinex,nobitex'), 'theme_color'=>setting('theme_color','#1d9bf0'), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'spin_referrals_per_chance'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards_text'=>spin_rewards_lines(), 'backup_last_created_at'=>setting('backup_last_created_at',''), 'backup_last_restored_at'=>setting('backup_last_restored_at',''), 'brand_name'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'min_withdraw'=>setting_int('min_withdraw',50000), 'start_reward'=>setting_int('start_reward',2000), 'storefront_brand_subtitle'=>setting('storefront_brand_subtitle','Digital Services'), 'storefront_hero_title'=>setting('storefront_hero_title','سرویس‌های دیجیتال، ساده و سریع'), 'storefront_hero_text'=>setting('storefront_hero_text',''), 'storefront_announcement_enabled'=>setting_bool('storefront_announcement_enabled',true), 'storefront_announcement_text'=>setting('storefront_announcement_text',''), 'storefront_star_sell_per_unit_toman'=>(float)setting('storefront_star_sell_per_unit_toman','3456'), 'storefront_star_sell_per_unit_usdt'=>(float)setting('storefront_star_sell_per_unit_usdt','0.018'), 'storefront_stars_price_basis'=>setting('storefront_stars_price_basis','toman'), 'storefront_stars_min'=>setting_int('storefront_stars_min',50), 'storefront_stars_max'=>setting_int('storefront_stars_max',10000), 'storefront_stars_step'=>setting_int('storefront_stars_step',25), 'storefront_stars_presets'=>setting_json('storefront_stars_presets',[100,500,1000,2500,5000]), 'default_base_currency'=>setting('default_base_currency', 'USDT'), 'resend_api_key'=>setting('resend_api_key',''), 'resend_from_email'=>setting('resend_from_email','onboarding@resend.dev'), 'require_email_verification'=>setting_bool('require_email_verification', true), 'vip_tier_rates'=>setting_json('vip_tier_rates', [])],
         'backups'=>blue_backup_list(),
         'withdrawals'=>admin_list_withdrawals('all'),
@@ -446,7 +452,8 @@ if ($action === 'storefront') {
     api_out([
         'ok'=>true,
         'shop_categories'=>array_map('category_payload', shop_categories(true)),
-        'shop_products'=>array_map(fn($p)=>product_payload($p, true), shop_products(null, true)),
+        'shop_products'=>array_map(fn($p)=>product_payload($p, true), storefront_shop_products()),
+        'catalog'=>catalog_public_payload(),
         'storefront_settings'=>storefront_settings_payload(),
         'storefront_content'=>storefront_content_payload(),
         'storefront_rates'=>storefront_rates_payload(),
@@ -487,8 +494,8 @@ if ($action === 'spin') { $user=get_user_by_id((int)$user['id']); if ((int)$user
 if ($action === 'withdraw') { $user=get_user_by_id((int)$user['id']); $card=trim((string)($input['card_info']??'')); if(mb_strlen($card)<8) api_out(['ok'=>false,'error'=>'INVALID_CARD_INFO','message'=>'اطلاعات کارت/شبا کامل نیست.'],400); $min=setting_int('min_withdraw',50000); if((int)$user['balance']<$min) api_out(['ok'=>false,'error'=>'LOW_BALANCE','message'=>'موجودی به حداقل برداشت نمی‌رسد.'],400); $pending=db()->prepare('SELECT COUNT(*) c FROM withdrawals WHERE user_id=? AND status="pending"'); $pending->execute([$user['id']]); if((int)$pending->fetch()['c']>0) api_out(['ok'=>false,'error'=>'PENDING_WITHDRAWAL','message'=>'یک برداشت در انتظار دارید.'],400); $amount=(int)$user['balance']; db()->prepare('INSERT INTO withdrawals (user_id, amount, card_info) VALUES (?,?,?)')->execute([$user['id'],$amount,$card]); db()->prepare('UPDATE users SET balance=0 WHERE id=?')->execute([$user['id']]); notify_admins("🏧 برداشت جدید\nکاربر: <code>".h($user['first_name']??$user['username']??$user['id'])."</code>\nمبلغ: <b>".money($amount)."</b>\nاطلاعات:\n".h($card)); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['withdraw_amount'=>$amount]); }
 if ($action === 'custom_code') { $code=normalize_ref_code((string)($input['code']??'')); $min=setting_int('custom_code_min_referrals',3); if((int)$user['referrals_count']<$min) api_out(['ok'=>false,'error'=>'NOT_ENOUGH_REFERRALS','message'=>"حداقل {$min} زیرمجموعه لازم است."],400); if(strlen($code)<4||strlen($code)>20) api_out(['ok'=>false,'error'=>'INVALID_CODE','message'=>'کد باید ۴ تا ۲۰ کاراکتر باشد.'],400); $exists=get_user_by_ref($code); if($exists && (int)$exists['id'] !== (int)$user['id']) api_out(['ok'=>false,'error'=>'CODE_TAKEN','message'=>'این کد قبلاً گرفته شده.'],400); db()->prepare('UPDATE users SET ref_code=? WHERE id=?')->execute([$code,$user['id']]); api_out(dashboard_payload(get_user_by_id((int)$user['id']))); }
 
-if ($action === 'create_order') { $productId=(int)($input['product_id']??0); $variantId=!empty($input['variant_id'])?(int)$input['variant_id']:null; $starsCount=isset($input['stars_count'])?(int)$input['stars_count']:null; try{ $order=create_storefront_order((int)$user['id'],$productId,$variantId,$starsCount); if(!empty($input['use_wallet'])) { try { $order=apply_wallet_to_order((int)$order['id'], (int)$user['id']); } catch(Throwable $we) {} } $wallet=(int)($order['wallet_amount'] ?? 0); $sourceStr = (!empty($authToken) || !empty($input['is_web'])) ? 'وب‌سایت 🌐' : 'Mini App 📱'; $userStr = !empty($user['telegram_id']) ? "<code>{$user['telegram_id']}</code>" : "<code>#{$user['id']} (".h($user['username']??$user['email']??'وب').")</code>"; notify_admins("🧾 سفارش جدید از {$sourceStr}\nسفارش: <code>#{$order['id']}</code>\nکاربر: {$userStr}\nمحصول: <b>".h($order['product_name'].(!empty($order['variant_title'])?' - '.$order['variant_title']:''))."</b>\nمبلغ قابل پرداخت: <b>".money($order['final_amount'])."</b>".($wallet>0?"\nپرداخت از کیف پول: <b>".money($wallet)."</b>":"")); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'محصول یا پلن پیدا نشد یا غیرفعال است.'],404); } }
-if ($action === 'apply_wallet') { try{ $order=apply_wallet_to_order((int)($input['order_id']??0),(int)$user['id']); if(normalize_order_status($order['status'])==='payment_confirmed') notify_admins("💰 پرداخت کامل با کیف پول\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>".h($user['username']??$user['telegram_id']??$user['id'])."</code>\nمحصول: <b>".h($order['product_name'].(!empty($order['variant_title'])?' - '.$order['variant_title']:''))."</b>"); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'امکان استفاده از کیف پول برای این سفارش نیست یا موجودی کافی نیست.'],400); } }
+if ($action === 'create_order') { $productId=(int)($input['product_id']??0); $variantId=!empty($input['variant_id'])?(int)$input['variant_id']:null; $starsCount=isset($input['stars_count'])?(int)$input['stars_count']:null; try{ $order=create_storefront_order((int)$user['id'],$productId,$variantId,$starsCount); if(!empty($input['use_wallet'])) { try { $order=apply_wallet_to_order((int)$order['id'], (int)$user['id']); } catch(Throwable $we) {} } $wallet=(int)($order['wallet_amount'] ?? 0); $sourceStr = (!empty($authToken) || !empty($input['is_web'])) ? 'وب‌سایت 🌐' : 'Mini App 📱'; $userStr = !empty($user['telegram_id']) ? "<code>{$user['telegram_id']}</code>" : "<code>#{$user['id']} (".h($user['username']??$user['email']??'وب').")</code>"; notify_admins("🧾 سفارش جدید از {$sourceStr}\nسفارش: <code>#{$order['id']}</code>\nکاربر: {$userStr}\nمحصول: <b>".h(order_catalog_display_name($order))."</b>\nمبلغ قابل پرداخت: <b>".money($order['final_amount'])."</b>".($wallet>0?"\nپرداخت از کیف پول: <b>".money($wallet)."</b>":"")); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'محصول یا پلن پیدا نشد یا غیرفعال است.'],404); } }
+if ($action === 'apply_wallet') { try{ $order=apply_wallet_to_order((int)($input['order_id']??0),(int)$user['id']); if(normalize_order_status($order['status'])==='payment_confirmed') notify_admins("💰 پرداخت کامل با کیف پول\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>".h($user['username']??$user['telegram_id']??$user['id'])."</code>\nمحصول: <b>".h(order_catalog_display_name($order))."</b>"); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'امکان استفاده از کیف پول برای این سفارش نیست یا موجودی کافی نیست.'],400); } }
 if ($action === 'select_payment_method') { try{ $order=order_set_payment_method((int)($input['order_id']??0),(int)$user['id'],(string)($input['method']??''), is_array($input['details']??null)?$input['details']:[]); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'روش پرداخت قابل ثبت نیست یا سفارش پیدا نشد.'],400); } }
 if ($action === 'start_stars_invoice') { try{ $order=order_set_payment_method((int)($input['order_id']??0),(int)$user['id'],'stars',[]); $res=send_stars_invoice_for_order($order); if(empty($res['ok'])) api_out(['ok'=>false,'error'=>'STARS_INVOICE_FAILED','message'=>'ارسال فاکتور Stars ممکن نشد. تنظیمات بات یا تلگرام را بررسی کن.'],400); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload(order_by_id((int)$order['id'])), 'stars_invoice_sent'=>true]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'امکان ساخت فاکتور Stars نیست.'],400); } }
 if ($action === 'select_crypto_wallet' || $action === 'start_crypto_payment') { try{ $order=start_crypto_payment((int)($input['order_id']??0),(int)$user['id'],(int)($input['wallet_id']??0)); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['order'=>order_public_payload($order)]); } catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'امکان انتخاب کیف پول رمزارز نیست. نرخ/ولت را در پنل ادمین بررسی کن.'],400); } }
@@ -503,6 +510,47 @@ if ($action === 'clear_canceled_orders') { $count=hide_user_cleanup_orders((int)
 
 // Admin Mini Panel actions
 if ($action === 'admin_summary') { require_admin($user); api_out(admin_payload()); }
+if ($action === 'admin_catalog_preview') {
+    require_admin($user);
+    set_setting('catalog_v2_last_scan',date('Y-m-d H:i:s')); api_out(admin_payload());
+}
+if ($action === 'admin_catalog_apply') {
+    require_admin($user);
+    if (strtoupper(trim((string)($input['confirm'] ?? ''))) !== 'APPLY') api_out(['ok'=>false,'message'=>'برای اعمال Migration باید Preview را تأیید کنی.'],400);
+    try { $result=catalog_apply_legacy_mapping(); log_admin_action((int)$user['telegram_id'],'catalog_v2_apply','catalog',0,'legacy mapping applied'); api_out(admin_payload()+['catalog_result'=>$result]); }
+    catch(Throwable $e){ api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'اعمال کاتالوگ انجام نشد؛ دیتای Legacy دست‌نخورده باقی ماند.'],400); }
+}
+if ($action === 'admin_catalog_apply_one') {
+    require_admin($user); $legacyId=(int)($input['legacy_product_id']??0);
+    if($legacyId<=0 || strtoupper(trim((string)($input['confirm']??'')))!=='APPLY') api_out(['ok'=>false,'message'=>'تأیید این مورد لازم است.'],400);
+    try{$result=catalog_apply_legacy_product($legacyId);log_admin_action((int)$user['telegram_id'],'catalog_v2_apply_one','product',$legacyId,'manual mapping');api_out(admin_payload()+['catalog_result'=>$result]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'نگاشت دستی این مورد انجام نشد.'],400);}
+}
+if ($action === 'admin_catalog_move_group') {
+    require_admin($user); $gid=(int)($input['group_id']??0); $sid=(int)($input['service_id']??0);
+    if($gid<=0||$sid<=0) api_out(['ok'=>false,'message'=>'سرویس و زیرسرویس معتبر انتخاب کن.'],400);
+    catalog_move_group($gid,$sid); log_admin_action((int)$user['telegram_id'],'catalog_move_group','service_group',$gid,'to service '.$sid); api_out(admin_payload());
+}
+if ($action === 'admin_catalog_move_plan') {
+    require_admin($user); $pid=(int)($input['plan_id']??0); $gid=(int)($input['group_id']??0);
+    if($pid<=0||$gid<=0) api_out(['ok'=>false,'message'=>'زیرسرویس و پلن معتبر انتخاب کن.'],400);
+    catalog_move_plan($pid,$gid); log_admin_action((int)$user['telegram_id'],'catalog_move_plan','service_plan',$pid,'to group '.$gid); api_out(admin_payload());
+}
+if ($action === 'admin_catalog_save_category') {
+    require_admin($user); try{$id=catalog_save_category($input);log_admin_action((int)$user['telegram_id'],'catalog_save_category','store_category',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ذخیره دسته فروشگاه ناموفق بود.'],400);}
+}
+if ($action === 'admin_catalog_add_service') {
+    require_admin($user); try{$id=catalog_create_service($input);log_admin_action((int)$user['telegram_id'],'catalog_add_service','service',$id,(string)($input['name']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت سرویس ناموفق بود.'],400);}
+}
+if ($action === 'admin_catalog_add_group') {
+    require_admin($user); try{$id=catalog_create_group($input);log_admin_action((int)$user['telegram_id'],'catalog_add_group','service_group',$id,(string)($input['name']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت زیرسرویس ناموفق بود.'],400);}
+}
+if ($action === 'admin_catalog_add_plan') {
+    require_admin($user); try{$id=catalog_create_plan($input);log_admin_action((int)$user['telegram_id'],'catalog_add_plan','service_plan',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت پلن ناموفق بود.'],400);}
+}
+if ($action === 'admin_catalog_fast_create') {
+    require_admin($user); try{$r=catalog_fast_create($input);log_admin_action((int)$user['telegram_id'],'catalog_fast_create','catalog',(int)($r['service_id']??0),(string)($input['service_name']??''));api_out(admin_payload()+['fast_create'=>$r]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت سریع کاتالوگ ناموفق بود.'],400);}
+}
 if ($action === 'admin_purchase_reward') {
     require_admin($user);
     $buyerTid = (int)($input['buyer_tid'] ?? 0);

@@ -130,6 +130,9 @@ function create_storefront_order(int $userId, int $productId, ?int $variantId=nu
     db()->prepare('INSERT INTO orders (user_id, product_id, variant_id, amount, final_amount, price_currency, status, stars_amount, payment_expires_at, customer_note) VALUES (?,?,?,?,?,?,?,?,?,?)')
         ->execute([$userId,$productId,null,$amount,$amount,'IRT','pending_payment',$stars,$paymentExpiresAt,$stars.' Telegram Stars']);
     $orderId = (int)db()->lastInsertId();
+    if (function_exists('catalog_order_snapshot')) {
+        try { catalog_order_snapshot($orderId, $productId, null); } catch (Throwable $e) {}
+    }
     add_order_event($orderId, 'pending_payment', 'سفارش Stars ثبت شد', number_format($stars).' Stars / '.money($amount));
     return order_by_id($orderId);
 }

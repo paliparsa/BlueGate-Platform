@@ -1,6 +1,6 @@
 # BlueGate Platform
 
-> نسخه فعلی: **v1.8.0**  
+> نسخه فعلی: **v2.0.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 ---
@@ -18,18 +18,20 @@
 9. [تنظیم Resend برای ایمیل](#تنظیم-resend-برای-ایمیل)
 10. [مدیریت پروژه روی VPS](#مدیریت-پروژه-روی-vps)
 11. [آپدیت پروژه](#آپدیت-پروژه)
-12. [محصولات، دسته‌بندی و Variant](#محصولات-دستهبندی-و-variant)
-13. [جریان خرید Website در v1.6.0](#جریان-خرید-website-در-v160)
-14. [سفارش‌ها و روش‌های پرداخت](#سفارشها-و-روشهای-پرداخت)
-15. [تحویل لینک سرویس و Subscription](#تحویل-لینک-سرویس-و-subscription)
-16. [Backup و Restore](#backup-و-restore)
-17. [انتقال فایل‌های Upload](#انتقال-فایلهای-upload)
-18. [مهاجرت از BlueReferral قدیمی](#مهاجرت-از-bluereferral-قدیمی)
-19. [امنیت و Permissionها](#امنیت-و-permissionها)
-20. [Cloudflare، Nginx و SSL](#cloudflare-nginx-و-ssl)
-21. [Troubleshooting](#troubleshooting)
-22. [Uninstall](#uninstall)
-23. [مسیر فایل‌های مهم](#مسیر-فایلهای-مهم)
+12. [Catalog v2 و Organizer](#catalog-v2-و-organizer)
+13. [محصولات، دسته‌بندی و Variant (Legacy)](#محصولات-دستهبندی-و-variant)
+
+14. [جریان خرید Website در v1.6.0](#جریان-خرید-website-در-v160)
+15. [سفارش‌ها و روش‌های پرداخت](#سفارشها-و-روشهای-پرداخت)
+16. [تحویل لینک سرویس و Subscription](#تحویل-لینک-سرویس-و-subscription)
+17. [Backup و Restore](#backup-و-restore)
+18. [انتقال فایل‌های Upload](#انتقال-فایلهای-upload)
+19. [مهاجرت از BlueReferral قدیمی](#مهاجرت-از-bluereferral-قدیمی)
+20. [امنیت و Permissionها](#امنیت-و-permissionها)
+21. [Cloudflare، Nginx و SSL](#cloudflare-nginx-و-ssl)
+22. [Troubleshooting](#troubleshooting)
+23. [Uninstall](#uninstall)
+24. [مسیر فایل‌های مهم](#مسیر-فایلهای-مهم)
 
 ---
 
@@ -87,9 +89,9 @@ Supabase در نسخه فعلی هسته اصلی پروژه نیست و اطل�
 
 ## فروشگاه و محصول
 
-- Category
-- Product
-- Product Variant
+- Catalog v2: Category → Service → Group → Plan
+- Legacy Product / Product Variant برای سازگاری Checkout و Order history
+- Catalog Organizer با Preview، Confidence و Manual Review
 - Dynamic product types
 - Inventory
 - Coupon
@@ -517,6 +519,31 @@ curl -fsSL https://raw.githubusercontent.com/paliparsa/BlueGate-Platform/main/in
 
 sudo bash /tmp/bluegate-install.sh --update
 ```
+
+---
+
+# Catalog v2 و Organizer
+
+از نسخه **v2.0.0** مدل فروشگاه به ساختار زیر ارتقا داده شده است:
+
+```text
+Store Category
+└── Service
+    └── Group
+        └── Plan
+```
+
+- **Category** فقط قفسه/دسته فروشگاه است.
+- **Service** سرویس مادر مثل BluePing، Spotify Premium یا ChatGPT است.
+- **Group** نوع یا زیرسرویس مثل Standard / Pro / Individual است.
+- **Plan** گزینه واقعی قابل خرید است.
+- برای سرویس‌هایی که Group ندارند، یک **Default Group** داخلی ساخته می‌شود و در UI مشتری مخفی می‌ماند.
+
+جداول جدید `store_categories`, `services`, `service_groups`, `service_plans` در کنار جداول Legacy ساخته می‌شوند. `products` و `product_variants` حذف نمی‌شوند و Checkout برای سازگاری همچنان Legacy ID واقعی را نگه می‌دارد. سفارش‌های جدید Snapshot مسیر Service/Group/Plan را ذخیره می‌کنند و هنگام Migration سفارش‌های قدیمی قابل نگاشت نیز Backfill می‌شوند.
+
+در Web Admin و Mini App تب **کاتالوگ** اضافه شده است. Organizer ابتدا Legacy catalog را Scan می‌کند و پیشنهادها را با سه Confidence نمایش می‌دهد. Auto Apply فقط موارد قطعی/احتمالاً درست را پس از Preview و تأیید ادمین اعمال می‌کند؛ موارد `Needs Review` دکمه نگاشت دستی دارند. در Web Admin می‌توان Group و Plan را Drag & Drop کرد؛ Mini App همان عملیات را با selector انجام می‌دهد. Fast Create نیز ساخت Service + Group + Plan را یک‌جا انجام می‌دهد.
+
+تا قبل از تأیید Migration، Storefront از ساختار Legacy استفاده می‌کند. پس از فعال‌شدن Catalog v2، ساختار نمایش از Catalog جدید گرفته می‌شود ولی آیتم‌های Legacy حل‌نشده تا زمان Review از فروشگاه حذف نمی‌شوند.
 
 ---
 

@@ -160,6 +160,8 @@ function migrate(): void {
     seed_setting('storefront_show_reviews', '1');
     seed_setting('storefront_show_tutorials', '0');
     seed_setting('storefront_show_comparison', '1');
+    seed_setting('catalog_v2_storefront_enabled', '0');
+    seed_setting('catalog_v2_applied_at', '');
 
     // Safe Commerce Plus upgrade columns. These commands are idempotent and keep older installs intact.
     add_column_if_missing('product_categories', 'image_url', 'VARCHAR(1024) NULL AFTER emoji');
@@ -187,6 +189,12 @@ function migrate(): void {
     add_column_if_missing('products', 'is_featured', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active');
     add_column_if_missing('products', 'sort_order', 'INT NOT NULL DEFAULT 0 AFTER is_featured');
     add_column_if_missing('orders', 'variant_id', 'BIGINT UNSIGNED NULL AFTER product_id');
+    add_column_if_missing('orders', 'catalog_service_id', 'BIGINT UNSIGNED NULL AFTER product_id');
+    add_column_if_missing('orders', 'catalog_group_id', 'BIGINT UNSIGNED NULL AFTER catalog_service_id');
+    add_column_if_missing('orders', 'catalog_plan_id', 'BIGINT UNSIGNED NULL AFTER catalog_group_id');
+    add_column_if_missing('orders', 'service_name_snapshot', 'VARCHAR(255) NULL AFTER catalog_plan_id');
+    add_column_if_missing('orders', 'group_name_snapshot', 'VARCHAR(255) NULL AFTER service_name_snapshot');
+    add_column_if_missing('orders', 'plan_name_snapshot', 'VARCHAR(255) NULL AFTER group_name_snapshot');
     add_column_if_missing('orders', 'price_currency', "VARCHAR(8) NOT NULL DEFAULT 'IRT' AFTER final_amount");
     add_column_if_missing('orders', 'price_usd', 'DECIMAL(14,4) NULL AFTER price_currency');
     add_column_if_missing('orders', 'usd_rate_toman', 'DECIMAL(24,6) NULL AFTER price_usd');
@@ -910,12 +918,21 @@ function order_set_payment_method(int $orderId, int $userId, string $method, arr
 function payment_method_fa(?string $m): string {
     return ['wallet'=>'کیف پول داخلی','card'=>'کارت به کارت','stars'=>'Telegram Stars','crypto'=>'رمزارز'][$m ?: ''] ?? 'انتخاب نشده';
 }
+function order_catalog_display_name(array $order): string {
+    $parts = array_values(array_filter([
+        trim((string)($order['service_name_snapshot'] ?? '')),
+        trim((string)($order['group_name_snapshot'] ?? '')),
+        trim((string)($order['plan_name_snapshot'] ?? '')),
+    ], static fn($v) => $v !== ''));
+    if ($parts) return implode(' - ', $parts);
+    return trim((string)($order['product_name'] ?? '').(!empty($order['variant_title']) ? ' - '.$order['variant_title'] : ''));
+}
 function send_stars_invoice_for_order(array $order): array {
     if (!payment_enabled('stars')) throw new RuntimeException('STARS_DISABLED');
     $amountStars = (int)($order['stars_amount'] ?? 0);
     if ($amountStars <= 0) $amountStars = max(1, (int)ceil((int)$order['final_amount'] / max(1, setting_int('stars_rate_toman', 3200))));
     $payload = 'order_'.$order['id'].'_stars_'.$amountStars;
-    $name = $order['product_name'].(!empty($order['variant_title']) ? ' - '.$order['variant_title'] : '');
+    $name = order_catalog_display_name($order);
     return tg('sendInvoice', [
         'chat_id'=>(int)$order['telegram_id'],
         'title'=>'پرداخت سفارش #'.$order['id'],
@@ -1112,7 +1129,7 @@ function notify_user_swapwallet_link(array $order, ?array $invoice=null): void {
     if (empty($res['ok'])) error_log('[BlueReferral SwapWallet] send payment link failed: '.json_encode($res, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
 }
 function swapwallet_invoice_payloads(array $order, float $amountUsd, string $token, int $ttl): array {
-    $name = $order['product_name'].(!empty($order['variant_title']) ? ' - '.$order['variant_title'] : '');
+    $name = order_catalog_display_name($order);
     $custom = ['order_id'=>(int)$order['id'], 'telegram_id'=>(int)$order['telegram_id'], 'cartId'=>'blue-ref-'.(int)$order['id']];
     $cb = swapwallet_callback_url((int)$order['id']);
     $returnUrl = miniapp_url(false);
@@ -1902,21 +1919,30 @@ function admin_order_keyboard(int $orderId): string {
     ]]);
 }
 function show_shop_home(int $chat_id, $message_id=null): void {
-    $cats = shop_categories(true);
+    $cats = (function_exists('catalog_enabled') && catalog_enabled()) ? catalog_store_categories(true) : shop_categories(true);
     $rows = [];
-    foreach ($cats as $c) $rows[] = [['text'=>trim(($c['emoji'] ?: '🛒').' '.$c['title']), 'callback_data'=>'shop_cat_'.$c['id']]];
+    foreach ($cats as $c) {
+        $callbackId = isset($c['legacy_category_id']) ? (int)$c['legacy_category_id'] : (int)$c['id'];
+        if ($callbackId <= 0) continue;
+        $rows[] = [['text'=>trim(($c['emoji'] ?: '🛒').' '.$c['title']), 'callback_data'=>'shop_cat_'.$callbackId]];
+    }
     $rows[] = [['text'=>'⭐ محصولات ویژه', 'callback_data'=>'shop_featured'], ['text'=>'📦 همه محصولات', 'callback_data'=>'shop_cat_0']];
     $rows[] = [['text'=>'🧾 سفارش‌های من', 'callback_data'=>'u_orders'], ['text'=>'🔙 منوی اصلی', 'callback_data'=>'main']];
     $txt = "🛒 <b>فروشگاه</b>\n\nمحصول را انتخاب کن؛ اگر محصول پلن داشته باشد، قبل از سفارش پلن را انتخاب می‌کنی. وضعیت سفارش هم مرحله‌به‌مرحله نمایش داده می‌شود.";
     send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>$rows]));
 }
 function show_shop_category(int $chat_id, $message_id, int $categoryId=0, bool $featured=false): void {
-    $products = shop_products($categoryId ?: null, true);
+    $products = function_exists('storefront_shop_products') ? storefront_shop_products() : shop_products(null, true);
+    if ($categoryId) $products = array_values(array_filter($products, fn($p)=>(int)($p['category_id'] ?? 0) === $categoryId));
+    // Telegram shop is flat: when a Service has visible Groups, list the Groups instead of a non-purchasable container row.
+    $products = array_values(array_filter($products, fn($p)=>(int)($p['child_count'] ?? 0) === 0));
     if ($featured) $products = array_values(array_filter($products, fn($p)=>(int)($p['is_featured'] ?? 0) === 1));
     $rows = [];
     foreach ($products as $p) {
-        $label = '📦 '.$p['name'].' — '.product_price_label($p);
-        if ((int)($p['variant_count'] ?? 0) > 0) $label .= ' | '.(int)$p['variant_count'].' پلن';
+        $display = !empty($p['parent_name']) ? $p['parent_name'].' → '.$p['name'] : $p['name'];
+        $label = '📦 '.$display.' — '.product_price_label($p);
+        $variantCount = array_key_exists('__catalog_variant_ids', $p) ? count((array)$p['__catalog_variant_ids']) : (int)($p['variant_count'] ?? 0);
+        if ($variantCount > 0) $label .= ' | '.$variantCount.' پلن';
         $rows[] = [['text'=>$label, 'callback_data'=>'shop_prod_'.$p['id']]];
     }
     if (!$rows) $rows[] = [['text'=>'فعلاً محصولی نیست', 'callback_data'=>'u_shop']];
@@ -1925,11 +1951,19 @@ function show_shop_category(int $chat_id, $message_id, int $categoryId=0, bool $
     send_or_edit($chat_id, $message_id, "🛒 <b>{$title}</b>\n\nبرای دیدن جزئیات روی محصول بزن.", json_markup(['inline_keyboard'=>$rows]));
 }
 function show_shop_product(int $chat_id, $message_id, int $productId): void {
-    $p = shop_product($productId);
-    if (!$p || (int)$p['is_active'] !== 1) { send_or_edit($chat_id, $message_id, 'محصول پیدا نشد یا غیرفعال است.', shop_back_keyboard()); return; }
-    $variants = product_variants($productId, true);
+    $p = null;
+    if (function_exists('storefront_shop_products')) {
+        foreach (storefront_shop_products() as $candidate) if ((int)$candidate['id'] === $productId && (int)($candidate['child_count'] ?? 0) === 0) { $p=$candidate; break; }
+    }
+    if (!$p) $p = shop_product($productId);
+    if (!$p || (int)$p['is_active'] !== 1 || (int)($p['child_count'] ?? 0) > 0) { send_or_edit($chat_id, $message_id, 'محصول پیدا نشد یا غیرفعال است.', shop_back_keyboard()); return; }
+    if (array_key_exists('__catalog_variant_ids', $p)) {
+        $variants=[];
+        foreach ((array)$p['__catalog_variant_ids'] as $vid) { $v=product_variant((int)$vid); if($v && (int)($v['is_active']??0)===1)$variants[]=$v; }
+    } else $variants = product_variants($productId, true);
     $priceLine = count($variants) ? product_price_label($p) : money((int)$p['price']);
-    $txt = "📦 <b>".h($p['name'])."</b>\n\n".
+    $displayName = !empty($p['parent_name']) ? $p['parent_name'].' → '.$p['name'] : $p['name'];
+    $txt = "📦 <b>".h($displayName)."</b>\n\n".
         "قیمت: <b>{$priceLine}</b>\n".
         "دسته: ".h(trim(($p['category_emoji'] ?? '').' '.($p['category_title'] ?? 'عمومی')))."\n".
         "نوع تحویل: <b>".delivery_type_fa($p['delivery_type'])."</b>\n".
@@ -1938,7 +1972,10 @@ function show_shop_product(int $chat_id, $message_id, int $productId): void {
         h($p['full_description'] ?: $p['short_description'] ?: '');
     $rows = [];
     if ($variants) {
-        foreach ($variants as $v) $rows[] = [['text'=>'🧩 '.$v['title'].' — '.money($v['price']), 'callback_data'=>'shop_buyv_'.$p['id'].'_'.$v['id']]];
+        foreach ($variants as $v) {
+            $actualPid=(int)($v['product_id'] ?? $p['id']);
+            $rows[] = [['text'=>'🧩 '.$v['title'].' — '.money(variant_current_price_toman($v)), 'callback_data'=>'shop_buyv_'.$actualPid.'_'.$v['id']]];
+        }
     } else {
         $rows[] = [['text'=>'🛒 ثبت سفارش', 'callback_data'=>'shop_buy_'.$p['id']]];
     }
@@ -1951,7 +1988,7 @@ function show_user_orders(int $chat_id, $message_id, int $userId): void {
     $txt = "🧾 <b>سفارش‌های من</b>\n\n";
     if (!$orders) $txt .= "فعلاً سفارش فعالی در لیستت نیست.";
     foreach ($orders as $o) {
-        $name = $o['product_name'].(!empty($o['variant_title']) ? ' - '.$o['variant_title'] : '');
+        $name = order_catalog_display_name($o);
         $txt .= order_status_emoji($o['status'])." <code>#{$o['id']}</code> | <b>".h($name)."</b> | ".money($o['final_amount'])."\n";
         $row = [['text'=>order_status_emoji($o['status']).' سفارش #'.$o['id'], 'callback_data'=>'order_view_'.$o['id']]];
         if (is_cleanup_order_status($o['status'])) $row[] = ['text'=>'🗑 حذف از لیست', 'callback_data'=>'order_hide_'.$o['id']];
@@ -1962,7 +1999,7 @@ function show_user_orders(int $chat_id, $message_id, int $userId): void {
     send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>$rows]));
 }
 function show_order_invoice(int $chat_id, $message_id, array $order): void {
-    $name = $order['product_name'].(!empty($order['variant_title']) ? ' - '.$order['variant_title'] : '');
+    $name = order_catalog_display_name($order);
     $txt = "🧾 <b>فاکتور سفارش #{$order['id']}</b>\n\n".
         "محصول: <b>".h($name)."</b>\n".
         "مبلغ: <b>".money($order['amount'])."</b>\n";
@@ -1989,7 +2026,7 @@ function show_order_invoice(int $chat_id, $message_id, array $order): void {
     send_or_edit($chat_id, $message_id, $txt, order_user_keyboard($order));
 }
 function order_admin_card(array $order): string {
-    $name = $order['product_name'].(!empty($order['variant_title']) ? ' - '.$order['variant_title'] : '');
+    $name = order_catalog_display_name($order);
     $cust = customer_stats((int)$order['user_id']);
     return "🧾 <b>سفارش #{$order['id']}</b>\n".
         "کاربر: @".h($order['username'] ?: 'بدون یوزرنیم')." | <code>{$order['telegram_id']}</code>\n".
@@ -2091,7 +2128,7 @@ function show_admin_orders(int $chat_id, $message_id, string $filter='all'): voi
     $rows=[]; $txt="🧾 <b>سفارش‌ها</b>\n\n";
     if (!$orders) $txt .= 'سفارشی در این بخش نیست.';
     foreach($orders as $o){
-        $name=$o['product_name'].(!empty($o['variant_title'])?' - '.$o['variant_title']:'');
+        $name=order_catalog_display_name($o);
         $txt .= order_status_emoji($o['status'])." <code>#{$o['id']}</code> | @".h($o['username'] ?: '---')." | ".h($name)." | ".money($o['final_amount'])."\n";
         $row=[['text'=>'#'.$o['id'].' '.order_status_fa($o['status']), 'callback_data'=>'ord_view_'.$o['id']]];
         if (is_cleanup_order_status($o['status'])) $row[]=['text'=>'🗑 حذف', 'callback_data'=>'ord_delete_'.$o['id']];
@@ -2369,13 +2406,22 @@ function price_meta_public(array $row): array {
     return ['currency'=>$m['currency'], 'usd'=>$m['usd'], 'toman'=>$m['toman'], 'rate_toman'=>$m['rate_toman'], 'rate_source'=>$m['rate_source'], 'rate_updated_at'=>$m['rate_updated_at'], 'dynamic'=>$m['dynamic'], 'label'=>$m['label']];
 }
 function product_price_label(array $p): string {
-    $vc=(int)($p['variant_count'] ?? 0);
-    if ($vc > 0) {
-        $prices=[];
-        try { foreach (product_variants((int)$p['id'], true) as $v) $prices[] = variant_current_price_toman($v); } catch (Throwable $e) {}
-        $prices = array_values(array_filter($prices, fn($x)=>$x>=0));
-        if ($prices) return 'از '.money(min($prices));
+    $prices=[];
+    if (array_key_exists('__catalog_variant_ids', $p)) {
+        try {
+            foreach ((array)$p['__catalog_variant_ids'] as $vid) {
+                $v=product_variant((int)$vid);
+                if ($v && (int)($v['is_active'] ?? 1) === 1) $prices[] = variant_current_price_toman($v);
+            }
+        } catch (Throwable $e) {}
+    } else {
+        $vc=(int)($p['variant_count'] ?? 0);
+        if ($vc > 0) {
+            try { foreach (product_variants((int)$p['id'], true) as $v) $prices[] = variant_current_price_toman($v); } catch (Throwable $e) {}
+        }
     }
+    $prices = array_values(array_filter($prices, fn($x)=>$x>=0));
+    if ($prices) return 'از '.money(min($prices));
     return price_runtime_meta($p)['label'];
 }
 function product_commission_text(array $p): string {
@@ -2447,6 +2493,7 @@ function create_shop_order(int $userId, int $productId, ?int $variantId=null): a
     $paymentExpiresAt = date('Y-m-d H:i:s', time() + setting_int('order_expiry_minutes', 20) * 60);
     db()->prepare('INSERT INTO orders (user_id, product_id, variant_id, amount, final_amount, price_currency, price_usd, usd_rate_toman, usd_rate_source, usd_rate_updated_at, status, expires_at, payment_expires_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute([$userId,$productId,$variantId,$amount,$amount,$priceMeta['currency'],$priceMeta['usd'],$priceMeta['rate_toman'],$priceMeta['rate_source'],$priceMeta['rate_updated_at'] ? date('Y-m-d H:i:s', strtotime($priceMeta['rate_updated_at'])) : ($priceMeta['currency']==='USD'?date('Y-m-d H:i:s'):null),'pending_payment',$expiresAt,$paymentExpiresAt]);
     $orderId = (int)db()->lastInsertId();
+    if (function_exists('catalog_order_snapshot')) { try { catalog_order_snapshot($orderId, $productId, $variantId); } catch (Throwable $e) {} }
     add_order_event($orderId, 'pending_payment', 'سفارش ثبت شد', 'در انتظار پرداخت مشتری');
     return order_by_id($orderId);
 }
@@ -2716,7 +2763,7 @@ function reserve_inventory_for_order(array $order) {
 function delivery_template_for_order(array $order, string $rawDelivery): string {
     $type = normalize_delivery_type((string)($order['delivery_type'] ?? 'manual'));
     $template = setting('delivery_template_'.$type, setting('delivery_template_manual', "📦 سفارش شما آماده شد\n\n{delivery}"));
-    $product = trim(($order['product_name'] ?? '').(!empty($order['variant_title']) ? ' - '.$order['variant_title'] : ''));
+    $product = order_catalog_display_name($order);
     return strtr($template, [
         '{delivery}'=>$rawDelivery,
         '{product}'=>$product,
@@ -2825,7 +2872,7 @@ function set_order_service_delivery(int $orderId, string $url, string $title='',
 
 function order_public_payload(array $o, bool $is_admin = false): array {
     if (!empty($o['id']) && ($o['payment_method'] ?? '') === 'crypto') { $o = refresh_crypto_order_amount_if_open((int)$o['id']) ?: $o; }
-    $name = $o['product_name'].(!empty($o['variant_title']) ? ' - '.$o['variant_title'] : '');
+    $name = order_catalog_display_name($o);
     $status = normalize_order_status($o['status']);
     $pmtExpiresAt = $o['payment_expires_at'] ?? null;
     if (!$pmtExpiresAt && $status === 'pending_payment') {
@@ -2842,6 +2889,12 @@ function order_public_payload(array $o, bool $is_admin = false): array {
 
     $payload = [
         'id'=>(int)$o['id'], 'product_name'=>$o['product_name'], 'variant_title'=>$o['variant_title'] ?? null, 'display_name'=>$name,
+        'catalog_service_id'=>isset($o['catalog_service_id']) && $o['catalog_service_id'] !== null ? (int)$o['catalog_service_id'] : null,
+        'catalog_group_id'=>isset($o['catalog_group_id']) && $o['catalog_group_id'] !== null ? (int)$o['catalog_group_id'] : null,
+        'catalog_plan_id'=>isset($o['catalog_plan_id']) && $o['catalog_plan_id'] !== null ? (int)$o['catalog_plan_id'] : null,
+        'service_name_snapshot'=>$o['service_name_snapshot'] ?? null,
+        'group_name_snapshot'=>$o['group_name_snapshot'] ?? null,
+        'plan_name_snapshot'=>$o['plan_name_snapshot'] ?? null,
         'image_url'=>$o['image_url'] ?? null, 'amount'=>(int)$o['amount'], 'discount_amount'=>(int)$o['discount_amount'],
         'variant_discount_percent'=>(int)($o['variant_discount_percent'] ?? 0),
         'wallet_amount'=>(int)($o['wallet_amount'] ?? 0), 'final_amount'=>(int)$o['final_amount'], 'coupon_code'=>$o['coupon_code'],
@@ -3174,7 +3227,7 @@ function update_inventory_field(int $id, string $field, $value): bool {
 function blue_backup_tables(): array {
     $preferred = [
         'settings','users','referrals','transactions','withdrawals','mission_claims','spin_logs','payment_methods',
-        'product_categories','products','coupons','product_variants','inventory_items','orders','order_events',
+        'product_categories','products','coupons','product_variants','store_categories','services','service_groups','service_plans','inventory_items','orders','order_events',
         'crypto_wallets','crypto_payment_checks','swapwallet_invoices'
     ];
     $existing = [];
@@ -3369,4 +3422,5 @@ function verify_webapp_init_data(string $initData): array|false {
     return $data;
 }
 
+require_once __DIR__ . '/catalog.php';
 require_once __DIR__ . '/storefront.php';
