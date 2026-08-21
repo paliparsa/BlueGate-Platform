@@ -47,9 +47,9 @@ function api_exception_message(Throwable $e,string $fallback): string {
     return $fallback;
 }
 function api_cookie_token(): string { return trim((string)($_COOKIE['bg_session']??'')); }
-function api_set_session_cookie(string $token): void {$secure=(!empty($_SERVER['HTTPS'])&&strtolower((string)$_SERVER['HTTPS'])!=='off')||((string)($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https');$origin=trim((string)app_config('WEB_ALLOWED_ORIGIN',''));$apiHost=strtolower((string)($_SERVER['HTTP_HOST']??''));$originHost=strtolower((string)(parse_url($origin,PHP_URL_HOST)?:''));$sameSite=($originHost&&$apiHost&&!str_contains($apiHost,$originHost)&&!str_contains($originHost,preg_replace('/:\d+$/','',$apiHost)))?'None':'Lax';setcookie('bg_session',$token,['expires'=>time()+max(1,setting_int('auth_token_ttl_hours',168))*3600,'path'=>'/','secure'=>$secure,'httponly'=>true,'samesite'=>$sameSite]);}
+function api_set_session_cookie(string $token, bool $remember=true): void {$secure=(!empty($_SERVER['HTTPS'])&&strtolower((string)$_SERVER['HTTPS'])!=='off')||((string)($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https');$origin=trim((string)app_config('WEB_ALLOWED_ORIGIN',''));$apiHost=strtolower((string)($_SERVER['HTTP_HOST']??''));$originHost=strtolower((string)(parse_url($origin,PHP_URL_HOST)?:''));$sameSite=($originHost&&$apiHost&&!str_contains($apiHost,$originHost)&&!str_contains($originHost,preg_replace('/:\d+$/','',$apiHost)))?'None':'Lax';$expires=$remember?time()+max(1,setting_int('auth_token_ttl_hours',168))*3600:0;setcookie('bg_session',$token,['expires'=>$expires,'path'=>'/','secure'=>$secure,'httponly'=>true,'samesite'=>$sameSite]);}
 function api_clear_session_cookie(): void { setcookie('bg_session','',['expires'=>time()-3600,'path'=>'/','secure'=>!empty($_SERVER['HTTPS']),'httponly'=>true,'samesite'=>'Lax']); }
-function api_issue_session(int $userId): void {$t=issue_user_auth_token($userId);api_set_session_cookie($t);}
+function api_issue_session(int $userId, bool $remember=true): void {$t=issue_user_auth_token($userId);api_set_session_cookie($t,$remember);}
 
 function get_authenticated_user(string $initData, ?string $authToken = null): array|false {
     if (!empty($initData)) {
@@ -251,7 +251,8 @@ function parse_spin_rewards_lines(string $text): array {
 function user_payload(array $user): array {
     $vip = vip_info((int)$user['referrals_count']); $today = today_referrals((int)$user['id']); $customer = customer_stats((int)$user['id']);
     $telegramId=(int)($user['telegram_id']??0);$telegramConnected=$telegramId>0&&$telegramId<9000000000;
-    return ['id'=>(int)$user['id'], 'telegram_id'=>$telegramId, 'telegram_connected'=>$telegramConnected, 'username'=>$user['username'], 'web_username'=>$user['web_username']??null, 'first_name'=>$user['first_name'], 'last_name'=>$user['last_name'] ?? null, 'email'=>$user['email'] ?? null, 'email_verified_at'=>$user['email_verified_at']??null, 'phone_number'=>$user['phone_number'] ?? null, 'phone_verified_at'=>$user['phone_verified_at'] ?? null, 'ref_code'=>$user['ref_code'], 'referral_link'=>referral_link($user), 'balance'=>(int)$user['balance'], 'total_earned'=>(int)$user['total_earned'], 'referrals_count'=>(int)$user['referrals_count'], 'today_referrals'=>$today, 'spin_balance'=>(int)$user['spin_balance'], 'vip'=>$vip, 'customer'=>$customer, 'theme_color'=>$user['theme_color'] ?? null, 'member_since'=>$user['created_at']??null, 'has_password'=>!empty($user['password_hash'])];
+    $hasPassword=!empty($user['password_hash']);$completionChecks=[trim((string)($user['first_name']??''))!=='',trim((string)($user['web_username']??$user['username']??''))!=='',!empty($user['email_verified_at']),$telegramConnected];$profileCompletion=(int)round((count(array_filter($completionChecks))/count($completionChecks))*100);$securityScore=count(array_filter([$hasPassword,!empty($user['email_verified_at']),$telegramConnected]));$securityLevel=$securityScore>=3?'great':($securityScore>=2?'good':'attention');
+    return ['id'=>(int)$user['id'], 'telegram_id'=>$telegramId, 'telegram_connected'=>$telegramConnected, 'username'=>$user['username'], 'web_username'=>$user['web_username']??null, 'first_name'=>$user['first_name'], 'last_name'=>$user['last_name'] ?? null, 'email'=>$user['email'] ?? null, 'email_verified_at'=>$user['email_verified_at']??null, 'phone_number'=>$user['phone_number'] ?? null, 'phone_verified_at'=>$user['phone_verified_at'] ?? null, 'ref_code'=>$user['ref_code'], 'referral_link'=>referral_link($user), 'balance'=>(int)$user['balance'], 'total_earned'=>(int)$user['total_earned'], 'referrals_count'=>(int)$user['referrals_count'], 'today_referrals'=>$today, 'spin_balance'=>(int)$user['spin_balance'], 'vip'=>$vip, 'customer'=>$customer, 'theme_color'=>$user['theme_color'] ?? null, 'member_since'=>$user['created_at']??null, 'has_password'=>$hasPassword, 'profile_completion'=>$profileCompletion, 'security_level'=>$securityLevel];
 }
 function dashboard_payload(array $user): array {
     $missions = []; $today = date('Y-m-d'); $todayCount = today_referrals((int)$user['id']);
@@ -330,7 +331,7 @@ if ($action === 'register') {
         ]);
     }
     
-    api_issue_session((int)$user['id']);api_out(dashboard_payload(get_user_by_id((int)$user['id'])));
+    api_issue_session((int)$user['id'],bool_input($input['remember']??1)===1);api_out(dashboard_payload(get_user_by_id((int)$user['id'])));
 }
 
 if ($action === 'verify_email_otp') {
@@ -344,7 +345,7 @@ if ($action === 'verify_email_otp') {
         api_out(['ok'=>false, 'error'=>'OTP_VERIFICATION_FAILED', 'message'=>'کد تایید اشتباه است یا منقضی شده است.'], 400);
     }
     $user = get_user_by_id($userId);
-    api_issue_session((int)$user['id']);
+    api_issue_session((int)$user['id'],bool_input($input['remember']??1)===1);
     notify_new_user_signup($user, '🌐 وب‌سایت (ایمیل تایید شد)');
     api_out(dashboard_payload($user)+['message'=>'ایمیل شما با موفقیت تایید شد! 🎉']);
 }
@@ -387,7 +388,7 @@ if ($action === 'login') {
         ], 403);
     }
 
-    security_rate_limit_clear('login',security_client_ip().'|'.strtolower($identifier));api_issue_session((int)$user['id']);api_out(dashboard_payload($user));
+    security_rate_limit_clear('login',security_client_ip().'|'.strtolower($identifier));api_issue_session((int)$user['id'],bool_input($input['remember']??1)===1);api_out(dashboard_payload($user));
 }
 
 if ($action === 'forgot_password_request') {
@@ -399,7 +400,7 @@ if ($action === 'forgot_password_request') {
 if ($action === 'reset_password_submit') {
     $identifier=trim((string)($input['identifier']??$input['email']??''));$otp=trim((string)($input['otp']??''));$newPassword=(string)($input['new_password']??'');api_rate_limit('reset_password',strtolower($identifier),8,900,900);
     if($identifier===''||strlen($otp)<4)api_out(['ok'=>false,'error'=>'INVALID_OTP','message'=>'کد تایید وارد شده معتبر نیست.'],400);if(mb_strlen($newPassword)<8)api_out(['ok'=>false,'error'=>'INVALID_PASSWORD','message'=>'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.'],400);
-    $u=get_user_by_email_or_username($identifier);if(!$u||user_is_blocked($u)||!reset_password_with_otp((int)$u['id'],$otp,$newPassword))api_out(['ok'=>false,'error'=>'RESET_FAILED','message'=>'کد تایید اشتباه است یا منقضی شده است.'],400);api_issue_session((int)$u['id']);api_out(['ok'=>true,'message'=>'رمز عبور شما با موفقیت تغییر کرد! اکنون وارد شده‌اید.']+dashboard_payload(get_user_by_id((int)$u['id'])));
+    $u=get_user_by_email_or_username($identifier);if(!$u||user_is_blocked($u)||!reset_password_with_otp((int)$u['id'],$otp,$newPassword))api_out(['ok'=>false,'error'=>'RESET_FAILED','message'=>'کد تایید اشتباه است یا منقضی شده است.'],400);api_issue_session((int)$u['id'],bool_input($input['remember']??1)===1);api_out(['ok'=>true,'message'=>'رمز عبور شما با موفقیت تغییر کرد! اکنون وارد شده‌اید.']+dashboard_payload(get_user_by_id((int)$u['id'])));
 }
 
 if ($action === 'telegram_login') {
@@ -415,10 +416,30 @@ if ($action === 'telegram_login') {
         'first_name' => $verified['first_name'] ?? null,
         'last_name' => $verified['last_name'] ?? null,
     ], null);
-    if(user_is_blocked($user))api_out(['ok'=>false,'error'=>'ACCOUNT_BLOCKED','message'=>'این حساب مسدود شده است.'],403);api_issue_session((int)$user['id']);api_out(dashboard_payload($user));
+    if(user_is_blocked($user))api_out(['ok'=>false,'error'=>'ACCOUNT_BLOCKED','message'=>'این حساب مسدود شده است.'],403);api_issue_session((int)$user['id'],bool_input($input['remember']??1)===1);api_out(dashboard_payload($user));
 }
 
 $user = get_authenticated_user((string)$initData, (string)$authToken);
+
+if ($action === 'telegram_link') {
+    if (!$user) api_out(['ok'=>false,'error'=>'AUTH_REQUIRED','message'=>'ابتدا وارد حساب BlueGate شوید.'],401);
+    api_rate_limit('telegram_link',(string)$user['id'],10,900,900);
+    $authData=is_array($input['auth_data']??null)?$input['auth_data']:[];
+    $verified=verify_telegram_login_widget($authData);
+    if(!$verified)api_out(['ok'=>false,'error'=>'INVALID_TELEGRAM_WIDGET_DATA','message'=>'تایید هویت تلگرام ناموفق بود.'],400);
+    $tid=(int)($verified['id']??0);if($tid<=0||$tid>=9000000000)api_out(['ok'=>false,'error'=>'INVALID_TELEGRAM_ID','message'=>'شناسه تلگرام معتبر نیست.'],400);
+    $existing=get_user_by_tid($tid);
+    if($existing&&(int)$existing['id']!==(int)$user['id'])api_out(['ok'=>false,'error'=>'TELEGRAM_ALREADY_LINKED','message'=>'این حساب تلگرام قبلاً به یک حساب BlueGate دیگر متصل شده است.'],409);
+    $pdo=db();$pdo->beginTransaction();
+    try{
+        $q=$pdo->prepare('SELECT id,telegram_id,first_name,last_name FROM users WHERE id=? FOR UPDATE');$q->execute([(int)$user['id']]);$locked=$q->fetch();if(!$locked)throw new RuntimeException('USER_NOT_FOUND');
+        $first=trim((string)($locked['first_name']??''))!==''?(string)$locked['first_name']:(string)($verified['first_name']??'');
+        $last=trim((string)($locked['last_name']??''))!==''?(string)$locked['last_name']:(string)($verified['last_name']??'');
+        $pdo->prepare('UPDATE users SET telegram_id=?, first_name=?, last_name=? WHERE id=?')->execute([$tid,$first,$last,(int)$user['id']]);
+        $pdo->commit();
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();if(str_contains(strtolower($e->getMessage()),'duplicate'))api_out(['ok'=>false,'error'=>'TELEGRAM_ALREADY_LINKED','message'=>'این حساب تلگرام قبلاً متصل شده است.'],409);throw $e;}
+    api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['message'=>'تلگرام با موفقیت به حساب متصل شد.']);
+}
 
 if ($action === 'me') {
     if (!$user) {

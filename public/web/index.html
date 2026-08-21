@@ -8,11 +8,11 @@
   <meta name="description" content="فروشگاه سرویس‌های دیجیتال BlueGate؛ VPN، Telegram Stars و Telegram Premium">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
-  <link rel="stylesheet" href="css/store.css?v=2.4.0">
-  <link rel="stylesheet" href="css/account.css?v=2.4.0">
-  <link rel="stylesheet" href="css/dashboard.css?v=2.4.0">
-  <link rel="stylesheet" href="css/ui-overhaul.css?v=2.4.0">
-  <link rel="stylesheet" href="css/admin-v18.css?v=2.4.0">
+  <link rel="stylesheet" href="css/store.css?v=2.5.0">
+  <link rel="stylesheet" href="css/account.css?v=2.5.0">
+  <link rel="stylesheet" href="css/dashboard.css?v=2.5.0">
+  <link rel="stylesheet" href="css/ui-overhaul.css?v=2.5.0">
+  <link rel="stylesheet" href="css/admin-v18.css?v=2.5.0">
 </head>
 <body>
   <div id="announcement" class="announcement hidden"></div>
@@ -31,13 +31,17 @@
         <button class="member-nav-link admin-only hidden" data-member-route="admin" type="button">مدیریت</button>
       </nav>
       <div class="header-actions">
-        <button id="accountBtn" class="bg-account-btn" type="button"><span>👤</span><span id="accountLabel">ورود / حساب</span><b id="accountBadge" class="bg-account-badge hidden">0</b></button>
+        <button id="quickCreditBtn" class="bg-credit-chip hidden" type="button" aria-label="اعتبار BlueGate"><span>اعتبار</span><b id="quickCreditValue">0 تومان</b></button>
+        <button id="accountBtn" class="bg-account-btn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span id="accountAvatar" class="bg-header-avatar">👤</span><span id="accountLabel">ورود</span><span id="accountChevron" class="bg-account-chevron hidden">⌄</span><b id="accountBadge" class="bg-account-badge hidden">0</b>
+        </button>
+        <button id="registerBtn" class="bg-register-btn" type="button">ساخت حساب</button>
         <a id="supportTop" class="btn header-support" target="_blank" rel="noopener">پشتیبانی</a>
         <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="منو">☰</button>
       </div>
     </div>
     <div id="mobileMenu" class="mobile-menu hidden">
-      <div class="shell mobile-menu-links"><a data-store-nav href="#products">سرویس‌ها</a><a data-store-nav href="#why">مزایا</a><a data-store-nav href="#reviewsSection">نظرات</a><a data-store-nav href="#faq">سوالات</a><button class="member-mobile-link hidden" data-member-route="orders" type="button">📦 سفارش‌ها</button><button class="member-mobile-link hidden" data-member-route="wallet" type="button">💳 اعتبار</button><button class="member-mobile-link hidden" data-member-route="referral" type="button">👥 همکاری در فروش</button><button class="member-mobile-link admin-only hidden" data-member-route="admin" type="button">🛠 مدیریت</button><button id="mobileAccountBtn" class="bg-account-btn" type="button">👤 حساب کاربری</button><a id="mobileSupport" target="_blank" rel="noopener">پشتیبانی تلگرام</a></div>
+      <div class="shell mobile-menu-links"><a data-store-nav href="#products">سرویس‌ها</a><a data-store-nav href="#why">مزایا</a><a data-store-nav href="#reviewsSection">نظرات</a><a data-store-nav href="#faq">سوالات</a><button class="member-mobile-link hidden" data-member-route="orders" type="button">📦 سفارش‌ها</button><button class="member-mobile-link hidden" data-member-route="wallet" type="button">💳 اعتبار</button><button class="member-mobile-link hidden" data-member-route="referral" type="button">👥 همکاری در فروش</button><button class="member-mobile-link admin-only hidden" data-member-route="admin" type="button">🛠 مدیریت</button><button id="mobileAccountBtn" class="bg-mobile-account-action" type="button">🔑 ورود</button><button id="mobileRegisterBtn" class="bg-mobile-register-action" type="button">✨ ساخت حساب</button><a id="mobileSupport" target="_blank" rel="noopener">پشتیبانی تلگرام</a></div>
     </div>
   </header>
 
@@ -226,13 +230,16 @@
   <div id="stickyCheckout" class="sticky-checkout hidden"><div class="sticky-copy"><small id="stickyProduct">انتخاب شما</small><strong id="stickyVariant">—</strong></div><div class="sticky-price"><strong id="stickyPrice">—</strong><small>تومان</small></div><button id="stickyBuy" class="btn primary sticky-cta" type="button"><span>ثبت سفارش</span><b>←</b></button></div>
 
 
+  <div id="accountMenuScrim" class="bg-account-menu-scrim hidden"></div>
+  <div id="accountMenu" class="bg-account-popover hidden" role="menu" aria-label="منوی حساب"></div>
+
   <div id="accountBackdrop" class="bg-drawer-backdrop"></div>
-  <aside id="accountDrawer" class="bg-account-drawer" aria-label="حساب کاربری">
+  <aside id="accountDrawer" class="bg-account-drawer" role="dialog" aria-modal="true" aria-label="ورود و حساب کاربری">
     <div class="bg-drawer-head"><strong>BlueGate Account</strong><button id="accountClose" class="bg-drawer-close" type="button" aria-label="بستن">×</button></div>
     <div id="accountContent" class="bg-account-content"></div>
   </aside>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="js/config.js?v=2.4.0"></script><script src="js/api.js?v=2.4.0"></script><script src="js/rates.js?v=2.4.0"></script><script src="js/pricing.js?v=2.4.0"></script><script src="js/account.js?v=2.4.0"></script><script src="js/admin.js?v=2.4.0"></script><script src="js/dashboard.js?v=2.4.0"></script><script src="js/checkout.js?v=2.4.0"></script><script src="js/app.js?v=2.4.0"></script>
+  <script src="js/config.js?v=2.5.0"></script><script src="js/api.js?v=2.5.0"></script><script src="js/rates.js?v=2.5.0"></script><script src="js/pricing.js?v=2.5.0"></script><script src="js/account.js?v=2.5.0"></script><script src="js/admin.js?v=2.5.0"></script><script src="js/dashboard.js?v=2.5.0"></script><script src="js/checkout.js?v=2.5.0"></script><script src="js/app.js?v=2.5.0"></script>
 </body>
 </html>

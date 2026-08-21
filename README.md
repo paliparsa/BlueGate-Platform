@@ -1,3 +1,5 @@
+> **v2.5.0 Auth & Account Navigation:** نوار ورود/ثبت‌نام Website از نو طراحی شده؛ Guest دو CTA واضح «ورود / ساخت حساب» دارد و بعد از ورود Header به Quick Credit + Account Menu تبدیل می‌شود. Auth حالا Modal/Bottom Sheet یکپارچه با Telegram Login، Password UX، بازیابی مرحله‌ای، OTP شش‌رقمی، Remember Session امن، Profile Completion و Telegram Link اختیاری است.
+
 > **v2.4.0 Account Center:** پروفایل Website و Mini App به Account Center یکپارچه ارتقا پیدا کرده، «کیف پول» کاربر به **اعتبار BlueGate** تبدیل شده و امکان برداشت موجودی از تمام مسیرهای اجرایی پروژه حذف شده است. سوابق تاریخی برداشت فقط برای Audit/Backup در دیتابیس نگهداری می‌شوند و هیچ عملیات جدیدی روی آن‌ها وجود ندارد.
 
 > **v2.3.1 VPN Popup & Premium Fix:** انتخاب BluePing حالا داخل Popup ریسپانسیو انجام می‌شود و باگ کشیدگی سبز کارت Premium با حذف pseudo-elementهای تداخلی برطرف شده.
@@ -10,7 +12,7 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.4.0**  
+> نسخه فعلی: **v2.5.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
