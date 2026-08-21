@@ -8,11 +8,11 @@
   <meta name="description" content="فروشگاه سرویس‌های دیجیتال BlueGate؛ VPN، Telegram Stars و Telegram Premium">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
-  <link rel="stylesheet" href="css/store.css?v=2.3.0">
-  <link rel="stylesheet" href="css/account.css?v=2.3.0">
-  <link rel="stylesheet" href="css/dashboard.css?v=2.3.0">
-  <link rel="stylesheet" href="css/ui-overhaul.css?v=2.3.0">
-  <link rel="stylesheet" href="css/admin-v18.css?v=2.3.0">
+  <link rel="stylesheet" href="css/store.css?v=2.3.1">
+  <link rel="stylesheet" href="css/account.css?v=2.3.1">
+  <link rel="stylesheet" href="css/dashboard.css?v=2.3.1">
+  <link rel="stylesheet" href="css/ui-overhaul.css?v=2.3.1">
+  <link rel="stylesheet" href="css/admin-v18.css?v=2.3.1">
 </head>
 <body>
   <div id="announcement" class="announcement hidden"></div>
@@ -97,10 +97,20 @@
 
       <div class="service-nav-wrap" aria-hidden="true"><div class="service-nav" id="serviceNav" role="tablist" aria-label="تعویض سریع سرویس"><button class="active" data-service="vpn" role="tab">VPN</button><button data-service="stars" role="tab">Stars</button><button data-service="premium" role="tab">Premium</button></div></div>
 
-      <div id="vpnPanel" class="product-panel active">
-        <div class="panel-intro"><div><span class="kicker">BLUEPING VPN</span><h3>نوع سرویس رو انتخاب کن</h3><p>پکیج و مبلغ نهایی داخل فاکتور تایید سفارش انتخاب می‌شود؛ تمیزتر و سریع‌تر.</p></div><span class="step-badge">مرحله ۲ از ۴</span></div>
-        <div id="vpnPlans" class="vpn-plan-picker"></div>
-        <div id="vpnPackageStage" class="vpn-package-stage hidden" data-theme="blue">
+      <div id="vpnPanel" class="product-panel active vpn-popup-panel">
+        <div class="vpn-popup-launcher" id="vpnPopupLauncher">
+          <div class="vpn-popup-launcher-icon" aria-hidden="true">🛡️</div>
+          <div class="vpn-popup-launcher-copy">
+            <span class="kicker">BLUEPING VPN</span>
+            <h3 id="vpnLauncherHeading">انتخاب پلن BluePing</h3>
+            <p id="vpnLauncherText">نوع سرویس و پکیج رو داخل یک پنجره جمع‌وجور انتخاب کن؛ بدون پرش صفحه.</p>
+            <div id="vpnLauncherSelection" class="vpn-launcher-selection hidden"></div>
+          </div>
+          <button id="vpnPopupOpen" class="btn primary vpn-popup-open" type="button">انتخاب پلن‌ها <b>←</b></button>
+        </div>
+        <div class="panel-intro vpn-inline-legacy"><div><span class="kicker">BLUEPING VPN</span><h3>نوع سرویس رو انتخاب کن</h3><p>پکیج و مبلغ نهایی داخل فاکتور تایید سفارش انتخاب می‌شود؛ تمیزتر و سریع‌تر.</p></div><span class="step-badge">مرحله ۲ از ۴</span></div>
+        <div id="vpnPlans" class="vpn-plan-picker vpn-inline-legacy"></div>
+        <div id="vpnPackageStage" class="vpn-package-stage vpn-inline-legacy hidden" data-theme="blue">
           <div class="vpn-stage-ambient" aria-hidden="true"></div>
 
           <div class="vpn-stage-top">
@@ -223,6 +233,6 @@
   </aside>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="js/config.js?v=2.3.0"></script><script src="js/api.js?v=2.3.0"></script><script src="js/rates.js?v=2.3.0"></script><script src="js/pricing.js?v=2.3.0"></script><script src="js/account.js?v=2.3.0"></script><script src="js/admin.js?v=2.3.0"></script><script src="js/dashboard.js?v=2.3.0"></script><script src="js/checkout.js?v=2.3.0"></script><script src="js/app.js?v=2.3.0"></script>
+  <script src="js/config.js?v=2.3.1"></script><script src="js/api.js?v=2.3.1"></script><script src="js/rates.js?v=2.3.1"></script><script src="js/pricing.js?v=2.3.1"></script><script src="js/account.js?v=2.3.1"></script><script src="js/admin.js?v=2.3.1"></script><script src="js/dashboard.js?v=2.3.1"></script><script src="js/checkout.js?v=2.3.1"></script><script src="js/app.js?v=2.3.1"></script>
 </body>
 </html>

@@ -1,3 +1,5 @@
+> **v2.3.1 VPN Popup & Premium Fix:** انتخاب BluePing حالا داخل Popup ریسپانسیو انجام می‌شود و باگ کشیدگی سبز کارت Premium با حذف pseudo-elementهای تداخلی برطرف شده.
+
 > **v2.3.0 Guided Service Flow:** انتخاب سرویس در موبایل به کارت‌های swipe/snap تبدیل شده، سوییچر فقط بعد از ورود به جزئیات Sticky می‌شود و BluePing حالا مسیر واقعی نوع سرویس → پکیج → تایید سفارش دارد.
 
 > **Security build note:** this archive is the Verified-35 variant of v2.2.0. Five previously unverified controls are intentionally excluded; see `RELEASE-NOTES-v2.2.0.md`.
@@ -6,7 +8,7 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.3.0**  
+> نسخه فعلی: **v2.3.1**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
