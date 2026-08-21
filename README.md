@@ -1,6 +1,6 @@
 # BlueGate Platform
 
-> نسخه فعلی: **v1.7.0**  
+> نسخه فعلی: **v1.8.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 ---
@@ -397,9 +397,9 @@ BlueGate <noreply@example.com>
 ---
 
 
-# پنل مدیریت Website در v1.7.0
+# پنل مدیریت Website در v1.8.0
 
-از v1.7.0 پنل Admin سایت به سطح قابلیت‌های Admin Mini App ارتقا پیدا کرده و با فونت، فرم و کارت‌های بزرگ‌تر برای دسکتاپ/تبلت/موبایل طراحی شده است.
+از v1.8.0 پنل Admin سایت به سطح قابلیت‌های Admin Mini App ارتقا پیدا کرده و با فونت، فرم و کارت‌های بزرگ‌تر برای دسکتاپ/تبلت/موبایل طراحی شده است.
 
 بخش‌های اصلی:
 
@@ -1079,9 +1079,9 @@ rm -f /usr/local/bin/bluegate
 
 ---
 
-# وضعیت نسخه 1.7.0
+# وضعیت نسخه 1.8.0
 
-مهم‌ترین تغییرات v1.7.0:
+مهم‌ترین تغییرات v1.8.0:
 
 - Full Web Admin Parity با پنل Admin Mini App
 - Admin Sidebar/Responsive Navigation جدید
@@ -1118,3 +1118,24 @@ rm -f /usr/local/bin/bluegate
 ```
 
 داشتن فقط یکی از این دو، Backup کامل فروشگاه محسوب نمی‌شود.
+
+
+## Product hierarchy in v1.8.0
+
+The storefront supports parent/child products. Example:
+
+```text
+BluePing (service_group)
+├── Standard (vpn)
+│   ├── 20 GB
+│   ├── 30 GB
+│   └── 50 GB
+└── Pro (vpn)
+    ├── 5 GB
+    ├── 10 GB
+    └── 20 GB
+```
+
+`products.parent_id` links sub-products to a service product. `product_variants` are the purchasable plans. Website rendering is database-driven: names such as Standard/Pro are not used to infer behavior; icon, badge, theme and benefits come from product configuration.
+
+The website is dark-only in v1.8.0. Light mode and its toggle were removed.

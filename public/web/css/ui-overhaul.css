@@ -280,7 +280,7 @@
   box-shadow:var(--app-shadow-soft);
   backdrop-filter:blur(22px);
 }
-.light .member-sidebar{background:rgba(255,255,255,.88)}
+
 .member-side-profile{gap:13px;padding:10px 9px 18px;margin-bottom:12px}
 .member-avatar{
   width:54px;
@@ -325,7 +325,7 @@
   width:150px;height:150px;left:-80px;top:-90px;
   border-radius:50%;background:rgba(56,160,255,.10);filter:blur(35px);pointer-events:none;
 }
-.light .member-topbar{background:rgba(255,255,255,.88)}
+
 .member-topbar h1{font-size:29px;line-height:1.25;letter-spacing:-.025em}
 .member-topbar p{margin-top:6px;font-size:13px;line-height:1.7}
 .member-top-actions{gap:10px}
@@ -609,7 +609,7 @@
   box-shadow:0 18px 55px rgba(0,0,0,.34);
   backdrop-filter:blur(22px);
 }
-.light .mobile-member-nav{background:rgba(255,255,255,.93)}
+
 .mobile-member-nav button{
   min-width:0;
   display:flex;

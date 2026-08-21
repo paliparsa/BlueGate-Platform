@@ -165,6 +165,9 @@ function product_payload(array $p, bool $activeVariants=true): array {
         'product_type' => $p['product_type'] ?? 'normal',
         'config' => storefront_product_config($p),
         'category_id' => isset($p['category_id']) ? (int)$p['category_id'] : 0,
+        'parent_id' => isset($p['parent_id']) ? (int)$p['parent_id'] : 0,
+        'child_count' => (int)($p['child_count'] ?? 0),
+        'parent_name' => $p['parent_name'] ?? null,
         'category_title' => $p['category_title'] ?? null,
         'category_emoji' => $p['category_emoji'] ?? null,
         'name' => $p['name'],
@@ -780,11 +783,19 @@ if ($action === 'admin_add_product') {
     try { $pp = price_admin_payload_from_input($input); } catch (Throwable $e) { api_out(['ok' => false, 'message' => 'قیمت معتبر نیست یا نرخ USDT برای قیمت دلاری در دسترس نیست.'], 400); }
     if ($name === '') api_out(['ok' => false, 'message' => 'نام محصول الزامی است.'], 400);
     $catId = !empty($input['category_id']) ? (int)$input['category_id'] : null;
+    $parentId = !empty($input['parent_id']) ? (int)$input['parent_id'] : null;
+    $ptype = trim((string)($input['product_type'] ?? 'normal')) ?: 'normal';
+    $slug = trim((string)($input['slug'] ?? '')) ?: null;
+    $configJson = trim((string)($input['config_json'] ?? '')) ?: null;
     $delivery = normalize_delivery_type((string)($input['delivery_type'] ?? 'manual'));
     $commissionType = in_array(($input['commission_type'] ?? 'none'), ['none', 'fixed', 'percent'], true) ? $input['commission_type'] : 'none';
     $commissionValue = max(0, (int)($input['commission_value'] ?? 0));
-    db()->prepare('INSERT INTO products (category_id,name,price,price_currency,price_usd,price_rate_toman,price_rate_source,price_rate_updated_at,short_description,full_description,image_url,image_srcset,delivery_type,commission_type,commission_value,duration_days,is_featured,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute([
+    db()->prepare('INSERT INTO products (category_id,parent_id,slug,product_type,config_json,name,price,price_currency,price_usd,price_rate_toman,price_rate_source,price_rate_updated_at,short_description,full_description,image_url,image_srcset,delivery_type,commission_type,commission_value,duration_days,is_featured,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute([
         $catId ?: null,
+        $parentId ?: null,
+        $slug,
+        $ptype,
+        $configJson,
         $name,
         $pp['price'],
         $pp['price_currency'],
@@ -808,10 +819,13 @@ if ($action === 'admin_add_product') {
 if ($action === 'admin_update_product') {
     require_admin($user);
     $id = (int)($input['product_id'] ?? 0);
+    if (array_key_exists('parent_id',$input)) $input['parent_id'] = !empty($input['parent_id']) ? (int)$input['parent_id'] : null;
+    if (array_key_exists('category_id',$input)) $input['category_id'] = !empty($input['category_id']) ? (int)$input['category_id'] : null;
+    if (!empty($input['parent_id']) && (int)$input['parent_id'] === $id) api_out(['ok'=>false,'message'=>'محصول نمی‌تواند والد خودش باشد.'],400);
     if (array_key_exists('price_currency', $input) || array_key_exists('price_usd', $input) || array_key_exists('price', $input)) {
         try { $pp = price_admin_payload_from_input($input); foreach ($pp as $k => $v) update_product_field($id, $k, $v); } catch (Throwable $e) { api_out(['ok' => false, 'message' => 'قیمت معتبر نیست یا نرخ USDT برای قیمت دلاری در دسترس نیست.'], 400); }
     }
-    foreach (['category_id', 'name', 'short_description', 'full_description', 'image_url', 'image_srcset', 'delivery_type', 'commission_type', 'commission_value', 'duration_days', 'is_active', 'is_featured'] as $f) {
+    foreach (['category_id', 'parent_id', 'slug', 'product_type', 'config_json', 'name', 'short_description', 'full_description', 'image_url', 'image_srcset', 'delivery_type', 'commission_type', 'commission_value', 'duration_days', 'is_active', 'is_featured'] as $f) {
         if (array_key_exists($f, $input)) update_product_field($id, $f, $input[$f]);
     }
     api_out(admin_payload());

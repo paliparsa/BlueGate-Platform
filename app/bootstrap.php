@@ -163,7 +163,9 @@ function migrate(): void {
 
     // Safe Commerce Plus upgrade columns. These commands are idempotent and keep older installs intact.
     add_column_if_missing('product_categories', 'image_url', 'VARCHAR(1024) NULL AFTER emoji');
-    add_column_if_missing('products', 'slug', 'VARCHAR(128) NULL AFTER category_id');
+    add_column_if_missing('products', 'parent_id', 'BIGINT UNSIGNED NULL AFTER category_id');
+    add_column_if_missing('products', 'slug', 'VARCHAR(128) NULL AFTER parent_id');
+    try { db()->exec('CREATE INDEX idx_products_parent ON products(parent_id)'); } catch (Throwable $e) {}
     add_column_if_missing('products', 'product_type', "VARCHAR(32) NOT NULL DEFAULT 'normal' AFTER slug");
     add_column_if_missing('products', 'config_json', 'LONGTEXT NULL AFTER product_type');
     try { db()->exec('CREATE UNIQUE INDEX uq_products_slug ON products(slug)'); } catch (Throwable $e) {}
@@ -2232,6 +2234,8 @@ function shop_products(?int $categoryId=null, bool $activeOnly=true): array {
     if ($categoryId) { $where[]='p.category_id=?'; $params[]=$categoryId; }
     $sql='SELECT p.*, c.title category_title, c.emoji category_emoji,
         (SELECT COUNT(*) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) variant_count,
+        (SELECT COUNT(*) FROM products ch WHERE ch.parent_id=p.id AND ch.is_active=1) child_count,
+        (SELECT name FROM products pp WHERE pp.id=p.parent_id LIMIT 1) parent_name,
         (SELECT MIN(v.price) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) min_variant_price,
         (SELECT COUNT(*) FROM inventory_items i WHERE i.product_id=p.id AND i.status="available") inventory_available
         FROM products p LEFT JOIN product_categories c ON c.id=p.category_id';
@@ -2242,6 +2246,8 @@ function shop_products(?int $categoryId=null, bool $activeOnly=true): array {
 function shop_product(int $id) {
     $q=db()->prepare('SELECT p.*, c.title category_title, c.emoji category_emoji,
         (SELECT COUNT(*) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) variant_count,
+        (SELECT COUNT(*) FROM products ch WHERE ch.parent_id=p.id AND ch.is_active=1) child_count,
+        (SELECT name FROM products pp WHERE pp.id=p.parent_id LIMIT 1) parent_name,
         (SELECT MIN(v.price) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) min_variant_price,
         (SELECT COUNT(*) FROM inventory_items i WHERE i.product_id=p.id AND i.status="available") inventory_available
         FROM products p LEFT JOIN product_categories c ON c.id=p.category_id WHERE p.id=?');
@@ -2423,6 +2429,7 @@ function create_shop_order(int $userId, int $productId, ?int $variantId=null): a
     cancel_expired_orders();
     $p = shop_product($productId);
     if (!$p || (int)$p['is_active'] !== 1) throw new RuntimeException('PRODUCT_NOT_FOUND');
+    if (in_array(strtolower((string)($p['product_type'] ?? 'normal')), ['service_group','group','container'], true)) throw new RuntimeException('PRODUCT_IS_CONTAINER');
     $variant = null;
     if ($variantId) {
         $variant = product_variant($variantId);
@@ -3115,6 +3122,7 @@ function hard_delete_product(int $productId): bool {
     if ((int)$q->fetch()['c'] > 0) return false;
     db()->prepare('DELETE FROM inventory_items WHERE product_id=?')->execute([$productId]);
     db()->prepare('DELETE FROM product_variants WHERE product_id=?')->execute([$productId]);
+    db()->prepare('UPDATE products SET parent_id=NULL WHERE parent_id=?')->execute([$productId]);
     $d=db()->prepare('DELETE FROM products WHERE id=?'); $d->execute([$productId]);
     return $d->rowCount() > 0;
 }
@@ -3135,7 +3143,7 @@ function hard_delete_inventory(int $inventoryId): bool {
     return $d->rowCount() > 0;
 }
 function update_product_field(int $id, string $field, $value): bool {
-    $allowed=['category_id','name','price','price_currency','price_usd','price_rate_toman','price_rate_source','price_rate_updated_at','short_description','full_description','image_url','image_srcset','delivery_type','commission_type','commission_value','duration_days','is_active','is_featured','flash_sale_start','flash_sale_end','flash_sale_discount'];
+    $allowed=['category_id','parent_id','slug','product_type','config_json','name','price','price_currency','price_usd','price_rate_toman','price_rate_source','price_rate_updated_at','short_description','full_description','image_url','image_srcset','delivery_type','commission_type','commission_value','duration_days','is_active','is_featured','flash_sale_start','flash_sale_end','flash_sale_discount'];
     if (!in_array($field,$allowed,true)) return false;
     if ($field==='price_usd') $value=decimal_price($value); elseif (in_array($field,['price','commission_value','duration_days','is_active','is_featured','flash_sale_discount'],true)) $value=(int)parse_amount($value); if ($field==='price_currency') $value=normalize_price_currency($value);
     if (in_array($field,['flash_sale_start','flash_sale_end'],true)) $value = (trim((string)$value)==='' || $value===null) ? null : date('Y-m-d H:i:s', strtotime((string)$value));

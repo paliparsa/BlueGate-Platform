@@ -120,6 +120,7 @@ function create_storefront_order(int $userId, int $productId, ?int $variantId=nu
     $p = shop_product($productId);
     if (!$p || (int)$p['is_active'] !== 1) throw new RuntimeException('PRODUCT_NOT_FOUND');
     $type = strtolower((string)($p['product_type'] ?? 'normal'));
+    if (in_array($type, ['service_group','group','container'], true)) throw new RuntimeException('PRODUCT_IS_CONTAINER');
     if ($type !== 'stars') return create_shop_order($userId, $productId, $variantId);
 
     cancel_expired_orders();
@@ -153,12 +154,12 @@ function storefront_upsert_product(array $data): int {
     $id = (int)($q->fetchColumn() ?: 0);
     $config = json_encode($data['config'] ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
     if ($id) {
-        db()->prepare('UPDATE products SET category_id=?, slug=?, product_type=?, config_json=?, name=?, price=?, short_description=?, full_description=?, delivery_type=?, is_active=1, is_featured=?, sort_order=? WHERE id=?')
-            ->execute([$data['category_id'],$slug,$data['product_type'],$config,$name,(int)($data['price']??1),$data['short_description']??'', $data['full_description']??'', $data['delivery_type']??'manual',(int)($data['is_featured']??0),(int)($data['sort_order']??0),$id]);
+        db()->prepare('UPDATE products SET category_id=?, parent_id=?, slug=?, product_type=?, config_json=?, name=?, price=?, short_description=?, full_description=?, delivery_type=?, is_active=1, is_featured=?, sort_order=? WHERE id=?')
+            ->execute([$data['category_id'],$data['parent_id']??null,$slug,$data['product_type'],$config,$name,(int)($data['price']??1),$data['short_description']??'', $data['full_description']??'', $data['delivery_type']??'manual',(int)($data['is_featured']??0),(int)($data['sort_order']??0),$id]);
         return $id;
     }
-    db()->prepare('INSERT INTO products (category_id,slug,product_type,config_json,name,price,short_description,full_description,delivery_type,is_active,is_featured,sort_order) VALUES (?,?,?,?,?,?,?,?,?,1,?,?)')
-        ->execute([$data['category_id'],$slug,$data['product_type'],$config,$name,(int)($data['price']??1),$data['short_description']??'', $data['full_description']??'', $data['delivery_type']??'manual',(int)($data['is_featured']??0),(int)($data['sort_order']??0)]);
+    db()->prepare('INSERT INTO products (category_id,parent_id,slug,product_type,config_json,name,price,short_description,full_description,delivery_type,is_active,is_featured,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,1,?,?)')
+        ->execute([$data['category_id'],$data['parent_id']??null,$slug,$data['product_type'],$config,$name,(int)($data['price']??1),$data['short_description']??'', $data['full_description']??'', $data['delivery_type']??'manual',(int)($data['is_featured']??0),(int)($data['sort_order']??0)]);
     return (int)db()->lastInsertId();
 }
 
@@ -183,47 +184,37 @@ function storefront_sync_variants(int $productId, array $variants): void {
 
 function seed_bluegate_storefront_catalog(): void {
     if (!table_exists('products') || !column_exists('products','slug')) return;
-    if (setting_bool('storefront_catalog_seeded_v1', false)) return;
+
     $vpnCat = storefront_find_or_create_category('VPN', '🛡️', 10);
     $tgCat = storefront_find_or_create_category('Telegram', '✈️', 20);
 
-    $standard = storefront_upsert_product([
-        'category_id'=>$vpnCat,'slug'=>'blueping-standard','product_type'=>'vpn','name'=>'BlueGate Standard','price'=>99000,'sort_order'=>10,
-        'short_description'=>'مولتی لوکیشن • مناسب استفاده روزمره','full_description'=>'اقتصادی و مناسب مصرف عادی','delivery_type'=>'vpn','config'=>['plan_slug'=>'standard','theme'=>'green','icon'=>'🛡️','note'=>'اقتصادی و مناسب مصرف عادی']
-    ]);
-    storefront_sync_variants($standard, [
-        ['title'=>'20 گیگ','price'=>99000],['title'=>'30 گیگ','price'=>149000],['title'=>'50 گیگ','price'=>199000],['title'=>'نامحدود (تک کاربر)','price'=>249000],['title'=>'نامحدود (دو کاربره)','price'=>399000]
-    ]);
+    // v1.8 hierarchy migration runs once. After that MySQL/Admin is the source of truth.
+    if (!setting_bool('storefront_catalog_hierarchy_v2', false)) {
+        $blueping = storefront_upsert_product([
+            'category_id'=>$vpnCat,'parent_id'=>null,'slug'=>'blueping','product_type'=>'service_group','name'=>'BluePing','price'=>0,'sort_order'=>5,'is_featured'=>1,
+            'short_description'=>'سرویس VPN BlueGate با زیرسرویس‌ها و پلن‌های قابل مدیریت از پنل',
+            'full_description'=>'زیرسرویس‌های BluePing مثل Standard و Pro محصول مستقل هستند و از دیتابیس خوانده می‌شوند.',
+            'delivery_type'=>'vpn','config'=>['service_kind'=>'vpn','theme'=>'blue','icon'=>'🛡️','badge'=>'BluePing VPN','benefits'=>['زیرسرویس‌های قابل مدیریت','پلن‌های دیتابیس‌محور','مدیریت از حساب BlueGate']]
+        ]);
+        db()->prepare('UPDATE products SET parent_id=?, category_id=? WHERE product_type="vpn" AND id<>? AND (parent_id IS NULL OR parent_id=0)')->execute([$blueping,$vpnCat,$blueping]);
+        set_setting('storefront_catalog_hierarchy_v2', '1');
+    }
 
-    $pro = storefront_upsert_product([
-        'category_id'=>$vpnCat,'slug'=>'blueping-pro','product_type'=>'vpn','name'=>'BlueGate Pro','price'=>69000,'sort_order'=>20,'is_featured'=>1,
-        'short_description'=>'آی‌پی ثابت • مناسب ترید و استفاده حرفه‌ای','full_description'=>'پایداری و سرعت بالا','delivery_type'=>'vpn','config'=>['plan_slug'=>'pro','theme'=>'purple','icon'=>'🚀','note'=>'پایداری و سرعت بالا']
-    ]);
-    storefront_sync_variants($pro, [
-        ['title'=>'5 گیگ','price'=>69000],['title'=>'10 گیگ','price'=>139000],['title'=>'15 گیگ','price'=>195000],['title'=>'20 گیگ','price'=>249000],['title'=>'25 گیگ','price'=>289000]
-    ]);
-
-    $emergency = storefront_upsert_product([
-        'category_id'=>$vpnCat,'slug'=>'blueping-emergency','product_type'=>'vpn','name'=>'BlueGate Emergency','price'=>195000,'sort_order'=>30,
-        'short_description'=>'ویژه قطعی یا اختلال شدید اینترنت','full_description'=>'مخصوص شرایط بحرانی','delivery_type'=>'vpn','config'=>['plan_slug'=>'emergency','theme'=>'blue','icon'=>'⚡','note'=>'مخصوص شرایط بحرانی']
-    ]);
-    storefront_sync_variants($emergency, [
-        ['title'=>'5 گیگ','price'=>195000],['title'=>'10 گیگ','price'=>390000],['title'=>'15 گیگ','price'=>585000],['title'=>'20 گیگ','price'=>780000]
-    ]);
-
-    storefront_upsert_product([
-        'category_id'=>$tgCat,'slug'=>'telegram-stars','product_type'=>'stars','name'=>'Telegram Stars','price'=>3456,'sort_order'=>40,'is_featured'=>1,
-        'short_description'=>'تعداد دلخواه با محاسبه قیمت سمت سرور','full_description'=>'مقدار Stars هنگام ثبت سفارش انتخاب می‌شود و مبلغ نهایی در بک‌اند محاسبه می‌شود.','delivery_type'=>'manual','config'=>['icon'=>'⭐']
-    ]);
-
-    $premium = storefront_upsert_product([
-        'category_id'=>$tgCat,'slug'=>'telegram-premium','product_type'=>'premium','name'=>'Telegram Premium','price'=>1,'sort_order'=>50,
-        'short_description'=>'اشتراک رسمی ۳، ۶ و ۱۲ ماهه تلگرام','full_description'=>'انتخاب مدت اشتراک و ثبت سفارش در حساب BlueGate.','delivery_type'=>'manual','config'=>['icon'=>'✈️']
-    ]);
-    storefront_sync_variants($premium, [
-        ['title'=>'3 ماهه','price'=>0,'price_currency'=>'USD','price_usd'=>14.388,'duration_days'=>90],
-        ['title'=>'6 ماهه','price'=>0,'price_currency'=>'USD','price_usd'=>19.188,'duration_days'=>180],
-        ['title'=>'12 ماهه','price'=>0,'price_currency'=>'USD','price_usd'=>34.788,'duration_days'=>365],
-    ]);
-    set_setting('storefront_catalog_seeded_v1', '1');
+    // Legacy fresh-install seed for non-VPN core services only. VPN children are always admin/data driven.
+    if (!setting_bool('storefront_catalog_seeded_v1', false)) {
+        storefront_upsert_product([
+            'category_id'=>$tgCat,'parent_id'=>null,'slug'=>'telegram-stars','product_type'=>'stars','name'=>'Telegram Stars','price'=>3456,'sort_order'=>40,'is_featured'=>1,
+            'short_description'=>'تعداد دلخواه با محاسبه قیمت سمت سرور','full_description'=>'مقدار Stars هنگام ثبت سفارش انتخاب می‌شود و مبلغ نهایی در بک‌اند محاسبه می‌شود.','delivery_type'=>'manual','config'=>['icon'=>'⭐']
+        ]);
+        $premium = storefront_upsert_product([
+            'category_id'=>$tgCat,'parent_id'=>null,'slug'=>'telegram-premium','product_type'=>'premium','name'=>'Telegram Premium','price'=>1,'sort_order'=>50,
+            'short_description'=>'اشتراک رسمی ۳، ۶ و ۱۲ ماهه تلگرام','full_description'=>'انتخاب مدت اشتراک و ثبت سفارش در حساب BlueGate.','delivery_type'=>'manual','config'=>['icon'=>'✈️']
+        ]);
+        storefront_sync_variants($premium, [
+            ['title'=>'3 ماهه','price'=>0,'price_currency'=>'USD','price_usd'=>14.388,'duration_days'=>90],
+            ['title'=>'6 ماهه','price'=>0,'price_currency'=>'USD','price_usd'=>19.188,'duration_days'=>180],
+            ['title'=>'12 ماهه','price'=>0,'price_currency'=>'USD','price_usd'=>34.788,'duration_days'=>365],
+        ]);
+        set_setting('storefront_catalog_seeded_v1', '1');
+    }
 }

@@ -1,4 +1,4 @@
-const CACHE = 'bluegate-platform-v1.7.0';
+const CACHE = 'bluegate-platform-v1.8.0';
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,7 @@ const ASSETS = [
   './css/account.css',
   './css/dashboard.css',
   './css/ui-overhaul.css',
-  './css/admin-v17.css',
+  './css/admin-v18.css',
   './js/config.js',
   './js/api.js',
   './js/rates.js',
