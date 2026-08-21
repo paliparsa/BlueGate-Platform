@@ -188,6 +188,8 @@ function migrate(): void {
     try { db()->exec("ALTER TABLE product_variants MODIFY COLUMN discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00"); } catch (Throwable $e) {}
     add_column_if_missing('products', 'is_featured', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active');
     add_column_if_missing('products', 'sort_order', 'INT NOT NULL DEFAULT 0 AFTER is_featured');
+    add_column_if_missing('service_groups', 'is_archived', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active');
+    add_column_if_missing('service_plans', 'is_archived', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active');
     add_column_if_missing('orders', 'variant_id', 'BIGINT UNSIGNED NULL AFTER product_id');
     add_column_if_missing('orders', 'catalog_service_id', 'BIGINT UNSIGNED NULL AFTER product_id');
     add_column_if_missing('orders', 'catalog_group_id', 'BIGINT UNSIGNED NULL AFTER catalog_service_id');

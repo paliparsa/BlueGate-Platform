@@ -38,8 +38,8 @@ function catalog_tree(bool $activeOnly=false): array {
     if (!table_exists('services') || !table_exists('service_groups') || !table_exists('service_plans')) return [];
     $where=$activeOnly?' WHERE s.is_active=1 AND (c.id IS NULL OR c.is_active=1)':'';
     $services=db()->query('SELECT s.*,c.title category_title,c.emoji category_emoji,c.legacy_category_id FROM services s LEFT JOIN store_categories c ON c.id=s.category_id'.$where.' ORDER BY s.sort_order ASC,s.id ASC')->fetchAll();
-    $gq=db()->query('SELECT * FROM service_groups'.($activeOnly?' WHERE is_active=1':'').' ORDER BY sort_order ASC,id ASC')->fetchAll();
-    $pq=db()->query('SELECT * FROM service_plans'.($activeOnly?' WHERE is_active=1':'').' ORDER BY sort_order ASC,id ASC')->fetchAll();
+    $gq=db()->query('SELECT * FROM service_groups'.($activeOnly?' WHERE is_active=1 AND is_archived=0':' WHERE is_archived=0').' ORDER BY sort_order ASC,id ASC')->fetchAll();
+    $pq=db()->query('SELECT * FROM service_plans'.($activeOnly?' WHERE is_active=1 AND is_archived=0':' WHERE is_archived=0').' ORDER BY sort_order ASC,id ASC')->fetchAll();
     $groupsBy=[];$plansBy=[];
     foreach($pq as $p){$plansBy[(int)$p['group_id']][]=$p;}
     foreach($gq as $g){$g['plans']=$plansBy[(int)$g['id']]??[];$groupsBy[(int)$g['service_id']][]=$g;}
@@ -158,7 +158,7 @@ function catalog_apply_proposal(array $proposal): int {
         $findG=db()->prepare('SELECT id FROM service_groups WHERE service_id=? AND legacy_product_id=? AND is_default=? LIMIT 1');$findG->execute([$serviceId,$legacyGroupId,!empty($gp['is_default'])?1:0]);$gr=$findG->fetch();
         $gname=!empty($gp['is_default'])?'Default Group':$groupProduct['name'];
         $gslug=!empty($gp['is_default'])?'default':($gr?catalog_unique_slug('service_groups',$groupProduct['name'],'group',(int)$gr['id']):catalog_unique_slug('service_groups',$groupProduct['name'],'group'));
-        if($gr){$groupId=(int)$gr['id'];db()->prepare('UPDATE service_groups SET name=?,slug=?,description=?,image_url=?,config_json=?,is_default=?,is_active=?,sort_order=? WHERE id=?')->execute([$gname,$gslug,$groupProduct['full_description']?:$groupProduct['short_description'],$groupProduct['image_url']??null,$groupProduct['config_json']??null,!empty($gp['is_default'])?1:0,(int)$groupProduct['is_active'],(int)($groupProduct['sort_order']??$gi),$groupId]);}
+        if($gr){$groupId=(int)$gr['id'];db()->prepare('UPDATE service_groups SET name=?,slug=?,description=?,image_url=?,config_json=?,is_default=?,is_active=?,is_archived=0,sort_order=? WHERE id=?')->execute([$gname,$gslug,$groupProduct['full_description']?:$groupProduct['short_description'],$groupProduct['image_url']??null,$groupProduct['config_json']??null,!empty($gp['is_default'])?1:0,(int)$groupProduct['is_active'],(int)($groupProduct['sort_order']??$gi),$groupId]);}
         else{db()->prepare('INSERT INTO service_groups (service_id,legacy_product_id,name,slug,description,image_url,config_json,is_default,is_active,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?)')->execute([$serviceId,$legacyGroupId,$gname,$gslug,$groupProduct['full_description']?:$groupProduct['short_description'],$groupProduct['image_url']??null,$groupProduct['config_json']??null,!empty($gp['is_default'])?1:0,(int)$groupProduct['is_active'],(int)($groupProduct['sort_order']??$gi)]);$groupId=(int)db()->lastInsertId();}
         $variants=product_variants($legacyGroupId,false);
         if($variants){foreach($variants as $vi=>$v)catalog_upsert_plan_from_legacy($groupId,$groupProduct,$v,$vi);}
@@ -208,7 +208,7 @@ function catalog_upsert_plan_from_legacy(int $groupId,array $product,?array $var
     else{$q=db()->prepare('SELECT id FROM service_plans WHERE group_id=? AND legacy_product_id=? AND legacy_variant_id IS NULL LIMIT 1');$q->execute([$groupId,$legacyProductId]);$found=$q->fetch();}
     $title=$variant?$variant['title']:$product['name'];$discount=(float)($variant['discount_percent']??0);$description=$variant?($variant['description']??''):($product['full_description']?:$product['short_description']);
     $args=[$groupId,$legacyProductId,$legacyVariantId,$title,(int)$row['price'],$row['price_currency']??'IRT',$row['price_usd']??null,$row['price_rate_toman']??null,$row['price_rate_source']??null,$row['price_rate_updated_at']??null,(int)($row['duration_days']??0),$discount,$description,$product['delivery_type']??'manual',$product['commission_type']??'none',(int)($product['commission_value']??0),(int)($row['is_active']??1),(int)($row['sort_order']??$sort)];
-    if($found){$id=(int)$found['id'];db()->prepare('UPDATE service_plans SET group_id=?,legacy_product_id=?,legacy_variant_id=?,title=?,price=?,price_currency=?,price_usd=?,price_rate_toman=?,price_rate_source=?,price_rate_updated_at=?,duration_days=?,discount_percent=?,description=?,delivery_type=?,commission_type=?,commission_value=?,is_active=?,sort_order=? WHERE id=?')->execute([...$args,$id]);return $id;}
+    if($found){$id=(int)$found['id'];db()->prepare('UPDATE service_plans SET group_id=?,legacy_product_id=?,legacy_variant_id=?,title=?,price=?,price_currency=?,price_usd=?,price_rate_toman=?,price_rate_source=?,price_rate_updated_at=?,duration_days=?,discount_percent=?,description=?,delivery_type=?,commission_type=?,commission_value=?,is_active=?,is_archived=0,sort_order=? WHERE id=?')->execute([...$args,$id]);return $id;}
     db()->prepare('INSERT INTO service_plans (group_id,legacy_product_id,legacy_variant_id,title,price,price_currency,price_usd,price_rate_toman,price_rate_source,price_rate_updated_at,duration_days,discount_percent,description,delivery_type,commission_type,commission_value,is_active,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute($args);return (int)db()->lastInsertId();
 }
 
@@ -252,14 +252,20 @@ function catalog_order_snapshot(int $orderId,int $legacyProductId,?int $legacyVa
 }
 
 function catalog_move_group(int $groupId,int $serviceId): void {
-    $q=db()->prepare('SELECT is_default FROM service_groups WHERE id=?');$q->execute([$groupId]);$g=$q->fetch();if(!$g)throw new RuntimeException('GROUP_NOT_FOUND');if((int)$g['is_default']===1)throw new RuntimeException('DEFAULT_GROUP_CANNOT_MOVE');
-    $q=db()->prepare('SELECT id FROM services WHERE id=?');$q->execute([$serviceId]);if(!$q->fetch())throw new RuntimeException('SERVICE_NOT_FOUND');
+    $q=db()->prepare('SELECT * FROM service_groups WHERE id=?');$q->execute([$groupId]);$g=$q->fetch();if(!$g)throw new RuntimeException('زیرسرویس پیدا نشد.');if((int)$g['is_default']===1)throw new RuntimeException('پلن‌های مستقیم قابل انتقال به عنوان زیرسرویس نیستند.');
+    $q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$serviceId]);$s=$q->fetch();if(!$s)throw new RuntimeException('سرویس مقصد پیدا نشد.');
     db()->prepare('UPDATE service_groups SET service_id=? WHERE id=?')->execute([$serviceId,$groupId]);
+    if(!empty($g['legacy_product_id'])){
+        $legacyCat=catalog_ensure_legacy_category((int)$s['category_id']);
+        db()->prepare('UPDATE products SET parent_id=?,category_id=? WHERE id=?')->execute([(int)$s['legacy_product_id'],$legacyCat,(int)$g['legacy_product_id']]);
+    }
 }
 function catalog_move_plan(int $planId,int $groupId): void {
-    $q=db()->prepare('SELECT id FROM service_plans WHERE id=?');$q->execute([$planId]);if(!$q->fetch())throw new RuntimeException('PLAN_NOT_FOUND');
-    $q=db()->prepare('SELECT id FROM service_groups WHERE id=?');$q->execute([$groupId]);if(!$q->fetch())throw new RuntimeException('GROUP_NOT_FOUND');
-    db()->prepare('UPDATE service_plans SET group_id=? WHERE id=?')->execute([$groupId,$planId]);
+    $q=db()->prepare('SELECT * FROM service_plans WHERE id=?');$q->execute([$planId]);$p=$q->fetch();if(!$p)throw new RuntimeException('پلن پیدا نشد.');
+    $q=db()->prepare('SELECT g.*,s.legacy_product_id service_legacy_product FROM service_groups g JOIN services s ON s.id=g.service_id WHERE g.id=?');$q->execute([$groupId]);$g=$q->fetch();if(!$g)throw new RuntimeException('زیرسرویس مقصد پیدا نشد.');
+    $legacyProduct=(int)($g['legacy_product_id']?:$g['service_legacy_product']);
+    db()->prepare('UPDATE service_plans SET group_id=?,legacy_product_id=? WHERE id=?')->execute([$groupId,$legacyProduct,$planId]);
+    if(!empty($p['legacy_variant_id']))db()->prepare('UPDATE product_variants SET product_id=? WHERE id=?')->execute([$legacyProduct,(int)$p['legacy_variant_id']]);
 }
 
 function catalog_save_category(array $d): int {
@@ -312,18 +318,223 @@ function catalog_create_plan(array $d): int {
     $product=shop_product($legacyProduct);$variant=product_variant($legacyVariant);return catalog_upsert_plan_from_legacy($groupId,$product,$variant,(int)($d['sort_order']??99));
 }
 
-function catalog_fast_create(array $d): array {
-    $serviceId=catalog_create_service(['name'=>$d['service_name']??'','category_id'=>(int)($d['category_id']??0),'description'=>$d['description']??'','theme'=>$d['theme']??'blue','badge'=>$d['badge']??'','skip_default_group'=>1]);
-    $text=trim((string)($d['groups_text']??''));$lines=array_values(array_filter(array_map('trim',preg_split('/\R/u',$text))));
-    if(!$lines)$lines=['Default: '.(string)($d['plans_text']??'')];
-    $made=['groups'=>0,'plans'=>0];
-    foreach($lines as $line){
-        $parts=preg_split('/\s*:\s*/u',$line,2);$groupName=trim($parts[0]??'Default');$planText=trim($parts[1]??'');$isDefault=in_array(mb_strtolower($groupName),['default','plans','پلن','پلن‌ها'],true);
-        $gid=catalog_create_group(['service_id'=>$serviceId,'name'=>$isDefault?'Default Group':$groupName,'is_default'=>$isDefault?1:0]);$made['groups']++;
-        foreach(array_values(array_filter(array_map('trim',preg_split('/\s*,\s*/u',$planText)))) as $spec){
-            $pp=preg_split('/\s*=\s*/u',$spec,2);$title=trim($pp[0]??'');$price=(int)preg_replace('/\D+/','',$pp[1]??'0');if($title!==''&&$price>0){catalog_create_plan(['group_id'=>$gid,'title'=>$title,'price'=>$price]);$made['plans']++;}
-        }
+
+function catalog_bool_value($v, int $default=1): int {
+    if ($v === null || $v === '') return $default;
+    if (is_bool($v)) return $v ? 1 : 0;
+    return in_array(strtolower((string)$v), ['1','true','yes','on'], true) ? 1 : 0;
+}
+
+function catalog_sync_service_legacy_visibility(int $serviceId): void {
+    $q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$serviceId]);$svc=$q->fetch();if(!$svc)return;
+    $serviceActive=(int)($svc['is_active']??0);$legacyRoot=(int)($svc['legacy_product_id']??0);
+    if($legacyRoot>0)db()->prepare('UPDATE products SET is_active=? WHERE id=?')->execute([$serviceActive,$legacyRoot]);
+    $q=db()->prepare('SELECT legacy_product_id,is_default,is_active FROM service_groups WHERE service_id=?');$q->execute([$serviceId]);
+    foreach($q->fetchAll() as $g){
+        if((int)($g['is_default']??0)===1)continue;
+        $legacy=(int)($g['legacy_product_id']??0);if($legacy<=0)continue;
+        $active=$serviceActive && (int)($g['is_active']??0) ? 1 : 0;
+        db()->prepare('UPDATE products SET is_active=? WHERE id=?')->execute([$active,$legacy]);
     }
-    set_setting('catalog_v2_storefront_enabled','1');set_setting('catalog_v2_applied_at',date('Y-m-d H:i:s'));
-    return ['ok'=>true,'service_id'=>$serviceId]+$made;
+}
+
+function catalog_save_service(array $d): int {
+    $id=(int)($d['id']??$d['service_id']??0);
+    $name=trim((string)($d['name']??''));
+    if($name==='') throw new RuntimeException('نام سرویس را وارد کن.');
+    $categoryId=(int)($d['category_id']??0);
+    if($categoryId<=0) throw new RuntimeException('یک دسته فروشگاه انتخاب کن.');
+    $dupe=db()->prepare('SELECT id FROM services WHERE LOWER(name)=LOWER(?) AND id<>? LIMIT 1');$dupe->execute([$name,$id]);
+    if($dupe->fetch()) throw new RuntimeException('سرویسی با این نام از قبل وجود دارد.');
+    if($id<=0){
+        $newId=catalog_create_service([
+            'name'=>$name,'category_id'=>$categoryId,'description'=>$d['description']??'','image_url'=>$d['image_url']??'',
+            'theme'=>$d['theme']??'blue','badge'=>$d['badge']??'','is_featured'=>catalog_bool_value($d['is_featured']??0,0),
+            'sort_order'=>(int)($d['sort_order']??99),'skip_default_group'=>1
+        ]);
+        $active=catalog_bool_value($d['is_active']??1,1);
+        if(!$active)db()->prepare('UPDATE services SET is_active=0 WHERE id=?')->execute([$newId]);
+        catalog_sync_service_legacy_visibility($newId);
+        return $newId;
+    }
+    $q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$id]);$row=$q->fetch();if(!$row)throw new RuntimeException('سرویس پیدا نشد.');
+    $legacyCat=catalog_ensure_legacy_category($categoryId);
+    $slug=catalog_unique_slug('services',(string)($d['slug']??$name),'service',$id);
+    $active=catalog_bool_value($d['is_active']??$row['is_active'],(int)$row['is_active']);
+    $featured=catalog_bool_value($d['is_featured']??$row['is_featured'],(int)$row['is_featured']);
+    $desc=(string)($d['description']??$row['description']??'');$image=trim((string)($d['image_url']??$row['image_url']??''))?:null;
+    $theme=(string)($d['theme']??$row['theme']??'blue');$badge=(string)($d['badge']??$row['badge']??'');$sort=(int)($d['sort_order']??$row['sort_order']??99);
+    db()->prepare('UPDATE services SET category_id=?,name=?,slug=?,description=?,image_url=?,theme=?,badge=?,is_featured=?,is_active=?,sort_order=? WHERE id=?')->execute([$categoryId,$name,$slug,$desc,$image,$theme,$badge,$featured,$active,$sort,$id]);
+    $legacy=(int)($row['legacy_product_id']??0);
+    if($legacy>0){
+        $lp=shop_product($legacy);$cfg=$lp?storefront_product_config($lp):[];$cfg['theme']=$theme;$cfg['badge']=$badge;
+        db()->prepare('UPDATE products SET category_id=?,name=?,short_description=?,full_description=?,image_url=?,config_json=?,is_featured=?,is_active=?,sort_order=? WHERE id=?')->execute([$legacyCat,$name,$desc,$desc,$image,json_encode($cfg,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$featured,$active,$sort,$legacy]);
+        db()->prepare('UPDATE products SET category_id=? WHERE parent_id=?')->execute([$legacyCat,$legacy]);
+    }
+    catalog_sync_service_legacy_visibility($id);
+    return $id;
+}
+
+function catalog_save_group(array $d): int {
+    $id=(int)($d['id']??$d['group_id']??0);$serviceId=(int)($d['service_id']??0);$isDefault=catalog_bool_value($d['is_default']??0,0);
+    $name=$isDefault?'Default Group':trim((string)($d['name']??''));
+    if($serviceId<=0||$name==='')throw new RuntimeException('نام و سرویس زیرسرویس را کامل کن.');
+    $q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$serviceId]);$svc=$q->fetch();if(!$svc)throw new RuntimeException('سرویس مقصد پیدا نشد.');
+    if(!$isDefault){$dupe=db()->prepare('SELECT id FROM service_groups WHERE service_id=? AND LOWER(name)=LOWER(?) AND id<>? AND is_default=0 AND is_archived=0 LIMIT 1');$dupe->execute([$serviceId,$name,$id]);if($dupe->fetch())throw new RuntimeException('این زیرسرویس قبلاً برای همین سرویس ساخته شده.');}
+    if($id<=0){
+        $newId=catalog_create_group(['service_id'=>$serviceId,'name'=>$name,'description'=>$d['description']??'','is_default'=>$isDefault,'sort_order'=>(int)($d['sort_order']??99)]);
+        $active=catalog_bool_value($d['is_active']??1,1);
+        if(!$active)db()->prepare('UPDATE service_groups SET is_active=0,is_archived=0 WHERE id=?')->execute([$newId]);
+        catalog_sync_service_legacy_visibility($serviceId);
+        return $newId;
+    }
+    $q=db()->prepare('SELECT * FROM service_groups WHERE id=?');$q->execute([$id]);$row=$q->fetch();if(!$row)throw new RuntimeException('زیرسرویس پیدا نشد.');
+    if((int)$row['is_default']===1){$isDefault=1;$name='Default Group';}
+    $slug=$isDefault?'default':catalog_unique_slug('service_groups',(string)($d['slug']??$name),'group',$id);
+    $desc=(string)($d['description']??$row['description']??'');$image=trim((string)($d['image_url']??$row['image_url']??''))?:null;$active=catalog_bool_value($d['is_active']??$row['is_active'],(int)$row['is_active']);$sort=(int)($d['sort_order']??$row['sort_order']??99);
+    db()->prepare('UPDATE service_groups SET service_id=?,name=?,slug=?,description=?,image_url=?,is_active=?,is_archived=0,sort_order=? WHERE id=?')->execute([$serviceId,$name,$slug,$desc,$image,$active,$sort,$id]);
+    $legacy=(int)($row['legacy_product_id']??0);$svcLegacy=(int)($svc['legacy_product_id']??0);
+    if($legacy>0){
+        if($isDefault){db()->prepare('UPDATE products SET name=?,short_description=?,full_description=?,is_active=?,sort_order=? WHERE id=?')->execute([$svc['name'],$svc['description']??'',$svc['description']??'',$active,$sort,$legacy]);}
+        else{db()->prepare('UPDATE products SET parent_id=?,category_id=(SELECT legacy_category_id FROM store_categories WHERE id=?),name=?,short_description=?,full_description=?,image_url=?,is_active=?,sort_order=? WHERE id=?')->execute([$svcLegacy,(int)$svc['category_id'],$name,$desc,$desc,$image,$active,$sort,$legacy]);}
+    }
+    catalog_sync_service_legacy_visibility($serviceId);
+    return $id;
+}
+
+function catalog_save_plan(array $d): int {
+    $id=(int)($d['id']??$d['plan_id']??0);$groupId=(int)($d['group_id']??0);$title=trim((string)($d['title']??''));$price=max(0,(int)($d['price']??0));
+    if($groupId<=0||$title==='')throw new RuntimeException('عنوان پلن و زیرسرویس را کامل کن.');
+    if($price<=0)throw new RuntimeException('قیمت پلن باید بیشتر از صفر باشد.');
+    $q=db()->prepare('SELECT g.*,s.legacy_product_id service_legacy_product FROM service_groups g JOIN services s ON s.id=g.service_id WHERE g.id=?');$q->execute([$groupId]);$g=$q->fetch();if(!$g)throw new RuntimeException('زیرسرویس پیدا نشد.');
+    $dupe=db()->prepare('SELECT id FROM service_plans WHERE group_id=? AND LOWER(title)=LOWER(?) AND id<>? AND is_archived=0 LIMIT 1');$dupe->execute([$groupId,$title,$id]);if($dupe->fetch())throw new RuntimeException('پلنی با این عنوان در همین زیرسرویس وجود دارد.');
+    if($id<=0){
+        $newId=catalog_create_plan($d+['group_id'=>$groupId,'title'=>$title,'price'=>$price]);
+        $active=catalog_bool_value($d['is_active']??1,1);
+        if(!$active){
+            db()->prepare('UPDATE service_plans SET is_active=0,is_archived=0 WHERE id=?')->execute([$newId]);
+            $q2=db()->prepare('SELECT legacy_variant_id FROM service_plans WHERE id=?');$q2->execute([$newId]);$np=$q2->fetch();
+            if(!empty($np['legacy_variant_id']))db()->prepare('UPDATE product_variants SET is_active=0 WHERE id=?')->execute([(int)$np['legacy_variant_id']]);
+        }
+        return $newId;
+    }
+    $q=db()->prepare('SELECT * FROM service_plans WHERE id=?');$q->execute([$id]);$row=$q->fetch();if(!$row)throw new RuntimeException('پلن پیدا نشد.');
+    $days=max(0,(int)($d['duration_days']??$row['duration_days']??0));$discount=max(0,min(100,(float)($d['discount_percent']??$row['discount_percent']??0)));$desc=(string)($d['description']??$row['description']??'');$delivery=(string)($d['delivery_type']??$row['delivery_type']??'manual');$active=catalog_bool_value($d['is_active']??$row['is_active'],(int)$row['is_active']);$sort=(int)($d['sort_order']??$row['sort_order']??99);
+    $legacyProduct=(int)($g['legacy_product_id']?:$g['service_legacy_product']);
+    db()->prepare('UPDATE service_plans SET group_id=?,legacy_product_id=?,title=?,price=?,duration_days=?,discount_percent=?,description=?,delivery_type=?,is_active=?,is_archived=0,sort_order=? WHERE id=?')->execute([$groupId,$legacyProduct,$title,$price,$days,$discount,$desc,$delivery,$active,$sort,$id]);
+    $legacyVariant=(int)($row['legacy_variant_id']??0);
+    if($legacyVariant>0){db()->prepare('UPDATE product_variants SET product_id=?,title=?,price=?,duration_days=?,discount_percent=?,description=?,is_active=?,sort_order=? WHERE id=?')->execute([$legacyProduct,$title,$price,$days,$discount,$desc,$active,$sort,$legacyVariant]);}
+    elseif(!empty($row['legacy_product_id'])){db()->prepare('UPDATE products SET name=?,price=?,short_description=?,full_description=?,delivery_type=?,is_active=?,sort_order=? WHERE id=?')->execute([$title,$price,$desc,$desc,$delivery,$active,$sort,(int)$row['legacy_product_id']]);}
+    return $id;
+}
+
+function catalog_soft_disable_plan(int $id): void {
+    $q=db()->prepare('SELECT * FROM service_plans WHERE id=?');$q->execute([$id]);$p=$q->fetch();if(!$p)return;
+    db()->prepare('UPDATE service_plans SET is_active=0,is_archived=1 WHERE id=?')->execute([$id]);
+    if(!empty($p['legacy_variant_id']))db()->prepare('UPDATE product_variants SET is_active=0 WHERE id=?')->execute([(int)$p['legacy_variant_id']]);
+}
+function catalog_soft_disable_group(int $id): void {
+    $q=db()->prepare('SELECT * FROM service_groups WHERE id=?');$q->execute([$id]);$g=$q->fetch();if(!$g)return;
+    db()->prepare('UPDATE service_groups SET is_active=0,is_archived=1 WHERE id=?')->execute([$id]);
+    if((int)$g['is_default']===0 && !empty($g['legacy_product_id']))db()->prepare('UPDATE products SET is_active=0 WHERE id=?')->execute([(int)$g['legacy_product_id']]);
+    $q=db()->prepare('SELECT id FROM service_plans WHERE group_id=?');$q->execute([$id]);foreach($q->fetchAll() as $p)catalog_soft_disable_plan((int)$p['id']);
+    catalog_sync_service_legacy_visibility((int)$g['service_id']);
+}
+function catalog_soft_disable_service(int $id): void {
+    $q=db()->prepare('SELECT legacy_product_id FROM services WHERE id=?');$q->execute([$id]);$s=$q->fetch();if(!$s)return;
+    db()->prepare('UPDATE services SET is_active=0 WHERE id=?')->execute([$id]);
+    if(!empty($s['legacy_product_id']))db()->prepare('UPDATE products SET is_active=0 WHERE id=?')->execute([(int)$s['legacy_product_id']]);
+    catalog_sync_service_legacy_visibility($id);
+}
+
+function catalog_service_blueprint_snapshot(int $serviceId): ?array {
+    foreach(catalog_tree(false) as $s){
+        if((int)$s['id']!==$serviceId)continue;
+        $hasVisible=false;foreach(($s['groups']??[]) as $g)if(!(int)($g['is_default']??0)){$hasVisible=true;break;}
+        return [
+            'id'=>(int)$s['id'],'name'=>$s['name']??'','category_id'=>(int)($s['category_id']??0),'description'=>$s['description']??'',
+            'image_url'=>$s['image_url']??'','theme'=>$s['theme']??'blue','badge'=>$s['badge']??'','is_featured'=>(int)($s['is_featured']??0),
+            'is_active'=>(int)($s['is_active']??0),'sort_order'=>(int)($s['sort_order']??99),'mode'=>$hasVisible?'grouped':'direct','groups'=>$s['groups']??[]
+        ];
+    }
+    return null;
+}
+function catalog_undo_meta(): array {
+    $raw=setting('catalog_v21_undo_json','');if(!$raw)return ['available'=>false];
+    $u=json_decode($raw,true);if(!is_array($u)||empty($u['service_id']))return ['available'=>false];
+    return ['available'=>true,'type'=>$u['type']??'restore','service_id'=>(int)$u['service_id'],'service_name'=>$u['service_name']??'سرویس','at'=>$u['at']??''];
+}
+function catalog_undo_last(): array {
+    $raw=setting('catalog_v21_undo_json','');$u=$raw?json_decode($raw,true):null;
+    if(!is_array($u)||empty($u['service_id']))throw new RuntimeException('تغییر قابل بازگشتی وجود ندارد.');
+    $sid=(int)$u['service_id'];
+    if(($u['type']??'restore')==='deactivate')catalog_soft_disable_service($sid);
+    else{
+        $bp=$u['blueprint']??null;if(!is_array($bp))throw new RuntimeException('نسخه قبلی سرویس برای بازگشت موجود نیست.');
+        catalog_save_blueprint(['blueprint'=>$bp,'skip_undo'=>1]);
+    }
+    set_setting('catalog_v21_undo_json','');
+    return ['ok'=>true,'service_id'=>$sid];
+}
+
+function catalog_save_blueprint(array $d): array {
+    $bp=$d['blueprint']??$d;
+    if(is_string($bp)){$bp=json_decode($bp,true);if(!is_array($bp))throw new RuntimeException('اطلاعات ویرایش کاتالوگ معتبر نیست.');}
+    if(!is_array($bp))throw new RuntimeException('اطلاعات کاتالوگ ناقص است.');
+    $serviceId=(int)($bp['id']??0);$mode=(string)($bp['mode']??'grouped');$groups=is_array($bp['groups']??null)?$bp['groups']:[];
+    $skipUndo=!empty($d['skip_undo']);$undoBefore=(!$skipUndo&&$serviceId>0)?catalog_service_blueprint_snapshot($serviceId):null;$wasNew=$serviceId<=0;
+    db()->beginTransaction();
+    try{
+        $serviceId=catalog_save_service($bp+['id'=>$serviceId]);
+        $existingGroups=[];$q=db()->prepare('SELECT id,is_default FROM service_groups WHERE service_id=? AND is_archived=0');$q->execute([$serviceId]);foreach($q->fetchAll() as $g)$existingGroups[(int)$g['id']]=$g;
+        $keptGroups=[];$keptPlans=[];$madeGroups=0;$madePlans=0;
+        if($mode==='direct'){
+            $default=null;foreach($existingGroups as $g)if((int)$g['is_default']===1){$default=(int)$g['id'];break;}
+            $payload=$groups[0]??['plans'=>[]];$gid=catalog_save_group(['id'=>$default?:0,'service_id'=>$serviceId,'name'=>'Default Group','is_default'=>1,'description'=>'','is_active'=>1,'sort_order'=>0]);$keptGroups[$gid]=true;if(!$default)$madeGroups++;
+            $plans=is_array($payload['plans']??null)?$payload['plans']:[];
+            foreach($plans as $i=>$pl){$pid=catalog_save_plan($pl+['group_id'=>$gid,'sort_order'=>$i]);$keptPlans[$pid]=true;if(empty($pl['id']))$madePlans++;}
+        }else{
+            // Keep a legacy/default group only when it still carries direct plans.
+            foreach($groups as $gi=>$gr){
+                $isDefault=!empty($gr['is_default']);
+                if($isDefault && empty($gr['plans']))continue;
+                $gid=catalog_save_group($gr+['service_id'=>$serviceId,'sort_order'=>$gi]);$keptGroups[$gid]=true;if(empty($gr['id']))$madeGroups++;
+                $plans=is_array($gr['plans']??null)?$gr['plans']:[];
+                foreach($plans as $pi=>$pl){$pid=catalog_save_plan($pl+['group_id'=>$gid,'sort_order'=>$pi]);$keptPlans[$pid]=true;if(empty($pl['id']))$madePlans++;}
+            }
+        }
+        // Anything removed in the wizard is safely deactivated instead of deleted.
+        $q=db()->prepare('SELECT p.id FROM service_plans p JOIN service_groups g ON g.id=p.group_id WHERE g.service_id=? AND p.is_archived=0 AND g.is_archived=0');$q->execute([$serviceId]);foreach($q->fetchAll() as $p){$pid=(int)$p['id'];if(!isset($keptPlans[$pid]))catalog_soft_disable_plan($pid);}
+        foreach($existingGroups as $gid=>$g){if(!isset($keptGroups[$gid]) && (int)$g['is_default']===0)catalog_soft_disable_group($gid);}
+        catalog_sync_service_legacy_visibility($serviceId);
+        set_setting('catalog_v2_storefront_enabled','1');if(!setting('catalog_v2_applied_at',''))set_setting('catalog_v2_applied_at',date('Y-m-d H:i:s'));
+        db()->commit();
+        if(!$skipUndo){
+            $undo=$undoBefore?['type'=>'restore','service_id'=>$serviceId,'service_name'=>$undoBefore['name']??($bp['name']??'سرویس'),'blueprint'=>$undoBefore,'at'=>date('Y-m-d H:i:s')]:['type'=>'deactivate','service_id'=>$serviceId,'service_name'=>$bp['name']??'سرویس','at'=>date('Y-m-d H:i:s')];
+            set_setting('catalog_v21_undo_json',json_encode($undo,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+        }
+    }catch(Throwable $e){if(db()->inTransaction())db()->rollBack();throw $e;}
+    return ['ok'=>true,'service_id'=>$serviceId,'created_groups'=>$madeGroups,'created_plans'=>$madePlans,'catalog'=>catalog_public_payload(),'undo'=>catalog_undo_meta()];
+}
+
+function catalog_fast_create(array $d): array {
+    $name=trim((string)($d['service_name']??''));$categoryId=(int)($d['category_id']??0);
+    if($name==='')throw new RuntimeException('نام سرویس را وارد کن.');if($categoryId<=0)throw new RuntimeException('دسته فروشگاه را انتخاب کن.');
+    $text=trim((string)($d['groups_text']??''));if($text==='')throw new RuntimeException('حداقل یک زیرسرویس و پلن وارد کن.');
+    $lines=array_values(array_filter(array_map('trim',preg_split('/\R/u',$text))));$groups=[];$planCount=0;
+    foreach($lines as $line){
+        $parts=preg_split('/\s*:\s*/u',$line,2);$groupName=trim($parts[0]??'');$planText=trim($parts[1]??'');
+        if($groupName===''||$planText==='')throw new RuntimeException('فرمت ساخت سریع معتبر نیست. نمونه: Pro: 10GB=149000, 20GB=249000');
+        $isDefault=in_array(mb_strtolower($groupName),['default','plans','plan','پلن','پلن‌ها','مستقیم'],true);$plans=[];
+        foreach(array_values(array_filter(array_map('trim',preg_split('/\s*,\s*/u',$planText)))) as $spec){
+            $pp=preg_split('/\s*=\s*/u',$spec,2);$title=trim($pp[0]??'');$price=(int)preg_replace('/\D+/','',$pp[1]??'0');
+            if($title===''||$price<=0)throw new RuntimeException('هر پلن باید عنوان و قیمت داشته باشد. نمونه: 20GB=249000');
+            $plans[]=['title'=>$title,'price'=>$price,'duration_days'=>0,'discount_percent'=>0,'description'=>'','is_active'=>1];$planCount++;
+        }
+        $groups[]=['name'=>$isDefault?'Default Group':$groupName,'description'=>'','is_default'=>$isDefault?1:0,'is_active'=>1,'plans'=>$plans];
+    }
+    $visible=array_values(array_filter($groups,fn($g)=>empty($g['is_default'])));$mode=count($visible)?'grouped':'direct';
+    if($mode==='direct'&&count($groups)>1)throw new RuntimeException('برای پلن مستقیم فقط یک خط Plans/مستقیم وارد کن.');
+    $r=catalog_save_blueprint(['blueprint'=>['id'=>0,'name'=>$name,'category_id'=>$categoryId,'description'=>$d['description']??'','image_url'=>$d['image_url']??'','theme'=>$d['theme']??'blue','badge'=>$d['badge']??'','is_featured'=>0,'is_active'=>1,'mode'=>$mode,'groups'=>$groups]]);
+    return $r+['groups'=>count($groups),'plans'=>$planCount];
 }

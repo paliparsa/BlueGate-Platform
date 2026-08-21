@@ -6,7 +6,7 @@ header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 
 $appMtime = file_exists(__DIR__ . '/app.js') ? filemtime(__DIR__ . '/app.js') : time();
 $cssMtime = file_exists(__DIR__ . '/style.css') ? filemtime(__DIR__ . '/style.css') : time();
-$version = 'v200-catalog-' . max($appMtime, $cssMtime);
+$version = 'v210-catalog-studio-' . max($appMtime, $cssMtime);
 
 $html = file_get_contents(__DIR__ . '/index.html');
 $html = preg_replace('/style\.css(\?v=[^"\'\s>]+)?/', 'style.css?v=' . $version, $html);

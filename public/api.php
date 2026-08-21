@@ -262,7 +262,7 @@ function admin_payload(): array {
         'categories'=>array_map('category_payload', shop_categories(false)),
         'inventory'=>inventory_items_for_admin(150),
         'variants'=>db()->query('SELECT v.*, p.name product_name FROM product_variants v JOIN products p ON p.id=v.product_id ORDER BY v.id DESC LIMIT 150')->fetchAll(),
-        'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload()],
+        'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta()],
         'settings'=>['payment_instructions'=>setting('payment_instructions',''), 'payment_methods_enabled'=>setting_json('payment_methods_enabled', ['wallet'=>true,'card'=>true,'stars'=>false,'crypto'=>false]), 'payment_methods'=>payment_methods_public(null), 'card_accounts_text'=>card_accounts_lines(), 'stars_rate_toman'=>setting_int('stars_rate_toman', 3200), 'crypto_wallets_text'=>crypto_wallets_lines(), 'crypto_manual_rates_text'=>crypto_manual_rates_lines(), 'crypto_rate_source'=>setting('crypto_rate_source','auto'), 'crypto_rate_markup_percent'=>(float)setting('crypto_rate_markup_percent','1'), 'crypto_notify_rate_fail'=>setting_bool('crypto_notify_rate_fail', true), 'crypto_rate_refresh_interval_seconds'=>setting_int('crypto_rate_refresh_interval_seconds', 600), 'crypto_rate_cache'=>crypto_rate_cache(), 'crypto_rate_last_result'=>setting_json('crypto_rate_last_result', []), 'crypto_rate_provider_priority'=>setting('crypto_rate_provider_priority','wallex,ramzinex,nobitex'), 'theme_color'=>setting('theme_color','#1d9bf0'), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'spin_referrals_per_chance'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards_text'=>spin_rewards_lines(), 'backup_last_created_at'=>setting('backup_last_created_at',''), 'backup_last_restored_at'=>setting('backup_last_restored_at',''), 'brand_name'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'min_withdraw'=>setting_int('min_withdraw',50000), 'start_reward'=>setting_int('start_reward',2000), 'storefront_brand_subtitle'=>setting('storefront_brand_subtitle','Digital Services'), 'storefront_hero_title'=>setting('storefront_hero_title','سرویس‌های دیجیتال، ساده و سریع'), 'storefront_hero_text'=>setting('storefront_hero_text',''), 'storefront_announcement_enabled'=>setting_bool('storefront_announcement_enabled',true), 'storefront_announcement_text'=>setting('storefront_announcement_text',''), 'storefront_star_sell_per_unit_toman'=>(float)setting('storefront_star_sell_per_unit_toman','3456'), 'storefront_star_sell_per_unit_usdt'=>(float)setting('storefront_star_sell_per_unit_usdt','0.018'), 'storefront_stars_price_basis'=>setting('storefront_stars_price_basis','toman'), 'storefront_stars_min'=>setting_int('storefront_stars_min',50), 'storefront_stars_max'=>setting_int('storefront_stars_max',10000), 'storefront_stars_step'=>setting_int('storefront_stars_step',25), 'storefront_stars_presets'=>setting_json('storefront_stars_presets',[100,500,1000,2500,5000]), 'default_base_currency'=>setting('default_base_currency', 'USDT'), 'resend_api_key'=>setting('resend_api_key',''), 'resend_from_email'=>setting('resend_from_email','onboarding@resend.dev'), 'require_email_verification'=>setting_bool('require_email_verification', true), 'vip_tier_rates'=>setting_json('vip_tier_rates', [])],
         'backups'=>blue_backup_list(),
         'withdrawals'=>admin_list_withdrawals('all'),
@@ -547,6 +547,35 @@ if ($action === 'admin_catalog_add_group') {
 }
 if ($action === 'admin_catalog_add_plan') {
     require_admin($user); try{$id=catalog_create_plan($input);log_admin_action((int)$user['telegram_id'],'catalog_add_plan','service_plan',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت پلن ناموفق بود.'],400);}
+}
+if ($action === 'admin_catalog_save_blueprint') {
+    require_admin($user);
+    try{$r=catalog_save_blueprint($input);log_admin_action((int)$user['telegram_id'],'catalog_save_blueprint','service',(int)($r['service_id']??0),'wizard create/edit');api_out(admin_payload()+['catalog_result'=>$r]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره سرویس انجام نشد.'],400);}
+}
+if ($action === 'admin_catalog_undo') {
+    require_admin($user);
+    try{$meta=catalog_undo_meta();$r=catalog_undo_last();log_admin_action((int)$user['telegram_id'],'catalog_undo','service',(int)($r['service_id']??0),'undo last catalog change');api_out(admin_payload()+['catalog_undo_result'=>$r,'catalog_undo_meta'=>$meta]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'بازگشت تغییر انجام نشد.'],400);}
+}
+if ($action === 'admin_catalog_save_service') {
+    require_admin($user);
+    try{$id=catalog_save_service($input);log_admin_action((int)$user['telegram_id'],'catalog_save_service','service',$id,(string)($input['name']??''));api_out(admin_payload()+['catalog_saved_id'=>$id]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره سرویس انجام نشد.'],400);}
+}
+if ($action === 'admin_catalog_save_group') {
+    require_admin($user);
+    try{$id=catalog_save_group($input);log_admin_action((int)$user['telegram_id'],'catalog_save_group','service_group',$id,(string)($input['name']??''));api_out(admin_payload()+['catalog_saved_id'=>$id]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره زیرسرویس انجام نشد.'],400);}
+}
+if ($action === 'admin_catalog_save_plan') {
+    require_admin($user);
+    try{$id=catalog_save_plan($input);log_admin_action((int)$user['telegram_id'],'catalog_save_plan','service_plan',$id,(string)($input['title']??''));api_out(admin_payload()+['catalog_saved_id'=>$id]);}
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>$e->getMessage()?:'ذخیره پلن انجام نشد.'],400);}
+}
+if ($action === 'admin_catalog_toggle_service') {
+    require_admin($user);$id=(int)($input['service_id']??0);$q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$id]);$s=$q->fetch();if(!$s)api_out(['ok'=>false,'message'=>'سرویس پیدا نشد.'],404);
+    $active=(int)$s['is_active']?0:1;catalog_save_service(['id'=>$id,'name'=>$s['name'],'category_id'=>$s['category_id'],'description'=>$s['description'],'image_url'=>$s['image_url'],'theme'=>$s['theme'],'badge'=>$s['badge'],'is_featured'=>$s['is_featured'],'is_active'=>$active,'sort_order'=>$s['sort_order']]);log_admin_action((int)$user['telegram_id'],'catalog_toggle_service','service',$id,$active?'enabled':'disabled');api_out(admin_payload());
 }
 if ($action === 'admin_catalog_fast_create') {
     require_admin($user); try{$r=catalog_fast_create($input);log_admin_action((int)$user['telegram_id'],'catalog_fast_create','catalog',(int)($r['service_id']??0),(string)($input['service_name']??''));api_out(admin_payload()+['fast_create'=>$r]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>$e->getMessage(),'message'=>'ساخت سریع کاتالوگ ناموفق بود.'],400);}

@@ -1,6 +1,6 @@
 # BlueGate Platform
 
-> نسخه فعلی: **v2.0.0**  
+> نسخه فعلی: **v2.1.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 ---
@@ -18,8 +18,8 @@
 9. [تنظیم Resend برای ایمیل](#تنظیم-resend-برای-ایمیل)
 10. [مدیریت پروژه روی VPS](#مدیریت-پروژه-روی-vps)
 11. [آپدیت پروژه](#آپدیت-پروژه)
-12. [Catalog v2 و Organizer](#catalog-v2-و-organizer)
-13. [محصولات، دسته‌بندی و Variant (Legacy)](#محصولات-دستهبندی-و-variant)
+12. [Catalog Studio v2.1](#catalog-v2-و-organizer)
+13. [لایه سازگاری داخلی](#محصولات-دستهبندی-و-variant)
 
 14. [جریان خرید Website در v1.6.0](#جریان-خرید-website-در-v160)
 15. [سفارش‌ها و روش‌های پرداخت](#سفارشها-و-روشهای-پرداخت)
@@ -89,9 +89,11 @@ Supabase در نسخه فعلی هسته اصلی پروژه نیست و اطل�
 
 ## فروشگاه و محصول
 
-- Catalog v2: Category → Service → Group → Plan
-- Legacy Product / Product Variant برای سازگاری Checkout و Order history
-- Catalog Organizer با Preview، Confidence و Manual Review
+- Catalog Studio v2.1: Category → Service → Group → Plan
+- Wizard پنج‌مرحله‌ای مشترک برای ساخت و ویرایش سرویس‌های فعلی
+- Product / Variant قدیمی فقط به‌عنوان لایه سازگاری داخلی و خارج از منوی عادی Admin
+- Guided Migration Assistant با Preview، Confidence و Manual Review
+- Draft محلی، Preview قبل از انتشار، Undo آخرین تغییر و حذف امن/Archive
 - Dynamic product types
 - Inventory
 - Coupon
@@ -541,15 +543,21 @@ Store Category
 
 جداول جدید `store_categories`, `services`, `service_groups`, `service_plans` در کنار جداول Legacy ساخته می‌شوند. `products` و `product_variants` حذف نمی‌شوند و Checkout برای سازگاری همچنان Legacy ID واقعی را نگه می‌دارد. سفارش‌های جدید Snapshot مسیر Service/Group/Plan را ذخیره می‌کنند و هنگام Migration سفارش‌های قدیمی قابل نگاشت نیز Backfill می‌شوند.
 
-در Web Admin و Mini App تب **کاتالوگ** اضافه شده است. Organizer ابتدا Legacy catalog را Scan می‌کند و پیشنهادها را با سه Confidence نمایش می‌دهد. Auto Apply فقط موارد قطعی/احتمالاً درست را پس از Preview و تأیید ادمین اعمال می‌کند؛ موارد `Needs Review` دکمه نگاشت دستی دارند. در Web Admin می‌توان Group و Plan را Drag & Drop کرد؛ Mini App همان عملیات را با selector انجام می‌دهد. Fast Create نیز ساخت Service + Group + Plan را یک‌جا انجام می‌دهد.
+در **v2.1.0** مدیریت محصول به **Catalog Studio** تبدیل شده است. ساخت و اصلاح سرویس‌های فعلی هر دو با یک Wizard پنج‌مرحله‌ای انجام می‌شوند: اطلاعات سرویس → مدل انتخاب → زیرسرویس‌ها → پلن‌ها → Preview. برای سرویس‌های ساده، Default Group پشت صحنه می‌ماند و در UI نمایش داده نمی‌شود. Draft فرم به‌صورت محلی نگه‌داری و هنگام بازگشت بازیابی می‌شود، ذخیره‌ی نهایی یک Undo یک‌مرحله‌ای دارد و حذف Group/Plan به‌صورت Archive امن انجام می‌شود تا تاریخچه سفارش‌ها دست‌نخورده بماند.
 
-تا قبل از تأیید Migration، Storefront از ساختار Legacy استفاده می‌کند. پس از فعال‌شدن Catalog v2، ساختار نمایش از Catalog جدید گرفته می‌شود ولی آیتم‌های Legacy حل‌نشده تا زمان Review از فروشگاه حذف نمی‌شوند.
+بخش‌های قدیمی Products / Categories / Variants دیگر در منوی عادی Web Admin یا Mini App نمایش داده نمی‌شوند و مسیرهای قدیمی نیز به Catalog هدایت می‌شوند. جدول‌های Legacy همچنان فقط برای سازگاری Checkout، Inventory و Order history در Backend باقی می‌مانند.
+
+Migration Assistant ابتدا فروشگاه قبلی را Scan می‌کند و پیشنهادها را با سه Confidence نمایش می‌دهد. Auto Apply فقط موارد مطمئن را پس از Preview و تأیید ادمین اعمال می‌کند؛ موارد `Needs Review` در صف اصلاح باقی می‌مانند. روی Desktop جابه‌جایی Group/Plan با Drag & Drop ممکن است و روی موبایل همان عملیات با selector و Sheet ریسپانسیو انجام می‌شود.
+
+تا قبل از تأیید Migration، Storefront از ساختار قبلی استفاده می‌کند. پس از فعال‌شدن Catalog جدید، ساختار نمایش از Catalog Studio خوانده می‌شود ولی آیتم‌های حل‌نشده تا زمان Review از دسترس خارج نمی‌شوند.
 
 ---
 
 # محصولات، دسته‌بندی و Variant
 
-Product Engine عمومی است؛ یعنی برای اضافه کردن محصول جدید معمولاً نیاز به تغییر Code نیست.
+> این بخش **لایه سازگاری داخلی** است و در v2.1 از منوی معمول Admin مخفی شده. برای ساخت یا ویرایش محصول از **Catalog Studio** استفاده کن.
+
+Product Engine قدیمی برای سازگاری Checkout، Inventory و سفارش‌های قبلی نگه داشته شده است.
 
 مثال:
 
