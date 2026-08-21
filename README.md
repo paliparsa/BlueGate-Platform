@@ -1,6 +1,6 @@
 # BlueGate Platform
 
-> نسخه فعلی: **v1.6.0**  
+> نسخه فعلی: **v1.7.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، کیف پول، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 ---
@@ -393,6 +393,35 @@ BlueGate <noreply@example.com>
 ```
 
 اگر ایمیل نمی‌خواهی، Resend API Key را خالی بگذار.
+
+---
+
+
+# پنل مدیریت Website در v1.7.0
+
+از v1.7.0 پنل Admin سایت به سطح قابلیت‌های Admin Mini App ارتقا پیدا کرده و با فونت، فرم و کارت‌های بزرگ‌تر برای دسکتاپ/تبلت/موبایل طراحی شده است.
+
+بخش‌های اصلی:
+
+```text
+Dashboard
+Orders + Search + Kanban + Bulk Actions + Cleanup
+Products + Reorder + Soft/Hard Delete + CSV
+Categories + Reorder + Soft/Hard Delete
+Variants / Plans
+Inventory
+Coupons
+Withdrawals
+Customer 360 + Edit + Balance + Ban
+Activity Log
+Admin Roles
+Settings: General / Payments / Crypto / Appearance / Gamification
+Backup Center: Create / Send to Bot / Download / Restore / Upload Restore
+Broadcast with optional attachment
+Purchase Referral Reward
+```
+
+تمام این بخش‌ها از همان API و دیتابیس مشترک Mini App استفاده می‌کنند؛ بنابراین تغییرات Website Admin و Mini App Admin بلافاصله روی یک داده مشترک اعمال می‌شود.
 
 ---
 
@@ -1050,9 +1079,21 @@ rm -f /usr/local/bin/bluegate
 
 ---
 
-# وضعیت نسخه 1.6.0
+# وضعیت نسخه 1.7.0
 
-مهم‌ترین تغییرات v1.6.0:
+مهم‌ترین تغییرات v1.7.0:
+
+- Full Web Admin Parity با پنل Admin Mini App
+- Admin Sidebar/Responsive Navigation جدید
+- Typography و کنترل‌های بزرگ‌تر در کل Admin
+- Customer 360، Activity Log و Admin Roles در Website
+- Orders Kanban/List، Bulk Actions، Cleanup، Archive و Receipt Viewer
+- مدیریت کامل Product/Category/Variant/Inventory/Coupon با Hard Delete و Reorder
+- Backup Send-to-Bot و Upload & Restore از Website
+- Broadcast با فایل، Purchase Reward و VIP Rates
+- Settings پنج‌بخشی شامل General/Payments/Crypto/Appearance/Gamification
+
+قابلیت‌های خرید و سفارش v1.6.0 نیز حفظ شده‌اند:
 
 - رفع Horizontal Overflow / فضای سیاه اضافه در Mobile Website
 - بازگشت Confirmation پیش از ثبت سفارش Website
