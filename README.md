@@ -1,3 +1,5 @@
+> **v2.8.0 Mini App Unification:** ساختار Telegram Mini App یکپارچه و سبک‌تر شده است: ناوبری کاربر به فروشگاه/سفارش‌ها/اعتبار/حساب محدود شده، Product Detail به یک Sheet واحد تبدیل شده، Credit و Account از داشبوردهای تکراری پاک‌سازی شده‌اند، Admin فقط چهار مقصد اصلی دارد و یک UI System مشترک برای Sheet/Confirm/Actionها اضافه شده است.
+
 > **v2.7.0 Credit Center:** مرکز اعتبار Website و Mini App بازطراحی شده و شارژ واقعی اعتبار با کارت، Telegram Stars و رمزارز به همراه تاریخچه، بررسی ادمین و تنظیمات min/max/presets اضافه شده است.
 
 > **v2.5.0 Auth & Account Navigation:** نوار ورود/ثبت‌نام Website از نو طراحی شده؛ Guest دو CTA واضح «ورود / ساخت حساب» دارد و بعد از ورود Header به Quick Credit + Account Menu تبدیل می‌شود. Auth حالا Modal/Bottom Sheet یکپارچه با Telegram Login، Password UX، بازیابی مرحله‌ای، OTP شش‌رقمی، Remember Session امن، Profile Completion و Telegram Link اختیاری است.
@@ -14,7 +16,7 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.7.0**  
+> نسخه فعلی: **v2.8.0**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
@@ -1219,3 +1221,22 @@ Referral/partner experience redesigned for Web and Mini App with a compact hero,
 - وضعیت و تاریخچه درخواست‌های شارژ
 - تنظیمات ادمین برای فعال/غیرفعال، حداقل/حداکثر، presetها و روش‌های پرداخت
 - بررسی و تایید/رد شارژهای دستی در Admin
+
+
+## v2.8.0 Mini App Unification
+
+- Bottom navigation کاربر به چهار مقصد فروشگاه، سفارش‌ها، اعتبار و حساب یکپارچه شد.
+- مسیر و صفحه Legacy محصول حذف شد؛ جزئیات محصول، انتخاب پلن و خرید در یک Product Sheet انجام می‌شود.
+- Popup دوم Variant و handlerهای قدیمی Quantity/Product حذف شدند.
+- Account به Hub خلاصه تبدیل شد و اطلاعات تکراری Credit/Referral از آن حذف شد.
+- Credit Center دیگر sub-tab داخلی ندارد؛ تاریخچه، دعوت دوستان و پاداش‌ها به viewهای متمرکز باز می‌شوند.
+- Shop hero بزرگ حذف و جستجو + دسته‌ها + Filter Sheet جایگزین کنترل‌های پراکنده شد.
+- Orders دارای سه فیلتر سریع، Filter Sheet پیشرفته و منوی More برای عملیات فرعی است.
+- Admin Mini App از ۹ تب به Dashboard / Catalog / Orders / More کاهش یافت.
+- UIهای Legacy Products/Categories/Variants از Mini App Admin حذف شدند و Catalog Studio تنها مسیر مدیریت کاتالوگ است.
+- Command Palette روی دستگاه‌های Touch مخفی و فقط برای Desktop نگه داشته شد.
+- UI System مشترک (`ui-system.js`) برای Sheet و Confirmationهای استاندارد اضافه شد و destructive actionهای اصلی از `window.confirm` خارج شدند.
+- لایه Design Token/override مشترک (`unified.css`) برای spacing، radius، typography، surface و motion اضافه شد.
+- Onboarding به دو پیام اصلی «خرید و مدیریت سرویس‌ها» و «دعوت و دریافت اعتبار» کاهش یافت.
+- Auth shortcut داخل Telegram authenticated پنهان می‌شود و فقط در Web fallback/Guest نمایش داده می‌شود.
+- منطق مالی/Payment Backend این نسخه تغییر نکرده است.
