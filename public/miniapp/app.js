@@ -298,7 +298,7 @@ function updateCartFab(){const fab=$('cartFab');if(!fab)return;const c=cartCount
 function openCartSheet(){const s=$('cartSheet');if(!s)return;s.innerHTML=cartSheetHtml();s.classList.add('open');s.style.display='flex';haptic('light');bindCartEvents(s)}
 function closeCartSheet(){const s=$('cartSheet');if(s){s.classList.remove('open');setTimeout(()=>{if(!s.classList.contains('open'))s.style.display='none';},300)}}
 function bindCartEvents(s){if(!s)return;s.querySelector('#cartCloseBtn')?.addEventListener('click',closeCartSheet);s.querySelector('.cart-sheet-handle')?.addEventListener('click',closeCartSheet);s.querySelector('#cartClearBtn')?.addEventListener('click',()=>{cartClear();openCartSheet()});s.querySelector('#cartCheckoutBtn')?.addEventListener('click',cartCheckout);s.querySelectorAll('[data-cart-inc]').forEach(btn=>{btn.addEventListener('click',e=>{const idx=Number(e.currentTarget.dataset.cartInc);cartQty(idx,1);openCartSheet()})});s.querySelectorAll('[data-cart-dec]').forEach(btn=>{btn.addEventListener('click',e=>{const idx=Number(e.currentTarget.dataset.cartDec);cartQty(idx,-1);openCartSheet()})});s.querySelectorAll('[data-cart-del]').forEach(btn=>{btn.addEventListener('click',e=>{const idx=Number(e.currentTarget.dataset.cartDel);cartRemove(idx);openCartSheet()})});s.addEventListener('click',e=>{if(e.target===s)closeCartSheet()})}
-function cartSheetHtml(){if(!_cart.length)return `<div class="cart-sheet-inner"><div class="cart-sheet-handle"></div><div class="cart-sheet-head"><h3>🛒 سبد خرید</h3><button class="ghost" id="cartCloseBtn">✕</button></div><p class="muted empty-state" style="padding:40px 20px;text-align:center;">سبد خرید شما خالی است. از فروشگاه محصول اضافه کنید.</p></div>`;return `<div class="cart-sheet-inner"><div class="cart-sheet-handle"></div><div class="cart-sheet-head"><h3>🛒 سبد خرید (${nf(cartCount())})</h3><button class="ghost" id="cartCloseBtn">✕</button></div><div class="cart-items">${_cart.map((it,i)=>`<div class="cart-item"><div class="cart-item-thumb">${it.img?`<img src="${esc(it.img)}" alt="">`:'<span>🛍</span>'}</div><div class="cart-item-info"><b>${esc(it.name)}</b><span class="muted" style="font-size:12px;color:var(--muted);">${fmt(it.price)} × ${nf(it.qty)}</span></div><div class="cart-item-qty"><button class="ghost" data-cart-dec="${i}">−</button><span>${nf(it.qty)}</span><button class="ghost" data-cart-inc="${i}">+</button></div><button class="ghost cart-item-del" data-cart-del="${i}">🗑</button></div>`).join('')}</div><div class="cart-sheet-foot"><div class="cart-total"><span>مجموع کل</span><b style="color:var(--cyan);font-size:17px;font-weight:900;">${fmt(cartTotal())}</b></div><div class="cart-actions"><button class="secondary" id="cartClearBtn">پاکسازی</button><button class="primary" id="cartCheckoutBtn" style="background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#000;font-weight:900;">⚡ ثبت ${nf(cartCount())} سفارش</button></div><p class="muted cart-note" style="font-size:11px;margin-top:6px;text-align:center;">هر آیتم یک سفارش جداگانه ثبت می‌کند.</p></div></div>`}
+function cartSheetHtml(){if(!_cart.length)return `<div class="cart-sheet-inner"><div class="cart-sheet-handle"></div><div class="cart-sheet-head"><h3>🛒 سبد خرید</h3><button class="ghost" id="cartCloseBtn">✕</button></div><p class="muted empty-state" style="padding:40px 20px;text-align:center;">سبد خرید شما خالی است. از فروشگاه محصول اضافه کنید.</p></div>`;return `<div class="cart-sheet-inner"><div class="cart-sheet-handle"></div><div class="cart-sheet-head"><h3>🛒 سبد خرید (${nf(cartCount())})</h3><button class="ghost" id="cartCloseBtn">✕</button></div><div class="cart-items">${_cart.map((it,i)=>`<div class="cart-item"><div class="cart-item-thumb">${it.img?`<img src="${esc(it.img)}" alt="">`:'<span>🛍</span>'}</div><div class="cart-item-info"><b>${esc(it.name)}</b><span class="muted" style="font-size:14px;color:var(--muted);">${fmt(it.price)} × ${nf(it.qty)}</span></div><div class="cart-item-qty"><button class="ghost" data-cart-dec="${i}">−</button><span>${nf(it.qty)}</span><button class="ghost" data-cart-inc="${i}">+</button></div><button class="ghost cart-item-del" data-cart-del="${i}">🗑</button></div>`).join('')}</div><div class="cart-sheet-foot"><div class="cart-total"><span>مجموع کل</span><b style="color:var(--cyan);font-size:17px;font-weight:900;">${fmt(cartTotal())}</b></div><div class="cart-actions"><button class="secondary" id="cartClearBtn">پاکسازی</button><button class="primary" id="cartCheckoutBtn" style="background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#000;font-weight:900;">⚡ ثبت ${nf(cartCount())} سفارش</button></div><p class="muted cart-note" style="font-size:13.5px;margin-top:6px;text-align:center;">هر آیتم یک سفارش جداگانه ثبت می‌کند.</p></div></div>`}
 function renderCartSheet(){const s=$('cartSheet');if(s&&s.classList.contains('open'))openCartSheet()}
 /* Referral tree */
 async function loadReferralTree(){try{const r=await api('my_referrals');return r.referrals||[]}catch(e){return[]}}
@@ -344,7 +344,7 @@ function showProductPreview(pid){
   showProduct(pid);
 }
 function closePreviewSheet(){const pv=$('previewSheet');if(pv){pv.classList.remove('open');pv.innerHTML=''}}
-function openAdminActionSheet(type,id){const pv=$('previewSheet');if(!pv)return;let title='',subtitle='',buttons='';if(type==='product'){const p=(adminState.products||[]).find(x=>Number(x.id)===Number(id));if(!p)return;title=`محصول #${nf(p.id)}`;subtitle=p.name;buttons=`<button class="ios-action-btn" data-edit-product="${p.id}">ویرایش کامل</button><button class="ios-action-btn" data-admin-toggle-product="${p.id}">${Number(p.is_active)?'غیرفعال کردن':'فعال کردن'}</button><button class="ios-action-btn danger-action" data-admin-delete-product="${p.id}">غیرفعال‌سازی</button><button class="ios-action-btn danger-action" data-admin-hard-delete-product="${p.id}">حذف کامل</button>`;}else if(type==='variant'){const v=(adminState.variants||[]).find(x=>Number(x.id)===Number(id));if(!v)return;title=`پلن #${nf(v.id)}`;subtitle=`${v.product_name||''} - ${v.title}`;buttons=`<button class="ios-action-btn" data-edit-variant="${v.id}">ویرایش پلن</button><button class="ios-action-btn danger-action" data-admin-delete-variant="${v.id}">غیرفعال‌سازی</button><button class="ios-action-btn danger-action" data-admin-hard-delete-variant="${v.id}">حذف کامل</button>`;}else if(type==='category'){const c=(adminState.categories||[]).find(x=>Number(x.id)===Number(id));if(!c)return;title=`دسته #${nf(c.id)}`;subtitle=c.title;buttons=`<button class="ios-action-btn" data-edit-category="${c.id}">ویرایش</button><button class="ios-action-btn danger-action" data-admin-delete-category="${c.id}">غیرفعال‌سازی</button><button class="ios-action-btn danger-action" data-admin-hard-delete-category="${c.id}">حذف کامل</button>`;}else if(type==='order'){const o=(adminState.orders||[]).find(x=>Number(x.id)===Number(id));if(!o)return;title=`سفارش #${nf(o.id)}`;subtitle=o.display_name;buttons=`${o.user_id?`<button class="ios-action-btn" data-customer-360="${o.user_id}">👤 پروفایل کاربر</button>`:''}${o.username?`<button class="ios-action-btn" data-chat-user="${esc(o.username)}">💬 ارسال پیام</button>`:''}<button class="ios-action-btn" data-admin-order-note="${o.id}">📝 یادداشت داخلی${o.admin_note?' (دارد)':''}</button><button class="ios-action-btn" data-admin-status="${o.id}:reviewing">در بررسی</button><button class="ios-action-btn" data-admin-status="${o.id}:payment_confirmed">تایید پرداخت</button><button class="ios-action-btn" data-admin-status="${o.id}:preparing">آماده‌سازی</button><button class="ios-action-btn" data-admin-service="${o.id}">🌐 ثبت لینک سرویس${o.delivery_url?' (ثبت شده)':''}</button><button class="ios-action-btn" data-admin-deliver="${o.id}">ثبت تحویل متنی</button>${o.receipt_file_id?`<button class="ios-action-btn" data-view-receipt="${o.id}">🖼 دیدن رسید تصویری</button>`:''}<button class="ios-action-btn danger-action" data-admin-status="${o.id}:rejected">رد سفارش</button><button class="ios-action-btn danger-action" data-admin-archive-order="${o.id}">آرشیو سفارش</button>${cleanupStatuses.includes(o.status)?`<button class="ios-action-btn danger-action" data-admin-delete-order="${o.id}">حذف کامل</button>`:''}`;}pv.innerHTML=`<div class="preview-sheet-inner" style="padding-top: 10px;"><div class="preview-sheet-handle" data-close-preview></div><div style="text-align:center; margin: 12px 0 16px;"><h3 style="font-size: 16px; margin-bottom: 4px;">${title}</h3><p class="muted" style="font-size: 13px;">${esc(subtitle)}</p></div><div class="ios-action-group">${buttons}</div><div class="ios-action-group" style="margin-top: -10px;"><button class="ios-action-btn" style="font-weight: 800;" data-close-preview>بستن</button></div></div>`;pv.classList.add('open');pv.querySelectorAll('[data-close-preview]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();closePreviewSheet()}));pv.addEventListener('click',function(ev){if(ev.target===pv)closePreviewSheet()})}
+function openAdminActionSheet(type,id){const pv=$('previewSheet');if(!pv)return;let title='',subtitle='',buttons='';if(type==='product'){const p=(adminState.products||[]).find(x=>Number(x.id)===Number(id));if(!p)return;title=`محصول #${nf(p.id)}`;subtitle=p.name;buttons=`<button class="ios-action-btn" data-edit-product="${p.id}">ویرایش کامل</button><button class="ios-action-btn" data-admin-toggle-product="${p.id}">${Number(p.is_active)?'غیرفعال کردن':'فعال کردن'}</button><button class="ios-action-btn danger-action" data-admin-delete-product="${p.id}">غیرفعال‌سازی</button><button class="ios-action-btn danger-action" data-admin-hard-delete-product="${p.id}">حذف کامل</button>`;}else if(type==='variant'){const v=(adminState.variants||[]).find(x=>Number(x.id)===Number(id));if(!v)return;title=`پلن #${nf(v.id)}`;subtitle=`${v.product_name||''} - ${v.title}`;buttons=`<button class="ios-action-btn" data-edit-variant="${v.id}">ویرایش پلن</button><button class="ios-action-btn danger-action" data-admin-delete-variant="${v.id}">غیرفعال‌سازی</button><button class="ios-action-btn danger-action" data-admin-hard-delete-variant="${v.id}">حذف کامل</button>`;}else if(type==='category'){const c=(adminState.categories||[]).find(x=>Number(x.id)===Number(id));if(!c)return;title=`دسته #${nf(c.id)}`;subtitle=c.title;buttons=`<button class="ios-action-btn" data-edit-category="${c.id}">ویرایش</button><button class="ios-action-btn danger-action" data-admin-delete-category="${c.id}">غیرفعال‌سازی</button><button class="ios-action-btn danger-action" data-admin-hard-delete-category="${c.id}">حذف کامل</button>`;}else if(type==='order'){const o=(adminState.orders||[]).find(x=>Number(x.id)===Number(id));if(!o)return;title=`سفارش #${nf(o.id)}`;subtitle=o.display_name;buttons=`${o.user_id?`<button class="ios-action-btn" data-customer-360="${o.user_id}">👤 پروفایل کاربر</button>`:''}${o.username?`<button class="ios-action-btn" data-chat-user="${esc(o.username)}">💬 ارسال پیام</button>`:''}<button class="ios-action-btn" data-admin-order-note="${o.id}">📝 یادداشت داخلی${o.admin_note?' (دارد)':''}</button><button class="ios-action-btn" data-admin-status="${o.id}:reviewing">در بررسی</button><button class="ios-action-btn" data-admin-status="${o.id}:payment_confirmed">تایید پرداخت</button><button class="ios-action-btn" data-admin-status="${o.id}:preparing">آماده‌سازی</button><button class="ios-action-btn" data-admin-service="${o.id}">🌐 ثبت لینک سرویس${o.delivery_url?' (ثبت شده)':''}</button><button class="ios-action-btn" data-admin-deliver="${o.id}">ثبت تحویل متنی</button>${o.receipt_file_id?`<button class="ios-action-btn" data-view-receipt="${o.id}">🖼 دیدن رسید تصویری</button>`:''}<button class="ios-action-btn danger-action" data-admin-status="${o.id}:rejected">رد سفارش</button><button class="ios-action-btn danger-action" data-admin-archive-order="${o.id}">آرشیو سفارش</button>${cleanupStatuses.includes(o.status)?`<button class="ios-action-btn danger-action" data-admin-delete-order="${o.id}">حذف کامل</button>`:''}`;}pv.innerHTML=`<div class="preview-sheet-inner" style="padding-top: 10px;"><div class="preview-sheet-handle" data-close-preview></div><div style="text-align:center; margin: 12px 0 16px;"><h3 style="font-size: 16px; margin-bottom: 4px;">${title}</h3><p class="muted" style="font-size: 14.5px;">${esc(subtitle)}</p></div><div class="ios-action-group">${buttons}</div><div class="ios-action-group" style="margin-top: -10px;"><button class="ios-action-btn" style="font-weight: 800;" data-close-preview>بستن</button></div></div>`;pv.classList.add('open');pv.querySelectorAll('[data-close-preview]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();closePreviewSheet()}));pv.addEventListener('click',function(ev){if(ev.target===pv)closePreviewSheet()})}
 /* VIP / loyalty progress (U8) */
 function vipProgressHtml(){const u=state.user;if(!u)return '';const tier=u.customer?.tier||{};const spent=Number(u.customer?.total_spent||0);const tiers=[{name:'Bronze',fa:'برنز',emoji:'🥉',min:0},{name:'Silver',fa:'نقره',emoji:'🥈',min:1000000},{name:'Gold',fa:'طلایی',emoji:'🥇',min:5000000},{name:'Diamond',fa:'الماس',emoji:'💎',min:10000000}];let cur=0,nxt=tiers[1];for(let i=0;i<tiers.length;i++){if(spent>=tiers[i].min){cur=i;nxt=tiers[i+1]||null}}const curTier=tiers[cur];const base=curTier.min;const ceiling=nxt?nxt.min:curTier.min;const range=Math.max(1,ceiling-base);const pct=nxt?Math.min(100,Math.round((spent-base)/range*100)):100;return `<article class="wallet-card vip-card"><div class="vip-head"><span class="vip-emoji">${curTier.emoji}</span><div><h3>سطح مشتری ${curTier.fa}</h3><p class="muted">${nxt?`تا ${nxt.fa} ${nxt.emoji}: ${fmt(Math.max(0,ceiling-spent))}`:'بالاترین سطح رسیدی! 🎉'}</p></div></div><div class="vip-track"><div class="vip-fill" style="width:${pct}%"></div></div><div class="vip-tiers">${tiers.map(t=>`<span class="${t.name===curTier.name?'active':''}">${t.emoji} ${esc(t.fa)}</span>`).join('')}</div></article>`}
 /* Onboarding (U10) */
@@ -359,7 +359,7 @@ function recentProductsHtml(){const ids=JSON.parse(localStorage.getItem('blue_re
 function qrCodeImg(text,size=200){const url='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(text)+'&margin=8&qzone=2';return `<img src="${esc(url)}" alt="QR" width="${size}" height="${size}" style="display:block;width:100%;height:100%;border-radius:8px">`}
 function openQrSheet(){const u=state.user;if(!u)return;const link=u.referral_link||'';if(!link){showStatus('لینک دعوت در دسترس نیست','error');return}const qs=$('qrSheet');if(!qs)return;qs.innerHTML=`<div class="qr-sheet-inner"><div class="qr-sheet-handle" data-close-qr></div><h3>📱 کد QR لینک دعوت</h3><p class="muted">دوستت این کد را با دوربین گوشی اسکن کنه تا مستقیم وارد بات بشه.</p><div class="qr-box">${qrCodeImg(link,200)}</div><div class="qr-link-box"><code>${esc(link)}</code></div><div class="actions"><button class="secondary" id="qrCopyBtn">📋 کپی لینک</button><button class="primary" id="qrCloseBtn">بستن</button></div></div>`;qs.classList.add('open');qs.querySelectorAll('[data-close-qr]').forEach(el=>el.addEventListener('click',closeQrSheet));$('qrCopyBtn')?.addEventListener('click',()=>{navigator.clipboard?.writeText(link);showStatus('لینک کپی شد')});$('qrCloseBtn')?.addEventListener('click',closeQrSheet)}
 function closeQrSheet(){const qs=$('qrSheet');if(qs){qs.classList.remove('open');qs.innerHTML=''}}
-function openPromoSheet(){const u=state.user;if(!u)return;const link=u.referral_link||'';if(!link){showStatus('لینک دعوت در دسترس نیست','error');return}const brand=state.brand||'BlueGate';const txt=`💙 با ${brand} هم اینترنت آزاد داشته باش، هم از دعوت دوستات درآمد بگیر!\n\n👥 با لینک من وارد ربات شو؛ فعالیتت زیرمجموعه من حساب می‌شه.\n🎁 پاداش دعوت، اعتبار BlueGate و گردونه شانس فعال است.\n\n🔗 ${link}`;const pv=$('previewSheet');if(!pv)return;pv.innerHTML=`<div class="preview-sheet-inner" style="padding-top: 20px;"><div class="preview-sheet-handle" data-close-preview></div><div style="text-align:center; margin-bottom: 16px;"><h3 style="font-size: 18px; margin-bottom: 8px;">📣 متن آماده تبلیغ شما</h3><p class="muted" style="font-size: 13px;">این متن را کپی کنید و برای دوستانتان یا در گروه‌ها بفرستید</p></div><div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; user-select: text; text-align: right; border: 1px solid rgba(255,255,255,0.05);">${esc(txt)}</div><div class="actions" style="flex-direction: column; gap: 8px;"><button class="primary" id="copyPromoBtn" style="width: 100%;">📋 کپی متن تبلیغ</button><button class="ghost" data-close-preview style="width: 100%;">بستن</button></div></div>`;pv.classList.add('open');pv.querySelectorAll('[data-close-preview]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();closePreviewSheet()}));pv.addEventListener('click',function(ev){if(ev.target===pv)closePreviewSheet()});$('copyPromoBtn')?.addEventListener('click',()=>{navigator.clipboard?.writeText(txt);showStatus('متن تبلیغ کپی شد!');closePreviewSheet()})}
+function openPromoSheet(){const u=state.user;if(!u)return;const link=u.referral_link||'';if(!link){showStatus('لینک دعوت در دسترس نیست','error');return}const brand=state.brand||'BlueGate';const txt=`💙 با ${brand} هم اینترنت آزاد داشته باش، هم از دعوت دوستات درآمد بگیر!\n\n👥 با لینک من وارد ربات شو؛ فعالیتت زیرمجموعه من حساب می‌شه.\n🎁 پاداش دعوت، اعتبار BlueGate و گردونه شانس فعال است.\n\n🔗 ${link}`;const pv=$('previewSheet');if(!pv)return;pv.innerHTML=`<div class="preview-sheet-inner" style="padding-top: 20px;"><div class="preview-sheet-handle" data-close-preview></div><div style="text-align:center; margin-bottom: 16px;"><h3 style="font-size: 18px; margin-bottom: 8px;">📣 متن آماده تبلیغ شما</h3><p class="muted" style="font-size: 14.5px;">این متن را کپی کنید و برای دوستانتان یا در گروه‌ها بفرستید</p></div><div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 14.5px; line-height: 1.6; white-space: pre-wrap; user-select: text; text-align: right; border: 1px solid rgba(255,255,255,0.05);">${esc(txt)}</div><div class="actions" style="flex-direction: column; gap: 8px;"><button class="primary" id="copyPromoBtn" style="width: 100%;">📋 کپی متن تبلیغ</button><button class="ghost" data-close-preview style="width: 100%;">بستن</button></div></div>`;pv.classList.add('open');pv.querySelectorAll('[data-close-preview]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();closePreviewSheet()}));pv.addEventListener('click',function(ev){if(ev.target===pv)closePreviewSheet()});$('copyPromoBtn')?.addEventListener('click',()=>{navigator.clipboard?.writeText(txt);showStatus('متن تبلیغ کپی شد!');closePreviewSheet()})}
 /* Achievement badges (U15) */
 function achievementsHtml(){const a=state.achievements||[];if(!a.length)return '';const earned=a.filter(x=>x.earned).length;return `<article class="wallet-card achievements-card"><div class="achievements-head"><span class="admin-card-icon">🏆</span><div><h3>دستاوردها</h3><p class="muted">${nf(earned)} از ${nf(a.length)} باز شده</p></div></div><div class="badges-grid">${a.map(x=>`<div class="badge-cell ${x.earned?'earned':'locked'}" title="${esc(x.title)}"><span class="badge-emoji">${x.earned?x.emoji:'🔒'}</span><small>${esc(x.title)}</small></div>`).join('')}</div></article>`}
 /* Advanced order search (A2) */
@@ -389,7 +389,7 @@ function openDialog(title,text,placeholder,onSubmit,initial='',showFile=false){
         value: initial || ''
       },
       ...(showFile ? [{
-        html: `<div style="margin-top:8px;"><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">انتخاب تصویر (اختیاری):</label><input type="file" id="dialog_file_val" accept="image/*" style="width:100%;"></div>`
+        html: `<div style="margin-top:8px;"><label style="display:block;font-size:14px;color:var(--muted);margin-bottom:4px;">انتخاب تصویر (اختیاری):</label><input type="file" id="dialog_file_val" accept="image/*" style="width:100%;"></div>`
       }] : [])
     ]
   }], async () => {
@@ -487,12 +487,12 @@ function openWalletConfirmSheet(orderId){
       <div style="text-align:center;margin-bottom:12px">
         <div style="font-size:42px;margin-bottom:4px">💰</div>
         <h3 style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">کسر از موجودی اعتبار BlueGate</h3>
-        <p class="muted" style="font-size:13px;line-height:1.6;margin-bottom:14px">
+        <p class="muted" style="font-size:14.5px;line-height:1.6;margin-bottom:14px">
           آیا از پرداخت سفارش <b>#${nf(o.id)}</b> به مبلغ <b>${fmt(o.final_amount)}</b> اطمینان دارید؟<br>
           موجودی قابل پرداخت شما: <b style="color:#4ade80;font-size:15px">${fmt(bal)}</b>
         </p>
       </div>
-      <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);padding:12px;border-radius:16px;font-size:12px;color:#fde68a;line-height:1.6;margin-bottom:18px;text-align:right">
+      <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);padding:12px;border-radius:16px;font-size:14px;color:#fde68a;line-height:1.6;margin-bottom:18px;text-align:right">
         ⚠️ <b>توجه مهم:</b> موجودی کسرشده تنها در صورت لغو سفارش به اعتبار BlueGate شما بازگردانده می‌شود.
         ${supportUser ? `<br>💬 قبل از تایید، حتماً موجودی محصول را با پشتیبانی <a href="https://t.me/${esc(supportUser)}" target="_blank" style="color:#60a5fa;text-decoration:underline">@${esc(supportUser)}</a> چک کنید.` : ''}
       </div>
@@ -740,7 +740,7 @@ function paymentMethodsHtml(o){
   }
 
   if(o.payment_method && o.payment_method !== 'none' && o.payment_method !== 'card' && o.payment_method !== 'crypto'){
-    html+=`<div style="margin-top:12px;text-align:center"><button class="ghost" data-reset-payment-method="${o.id}" style="font-size:12px">🔄 تغییر روش پرداخت</button></div>`;
+    html+=`<div style="margin-top:12px;text-align:center"><button class="ghost" data-reset-payment-method="${o.id}" style="font-size:14px">🔄 تغییر روش پرداخت</button></div>`;
   }
 
   html+=`</article>`;
@@ -840,7 +840,7 @@ function orderDetailHtml(o){
   let basePriceHtml=`${fmt(o.amount)}`;
   if(d>0){
     const orig=Math.round(Number(o.amount)/(1-d/100));
-    basePriceHtml=`<div style="display:flex;align-items:center;gap:6px"><s class="muted" style="font-size:0.85em">${fmt(orig)}</s><span>${fmt(o.amount)}</span><span class="flash-pill">−${nf(d)}٪</span></div>`;
+    basePriceHtml=`<div style="display:flex;align-items:center;gap:6px"><s class="muted" style="font-size:14px">${fmt(orig)}</s><span>${fmt(o.amount)}</span><span class="flash-pill">−${nf(d)}٪</span></div>`;
   }
   const cur = String(o.price_currency || o.currency || 'IRT').toUpperCase();
   let nativeCurrencyPill = '';
@@ -858,9 +858,9 @@ function orderDetailHtml(o){
     <div class="savings-breakdown-card" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:16px;padding:14px;margin:12px 0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span style="font-weight:900;color:#22c55e;">🎉 سود شما از این خرید</span>
-        <span class="savings-tag" style="color:#4ade80;font-weight:800;font-size:11px;background:rgba(34,197,94,0.12);padding:2px 7px;border-radius:8px;border:1px solid rgba(34,197,94,0.25);">مجموع سود: ${fmt(totalSavings)}</span>
+        <span class="savings-tag" style="color:#4ade80;font-weight:800;font-size:13.5px;background:rgba(34,197,94,0.12);padding:2px 7px;border-radius:8px;border:1px solid rgba(34,197,94,0.25);">مجموع سود: ${fmt(totalSavings)}</span>
       </div>
-      <div style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px;">
+      <div style="font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:4px;">
         ${Number(o.discount_amount)>0 ? `<div>🎟 تخفیف با کد: <b style="color:var(--text);">${fmt(o.discount_amount)}</b></div>` : ''}
         ${Number(o.wallet_amount)>0 ? `<div>💰 کسر از اعتبار BlueGate: <b style="color:var(--text);">${fmt(o.wallet_amount)}</b></div>` : ''}
       </div>
@@ -1068,7 +1068,7 @@ function specialDiscountsBannerHtml(){
               ${crossedPrice > 0 ? `<s class="flash-card-orig-price">${fmt(crossedPrice)}</s>` : ''}
               <b class="flash-card-cur-price">${fmt(realPrice)}</b>
             </div>
-            <button class="primary" data-buy="${p.id}" style="padding:6px 12px; font-size:12px; border-radius:12px;">⚡ خرید</button>
+            <button class="primary" data-buy="${p.id}" style="padding:6px 12px; font-size:14px; border-radius:12px;">⚡ خرید</button>
           </div>
         </div>`;
       }).join('')}
@@ -1108,9 +1108,9 @@ function buyButtonsForProduct(p){
       if(d > 0){
         const orig = (v.old_price && Number(v.old_price) > Number(v.price)) ? Number(v.old_price) : Math.round(Number(v.price) / (1 - d / 100));
         const savings = orig - Number(v.price);
-        priceHtml = `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><s class="muted-strike" style="font-size:0.88em;text-decoration:line-through;color:#9fb0c8;">${fmt(orig)}</s><span style="font-weight:900;color:#ffffff;">${priceText}</span><span class="discount-badge">−${nf(d)}٪</span>${savings>0?`<small class="savings-tag" style="color:#4ade80;font-weight:800;font-size:11px;">(سود: ${fmt(savings)})</small>`:''}</div>`;
+        priceHtml = `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><s class="muted-strike" style="font-size:14px;text-decoration:line-through;color:#9fb0c8;">${fmt(orig)}</s><span style="font-weight:900;color:#ffffff;">${priceText}</span><span class="discount-badge">−${nf(d)}٪</span>${savings>0?`<small class="savings-tag" style="color:#4ade80;font-weight:800;font-size:13.5px;">(سود: ${fmt(savings)})</small>`:''}</div>`;
       }
-      return `<div class="variant-card"><div class="variant-info" data-variant-details="${p.id}:${v.id}" style="cursor:pointer;"><div style="display:flex;align-items:center;gap:6px;"><b style="color:#ffffff;">${esc(v.title)}</b><span class="v-info-icon" style="font-size:13px;opacity:0.8;" title="مشاهده جزئیات پلن">ℹ️</span></div>${priceHtml}</div><div class="variant-card-actions"><button class="ghost" data-variant-details="${p.id}:${v.id}" title="مشاهده جزئیات پلن">ℹ️</button><button class="ghost" data-cart-add="${p.id}" data-cart-variant="${v.id}">🛒</button><button class="primary" data-buy="${p.id}" data-variant="${v.id}">خرید</button>${bal>0?`<button class="secondary" data-buy-wallet="${p.id}" data-variant="${v.id}">کیف</button>`:''}</div></div>`;
+      return `<div class="variant-card"><div class="variant-info" data-variant-details="${p.id}:${v.id}" style="cursor:pointer;"><div style="display:flex;align-items:center;gap:6px;"><b style="color:#ffffff;">${esc(v.title)}</b><span class="v-info-icon" style="font-size:14.5px;opacity:0.8;" title="مشاهده جزئیات پلن">ℹ️</span></div>${priceHtml}</div><div class="variant-card-actions"><button class="ghost" data-variant-details="${p.id}:${v.id}" title="مشاهده جزئیات پلن">ℹ️</button><button class="ghost" data-cart-add="${p.id}" data-cart-variant="${v.id}">🛒</button><button class="primary" data-buy="${p.id}" data-variant="${v.id}">خرید</button>${bal>0?`<button class="secondary" data-buy-wallet="${p.id}" data-variant="${v.id}">کیف</button>`:''}</div></div>`;
     }).join('')}</div>`;
   }
   return `${walletHint}<div class="actions variant-list"><button class="ghost" data-cart-add="${p.id}">🛒 افزودن به سبد</button><button class="primary pulse" data-buy="${p.id}">ثبت سفارش</button>${bal>0?`<button class="secondary" data-buy-wallet="${p.id}">خرید با اعتبار BlueGate</button>`:''}</div>`;
@@ -1161,7 +1161,7 @@ function openVariantDetails(pid, vid){
         <div style="display:flex; align-items:center; gap:12px;">
           <div style="text-align:right;">
             <h3 style="font-size:16px; font-weight:800; color:#ffffff; margin:0;">فاکتور رسمی خرید ${esc(brandName)}</h3>
-            <p style="font-size:12px; color:#00f2fe; margin:2px 0 0 0; font-weight:700;">کد پیگیری: <b>#BG-${p.id}${v.id}</b></p>
+            <p style="font-size:14px; color:#00f2fe; margin:2px 0 0 0; font-weight:700;">کد پیگیری: <b>#BG-${p.id}${v.id}</b></p>
           </div>
           <div style="width:48px; height:48px; min-width:48px; min-height:48px; border-radius:50%; background:rgba(0, 242, 254, 0.1); border:2px solid #00f2fe; box-shadow:0 0 14px rgba(0, 242, 254, 0.35); display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:22px; flex-shrink:0;">
             ${p.image_url ? `<img src="${esc(p.image_url)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="">` : '<span>⚡</span>'}
@@ -1171,19 +1171,19 @@ function openVariantDetails(pid, vid){
 
       <!-- Specs List -->
       <div style="display:flex; flex-direction:column; gap:10px; padding:4px 0;">
-        <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; font-size:14.5px;">
           <span style="color:#94a3b8; font-weight:600; display:flex; align-items:center; gap:6px;"><span>📚</span> <span>سرویس انتخابی:</span></span>
           <span style="color:#00f2fe; font-weight:800;">${esc(p.name)}</span>
         </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; font-size:14.5px;">
           <span style="color:#94a3b8; font-weight:600; display:flex; align-items:center; gap:6px;"><span>📐</span> <span>نام پلن:</span></span>
           <span style="color:#ffffff; font-weight:800;">${esc(v.title)}</span>
         </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; font-size:14.5px;">
           <span style="color:#94a3b8; font-weight:600; display:flex; align-items:center; gap:6px;"><span>⚡</span> <span>نوع / خصوصیت:</span></span>
           <span style="color:#f1f5f9; font-weight:700;">${esc(deliveryTypeFa)}</span>
         </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; font-size:14.5px;">
           <span style="color:#94a3b8; font-weight:600; display:flex; align-items:center; gap:6px;"><span>📅</span> <span>مدت اعتبار:</span></span>
           <span style="color:#4ade80; font-weight:800;">${v.duration_days > 0 ? `${nf(v.duration_days)} روز` : 'دائمی / بدون انقضا'}</span>
         </div>
@@ -1192,22 +1192,22 @@ function openVariantDetails(pid, vid){
       <!-- Custom Variant Description Box -->
       ${descText ? `
         <div style="background:rgba(255, 255, 255, 0.03); border:1px solid rgba(255, 255, 255, 0.08); border-radius:14px; padding:12px; max-height:140px; overflow-y:auto;">
-          <div style="font-size:12px; font-weight:800; color:#00f2fe; margin-bottom:6px;">📝 توضیحات اختصاصی پلن:</div>
-          <div style="font-size:12px; line-height:1.65; color:#cbd5e1; word-break:break-word;">${textBlock(descText)}</div>
+          <div style="font-size:14px; font-weight:800; color:#00f2fe; margin-bottom:6px;">📝 توضیحات اختصاصی پلن:</div>
+          <div style="font-size:14px; line-height:1.65; color:#cbd5e1; word-break:break-word;">${textBlock(descText)}</div>
         </div>
       ` : ''}
 
       <!-- Dashed Payable Price Card -->
       <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:rgba(0, 242, 254, 0.04); border:1.5px dashed rgba(0, 242, 254, 0.4); border-radius:16px;">
-        <span style="font-size:13px; font-weight:700; color:#cbd5e1;">مبلغ کل قابل پرداخت:</span>
+        <span style="font-size:14.5px; font-weight:700; color:#cbd5e1;">مبلغ کل قابل پرداخت:</span>
         <div style="display:flex; align-items:center; gap:6px;">
-          ${d > 0 ? `<s style="font-size:12px; color:#94a3b8; margin-left:6px; text-decoration:line-through;">${fmt(origPrice)}</s>` : ''}
+          ${d > 0 ? `<s style="font-size:14px; color:#94a3b8; margin-left:6px; text-decoration:line-through;">${fmt(origPrice)}</s>` : ''}
           <b style="font-size:20px; font-weight:900; color:#facc15;">${fmt(v.price)}</b>
         </div>
       </div>
 
       <!-- Guarantee Banner -->
-      <div style="background:rgba(34, 197, 94, 0.08); border:1px solid rgba(34, 197, 94, 0.25); color:#4ade80; font-size:12px; font-weight:700; border-radius:12px; padding:10px 14px; text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;">
+      <div style="background:rgba(34, 197, 94, 0.08); border:1px solid rgba(34, 197, 94, 0.25); color:#4ade80; font-size:14px; font-weight:700; border-radius:12px; padding:10px 14px; text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;">
         🛡️ شامل ۷ روز ضمانت بازگشت ۱۰۰٪ وجه در صورت عدم رضایت
       </div>
 
@@ -1216,7 +1216,7 @@ function openVariantDetails(pid, vid){
         <button data-buy="${p.id}" data-variant="${v.id}" onclick="closeVariantDetails()" style="width:100%; padding:14px; background:linear-gradient(135deg, #00f2fe, #1d9bf0); border:none; border-radius:14px; color:#000000; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 4px 18px rgba(0, 242, 254, 0.4);">
           ⚡ تایید و ثبت سفارش (${fmt(v.price)})
         </button>
-        <button onclick="addToCart(${p.id}, ${v.id})" style="width:100%; padding:13px; background:rgba(255, 255, 255, 0.06); border:1px solid rgba(255, 255, 255, 0.12); border-radius:14px; color:#ffffff; font-weight:800; font-size:13.5px; cursor:pointer;">
+        <button onclick="addToCart(${p.id}, ${v.id})" style="width:100%; padding:13px; background:rgba(255, 255, 255, 0.06); border:1px solid rgba(255, 255, 255, 0.12); border-radius:14px; color:#ffffff; font-weight:800; font-size:15px; cursor:pointer;">
           🛒 افزودن به سبد خرید
         </button>
       </div>
@@ -1430,7 +1430,7 @@ function showProduct(pid){
 
     const lbl = $('mp-price-lbl');
     if (lbl) {
-      lbl.innerHTML = `${totalOrig ? `<s style="color:var(--muted); font-size:12px; margin-left:6px; text-decoration:line-through; font-weight:normal;">${fmt(totalOrig)}</s>` : ''}${fmt(totalPrice)}`;
+      lbl.innerHTML = `${totalOrig ? `<s style="color:var(--muted); font-size:14px; margin-left:6px; text-decoration:line-through; font-weight:normal;">${fmt(totalOrig)}</s>` : ''}${fmt(totalPrice)}`;
     }
   }
 
@@ -1452,17 +1452,17 @@ function showProduct(pid){
         </div>
       ` : ''}
 
-      <div style="display:flex; justify-content:space-around; background:rgba(0,242,254,0.04); border:1px solid rgba(0,242,254,0.2); border-radius:14px; padding:12px; margin-bottom:16px; font-size:12px; color:var(--cyan);">
+      <div style="display:flex; justify-content:space-around; background:rgba(0,242,254,0.04); border:1px solid rgba(0,242,254,0.2); border-radius:14px; padding:12px; margin-bottom:16px; font-size:14px; color:var(--cyan);">
         <span>⚡ <b>تحویل آنی ۲۴ ساعته</b></span>
         <span>🛡️ <b>ضمانت سلامت اکانت</b></span>
         <span>🎧 <b>پشتیبانی اختصاصی</b></span>
       </div>
 
-      ${hasDesc ? `<div style="margin-bottom:16px; background:rgba(255,255,255,0.03); border-radius:14px; padding:14px; border:1px solid rgba(255,255,255,0.08); font-size:13px; color:var(--muted); line-height:1.7;">${textBlock(rawDesc)}</div>` : ''}
+      ${hasDesc ? `<div style="margin-bottom:16px; background:rgba(255,255,255,0.03); border-radius:14px; padding:14px; border:1px solid rgba(255,255,255,0.08); font-size:14.5px; color:var(--muted); line-height:1.7;">${textBlock(rawDesc)}</div>` : ''}
 
       ${variants.length > 0 ? `
         <div style="margin-bottom:18px;">
-          <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:8px;">انتخاب پلن / مدت زمان اشتراک:</label>
+          <label style="display:block; font-size:14px; color:var(--muted); margin-bottom:8px;">انتخاب پلن / مدت زمان اشتراک:</label>
           <div class="variant-cards-grid">
             ${variants.map((v, idx) => {
               const vDisc = Number(v.discount_percent || 0);
@@ -1474,11 +1474,11 @@ function showProduct(pid){
                     <span class="variant-badge">${v.duration_days ? `${v.duration_days} روز` : 'پلن ویژه'}</span>
                   </div>
                   <div class="variant-price">
-                    ${vOrig > 0 && vOrig > Number(v.price) ? `<s style="color:var(--muted); font-size:11px; margin-left:4px; text-decoration:line-through;">${fmt(vOrig)}</s>` : ''}
+                    ${vOrig > 0 && vOrig > Number(v.price) ? `<s style="color:var(--muted); font-size:13.5px; margin-left:4px; text-decoration:line-through;">${fmt(vOrig)}</s>` : ''}
                     <span>${fmt(v.price)}</span>
-                    ${vDisc > 0 ? `<span class="flash-pill" style="font-size:10px; background:rgba(239,68,68,0.2); color:#fca5a5; padding:2px 6px; border-radius:6px; margin-right:4px;">−${nf(vDisc)}٪</span>` : ''}
+                    ${vDisc > 0 ? `<span class="flash-pill" style="font-size:13px; background:rgba(239,68,68,0.2); color:#fca5a5; padding:2px 6px; border-radius:6px; margin-right:4px;">−${nf(vDisc)}٪</span>` : ''}
                   </div>
-                  <div style="margin-top:6px; font-size:11px; color:var(--accent); text-align:left; font-weight:700;">ℹ️ مشاهده جزئیات و مشخصات پلن ↗</div>
+                  <div style="margin-top:6px; font-size:13.5px; color:var(--accent); text-align:left; font-weight:700;">ℹ️ مشاهده جزئیات و مشخصات پلن ↗</div>
                 </button>
               `;
             }).join('')}
@@ -1557,7 +1557,7 @@ function orderRowHtml(o){
   let priceStr=`مانده ${fmt(o.final_amount)}`;
   if(d>0){
     const orig=Math.round(Number(o.amount)/(1-d/100));
-    priceStr=`<s class="muted" style="font-size:0.85em">${fmt(orig)}</s> <span style="font-weight:600;color:var(--text)">${fmt(o.final_amount)}</span> <span class="flash-pill" style="padding:2px 4px;font-size:10px">−${nf(d)}٪</span>`;
+    priceStr=`<s class="muted" style="font-size:14px">${fmt(orig)}</s> <span style="font-weight:600;color:var(--text)">${fmt(o.final_amount)}</span> <span class="flash-pill" style="padding:2px 4px;font-size:13px">−${nf(d)}٪</span>`;
   }
   const remSec = getOrderRemainingSeconds(o);
   const isPendingRow = ['pending_payment','pending'].includes(String(o.status||'').toLowerCase());
@@ -2035,7 +2035,7 @@ function openWalletBuilder(index=null){
       <option value="USDT" ${currentAsset==='USDT'?'selected':''}>USDT (تتر / دلار)</option>
       <option value="TRX" ${currentAsset==='TRX'?'selected':''}>TRX (ترون)</option>
       <option value="TON" ${currentAsset==='TON'?'selected':''}>TON (تن کوین)</option>
-    </select><div id="bw_rate_info" style="margin-top:6px;font-size:11px;color:var(--accent)"></div>`),
+    </select><div id="bw_rate_info" style="margin-top:6px;font-size:13.5px;color:var(--accent)"></div>`),
     field('عنوان ولت',`<input id="bw_title" value="${esc(w.title||'')}" placeholder="مثلاً ولت اختصاصی تتر">`),
     field('شبکه کیف پول',`<select id="bw_network">
       <option value="TRC20">TRC20 (TRON Network)</option>
@@ -2378,14 +2378,14 @@ function renderAdminSettings(){
             <div class="admin-card-icon"><span>🎡</span></div>
             <div>
               <h3 style="font-size:16px;font-weight:800;margin:0;">مدیریت جوایز گردونه شانس (${miniappSpinRewards.length})</h3>
-              <p class="muted" style="margin-top:2px;font-size:12px;">تعریف جوایز، شانس احتمال و اعلان ادمین</p>
+              <p class="muted" style="margin-top:2px;font-size:14px;">تعریف جوایز، شانس احتمال و اعلان ادمین</p>
             </div>
           </div>
-          <button type="button" class="primary" id="btnAddSpinReward" style="background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#000;font-size:12px;padding:8px 14px;border-radius:12px;font-weight:900;border:0;cursor:pointer;">➕ افزودن جایزه جدید</button>
+          <button type="button" class="primary" id="btnAddSpinReward" style="background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#000;font-size:14px;padding:8px 14px;border-radius:12px;font-weight:900;border:0;cursor:pointer;">➕ افزودن جایزه جدید</button>
         </div>
 
         <div style="margin:14px 0 16px;">
-          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">تعداد زیرمجموعه برای دریافت ۱ شانس گردونه:</label>
+          <label style="display:block;font-size:14px;color:var(--muted);margin-bottom:6px;">تعداد زیرمجموعه برای دریافت ۱ شانس گردونه:</label>
           <input id="as_spin_every" value="${esc(s.spin_referrals_per_chance||5)}" inputmode="numeric" style="max-width:240px;">
         </div>
 
@@ -2478,7 +2478,7 @@ function editProduct(id){
     {title:'قیمت‌گذاری',fields:[
       {id:'ep_currency',label:'ارز پایه',type:'select',options:currencyOptions(cur)},
       {id:'ep_price_amount',label:'قیمت',type:'number',props:'inputmode="decimal"',value:initialAmt},
-      {html:'<div id="ep_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:13px;color:var(--text);margin-top:-4px"></div>'},
+      {html:'<div id="ep_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:14.5px;color:var(--text);margin-top:-4px"></div>'},
       {id:'ep_commission_type',label:'نوع پورسانت',type:'select',options:`<option value="none">بدون پورسانت</option><option value="fixed">مبلغ ثابت</option><option value="percent">درصدی</option>`},
       {id:'ep_commission_value',label:'مقدار پورسانت',value:p.commission_value||0},
       {id:'ep_duration',label:'مدت روز',type:'number',value:p.duration_days||0}
@@ -2524,7 +2524,7 @@ function editVariant(id){
       {id:'ev_title',label:'نام پلن',value:v.title},
       {id:'ev_currency',label:'ارز پایه',type:'select',options:currencyOptions(cur)},
       {id:'ev_price_amount',label:'قیمت',type:'number',props:'inputmode="decimal"',value:initialAmt},
-      {html:'<div id="ev_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:13px;color:var(--text);margin-top:-4px"></div>'},
+      {html:'<div id="ev_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:14.5px;color:var(--text);margin-top:-4px"></div>'},
       {id:'ev_duration',label:'مدت روز',type:'number',value:v.duration_days||0},
       {id:'ev_discount',label:'درصد تخفیف',type:'number',props:'inputmode="decimal" step="any"',value:v.discount_percent||0},
       {id:'ev_description',label:'توضیحات اختصاصی پلن',type:'textarea',placeholder:'توضیحات کامل این پلن (در پاپ‌آپ کاربر نمایش داده می‌شود)...',value:v.description||''},
@@ -2556,7 +2556,7 @@ function openAddProduct(){
     {title:'قیمت‌گذاری',fields:[
       {id:'ap_currency',label:'ارز پایه',type:'select',options:currencyOptions(defCur)},
       {id:'ap_price_amount',label:'قیمت',type:'number',props:'inputmode="decimal"',value:0},
-      {html:'<div id="ap_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:13px;color:var(--text);margin-top:-4px"></div>'},
+      {html:'<div id="ap_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:14.5px;color:var(--text);margin-top:-4px"></div>'},
       {id:'ap_commission_type',label:'نوع پورسانت',type:'select',options:`<option value="none" selected>بدون پورسانت</option><option value="fixed">مبلغ ثابت</option><option value="percent">درصدی</option>`},
       {id:'ap_commission_value',label:'مقدار پورسانت',value:0},
       {id:'ap_duration',label:'مدت روز',type:'number',value:0}
@@ -2594,7 +2594,7 @@ function openAddVariant(productId){
       {id:'av_title',label:'نام پلن'},
       {id:'av_currency',label:'ارز پایه',type:'select',options:currencyOptions(defCur)},
       {id:'av_price_amount',label:'قیمت',type:'number',props:'inputmode="decimal"',value:0},
-      {html:'<div id="av_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:13px;color:var(--text);margin-top:-4px"></div>'},
+      {html:'<div id="av_price_hint" class="price-hint-badge" style="grid-column:1/-1;padding:8px 12px;background:rgba(29,155,240,0.1);border-radius:10px;font-size:14.5px;color:var(--text);margin-top:-4px"></div>'},
       {id:'av_duration',label:'مدت روز',type:'number',value:0},
       {id:'av_discount',label:'درصد تخفیف',type:'number',props:'inputmode="decimal" step="any"',value:0},
       {id:'av_description',label:'توضیحات اختصاصی پلن',type:'textarea',placeholder:'توضیحات کامل این پلن (در پاپ‌آپ کاربر نمایش داده می‌شود)...'},
@@ -2833,7 +2833,7 @@ if(t.dataset.cancel){
   openEdit(`لغو سفارش #${oid}`, [{
     title: 'تایید لغو سفارش',
     fields: [{
-      html: `<div class="cancel-confirm-box" style="padding:16px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:18px;color:#fca5a5;font-size:13.5px;line-height:1.6;text-align:right">
+      html: `<div class="cancel-confirm-box" style="padding:16px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:18px;color:#fca5a5;font-size:15px;line-height:1.6;text-align:right">
         ⚠️ <b>آیا از لغو این سفارش اطمینان دارید؟</b><br>
         پس از لغو، زمان مجاز پرداخت منقضی می‌شود و رزرو آیتم انبار آزاد خواهد شد.
       </div>`
@@ -2940,7 +2940,7 @@ async function load(){
     const home = $('homePage');
     if (home) {
       home.classList.remove('hidden');
-      home.innerHTML = `<div class="error-state" style="padding:40px 20px;text-align:center"><div style="font-size:48px;margin-bottom:12px">⚠️</div><h3>خطا در بارگذاری اطلاعات</h3><p class="muted" style="margin-bottom:20px;font-size:13px">${esc(e.message||'خطا در ارتباط با سرور')}</p><button class="primary" onclick="location.reload()">تلاش مجدد</button></div>`;
+      home.innerHTML = `<div class="error-state" style="padding:40px 20px;text-align:center"><div style="font-size:48px;margin-bottom:12px">⚠️</div><h3>خطا در بارگذاری اطلاعات</h3><p class="muted" style="margin-bottom:20px;font-size:14.5px">${esc(e.message||'خطا در ارتباط با سرور')}</p><button class="primary" onclick="location.reload()">تلاش مجدد</button></div>`;
     }
   }
 }

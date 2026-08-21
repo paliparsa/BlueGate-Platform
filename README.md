@@ -1186,3 +1186,6 @@ BluePing (service_group)
 `products.parent_id` links sub-products to a service product. `product_variants` are the purchasable plans. Website rendering is database-driven: names such as Standard/Pro are not used to infer behavior; icon, badge, theme and benefits come from product configuration.
 
 The website is dark-only in v1.8.0. Light mode and its toggle were removed.
+
+## v2.5.1 readability pass
+The storefront, account/auth UI, dashboard/admin and Mini App now use a larger unified typography scale. Form controls use a 16px baseline and previously tiny microcopy/badges/helper text have been raised to readable sizes across desktop and mobile.
