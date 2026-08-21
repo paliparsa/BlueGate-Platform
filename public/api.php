@@ -501,17 +501,33 @@ if ($action === 'claim_missions') { [$count, $claimed] = claim_available_mission
 if ($action === 'spin') { $user=get_user_by_id((int)$user['id']); if ((int)$user['spin_balance']<=0) api_out(['ok'=>false,'error'=>'NO_SPIN_BALANCE','message'=>'فعلاً شانس گردونه نداری.'],400); $rewards=spin_rewards_public(); $reward=weighted_spin_reward(); $title=$reward['title']??'جایزه گردونه'; $amount=(int)($reward['amount']??0); $idx=0; foreach($rewards as $i=>$r){ if(($r['title']??'')===$title && (int)($r['amount']??0)===$amount){ $idx=$i; break; } } db()->prepare('UPDATE users SET spin_balance=spin_balance-1 WHERE id=? AND spin_balance>0')->execute([$user['id']]); db()->prepare('INSERT INTO spin_logs (user_id, prize_title, prize_amount) VALUES (?,?,?)')->execute([$user['id'],$title,$amount]); if($amount>0)add_balance($user['id'],$amount,'spin_reward',$title,null); if(!empty($reward['notify_admin'])) notify_admins("🎡 جایزه Mini App نیازمند بررسی\nکاربر: <code>".h($user['first_name']??$user['username']??$user['id'])."</code>\nجایزه: <b>".h($title)."</b>"); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['prize'=>['title'=>$title,'amount'=>$amount,'index'=>$idx]]); }
 if ($action === 'withdraw') { api_out(['ok'=>false,'error'=>'WITHDRAWALS_DISABLED','message'=>'برداشت موجودی در BlueGate غیرفعال است؛ اعتبار فقط برای خرید سرویس قابل استفاده است.'],410); }
 
+if ($action === 'email_change_start') {
+    api_rate_limit('email_change_start',(string)$user['id'],4,900,900);$res=email_change_begin(get_user_by_id((int)$user['id'])?:$user);if(empty($res['ok']))api_out(['ok'=>false,'error'=>$res['error']??'SEND_FAILED','message'=>'ارسال کد تایید ممکن نشد. کمی بعد دوباره تلاش کنید.'],500);api_out($res);
+}
+if ($action === 'email_change_verify_current') {
+    api_rate_limit('email_change_verify_current',(string)$user['id'],8,900,900);$otp=trim((string)($input['otp']??''));if(!preg_match('/^\d{6}$/',$otp)||!email_change_verify_current(get_user_by_id((int)$user['id'])?:$user,$otp))api_out(['ok'=>false,'error'=>'OTP_VERIFICATION_FAILED','message'=>'کد تایید ایمیل فعلی اشتباه است یا منقضی شده.'],400);api_out(['ok'=>true,'step'=>'new_email','message'=>'ایمیل فعلی تایید شد. حالا ایمیل جدید را وارد کنید.']);
+}
+if ($action === 'email_change_set_new') {
+    api_rate_limit('email_change_set_new',(string)$user['id'],5,900,900);$res=email_change_send_new(get_user_by_id((int)$user['id'])?:$user,(string)($input['email']??''));if(empty($res['ok']))api_out($res,($res['error']??'')==='EMAIL_TAKEN'?409:400);api_out($res);
+}
+if ($action === 'email_change_resend_current') {
+    api_rate_limit('email_change_resend_current',(string)$user['id'],4,900,900);$res=email_change_begin(get_user_by_id((int)$user['id'])?:$user);if(empty($res['ok']))api_out(['ok'=>false,'error'=>$res['error']??'SEND_FAILED','message'=>'ارسال مجدد کد ممکن نشد.'],500);api_out($res);
+}
+if ($action === 'email_change_resend_new') {
+    api_rate_limit('email_change_resend_new',(string)$user['id'],4,900,900);$res=email_change_resend_new(get_user_by_id((int)$user['id'])?:$user);if(empty($res['ok']))api_out($res,400);api_out($res);
+}
+if ($action === 'email_change_verify_new') {
+    api_rate_limit('email_change_verify_new',(string)$user['id'],8,900,900);$otp=trim((string)($input['otp']??''));if(!preg_match('/^\d{6}$/',$otp))api_out(['ok'=>false,'error'=>'INVALID_OTP','message'=>'کد ۶ رقمی را کامل وارد کنید.'],400);try{$fresh=email_change_verify_new(get_user_by_id((int)$user['id'])?:$user,$otp);}catch(Throwable $e){$code=api_exception_code($e,'OTP_VERIFICATION_FAILED');$msg=$code==='EMAIL_TAKEN'?'این ایمیل همین حالا روی حساب دیگری ثبت شده است.':($code==='CURRENT_EMAIL_NOT_VERIFIED'?'تایید ایمیل فعلی منقضی شده؛ فرایند را دوباره شروع کنید.':'کد تایید ایمیل جدید اشتباه است یا منقضی شده.');api_out(['ok'=>false,'error'=>$code,'message'=>$msg],$code==='EMAIL_TAKEN'?409:400);}api_out(dashboard_payload($fresh)+['message'=>'ایمیل جدید با موفقیت تایید و روی حساب ثبت شد.']);
+}
+
 if ($action === 'update_my_profile') {
-    $first=trim((string)($input['first_name']??''));$last=trim((string)($input['last_name']??''));$email=strtolower(trim((string)($input['email']??'')));$phone=trim((string)($input['phone_number']??''));
+    $first=trim((string)($input['first_name']??''));$last=trim((string)($input['last_name']??''));$phone=trim((string)($input['phone_number']??''));
     if($first===''||mb_strlen($first)>80)api_out(['ok'=>false,'error'=>'INVALID_NAME','message'=>'نام نمایشی را درست وارد کنید.'],400);
     if(mb_strlen($last)>80)api_out(['ok'=>false,'error'=>'INVALID_LAST_NAME','message'=>'نام خانوادگی بیش از حد طولانی است.'],400);
-    if($email!==''&&!filter_var($email,FILTER_VALIDATE_EMAIL))api_out(['ok'=>false,'error'=>'INVALID_EMAIL','message'=>'ایمیل معتبر نیست.'],400);
-    if($email!==''){$q=db()->prepare('SELECT id FROM users WHERE LOWER(email)=? AND id<>? LIMIT 1');$q->execute([$email,(int)$user['id']]);if($q->fetch())api_out(['ok'=>false,'error'=>'EMAIL_TAKEN','message'=>'این ایمیل روی حساب دیگری ثبت شده است.'],409);}
     if(mb_strlen($phone)>32)api_out(['ok'=>false,'error'=>'INVALID_PHONE','message'=>'شماره تماس معتبر نیست.'],400);
-    $oldEmail=strtolower(trim((string)($user['email']??'')));$emailChanged=$email!==$oldEmail;
-    db()->prepare('UPDATE users SET first_name=?,last_name=?,email=?,phone_number=?,email_verified_at=CASE WHEN ? THEN NULL ELSE email_verified_at END WHERE id=?')->execute([$first,$last?:null,$email?:null,$phone?:null,$emailChanged?1:0,(int)$user['id']]);
-    $fresh=get_user_by_id((int)$user['id']);
-    api_out(dashboard_payload($fresh)+['message'=>$emailChanged&&$email!==''?'اطلاعات ذخیره شد؛ ایمیل جدید در ورود بعدی نیاز به تایید دارد.':'اطلاعات حساب ذخیره شد.']);
+    if(array_key_exists('email',$input)){ $submitted=strtolower(trim((string)$input['email']));$current=strtolower(trim((string)($user['email']??'')));if($submitted!==$current)api_out(['ok'=>false,'error'=>'EMAIL_CHANGE_REQUIRES_OTP','message'=>'برای تغییر یا حذف ایمیل باید از فرایند تایید دو مرحله‌ای استفاده کنید.'],409); }
+    db()->prepare('UPDATE users SET first_name=?,last_name=?,phone_number=? WHERE id=?')->execute([$first,$last?:null,$phone?:null,(int)$user['id']]);
+    $fresh=get_user_by_id((int)$user['id']);api_out(dashboard_payload($fresh)+['message'=>'اطلاعات حساب ذخیره شد.']);
 }
 if ($action === 'change_my_password') {
     $fresh=get_user_by_id((int)$user['id']);$current=(string)($input['current_password']??'');$next=(string)($input['new_password']??'');

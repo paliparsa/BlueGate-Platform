@@ -99,6 +99,15 @@ function migrate(): void {
         UNIQUE KEY uq_broadcast_recipient (job_id,telegram_id), INDEX(job_id,status),
         CONSTRAINT fk_broadcast_recipient_job FOREIGN KEY (job_id) REFERENCES broadcast_jobs(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    db()->exec('CREATE TABLE IF NOT EXISTS email_change_requests (
+        user_id BIGINT UNSIGNED PRIMARY KEY, old_email VARCHAR(255) NULL, pending_email VARCHAR(255) NULL,
+        old_otp_hash VARCHAR(255) NULL, old_otp_expires_at DATETIME NULL, old_verified_at DATETIME NULL,
+        new_otp_hash VARCHAR(255) NULL, new_otp_expires_at DATETIME NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX(old_otp_expires_at), INDEX(new_otp_expires_at),
+        CONSTRAINT fk_email_change_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
 
     // Safe upgrade path from older BlueGate ReferralWallet versions.
     add_column_if_missing('users', 'last_name', 'VARCHAR(255) NULL AFTER first_name');
@@ -1608,6 +1617,96 @@ function verify_email_otp(int $userId, string $otp): bool {
     return true;
 }
 
+function mask_email_address(string $email): string {
+    $email=trim($email);if($email==='')return '';
+    [$local,$domain]=array_pad(explode('@',$email,2),2,'');
+    if($domain==='')return $email;
+    $shown=mb_substr($local,0,min(2,max(1,mb_strlen($local))));
+    return $shown.str_repeat('•',max(3,min(8,mb_strlen($local)-mb_strlen($shown)))).'@'.$domain;
+}
+
+function send_email_change_otp(array $user,string $targetEmail,string $otp,string $phase): array {
+    $brand=setting('brand_name',app_config('BRAND_NAME','BlueGate'));
+    $isOld=$phase==='old';
+    $subject=$isOld?"تایید تغییر ایمیل {$brand}":"تایید ایمیل جدید {$brand}";
+    $title=$isOld?'تایید مالکیت ایمیل فعلی':'تایید ایمیل جدید';
+    $body=$isOld?'برای شروع تغییر ایمیل حساب، ابتدا مالکیت ایمیل فعلی را تایید کنید.':'برای ثبت ایمیل جدید روی حساب BlueGate، کد زیر را وارد کنید.';
+    $html='<div style="font-family:Tahoma,Arial,sans-serif;direction:rtl;text-align:right;background:#08111f;color:#fff;padding:30px;border-radius:16px;max-width:500px;margin:0 auto;border:1px solid #1d9bf044">'
+        .'<h2 style="color:#1d9bf0;margin:0 0 18px">'.htmlspecialchars($brand).'</h2>'
+        .'<h3 style="margin:0 0 10px">'.htmlspecialchars($title).'</h3>'
+        .'<p style="font-size:15px;color:#b8c7da;line-height:1.8">'.htmlspecialchars($body).'</p>'
+        .'<div style="text-align:center;margin:28px 0"><span style="font-size:34px;font-weight:900;letter-spacing:8px;color:#52c9ff;background:#ffffff10;padding:12px 24px;border-radius:14px;border:1px solid #52c9ff55;display:inline-block">'.htmlspecialchars($otp).'</span></div>'
+        .'<p style="font-size:13px;color:#8fa2bb;border-top:1px solid #ffffff10;padding-top:15px">این کد ۱۵ دقیقه معتبر است. اگر این درخواست از طرف شما نبوده، کد را در اختیار هیچ‌کس قرار ندهید.</p></div>';
+    return send_email_via_resend($targetEmail,$subject,$html);
+}
+
+function email_change_request(int $userId): ?array {
+    $q=db()->prepare('SELECT * FROM email_change_requests WHERE user_id=? LIMIT 1');$q->execute([$userId]);$r=$q->fetch();return $r?:null;
+}
+
+function email_change_begin(array $user): array {
+    $uid=(int)$user['id'];$old=strtolower(trim((string)($user['email']??'')));
+    if($old===''){
+        db()->prepare('INSERT INTO email_change_requests (user_id,old_email,old_verified_at,created_at) VALUES (?,NULL,NOW(),NOW()) ON DUPLICATE KEY UPDATE old_email=NULL,pending_email=NULL,old_otp_hash=NULL,old_otp_expires_at=NULL,old_verified_at=NOW(),new_otp_hash=NULL,new_otp_expires_at=NULL,created_at=NOW()')->execute([$uid]);
+        return ['ok'=>true,'step'=>'new_email','has_current_email'=>false,'message'=>'برای این حساب هنوز ایمیلی ثبت نشده است. ایمیل جدید را وارد کنید.'];
+    }
+    $otp=(string)random_int(100000,999999);$send=send_email_change_otp($user,$old,$otp,'old');
+    if(empty($send['ok']))return $send;
+    $expires=date('Y-m-d H:i:s',time()+900);
+    db()->prepare('INSERT INTO email_change_requests (user_id,old_email,old_otp_hash,old_otp_expires_at,old_verified_at,pending_email,new_otp_hash,new_otp_expires_at,created_at) VALUES (?,?,?,?,NULL,NULL,NULL,NULL,NOW()) ON DUPLICATE KEY UPDATE old_email=VALUES(old_email),old_otp_hash=VALUES(old_otp_hash),old_otp_expires_at=VALUES(old_otp_expires_at),old_verified_at=NULL,pending_email=NULL,new_otp_hash=NULL,new_otp_expires_at=NULL,created_at=NOW()')->execute([$uid,$old,password_hash($otp,PASSWORD_DEFAULT),$expires]);
+    return ['ok'=>true,'step'=>'current_otp','has_current_email'=>true,'masked_email'=>mask_email_address($old),'message'=>'کد تایید به ایمیل فعلی ارسال شد.'];
+}
+
+function email_change_verify_current(array $user,string $otp): bool {
+    $r=email_change_request((int)$user['id']);$current=strtolower(trim((string)($user['email']??'')));
+    if(!$r||$current===''||strtolower((string)($r['old_email']??''))!==$current||empty($r['old_otp_hash']))return false;
+    if(!empty($r['old_otp_expires_at'])&&strtotime((string)$r['old_otp_expires_at'])<time())return false;
+    if(!password_verify(trim($otp),(string)$r['old_otp_hash']))return false;
+    db()->prepare('UPDATE email_change_requests SET old_verified_at=NOW(),old_otp_hash=NULL,old_otp_expires_at=NULL WHERE user_id=?')->execute([(int)$user['id']]);
+    return true;
+}
+
+function email_change_send_new(array $user,string $newEmail): array {
+    $uid=(int)$user['id'];$newEmail=strtolower(trim($newEmail));$old=strtolower(trim((string)($user['email']??'')));
+    if(!filter_var($newEmail,FILTER_VALIDATE_EMAIL))return ['ok'=>false,'error'=>'INVALID_EMAIL','message'=>'ایمیل جدید معتبر نیست.'];
+    if($newEmail===$old)return ['ok'=>false,'error'=>'SAME_EMAIL','message'=>'ایمیل جدید با ایمیل فعلی یکسان است.'];
+    $q=db()->prepare('SELECT id FROM users WHERE LOWER(email)=? AND id<>? LIMIT 1');$q->execute([$newEmail,$uid]);if($q->fetch())return ['ok'=>false,'error'=>'EMAIL_TAKEN','message'=>'این ایمیل روی حساب دیگری ثبت شده است.'];
+    $r=email_change_request($uid);
+    if($old!==''){
+        if(!$r||strtolower((string)($r['old_email']??''))!==$old||empty($r['old_verified_at'])||strtotime((string)$r['old_verified_at'])<time()-900)return ['ok'=>false,'error'=>'CURRENT_EMAIL_NOT_VERIFIED','message'=>'ابتدا ایمیل فعلی را با کد تایید کنید.'];
+    }elseif(!$r){
+        db()->prepare('INSERT INTO email_change_requests (user_id,old_email,old_verified_at,created_at) VALUES (?,NULL,NOW(),NOW())')->execute([$uid]);
+    }
+    $otp=(string)random_int(100000,999999);$send=send_email_change_otp($user,$newEmail,$otp,'new');if(empty($send['ok']))return $send;
+    $expires=date('Y-m-d H:i:s',time()+900);
+    db()->prepare('UPDATE email_change_requests SET pending_email=?,new_otp_hash=?,new_otp_expires_at=? WHERE user_id=?')->execute([$newEmail,password_hash($otp,PASSWORD_DEFAULT),$expires,$uid]);
+    return ['ok'=>true,'step'=>'new_otp','masked_email'=>mask_email_address($newEmail),'message'=>'کد تایید به ایمیل جدید ارسال شد.'];
+}
+
+function email_change_resend_new(array $user): array {
+    $r=email_change_request((int)$user['id']);$pending=strtolower(trim((string)($r['pending_email']??'')));if($pending==='')return ['ok'=>false,'error'=>'NO_PENDING_EMAIL','message'=>'ابتدا ایمیل جدید را وارد کنید.'];
+    return email_change_send_new($user,$pending);
+}
+
+function email_change_verify_new(array $user,string $otp): array {
+    $uid=(int)$user['id'];$pdo=db();$pdo->beginTransaction();
+    try{
+        $q=$pdo->prepare('SELECT * FROM email_change_requests WHERE user_id=? FOR UPDATE');$q->execute([$uid]);$r=$q->fetch();
+        if(!$r||empty($r['pending_email'])||empty($r['new_otp_hash']))throw new RuntimeException('OTP_VERIFICATION_FAILED');
+        if(!empty($r['new_otp_expires_at'])&&strtotime((string)$r['new_otp_expires_at'])<time())throw new RuntimeException('OTP_VERIFICATION_FAILED');
+        if(!password_verify(trim($otp),(string)$r['new_otp_hash']))throw new RuntimeException('OTP_VERIFICATION_FAILED');
+        $pending=strtolower(trim((string)$r['pending_email']));$old=strtolower(trim((string)($user['email']??'')));
+        if($old!==''&&(empty($r['old_verified_at'])||strtolower((string)($r['old_email']??''))!==$old||strtotime((string)$r['old_verified_at'])<time()-900))throw new RuntimeException('CURRENT_EMAIL_NOT_VERIFIED');
+        $dupe=$pdo->prepare('SELECT id FROM users WHERE LOWER(email)=? AND id<>? LIMIT 1 FOR UPDATE');$dupe->execute([$pending,$uid]);if($dupe->fetch())throw new RuntimeException('EMAIL_TAKEN');
+        $pdo->prepare('UPDATE users SET email=?,email_verified_at=NOW(),email_verification_token=NULL,email_verification_expires_at=NULL WHERE id=?')->execute([$pending,$uid]);
+        $pdo->prepare('DELETE FROM email_change_requests WHERE user_id=?')->execute([$uid]);$pdo->commit();
+        if($old!==''&&$old!==$pending){
+            $brand=setting('brand_name',app_config('BRAND_NAME','BlueGate'));$html='<div style="font-family:Tahoma,Arial,sans-serif;direction:rtl;background:#08111f;color:#fff;padding:26px;border-radius:16px"><h2 style="color:#1d9bf0">'.htmlspecialchars($brand).'</h2><p style="line-height:1.9">ایمیل حساب شما با موفقیت به <b>'.htmlspecialchars(mask_email_address($pending)).'</b> تغییر کرد. اگر این تغییر توسط شما انجام نشده، فوراً با پشتیبانی تماس بگیرید.</p></div>';try{send_email_via_resend($old,"اعلان تغییر ایمیل {$brand}",$html);}catch(Throwable $e){}
+        }
+        return get_user_by_id($uid)?:$user;
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+}
+
 function send_password_reset_otp(array $user): array {
     if (empty($user['email'])) {
         return ['ok' => false, 'error' => 'NO_EMAIL', 'message' => 'آدرس ایمیل برای این حساب ثبت نشده است.'];
@@ -1654,6 +1753,7 @@ function reset_password_with_otp(int $userId, string $otp, string $newPassword):
 function delete_user_account(int $userId): bool {
     $user = get_user_by_id($userId);
     if (!$user) return false;
+    db()->prepare('DELETE FROM email_change_requests WHERE user_id=?')->execute([$userId]);
     db()->prepare('UPDATE users SET email=NULL,web_username=NULL,password_hash=NULL,auth_token=NULL,auth_token_hash=NULL,auth_token_expires_at=NULL,phone_number=NULL,phone_verified_at=NULL,email_verification_token=NULL,email_verification_expires_at=NULL,first_name="حساب حذف شده",last_name="",username=NULL,balance=0 WHERE id=?')->execute([$userId]);
     return true;
 }

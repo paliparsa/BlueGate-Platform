@@ -1189,3 +1189,15 @@ The website is dark-only in v1.8.0. Light mode and its toggle were removed.
 
 ## v2.5.1 readability pass
 The storefront, account/auth UI, dashboard/admin and Mini App now use a larger unified typography scale. Form controls use a 16px baseline and previously tiny microcopy/badges/helper text have been raised to readable sizes across desktop and mobile.
+
+
+## v2.5.2 Profile refinement & secure email change
+
+- Profile completion is integrated into the profile hero instead of using a separate large card.
+- Account information, Telegram connections, security, support, and the danger zone use a cleaner visual hierarchy on web.
+- Support is compact and destructive account controls are collapsed under Sensitive settings.
+- Direct user-side email editing/removal is disabled.
+- Existing email changes require OTP verification of the current email, followed by a second OTP sent to the new email.
+- Accounts without an email can add one with verification of the new address.
+- Web and Mini App use the same secure email-change flow.
+- Pending email-change OTPs are purpose-separated from signup/password-reset OTPs and rate limited.

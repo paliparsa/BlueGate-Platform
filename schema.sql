@@ -39,6 +39,22 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT fk_users_referrer FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS email_change_requests (
+  user_id BIGINT UNSIGNED PRIMARY KEY,
+  old_email VARCHAR(255) NULL,
+  pending_email VARCHAR(255) NULL,
+  old_otp_hash VARCHAR(255) NULL,
+  old_otp_expires_at DATETIME NULL,
+  old_verified_at DATETIME NULL,
+  new_otp_hash VARCHAR(255) NULL,
+  new_otp_expires_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX(old_otp_expires_at),
+  INDEX(new_otp_expires_at),
+  CONSTRAINT fk_email_change_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS referrals (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   referrer_id BIGINT UNSIGNED NOT NULL,
