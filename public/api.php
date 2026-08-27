@@ -420,6 +420,14 @@ if ($action === 'telegram_login') {
     if(user_is_blocked($user))api_out(['ok'=>false,'error'=>'ACCOUNT_BLOCKED','message'=>'این حساب مسدود شده است.'],403);api_issue_session((int)$user['id'],bool_input($input['remember']??1)===1);api_out(dashboard_payload($user));
 }
 
+if ($action === 'telegram_boot') {
+    if (trim((string)$initData) === '') {
+        api_out(['ok'=>false,'error'=>'TELEGRAM_INIT_DATA_MISSING','message'=>'اطلاعات ورود تلگرام دریافت نشد. Mini App را از داخل ربات باز کنید.'],401);
+    }
+    $tgBootUser = webapp_auth_user((string)$initData);
+    api_out(dashboard_payload($tgBootUser)+['telegram_authenticated'=>true]);
+}
+
 $user = get_authenticated_user((string)$initData, (string)$authToken);
 
 if ($action === 'telegram_link') {

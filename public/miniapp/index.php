@@ -10,7 +10,7 @@ foreach ($assets as $asset) {
     $path = __DIR__ . '/' . $asset;
     $mtimes[] = file_exists($path) ? filemtime($path) : time();
 }
-$version = 'v281-telegram-boot-' . max($mtimes);
+$version = 'v282-telegram-session-' . max($mtimes);
 
 $html = file_get_contents(__DIR__ . '/index.html');
 foreach ($assets as $asset) {

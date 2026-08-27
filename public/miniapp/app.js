@@ -1,12 +1,45 @@
 // BlueGate Mini App v2.8.1 — Telegram boot recovery + unified navigation
 // (prepending a safe comment helps spot versions; remove only when sure)
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
+let tg = window.Telegram?.WebApp || null;
+if (tg) { try{tg.ready();tg.expand();}catch(_){} }
 // Scroll safety: do not block touchmove/touchend globally.
 // Telegram's WebView handles one-finger page scrolling best when touch events stay passive.
 // Zoom is controlled by the viewport meta and CSS; global preventDefault breaks scrolling on some Android builds.
 try { tg?.disableVerticalSwipes?.(); } catch(e) {}
-const initData = tg?.initData || '';
+function initDataFromLocation(){
+  const sources=[location.search||'',(location.hash||'').replace(/^#/,'')];
+  for(const raw of sources){
+    try{
+      const p=new URLSearchParams(raw.replace(/^\?/,''));
+      const v=p.get('tgWebAppData');
+      if(v) return v;
+    }catch(_){}
+  }
+  return '';
+}
+let initData = String(tg?.initData || initDataFromLocation() || '');
+function refreshTelegramContext(){
+  tg = window.Telegram?.WebApp || tg || null;
+  const fresh = String(tg?.initData || initDataFromLocation() || '');
+  if(fresh) initData = fresh;
+  return {tg, initData};
+}
+function isTelegramMiniAppContext(){
+  refreshTelegramContext();
+  const platform=String(tg?.platform||'').toLowerCase();
+  return Boolean(initData || tg?.initDataUnsafe?.user?.id || (platform && platform !== 'unknown'));
+}
+async function waitForTelegramInitData(timeoutMs=4500){
+  const started=Date.now();
+  while(Date.now()-started < timeoutMs){
+    refreshTelegramContext();
+    if(initData) return initData;
+    try{tg?.ready?.();}catch(_){}
+    await new Promise(r=>setTimeout(r,60));
+  }
+  refreshTelegramContext();
+  return initData;
+}
 function getUrlFlag(name){
   const search=new URLSearchParams(location.search||'');
   if(search.get(name)) return search.get(name);
@@ -225,6 +258,7 @@ function showStatus(text,type='success'){
   _statusTimer=setTimeout(()=>el.classList.add('hidden'),3500);
 }
 async function api(action,payload={}){
+  refreshTelegramContext();
   const body = JSON.stringify({action,initData,...payload});
   const headers = {'Content-Type':'application/json'};
   const candidateEndpoints = ['../api.php', 'api.php', '/api.php'];
@@ -271,7 +305,7 @@ function miniBootContext(){
     mode:isAdminMode?'admin':'user',
     telegram:Boolean(initData),
     platform:String(tg?.platform||'unknown'),
-    version:'2.8.1'
+    version:'2.8.2'
   };
 }
 function setMiniBootState(kind, message=''){
@@ -317,7 +351,17 @@ async function load({force=false}={}){
     try{
       try{tg?.ready?.();tg?.expand?.();}catch(e){console.warn('[BlueGate MiniApp] Telegram ready/expand failed',e?.message||e)}
       applyDeviceLayout();
+      const telegramContext=isTelegramMiniAppContext();
+      if(telegramContext){
+        const readyInitData=await waitForTelegramInitData();
+        if(!readyInitData){
+          const err=new Error('اطلاعات ورود تلگرام دریافت نشد. Mini App را کامل ببند و دوباره از داخل ربات باز کن.');
+          err.error='TELEGRAM_INIT_DATA_MISSING';
+          throw err;
+        }
+      }
       if(isAdminMode){
+        if(telegramContext) await api('telegram_boot');
         adminState=await api('admin_summary');
         applyTheme(adminState.settings||{});
         $('userApp')?.classList.add('hidden');
@@ -325,7 +369,12 @@ async function load({force=false}={}){
         renderAdmin();
         try{startAdminLivePolling();}catch(_){}
       }else{
-        state=await api('me');
+        state=telegramContext ? await api('telegram_boot') : await api('me');
+        if(telegramContext && (state?.is_guest || state?.user?.is_guest || !state?.user)){
+          const err=new Error('تلگرام هویت کاربر را تأیید نکرد. Mini App را دوباره از داخل ربات باز کن.');
+          err.error='TELEGRAM_SESSION_NOT_RESOLVED';
+          throw err;
+        }
         applyTheme(state||{});
         $('adminApp')?.classList.add('hidden');
         $('userApp')?.classList.remove('hidden');
