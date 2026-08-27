@@ -1,4 +1,4 @@
-// BlueGate Mini App v2.8.0 — unified navigation and component system
+// BlueGate Mini App v2.8.1 — Telegram boot recovery + unified navigation
 // (prepending a safe comment helps spot versions; remove only when sure)
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
@@ -240,7 +240,7 @@ async function api(action,payload={}){
     } catch(e) { fetchErr = e; }
   }
   if(!res || !res.ok || data?.ok===false){
-    if(data?.error === 'AUTH_REQUIRED'){
+    if(data?.error === 'AUTH_REQUIRED' && !initData){
       openAuthModal();
     }
     const err = new Error(data?.message || data?.error || fetchErr?.message || 'خطا در ارتباط با سرور');
@@ -263,6 +263,92 @@ let _ptrAttached=false,_ptrStartY=0,_ptrPulling=false,_ptrDist=0,_ptrIndicator=n
 function attachPullToRefresh(){if(_ptrAttached)return;_ptrAttached=true;_ptrIndicator=document.createElement('div');_ptrIndicator.className='ptr-indicator';_ptrIndicator.innerHTML=`<div class="ptr-arc-wrapper"><svg class="ptr-arc" viewBox="0 0 40 40"><circle class="ptr-arc-bg" cx="20" cy="20" r="16"/><circle class="ptr-arc-fill" cx="20" cy="20" r="16" transform="rotate(-90 20 20)"/></svg></div><span class="ptr-label">برای رفرش بکش...</span>`;document.body.appendChild(_ptrIndicator);document.addEventListener('touchstart',e=>{// BUG-15: don't trigger PTR when any sheet/overlay is open
 if(scrollY<=0&&!document.querySelector('.presentation-sheet.open,.preview-sheet.open,.cart-sheet.open,.wallet-confirm-sheet.open,.share-sheet.open')){_ptrStartY=e.touches[0].clientY;_ptrPulling=true;_ptrDist=0}},{passive:true});document.addEventListener('touchmove',e=>{if(!_ptrPulling)return;_ptrDist=Math.max(0,e.touches[0].clientY-_ptrStartY);if(_ptrDist>0&&_ptrDist<130){_ptrIndicator.style.opacity=Math.min(1,_ptrDist/70);const arcFill=_ptrIndicator.querySelector('.ptr-arc-fill');const arcWrapper=_ptrIndicator.querySelector('.ptr-arc-wrapper');if(arcFill){const progress=Math.min(1,_ptrDist/70);arcFill.style.strokeDashoffset=100.53*(1-progress)}if(arcWrapper)arcWrapper.style.transform=`rotate(${_ptrDist*2.5}deg)`;_ptrIndicator.classList.toggle('ready',_ptrDist>70);const lbl=_ptrIndicator.querySelector('.ptr-label');if(lbl)lbl.textContent=_ptrDist>70?'رها کن':'برای رفرش بکش...'}else{_ptrIndicator.style.opacity=0}},{passive:true});document.addEventListener('touchend',async()=>{if(!_ptrPulling)return;_ptrPulling=false;if(_ptrDist>70){_ptrIndicator.classList.add('loading');const arcWrapper=_ptrIndicator.querySelector('.ptr-arc-wrapper');if(arcWrapper)arcWrapper.style.animation='ptrSpin .8s linear infinite';const arcFill=_ptrIndicator.querySelector('.ptr-arc-fill');if(arcFill)arcFill.style.strokeDashoffset='20';const lbl=_ptrIndicator.querySelector('.ptr-label');if(lbl)lbl.textContent='در حال بارگذاری...';const st=Date.now();try{await reloadCurrentPage()}catch(e){}const el=Date.now()-st;setTimeout(()=>{_ptrIndicator.classList.remove('loading','ready');_ptrIndicator.style.opacity='';if(arcWrapper)arcWrapper.style.animation='';if(arcFill)arcFill.style.strokeDashoffset='100.53';if(lbl)lbl.textContent='برای رفرش بکش...'},Math.max(0,1000-el))}else{_ptrIndicator.style.opacity=''}_ptrDist=0},{passive:true})}
 async function reloadCurrentPage(){if(isAdminMode){adminState=await api('admin_summary');applyTheme(adminState.settings||{});renderAdmin()}else{state=await api('me');applyTheme(state);renderUser()}}
+
+/* v2.8.1 — single, resilient Mini App boot controller */
+let _bootPromise = null;
+function miniBootContext(){
+  return {
+    mode:isAdminMode?'admin':'user',
+    telegram:Boolean(initData),
+    platform:String(tg?.platform||'unknown'),
+    version:'2.8.1'
+  };
+}
+function setMiniBootState(kind, message=''){
+  document.documentElement.dataset.bootState=kind;
+  const app=isAdminMode?$('adminApp'):$('userApp');
+  if(!app)return;
+  let box=$('miniBootState');
+  if(kind==='ready'){
+    box?.remove();
+    app.classList.remove('boot-pending','boot-failed');
+    return;
+  }
+  app.classList.toggle('boot-pending',kind==='loading');
+  app.classList.toggle('boot-failed',kind==='error');
+  if(kind==='loading'){
+    box?.remove();
+    return;
+  }
+  if(!box){
+    box=document.createElement('section');
+    box.id='miniBootState';
+    box.className='mini-boot-state';
+    app.prepend(box);
+  }
+  {
+    box.innerHTML=`<div class="mini-boot-error-icon">!</div><b>Mini App کامل بارگذاری نشد</b><span>${esc(message||'ارتباط با سرور برقرار نشد.')}</span><button type="button" class="primary" id="miniBootRetry">تلاش دوباره</button>`;
+    box.querySelector('#miniBootRetry')?.addEventListener('click',()=>{_bootPromise=null;load({force:true})});
+  }
+}
+function syncMiniAuthChrome(){
+  const authBtn=$('openAuthModalBtn');
+  const telegramSession=Boolean(initData);
+  const loggedIn=Boolean(state?.user&&!state?.is_guest&&!state?.user?.is_guest);
+  if(authBtn) authBtn.classList.toggle('hidden', telegramSession&&loggedIn);
+}
+async function load({force=false}={}){
+  if(_bootPromise&&!force)return _bootPromise;
+  _bootPromise=(async()=>{
+    const ctx=miniBootContext();
+    console.info('[BlueGate MiniApp boot]',ctx);
+    setMiniBootState('loading');
+    try{showSkeleton();}catch(_){}
+    try{
+      try{tg?.ready?.();tg?.expand?.();}catch(e){console.warn('[BlueGate MiniApp] Telegram ready/expand failed',e?.message||e)}
+      applyDeviceLayout();
+      if(isAdminMode){
+        adminState=await api('admin_summary');
+        applyTheme(adminState.settings||{});
+        $('userApp')?.classList.add('hidden');
+        $('adminApp')?.classList.remove('hidden');
+        renderAdmin();
+        try{startAdminLivePolling();}catch(_){}
+      }else{
+        state=await api('me');
+        applyTheme(state||{});
+        $('adminApp')?.classList.add('hidden');
+        $('userApp')?.classList.remove('hidden');
+        renderUser();
+        initAuthHandlers();
+        updateAuthUI(state);
+        syncMiniAuthChrome();
+        try{checkAndCelebrate();}catch(_){}
+        try{handleDeepLink();}catch(e){console.warn('[BlueGate MiniApp] deep link failed',e?.message||e)}
+        try{showOnboarding();}catch(_){}
+      }
+      try{hideSkeleton();}catch(_){}
+      setMiniBootState('ready');
+      return isAdminMode?adminState:state;
+    }catch(e){
+      console.error('[BlueGate MiniApp boot failed]',{...ctx,code:e?.error||'',message:e?.message||String(e)});
+      try{hideSkeleton();}catch(_){}
+      setMiniBootState('error',e?.message||'اتصال به BlueGate برقرار نشد.');
+      throw e;
+    }
+  })();
+  try{return await _bootPromise}finally{if(document.documentElement.dataset.bootState==='error')_bootPromise=null}
+}
 /* Charts (SVG / CSS, no external lib) */
 function last7DaysRevenue(orders){const days=[];const now=new Date();for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);const rev=orders.filter(o=>{const od=String(o.created_at||'').slice(0,10);return ds===od&&['payment_confirmed','preparing','delivered'].includes(o.status)}).reduce((s,o)=>s+Number(o.final_amount||0),0);days.push({date:ds,label:['ی','د','س','چ','پ','ج','ش'][d.getDay()],rev})}return days}
 function sparklineHtml(data){if(!data||!data.length)return '';const max=Math.max(...data.map(d=>d.rev),1);const w=280,h=56,pad=4;const pts=data.map((d,i)=>{const x=pad+(i*(w-2*pad))/(data.length-1);const y=h-pad-(d.rev/max)*(h-2*pad);return [x,y]});const poly=pts.map(p=>p.join(',')).join(' ');const area=`${pad},${h-pad} ${poly} ${w-pad},${h-pad}`;const labels=data.map((d,i)=>`<text x="${pad+(i*(w-2*pad))/(data.length-1)}" y="${h-1}" text-anchor="middle" font-size="9" fill="#9fb0c8">${d.label}</text>`).join('');const dots=pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--accent)"/>`).join('');return `<svg class="sparkline" viewBox="0 0 ${w} ${h+12}" width="100%" height="68"><polygon points="${area}" fill="color-mix(in srgb,var(--accent) 18%,transparent)" stroke="none"/><polyline points="${poly}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg>`}
@@ -2672,7 +2758,7 @@ function initAuthHandlers() {
 }
 
 
-load();
+load().catch(()=>{});
 if (typeof attachPullToRefresh === 'function') attachPullToRefresh();
 if (typeof attachLongPress === 'function') attachLongPress();
 if (typeof initBackToTop === 'function') initBackToTop();

@@ -4,12 +4,18 @@ header('Cache-Control: post-check=0, pre-check=0', false);
 header('Pragma: no-cache');
 header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 
-$appMtime = file_exists(__DIR__ . '/app.js') ? filemtime(__DIR__ . '/app.js') : time();
-$cssMtime = file_exists(__DIR__ . '/style.css') ? filemtime(__DIR__ . '/style.css') : time();
-$version = 'v251-typography-' . max($appMtime, $cssMtime);
+$assets = ['app.js','style.css','ui-system.js','unified.css'];
+$mtimes = [];
+foreach ($assets as $asset) {
+    $path = __DIR__ . '/' . $asset;
+    $mtimes[] = file_exists($path) ? filemtime($path) : time();
+}
+$version = 'v281-telegram-boot-' . max($mtimes);
 
 $html = file_get_contents(__DIR__ . '/index.html');
-$html = preg_replace('/style\.css(\?v=[^"\'\s>]+)?/', 'style.css?v=' . $version, $html);
-$html = preg_replace('/app\.js(\?v=[^"\'\s>]+)?/', 'app.js?v=' . $version, $html);
+foreach ($assets as $asset) {
+    $quoted = preg_quote($asset, '/');
+    $html = preg_replace('/' . $quoted . '(\?v=[^"\'\s>]+)?/', $asset . '?v=' . $version, $html);
+}
 
 echo $html;

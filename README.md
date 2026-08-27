@@ -1,3 +1,5 @@
+> **v2.8.1 Telegram Boot Fix & Mobile Web Pass:** رگرشن Boot در Telegram Mini App برطرف شده، شناسایی خودکار کاربر با `initData` دوباره برقرار است و به‌جای صفحه سفید Error/Retry واقعی نمایش داده می‌شود. صفحه اصلی Website نیز با یک لایه Responsive نهایی برای Header، Hero، نرخ‌ها، انتخاب سرویس، VPN، Stars، Premium، FAQ، Footer و کنترل‌های Sticky روی موبایل بازطراحی و پایدار شده است.
+
 > **v2.8.0 Mini App Unification:** ساختار Telegram Mini App یکپارچه و سبک‌تر شده است: ناوبری کاربر به فروشگاه/سفارش‌ها/اعتبار/حساب محدود شده، Product Detail به یک Sheet واحد تبدیل شده، Credit و Account از داشبوردهای تکراری پاک‌سازی شده‌اند، Admin فقط چهار مقصد اصلی دارد و یک UI System مشترک برای Sheet/Confirm/Actionها اضافه شده است.
 
 > **v2.7.0 Credit Center:** مرکز اعتبار Website و Mini App بازطراحی شده و شارژ واقعی اعتبار با کارت، Telegram Stars و رمزارز به همراه تاریخچه، بررسی ادمین و تنظیمات min/max/presets اضافه شده است.
@@ -16,7 +18,7 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.8.0**  
+> نسخه فعلی: **v2.8.1**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
@@ -1240,3 +1242,16 @@ Referral/partner experience redesigned for Web and Mini App with a compact hero,
 - Onboarding به دو پیام اصلی «خرید و مدیریت سرویس‌ها» و «دعوت و دریافت اعتبار» کاهش یافت.
 - Auth shortcut داخل Telegram authenticated پنهان می‌شود و فقط در Web fallback/Guest نمایش داده می‌شود.
 - منطق مالی/Payment Backend این نسخه تغییر نکرده است.
+
+
+## v2.8.1 Telegram Boot Fix & Mobile Web Pass
+
+- Boot controller واحد برای Telegram Mini App اضافه شد و رگرشن حذف‌شدن `load()` که باعث صفحه سفید می‌شد برطرف شد.
+- احراز هویت خودکار Telegram دوباره از `initData` به `api('me')` عبور می‌کند؛ در نشست Telegram معتبر Auth popup نمایش داده نمی‌شود.
+- خطای Boot به‌جای صفحه خالی با Error State و Retry قابل بازیابی نمایش داده می‌شود.
+- Cache busting Mini App برای `app.js`، `style.css`، `ui-system.js` و `unified.css` یکپارچه شد.
+- Website یک لایه Responsive نهایی با breakpointهای 1024 / 768 / 420 دریافت کرد.
+- Header، Hero، live rates، conversion rail، service carousel، sticky switcher، VPN bottom sheet، Stars، Premium، بخش‌های ثانویه، FAQ و Footer برای موبایل بهینه شدند.
+- روی موبایل جدول مقایسه می‌تواند به Comparison Card تبدیل شود و منو/Sticky checkout/sheets محدود به viewport و safe-area هستند.
+- Service Worker و asset versionهای Website به v2.8.1 ارتقا یافتند.
+- منطق مالی، Checkout و Payment Backend در این نسخه تغییر نکرده است.
