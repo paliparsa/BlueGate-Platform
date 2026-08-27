@@ -79,3 +79,23 @@ body{letter-spacing:0;}
 @keyframes bgBootSpin{to{transform:rotate(360deg)}}
 .boot-pending>.page,.boot-pending>.bottom-nav,.boot-pending>.topbar~.page{visibility:hidden}.boot-failed>.page,.boot-failed>.bottom-nav{display:none!important}
 @media(prefers-reduced-motion:reduce){.mini-boot-spinner{animation:none}}
+
+
+/* ===== v2.8.3 Mini App stability + compact shop ===== */
+.auth-top-btn.hidden{display:none!important}
+.shop-active-filters:empty{display:none!important;margin:0!important}
+.shop-header-sticky{padding-bottom:6px!important}
+.category-strip.modern-cats{gap:8px!important;padding:8px 1px 4px!important;scroll-padding-inline:12px;overscroll-behavior-inline:contain}
+.category-strip.modern-cats .cat-pill{min-height:42px!important;padding:8px 13px!important;border-radius:16px!important;flex:0 0 auto!important;max-width:180px}
+.category-strip.modern-cats .cat-pill b{font-size:14px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shop-page-intro{margin-bottom:6px!important}.shop-page-intro p{margin-top:1px!important}
+.searchbar-modern{margin-bottom:0!important}.shop-active-filters{margin:6px 0 0!important}
+.admin-primary-action{margin:0 2px 12px}
+@media(max-width:520px){
+  .shop-page-intro{margin-top:6px!important}.shop-page-intro h2{font-size:21px!important}.shop-page-intro p{font-size:13.5px!important}
+  .shop-header-sticky{top:66px!important;padding-top:2px!important}
+  .category-strip.modern-cats .cat-pill{min-height:40px!important;padding:7px 12px!important;border-radius:15px!important}
+  .category-strip.modern-cats .cat-pill img{width:22px!important;height:22px!important}
+  .shop-active-filters span{font-size:12.5px!important;padding:4px 8px!important}
+  .admin-primary-action .primary{min-height:46px!important}
+}
