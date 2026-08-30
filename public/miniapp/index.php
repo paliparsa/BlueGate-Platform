@@ -1,8 +1,6 @@
 <?php
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Cache-Control: post-check=0, pre-check=0', false);
+header('Cache-Control: no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
-header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 
 $assets = ['app.js','style.css','ui-system.js','unified.css','purchase.js','purchase.css','web-parity.css'];
 $mtimes = [];
@@ -10,7 +8,7 @@ foreach ($assets as $asset) {
     $path = __DIR__ . '/' . $asset;
     $mtimes[] = file_exists($path) ? filemtime($path) : time();
 }
-$version = 'v290-ui-convergence-' . max($mtimes);
+$version = 'v291-performance-ux-' . max($mtimes);
 
 $html = file_get_contents(__DIR__ . '/index.html');
 foreach ($assets as $asset) {

@@ -116,6 +116,41 @@ function storefront_stars_amount(int $stars): int {
     return storefront_round_amount($stars * $unit);
 }
 
+function storefront_quote_amount(int $productId, ?int $variantId=null, ?int $starsCount=null): array {
+    $p=shop_product($productId);
+    if(!$p||(int)$p['is_active']!==1)throw new RuntimeException('PRODUCT_NOT_FOUND');
+    $type=strtolower((string)($p['product_type']??'normal'));
+    if(in_array($type,['service_group','group','container'],true))throw new RuntimeException('PRODUCT_IS_CONTAINER');
+    if($type==='stars'){
+        $stars=(int)($starsCount??0);
+        return ['product_id'=>$productId,'variant_id'=>null,'amount'=>storefront_stars_amount($stars),'stars_count'=>$stars];
+    }
+    $variants=product_variants($productId,true);
+    $variant=null;
+    if($variantId){
+        foreach($variants as $v){if((int)$v['id']===(int)$variantId){$variant=$v;break;}}
+        if(!$variant)throw new RuntimeException('VARIANT_NOT_FOUND');
+    }elseif($variants){
+        throw new RuntimeException('VARIANT_REQUIRED');
+    }
+    $meta=price_runtime_meta($variant?:$p);
+    return ['product_id'=>$productId,'variant_id'=>$variant?(int)$variant['id']:null,'amount'=>(int)($meta['toman']??0),'stars_count'=>null];
+}
+
+function preview_storefront_coupon(int $userId,string $code,int $productId,?int $variantId=null,?int $starsCount=null): array {
+    $code=normalize_coupon_code($code);
+    if($code==='')throw new RuntimeException('کد تخفیف را وارد کن.');
+    $quote=storefront_quote_amount($productId,$variantId,$starsCount);
+    $coupon=coupon_by_code($code);
+    $discount=calculate_coupon_discount($coupon,(int)$quote['amount'],$userId,$productId);
+    return [
+        'code'=>(string)$coupon['code'],
+        'amount'=>(int)$quote['amount'],
+        'discount_amount'=>$discount,
+        'final_amount'=>max(0,(int)$quote['amount']-$discount),
+    ];
+}
+
 function create_storefront_order(int $userId, int $productId, ?int $variantId=null, ?int $starsCount=null): array {
     $p = shop_product($productId);
     if (!$p || (int)$p['is_active'] !== 1) throw new RuntimeException('PRODUCT_NOT_FOUND');

@@ -431,6 +431,26 @@ server {
     index index.php index.html;
     client_max_body_size 20M;
 
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_min_length 512;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;
+
+    location = /web/sw.js {
+        try_files \$uri =404;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate, max-age=0";
+        access_log off;
+    }
+
+    location ~* \.(?:css|js|png|jpe?g|gif|webp|svg|ico|woff2?)$ {
+        try_files \$uri =404;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
+    }
+
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
@@ -455,6 +475,26 @@ server {
     root ${APP_DIR}/public;
     index index.php index.html;
     client_max_body_size 20M;
+
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_min_length 512;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;
+
+    location = /web/sw.js {
+        try_files \$uri =404;
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate, max-age=0";
+        access_log off;
+    }
+
+    location ~* \.(?:css|js|png|jpe?g|gif|webp|svg|ico|woff2?)$ {
+        try_files \$uri =404;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
+    }
 
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;

@@ -1,4 +1,4 @@
-/* BlueGate v2.9.0 — Mini App visual parity with Website */
+/* BlueGate v2.9.1 — Mini App visual parity with Website */
 :root{--bg-web-surface:#0d1728;--bg-web-surface-2:#08111f;--bg-web-line:rgba(118,205,255,.13);--bg-web-muted:#91a4bc;--bg-web-radius:20px}
 body{background:radial-gradient(circle at 80% -10%,color-mix(in srgb,var(--accent,#1d9bf0) 13%,transparent),transparent 28%),linear-gradient(180deg,#07101d 0%,#050a13 100%)!important;color:#f5f9ff}
 .topbar.glass{background:rgba(8,16,29,.90)!important;border-color:var(--bg-web-line)!important;box-shadow:0 14px 38px rgba(0,0,0,.18)!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}.brand-box small{color:color-mix(in srgb,var(--accent,#45c8ff) 78%,white)!important}.brand-box h1{letter-spacing:-.02em}

@@ -4,17 +4,13 @@ let busy=false,current=null,modal=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const fmt=v=>Number(v||0).toLocaleString('en-US');
 const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
+const couponCode=v=>String(v||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
 
 function normalize(data){
   const variants=(data.variants||[]).map(v=>({
-    id:Number(v.id||v.variant_id||0),
-    title:String(v.title||v.label||'پلن'),
-    price:Number(v.price??v.price_toman??0),
-    duration_days:Number(v.duration_days||0),
-    description:String(v.description||''),
-    old_price:Number(v.old_price||0),
-    discount_percent:Number(v.discount_percent||0),
-    product_id:Number(v.product_id||0)
+    id:Number(v.id||v.variant_id||0),title:String(v.title||v.label||'پلن'),price:Number(v.price??v.price_toman??0),
+    duration_days:Number(v.duration_days||0),description:String(v.description||''),old_price:Number(v.old_price||0),
+    discount_percent:Number(v.discount_percent||0),product_id:Number(v.product_id||0)
   })).filter(v=>v.id);
   let selectedId=Number(data.variantId||data.selectedVariantId||0)||null;
   if(!selectedId&&variants.length) selectedId=variants[0].id;
@@ -24,7 +20,7 @@ function normalize(data){
     description:String(data.description||''),delivery:String(data.delivery||data.delivery_type_fa||'تحویل و پیگیری از حساب BlueGate'),
     variants,selectedId,basePrice:Number(data.toman||data.price||0),
     starsCount:Number(data.starsCount||0),starsMin:Number(data.starsMin||50),starsMax:Number(data.starsMax||10000),starsStep:Number(data.starsStep||25),
-    starsPresets:(data.starsPresets||[]).map(Number).filter(Boolean),settings:data.settings||null,rates:data.rates||null
+    starsPresets:(data.starsPresets||[]).map(Number).filter(Boolean),settings:data.settings||null,rates:data.rates||null,coupon:null,couponInput:''
   };
 }
 function selectedVariant(){return current?.variants.find(v=>v.id===Number(current.selectedId))||null}
@@ -34,13 +30,17 @@ function starPrice(count){
   return current.basePrice;
 }
 function currentPrice(){return current.scope==='stars'?starPrice(current.starsCount):Number(selectedVariant()?.price??current.basePrice??0)}
+function payablePrice(){return current?.coupon?Number(current.coupon.final_amount??currentPrice()):currentPrice()}
 function currentTitle(){return current.scope==='stars'?`${fmt(current.starsCount)} Stars`:(selectedVariant()?.title||current.delivery||'سفارش مستقیم')}
 function durationText(v){if(!v)return current.scope==='stars'?'تحویل دیجیتال':'—';return v.duration_days>0?`${fmt(v.duration_days)} روز`:'دائمی / بدون انقضا'}
+function clearCoupon(){if(current){current.coupon=null}}
+function purchaseSpec(){const v=selectedVariant();return {productId:Number(v?.product_id||current.productId),variantId:v?.id||null,starsCount:current.scope==='stars'?current.starsCount:null}}
 
 function render(){
-  const v=selectedVariant(),price=currentPrice();
+  const v=selectedVariant(),price=currentPrice(),payable=payablePrice();
   const orig=v&&(v.old_price>v.price?v.old_price:(v.discount_percent>0?Math.round(v.price/(1-v.discount_percent/100)):0));
   const variantPicker=current.scope==='stars'?starsPicker():variantPickerHtml();
+  const coupon=current.coupon;
   modal.innerHTML=`<div class="purchase-confirm-card" role="document" aria-label="تایید سفارش">
     <div class="purchase-confirm-header">
       <button class="purchase-confirm-close" type="button" data-pc-close aria-label="بستن">✕</button>
@@ -54,10 +54,14 @@ function render(){
       <div><span>📅 مدت اعتبار</span><b class="green">${esc(durationText(v))}</b></div>
     </div>
     ${(v?.description||current.description)?`<div class="purchase-confirm-desc"><b>📝 توضیحات سفارش</b><p>${esc(v?.description||current.description)}</p></div>`:''}
-    <div class="purchase-confirm-price"><span>مبلغ کل قابل پرداخت</span><div>${orig?`<s>${fmt(orig)}</s>`:''}<strong>${fmt(price)}</strong><small>تومان</small></div></div>
+    <div class="purchase-confirm-price"><span>${coupon?'مبلغ بعد از تخفیف':'مبلغ کل قابل پرداخت'}</span><div>${coupon?`<s>${fmt(price)}</s>`:(orig?`<s>${fmt(orig)}</s>`:'')}<strong>${fmt(payable)}</strong><small>تومان</small></div></div>
     <div class="purchase-confirm-guarantee">🛡️ شامل ضمانت بازگشت وجه طبق شرایط سرویس</div>
-    <label class="purchase-confirm-coupon"><span>🎟 کد تخفیف <small>اختیاری</small></span><input id="purchaseCoupon" autocomplete="off" placeholder="مثلاً WELCOME10"></label>
-    <div class="purchase-confirm-actions"><button type="button" class="purchase-confirm-submit" data-pc-submit>⚡ تایید و ثبت سفارش (${fmt(price)})</button><button type="button" class="purchase-confirm-cancel" data-pc-close>بازگشت و ویرایش انتخاب</button></div>
+    <div class="purchase-confirm-coupon">
+      <span>🎟 کد تخفیف <small>اختیاری</small></span>
+      <div class="purchase-coupon-row"><input id="purchaseCoupon" autocomplete="off" value="${esc(current.couponInput||coupon?.code||'')}" placeholder="مثلاً WELCOME10"><button type="button" data-pc-coupon>${coupon?'اعمال شد ✓':'ثبت کد'}</button></div>
+      <div class="purchase-coupon-feedback ${coupon?'success':''}">${coupon?`کد ${esc(coupon.code)} فعال شد؛ ${fmt(coupon.discount_amount)} تومان تخفیف.`:'کد را وارد کن و «ثبت کد» را بزن.'}</div>
+    </div>
+    <div class="purchase-confirm-actions"><button type="button" class="purchase-confirm-submit" data-pc-submit>⚡ تایید و ثبت سفارش (${fmt(payable)})</button><button type="button" class="purchase-confirm-cancel" data-pc-close>بازگشت و ویرایش انتخاب</button></div>
   </div>`;
   bindModal();
 }
@@ -71,40 +75,50 @@ function starsPicker(){
 }
 function setStars(v){
   const step=Math.max(1,current.starsStep),base=current.starsMin;
-  v=clamp(Number(v||base),current.starsMin,current.starsMax);v=base+Math.round((v-base)/step)*step;current.starsCount=clamp(v,current.starsMin,current.starsMax);render();
+  v=clamp(Number(v||base),current.starsMin,current.starsMax);v=base+Math.round((v-base)/step)*step;current.starsCount=clamp(v,current.starsMin,current.starsMax);clearCoupon();render();
 }
 function bindModal(){
   modal.querySelectorAll('[data-pc-close]').forEach(b=>b.onclick=close);
-  modal.querySelectorAll('[data-pc-variant]').forEach(b=>b.onclick=()=>{current.selectedId=Number(b.dataset.pcVariant);render()});
+  modal.querySelectorAll('[data-pc-variant]').forEach(b=>b.onclick=()=>{current.selectedId=Number(b.dataset.pcVariant);clearCoupon();render()});
   modal.querySelector('[data-pc-stars="minus"]')?.addEventListener('click',()=>setStars(current.starsCount-current.starsStep));
   modal.querySelector('[data-pc-stars="plus"]')?.addEventListener('click',()=>setStars(current.starsCount+current.starsStep));
   modal.querySelectorAll('[data-pc-preset]').forEach(b=>b.onclick=()=>setStars(Number(b.dataset.pcPreset)));
   modal.querySelector('#purchaseStarsInput')?.addEventListener('change',e=>setStars(e.target.value));
   modal.querySelector('#purchaseStarsRange')?.addEventListener('change',e=>setStars(e.target.value));
+  modal.querySelector('#purchaseCoupon')?.addEventListener('input',e=>{current.couponInput=e.target.value;if(current.coupon&&couponCode(e.target.value)!==current.coupon.code)current.coupon=null});
+  modal.querySelector('[data-pc-coupon]')?.addEventListener('click',applyCouponPreview);
   modal.querySelector('[data-pc-submit]').onclick=confirm;
+}
+async function applyCouponPreview(){
+  if(busy)return false;
+  const input=modal?.querySelector('#purchaseCoupon');const code=couponCode(input?.value||current.couponInput||'');
+  if(!code){window.BGAccount?.toast?.('کد تخفیف را وارد کن.','warn');return false}
+  const btn=modal?.querySelector('[data-pc-coupon]');if(btn){btn.disabled=true;btn.textContent='بررسی…'}
+  try{
+    const spec=purchaseSpec();const r=await window.BGApi.call('preview_coupon',{code,product_id:spec.productId,variant_id:spec.variantId,stars_count:spec.starsCount});
+    current.couponInput=code;current.coupon=r.coupon;render();window.BGAccount?.toast?.('کد تخفیف اعمال شد ✓','success');return true;
+  }catch(e){current.coupon=null;const feedback=modal?.querySelector('.purchase-coupon-feedback');if(feedback){feedback.className='purchase-coupon-feedback error';feedback.textContent=e.message||'کد تخفیف معتبر نیست.'}window.BGAccount?.toast?.(e.message||'کد تخفیف معتبر نیست.','error');if(btn){btn.disabled=false;btn.textContent='ثبت کد'}return false}
 }
 async function confirm(){
   if(busy)return;
-  const v=selectedVariant();
-  if(current.variants.length&&!v){window.BGAccount?.toast?.('اول یک پلن انتخاب کن.','warn');return}
-  const spec={productId:Number(v?.product_id||current.productId),variantId:v?.id||null,starsCount:current.scope==='stars'?current.starsCount:null};
-  const coupon=modal.querySelector('#purchaseCoupon')?.value?.trim()||'';
+  const v=selectedVariant();if(current.variants.length&&!v){window.BGAccount?.toast?.('اول یک پلن انتخاب کن.','warn');return}
+  current.couponInput=modal.querySelector('#purchaseCoupon')?.value?.trim()||current.couponInput||'';
+  const typed=couponCode(current.couponInput);
+  if(typed&&current.coupon?.code!==typed){const ok=await applyCouponPreview();if(!ok)return}
+  const spec=purchaseSpec();const coupon=current.coupon?.code||'';
   busy=true;const btn=modal.querySelector('[data-pc-submit]');if(btn){btn.disabled=true;btn.textContent='در حال ثبت سفارش…'}
   try{
-    const logged=window.BGAccount?.isLogged?.();
-    if(!logged) close();
+    const logged=window.BGAccount?.isLogged?.();if(!logged) close();
     await window.BGAccount?.submitOrder?.(spec,coupon);
-  }catch(e){window.BGAccount?.toast?.(e.message||'ثبت سفارش انجام نشد.','error');if(modal&&document.body.contains(modal)){btn.disabled=false;btn.textContent=`⚡ تایید و ثبت سفارش (${fmt(currentPrice())})`}}
+  }catch(e){window.BGAccount?.toast?.(e.message||'ثبت سفارش انجام نشد.','error');if(modal&&document.body.contains(modal)){btn.disabled=false;btn.textContent=`⚡ تایید و ثبت سفارش (${fmt(payablePrice())})`}}
   finally{busy=false}
 }
 function open(data){
-  if(!data||busy)return null;
-  current=normalize(data);if(!current.productId){window.BGAccount?.toast?.('محصول معتبر نیست.','error');return null}
+  if(!data||busy)return null;current=normalize(data);if(!current.productId){window.BGAccount?.toast?.('محصول معتبر نیست.','error');return null}
   if(current.scope==='stars'&&!current.starsCount)current.starsCount=current.starsMin;
   close();modal=document.createElement('dialog');modal.id='purchaseConfirmModal';modal.className='purchase-confirm-overlay';document.body.appendChild(modal);document.documentElement.classList.add('purchase-confirm-open');document.body.classList.add('purchase-confirm-open');render();
   if(typeof modal.showModal==='function')modal.showModal();else modal.setAttribute('open','');
-  modal.addEventListener('cancel',e=>{e.preventDefault();close()});modal.addEventListener('click',e=>{if(e.target===modal)close()});
-  return modal;
+  modal.addEventListener('cancel',e=>{e.preventDefault();close()});modal.addEventListener('click',e=>{if(e.target===modal)close()});return modal;
 }
 function close(){if(modal){try{modal.close()}catch{};modal.remove();modal=null}document.documentElement.classList.remove('purchase-confirm-open');document.body.classList.remove('purchase-confirm-open')}
 window.BGCheckout={open,close};

@@ -1,4 +1,4 @@
-const CACHE = 'bluegate-platform-v2.9.0';
+const CACHE = 'bluegate-platform-v2.9.1';
 const ASSETS = [
   './',
   './index.html',
@@ -30,26 +30,36 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
-  );
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))));
   self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+function isStatic(url){
+  return /\.(?:css|js|png|jpe?g|gif|webp|svg|ico|woff2?|json)$/i.test(url.pathname) && !/\/api\.php$/i.test(url.pathname);
+}
 
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request).then(hit => hit || caches.match('./index.html')))
-  );
+self.addEventListener('fetch', event => {
+  const req=event.request;
+  if(req.method !== 'GET') return;
+  const url=new URL(req.url);
+  if(url.origin !== self.location.origin) return;
+  if(/\/api\.php$/i.test(url.pathname)) return;
+
+  if(req.mode === 'navigate'){
+    event.respondWith(fetch(req).catch(() => caches.match('./index.html')));
+    return;
+  }
+
+  if(isStatic(url)){
+    event.respondWith(caches.match(req,{ignoreSearch:true}).then(hit => {
+      const fresh=fetch(req).then(res => {
+        if(res.ok) caches.open(CACHE).then(cache => cache.put(req,res.clone()));
+        return res;
+      }).catch(() => hit);
+      return hit || fresh;
+    }));
+    return;
+  }
+
+  event.respondWith(fetch(req).catch(() => caches.match(req)));
 });
