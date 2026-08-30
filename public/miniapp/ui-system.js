@@ -1,4 +1,4 @@
-/* BlueGate Mini App UI System v2.8.4 */
+/* BlueGate Mini App UI System v2.9.0 */
 (() => {
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));

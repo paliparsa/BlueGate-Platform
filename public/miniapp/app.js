@@ -300,7 +300,7 @@ function miniBootContext(){
     mode:isAdminMode?'admin':'user',
     telegram:Boolean(initData),
     platform:String(tg?.platform||'unknown'),
-    version:'2.8.4'
+    version:'2.9.0'
   };
 }
 function setMiniBootState(kind, message=''){
@@ -1257,7 +1257,7 @@ function specialDiscountsBannerHtml(){
               ${crossedPrice > 0 ? `<s class="flash-card-orig-price">${fmt(crossedPrice)}</s>` : ''}
               <b class="flash-card-cur-price">${fmt(realPrice)}</b>
             </div>
-            <button class="primary" data-buy="${p.id}" style="padding:6px 12px; font-size:14px; border-radius:12px;">⚡ خرید</button>
+            <button class="primary" data-product="${p.id}" style="padding:6px 12px; font-size:14px; border-radius:12px;">⚡ خرید</button>
           </div>
         </div>`;
       }).join('')}
@@ -1430,67 +1430,37 @@ async function shareProductLegacy(pid){
 
 function showProduct(pid,preferredVariantId=0){
   const p=(state.shop_products||[]).find(x=>Number(x.id)===Number(pid));
-  if(!p) return;
+  if(!p)return;
   pushRecent(p.id);
-  const variants=(p.variants||[]).filter(v=>Number(v.is_active??1)!==0);
-  let selected=variants.find(v=>Number(v.id)===Number(preferredVariantId))||variants[0]||null;
-  const desc=String(p.full_description||p.short_description||'').trim();
-
-  const variantBelongsToSheet=(v)=>{
-    if(!v) return false;
-    return variants.some(x=>Number(x.id)===Number(v.id));
-  };
-  const variantButtons=()=>variants.length?`<div class="product-plan-title">انتخاب پلن</div><div class="product-plan-grid">${variants.map(v=>`<button type="button" class="product-plan-option ${selected&&Number(selected.id)===Number(v.id)?'selected':''}" data-u-plan="${v.id}" data-u-product="${p.id}"><b>${esc(v.title)}</b><span>${fmt(v.price)}</span><small>${v.duration_days?nf(v.duration_days)+' روز':'پلن ویژه'}</small></button>`).join('')}</div>`:'';
-  const summary=()=>{
-    const safeSelected=variantBelongsToSheet(selected)?selected:null;
-    const price=Number(safeSelected?.price??p.price??0);
-    const duration=safeSelected?.duration_days?nf(safeSelected.duration_days)+' روز':'بدون مدت مشخص';
-    const delivery=p.delivery_type_fa||({manual:'تحویل دستی',account:'اکانت اختصاصی',vpn:'سرویس VPN',code:'کد دیجیتال',file:'فایل / متن'}[p.delivery_type]||'تحویل پس از ثبت');
-    return `<div class="product-selected-summary"><div class="product-summary-row"><span>انتخاب شما</span><b>${esc(safeSelected?.title||p.name)}</b></div><div class="product-summary-row"><span>مدت</span><b>${esc(duration)}</b></div><div class="product-summary-row"><span>نوع تحویل</span><b>${esc(delivery)}</b></div><div class="product-summary-row product-summary-price"><span>مبلغ</span><b>${fmt(price)}</b></div></div><div class="product-sheet-actions"><button class="secondary" data-u-cart data-u-product="${p.id}">افزودن به سبد</button><button class="primary" data-buy="${p.id}" ${safeSelected?`data-variant="${safeSelected.id}"`:''}>خرید</button>${Number(state.user?.balance||0)>0?`<button class="ghost wallet-buy" data-buy-wallet="${p.id}" ${safeSelected?`data-variant="${safeSelected.id}"`:''}>خرید با اعتبار BlueGate</button>`:''}</div>`;
-  };
-  const renderBody=()=>`${p.image_url?`<div class="product-unified-hero"><img src="${esc(p.image_url)}" alt="${esc(p.name)}"></div>`:''}<div class="product-unified-toolbar"><button class="secondary" data-u-wish> ${getWishlist().includes(Number(p.id))?'♥ علاقه‌مندی':'♡ علاقه‌مندی'}</button><button class="secondary" data-u-share>↗ اشتراک‌گذاری</button></div>${desc&&desc!=='-'?`<p class="product-unified-desc">${textBlock(desc)}</p>`:''}<div data-u-plan-wrap>${variantButtons()}</div><div data-u-summary>${summary()}</div>`;
-
-  const sheet=BlueGateUI.openSheet({
-    type:'detail',
-    eyebrow:state.brand||'BLUEGATE',
-    title:p.name,
-    subtitle:p.short_description||'انتخاب پلن و ثبت سفارش',
-    body:renderBody(),
-    onOpen:(host,panel)=>{
-      // IMPORTANT: bind to this freshly-created panel, not the persistent #appSheet host.
-      // This prevents listeners from previously-opened products from handling the next product's plan taps.
-      if(!panel) return;
-      panel.dataset.productId=String(p.id);
-      panel.addEventListener('click',(e)=>{
-        const btn=e.target.closest('[data-u-plan],[data-u-wish],[data-u-share],[data-u-cart]');
-        if(!btn || !panel.contains(btn)) return;
-        if(btn.dataset.uPlan!==undefined){
-          if(Number(btn.dataset.uProduct)!==Number(p.id)) return;
-          const next=variants.find(v=>Number(v.id)===Number(btn.dataset.uPlan));
-          if(!next){showStatus('این پلن متعلق به محصول فعلی نیست. صفحه محصول دوباره بارگذاری شد.','error');return;}
-          selected=next;
-          const planWrap=panel.querySelector('[data-u-plan-wrap]');
-          const sum=panel.querySelector('[data-u-summary]');
-          if(planWrap) planWrap.innerHTML=variantButtons();
-          if(sum) sum.innerHTML=summary();
-          haptic('light');
-          return;
-        }
-        if(btn.dataset.uWish!==undefined){
-          toggleWishlist(p.id);
-          btn.textContent=getWishlist().includes(Number(p.id))?'♥ علاقه‌مندی':'♡ علاقه‌مندی';
-          return;
-        }
-        if(btn.dataset.uShare!==undefined){openShareSheet(p.id);return;}
-        if(btn.dataset.uCart!==undefined){
-          if(Number(btn.dataset.uProduct)!==Number(p.id)) return;
-          cartAdd(p.id,variantBelongsToSheet(selected)?selected.id:0);
-          BlueGateUI.closeSheet();
-        }
-      });
+  const variants=(p.variants||[]).filter(v=>Number(v.is_active??1)!==0).map(v=>({
+    id:Number(v.id),title:v.title||'پلن',price:Number(v.price||0),duration_days:Number(v.duration_days||0),
+    description:v.description||'',old_price:Number(v.old_price||0),discount_percent:Number(v.discount_percent||0),
+    product_id:Number(v.product_id||p.id)
+  }));
+  const preferred=variants.some(v=>Number(v.id)===Number(preferredVariantId))?Number(preferredVariantId):(variants[0]?.id||null);
+  const delivery=p.delivery_type_fa||({manual:'تحویل دستی',account:'اکانت اختصاصی',vpn:'سرویس VPN',code:'کد دیجیتال',file:'فایل / متن'}[p.delivery_type]||'تحویل پس از ثبت');
+  if(!window.BlueGatePurchase){showStatus('پنجره خرید هنوز بارگذاری نشده. دوباره تلاش کن.','error');return;}
+  window.BlueGatePurchase.open({
+    productId:Number(p.id),variantId:preferred,product:p.name,description:p.full_description||p.short_description||'',
+    image:p.image_url||'',icon:p.category_emoji||p.config?.icon||'⚡',badge:p.category_title||state.brand||'BlueGate',
+    delivery,price:Number(p.price||variants[0]?.price||0),variants,
+    onShare:()=>{ window.BlueGatePurchase.close(); openShareSheet(p.id); },
+    onCart:({variantId})=>{cartAdd(p.id,variantId||0);showStatus('به سبد خرید اضافه شد');},
+    onError:(err)=>showStatus(err?.message||'ثبت سفارش انجام نشد.','error'),
+    onSubmit:async({productId,variantId,orderProductId,coupon})=>{
+      const guest=Boolean(state?.is_guest||state?.user?.is_guest||!state?.user);
+      if(guest){window.BlueGatePurchase.close();openAuthModal('login');throw new Error('برای ثبت سفارش اول وارد حساب شو.');}
+      const resolved=resolveMiniPurchase(productId,variantId);
+      if(!resolved||resolved.needsVariant)throw new Error('پلن انتخاب‌شده معتبر نیست. دوباره انتخاب کن.');
+      const res=await api('create_order',{product_id:Number(orderProductId||resolved.orderProductId),variant_id:resolved.variant?.id||null,use_wallet:0});
+      const oid=Number(res?.order?.id||res?.order_id||0);
+      let couponWarn=false;
+      if(coupon&&oid){try{await api('apply_coupon',{order_id:oid,code:coupon})}catch(_){couponWarn=true;}}
+      state=await api('me');applyTheme(state);currentTab='orders';currentOrderId=oid||Number(state.orders?.[0]?.id||0)||null;renderUser();
+      showStatus(couponWarn?'سفارش ثبت شد؛ کد تخفیف معتبر نبود.':'⚡ سفارش با موفقیت ثبت شد',couponWarn?'warning':'success');
     }
   });
-  if(sheet) haptic('light');
+  haptic('light');
 }
 
 function openOrderFiltersSheet(){const opts=[['all','همه'],['active','فعال'],['pending_payment','در انتظار پرداخت'],['receipt_submitted','در بررسی رسید'],['delivered','تکمیل‌شده'],['cleanup','لغو / رد شده']];BlueGateUI.openSheet({type:'action',eyebrow:'سفارش‌ها',title:'فیلتر سفارش‌ها',body:`<div class="filter-choice-grid" style="grid-template-columns:1fr 1fr">${opts.map(x=>`<button data-u-order-filter="${x[0]}" class="${orderFilter===x[0]?'active':''}">${x[1]}</button>`).join('')}</div>`,onOpen:(host)=>host.querySelectorAll('[data-u-order-filter]').forEach(b=>b.addEventListener('click',()=>{orderFilter=b.dataset.uOrderFilter;BlueGateUI.closeSheet();renderOrders()}))})}
@@ -2592,7 +2562,7 @@ document.addEventListener('keydown',e=>{if(isAdminMode&&(e.metaKey||e.ctrlKey)&&
 document.addEventListener('click',e=>{const item=e.target.closest('[data-cmd-idx]');if(item){const cp2=$('cmdPalette');const idx=Number(item.dataset.cmdIdx);cp2?._cmds?.[idx]?.action?.();closeCommandPalette();return}const inside=e.target.closest('#cmdPalette');if(!inside&&$('cmdPalette')?.classList.contains('open'))closeCommandPalette()})
 
 
-/* ===== v2.8.4: single-source purchase handler ===== */
+/* ===== v2.9.0: shared web-parity purchase flow ===== */
 let _purchaseBusy=false;
 function resolveMiniPurchase(productId,variantId){
   const p=(state?.shop_products||[]).find(x=>Number(x.id)===Number(productId));
