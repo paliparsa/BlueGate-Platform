@@ -1,3 +1,5 @@
+> **v2.8.4 Mini App Product & Palette Fix:** پنل Command Palette فقط در Admin Desktop و فقط پس از فراخوانی صریح نمایش داده می‌شود؛ نشت listener بین Product Sheetها رفع شده تا انتخاب پلن هر محصول فقط همان محصول را تغییر دهد، و handler واحد ثبت سفارش Mini App دوباره با اعتبارسنجی product/variant فعال شده است.
+
 > **v2.8.1 Telegram Boot Fix & Mobile Web Pass:** رگرشن Boot در Telegram Mini App برطرف شده، شناسایی خودکار کاربر با `initData` دوباره برقرار است و به‌جای صفحه سفید Error/Retry واقعی نمایش داده می‌شود. صفحه اصلی Website نیز با یک لایه Responsive نهایی برای Header، Hero، نرخ‌ها، انتخاب سرویس، VPN، Stars، Premium، FAQ، Footer و کنترل‌های Sticky روی موبایل بازطراحی و پایدار شده است.
 
 > **v2.8.0 Mini App Unification:** ساختار Telegram Mini App یکپارچه و سبک‌تر شده است: ناوبری کاربر به فروشگاه/سفارش‌ها/اعتبار/حساب محدود شده، Product Detail به یک Sheet واحد تبدیل شده، Credit و Account از داشبوردهای تکراری پاک‌سازی شده‌اند، Admin فقط چهار مقصد اصلی دارد و یک UI System مشترک برای Sheet/Confirm/Actionها اضافه شده است.
@@ -18,7 +20,7 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.8.1**  
+> نسخه فعلی: **v2.8.4**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
