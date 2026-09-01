@@ -1,10 +1,10 @@
 # BlueGate Platform
 
-> **Current release:** v3.0.3 — Core Stability. Money-flow, concurrency and Catalog/Legacy consistency fixes. See `RELEASE-NOTES-v3.0.3.md`.
+> **Current release:** v3.0.6 — Mini App Enhancements (Safe). The stable v3.0.5.5 boot is preserved; user enhancements hydrate only after first paint.
 
 BlueGate Platform is the main commerce stack behind BlueGate: a PHP/MySQL storefront, customer account area, administration panel, Telegram Mini App and Telegram Bot running on one catalog, one order system and one source of truth.
 
-**Current build: v3.0.2.1**
+**Current build: v3.0.6**
 
 This repository is intended to be deployed as a complete application. The Website and Telegram Mini App use the same backend and catalog data, so a product edited in Admin is not maintained separately for each client.
 

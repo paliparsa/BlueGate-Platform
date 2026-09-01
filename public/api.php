@@ -524,6 +524,16 @@ if ($action === 'mini_enhancements') {
     ]);
 }
 
+if ($action === 'mini_enhancements') {
+    $op = array_map('order_public_payload', user_orders((int)$user['id'], 40));
+    api_out([
+        'ok'=>true,
+        'services'=>active_services_from_order_payloads($op,12),
+        'wishlist_product_ids'=>safe_mini_optional(fn()=>wishlist_product_ids((int)$user['id']),[]),
+        'notifications'=>safe_mini_optional(fn()=>user_notifications((int)$user['id'],30),[]),
+        'notification_unread'=>(int)safe_mini_optional(fn()=>user_notification_unread_count((int)$user['id']),0),
+    ]);
+}
 if ($action === 'wishlist_toggle') { try{$r=toggle_user_wishlist((int)$user['id'],(int)($input['product_id']??0));api_out(['ok'=>true,'wishlist_product_ids'=>$r['ids'],'active'=>$r['active']]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'تغییر علاقه‌مندی انجام نشد.'],400);} }
 if ($action === 'notifications_read') { mark_user_notifications_read((int)$user['id']);api_out(['ok'=>true,'notification_unread'=>0]); }
 if ($action === 'create_cart_orders') {
