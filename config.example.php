@@ -70,4 +70,6 @@ $CRYPTO_RATE_REFRESH_INTERVAL_SECONDS = 600; // cron should refresh live rates e
 $CRYPTO_MANUAL_RATES = ['USDT' => 0, 'TRX' => 0, 'TON' => 0];
 $TRONSCAN_API_KEY = ''; // optional, recommended for higher Tronscan API limits
 $TONCENTER_API_KEY = ''; // optional, recommended for TON checks
+$ETH_RPC_URL = 'https://cloudflare-eth.com'; // Ethereum JSON-RPC for ETH / USDT-ERC20 verification
+$BSC_RPC_URL = 'https://bsc-dataseed.binance.org/'; // BNB Smart Chain JSON-RPC for BNB / USDT-BEP20 verification
 

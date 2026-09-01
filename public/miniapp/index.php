@@ -8,7 +8,7 @@ foreach ($assets as $asset) {
     $path = __DIR__ . '/' . $asset;
     $mtimes[] = file_exists($path) ? filemtime($path) : time();
 }
-$version = 'v308-catalog-wallet-builder-' . max($mtimes);
+$version = 'v3082-crypto-wallet-tracking-' . max($mtimes);
 
 $html = file_get_contents(__DIR__ . '/index.html');
 foreach ($assets as $asset) {

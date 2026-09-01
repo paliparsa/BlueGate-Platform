@@ -146,6 +146,7 @@ function migrate(): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
     // Safe upgrade path from older BlueGate ReferralWallet versions.
+    add_column_if_missing('crypto_wallets', 'min_confirmations', 'INT NOT NULL DEFAULT 1 AFTER rate_symbol');
     add_column_if_missing('users', 'last_name', 'VARCHAR(255) NULL AFTER first_name');
     add_column_if_missing('users', 'ref_rewarded', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER referrer_id');
     add_column_if_missing('users', 'spin_balance', 'INT NOT NULL DEFAULT 0 AFTER referrals_count');
@@ -563,6 +564,25 @@ function crypto_rate_meta(string $asset): array {
     }
     return ['asset'=>$asset,'rate'=>(float)($manual[$asset] ?? 0),'source'=>'manual','updated_at'=>null,'is_live'=>false];
 }
+function crypto_tracking_profile(string $asset, string $network): array {
+    $asset=strtoupper(trim($asset)); $network=strtoupper(trim($network));
+    $aliases=['TRX'=>'TRON','TRC20'=>'TRC20','TRON'=>'TRON','TON'=>'TON','ERC20'=>'ERC20','ETH'=>'ETHEREUM','ETHEREUM'=>'ETHEREUM','BEP20'=>'BEP20','BSC'=>'BSC','BITCOIN'=>'BITCOIN','BTC'=>'BITCOIN'];
+    $network=$aliases[$network] ?? $network;
+    $supported=false; $provider='manual'; $label='بررسی دستی';
+    if(($asset==='USDT' && in_array($network,['TRC20','ERC20','BEP20'],true)) || ($asset==='TRX' && $network==='TRON')) { $supported=true; $provider=$network==='TRC20'||$network==='TRON'?'TronScan':($network==='ERC20'?'Ethereum RPC':'BSC RPC'); }
+    elseif($asset==='TON' && $network==='TON') { $supported=true; $provider='TON Center'; }
+    elseif($asset==='ETH' && in_array($network,['ETHEREUM','ERC20'],true)) { $supported=true; $provider='Ethereum RPC'; }
+    elseif($asset==='BNB' && in_array($network,['BSC','BEP20'],true)) { $supported=true; $provider='BSC RPC'; }
+    elseif($asset==='BTC' && $network==='BITCOIN') { $supported=true; $provider='Blockstream'; }
+    if($supported) $label='پیگیری خودکار';
+    return ['supported'=>$supported,'provider'=>$provider,'label'=>$label,'asset'=>$asset,'network'=>$network];
+}
+function crypto_wallet_supported(string $asset,string $network): bool { return (bool)crypto_tracking_profile($asset,$network)['supported']; }
+function crypto_wallet_admin_payload(array $w): array {
+    $p=crypto_wallet_payload($w,null); $track=crypto_tracking_profile((string)$w['asset'],(string)$w['network']);
+    $p['tracking_supported']=$track['supported']; $p['tracking_provider']=$track['provider']; $p['tracking_label']=$track['label'];
+    $p['min_confirmations']=(int)($w['min_confirmations']??1); return $p;
+}
 function crypto_wallet_payload(array $w, ?int $tomanAmount=null): array {
     $symbol = strtoupper((string)($w['rate_symbol'] ?: $w['asset']));
     $meta = crypto_rate_meta($symbol);
@@ -574,13 +594,16 @@ function crypto_wallet_payload(array $w, ?int $tomanAmount=null): array {
     }
     return [
         'id'=>(int)$w['id'], 'title'=>$w['title'], 'network'=>strtoupper($w['network']), 'asset'=>strtoupper($w['asset']), 'address'=>$w['address'],
-        'rate_symbol'=>$symbol, 'is_active'=>(int)$w['is_active'], 'sort_order'=>(int)$w['sort_order'],
+        'rate_symbol'=>$symbol, 'is_active'=>(int)$w['is_active'], 'sort_order'=>(int)$w['sort_order'], 'min_confirmations'=>(int)($w['min_confirmations']??1),
+        'tracking_supported'=>crypto_wallet_supported((string)$w['asset'],(string)$w['network']), 'tracking_provider'=>crypto_tracking_profile((string)$w['asset'],(string)$w['network'])['provider'],
         'rate_toman'=>$rate, 'rate_source'=>$meta['source'], 'rate_updated_at'=>$meta['updated_at'], 'estimated_amount'=>$amount,
     ];
 }
 function crypto_wallets_public(?int $tomanAmount=null): array {
-    return array_map(fn($w)=>crypto_wallet_payload($w, $tomanAmount), crypto_wallets(true));
+    $rows=array_values(array_filter(crypto_wallets(true),fn($w)=>crypto_wallet_supported((string)$w['asset'],(string)$w['network'])));
+    return array_map(fn($w)=>crypto_wallet_payload($w, $tomanAmount), $rows);
 }
+
 function http_json_get(string $url, array $headers=[]): array {
     return crypto_http_json_request('GET', $url, null, $headers);
 }
@@ -931,10 +954,12 @@ function crypto_verify_order(int $orderId): ?array {
     if($check['status']==='confirmed') return $check;
     $ok=false; $reason=''; $raw=[];
     try{
-        $network=strtoupper($check['network']);
+        $network=strtoupper($check['network']); $asset=strtoupper($check['asset']);
         if(in_array($network,['TRC20','TRON','TRX'],true)) { [$ok,$reason,$raw]=verify_tron_payment($check); }
         elseif($network==='TON') { [$ok,$reason,$raw]=verify_ton_payment($check); }
-        else { $reason='این شبکه هنوز بررسی خودکار ندارد و نیاز به تایید دستی ادمین دارد.'; }
+        elseif(in_array($network,['ERC20','ETHEREUM','ETH','BEP20','BSC'],true)) { [$ok,$reason,$raw]=verify_evm_payment($check); }
+        elseif(in_array($network,['BITCOIN','BTC'],true) && $asset==='BTC') { [$ok,$reason,$raw]=verify_bitcoin_payment($check); }
+        else { $reason='این ترکیب ارز/شبکه بررسی خودکار ندارد.'; }
     } catch(Throwable $e){ $reason=$e->getMessage(); $raw=['exception'=>$reason]; }
     db()->prepare('UPDATE crypto_payment_checks SET check_count=check_count+1,last_checked_at=NOW(),raw_response=?,fail_reason=?,status=? WHERE id=?')->execute([json_encode($raw,JSON_UNESCAPED_UNICODE),$reason,$ok?'confirmed':'pending',(int)$check['id']]);
     if($ok){
@@ -986,6 +1011,49 @@ function verify_ton_payment(array $check): array {
         return [false,'مبلغ تراکنش TON کمتر از مقدار سفارش است.',$j];
     }
     return [false,'تراکنش TON در آخرین تراکنش‌های این آدرس پیدا نشد.',$j];
+}
+function evm_rpc_url(string $network): string {
+    $network=strtoupper($network);
+    if(in_array($network,['BEP20','BSC'],true)) return (string)(app_config('BSC_RPC_URL','https://bsc-dataseed.binance.org/') ?: 'https://bsc-dataseed.binance.org/');
+    return (string)(app_config('ETH_RPC_URL','https://cloudflare-eth.com') ?: 'https://cloudflare-eth.com');
+}
+function evm_rpc(string $network,string $method,array $params=[]){
+    static $id=0; $j=http_json_post(evm_rpc_url($network),['jsonrpc'=>'2.0','id'=>++$id,'method'=>$method,'params'=>$params]);
+    if(isset($j['error'])) throw new RuntimeException('EVM_RPC_ERROR'); return $j['result']??null;
+}
+function hex_num(string $hex): float { $hex=strtolower(trim($hex)); if(str_starts_with($hex,'0x'))$hex=substr($hex,2); if($hex==='')return 0.0; $n=0.0; foreach(str_split($hex) as $c){$v=strpos('0123456789abcdef',$c); if($v===false)continue; $n=$n*16+$v;} return $n; }
+function evm_confirmations(string $network,string $blockHex): int { if(!$blockHex)return 0; $latest=evm_rpc($network,'eth_blockNumber',[]); return max(0,(int)(hex_num((string)$latest)-hex_num($blockHex)+1)); }
+function verify_evm_payment(array $check): array {
+    $network=strtoupper((string)$check['network']); $asset=strtoupper((string)$check['asset']); $hash=(string)$check['tx_hash'];
+    $receipt=evm_rpc($network,'eth_getTransactionReceipt',[$hash]); if(!$receipt)return [false,'تراکنش هنوز در شبکه پیدا نشده است.',[]];
+    if(strtolower((string)($receipt['status']??''))!=='0x1')return [false,'تراکنش EVM ناموفق است.',$receipt];
+    $wallet=crypto_wallet_by_id((int)$check['wallet_id']); $min=max(1,(int)($wallet['min_confirmations']??1));
+    $conf=evm_confirmations($network,(string)($receipt['blockNumber']??'')); if($conf<$min)return [false,"تراکنش {$conf} تایید دارد؛ حداقل {$min} تایید لازم است.",['receipt'=>$receipt,'confirmations'=>$conf]];
+    $to=strtolower((string)$check['address']); $need=(float)$check['expected_amount'];
+    if(($asset==='ETH' && in_array($network,['ETHEREUM','ETH','ERC20'],true)) || ($asset==='BNB' && in_array($network,['BSC','BEP20'],true))){
+        $tx=evm_rpc($network,'eth_getTransactionByHash',[$hash]); if(!$tx)return [false,'جزئیات تراکنش EVM پیدا نشد.',$receipt];
+        $txTo=strtolower((string)($tx['to']??'')); $amount=hex_num((string)($tx['value']??'0x0'))/1e18;
+        if($txTo===$to && $amount+0.00000001 >= $need)return [true,'confirmed',['receipt'=>$receipt,'tx'=>$tx,'confirmations'=>$conf]];
+        return [false,'مبلغ یا آدرس تراکنش با Wallet تطابق ندارد.',['receipt'=>$receipt,'tx'=>$tx]];
+    }
+    if($asset==='USDT'){
+        $contracts=['ERC20'=>['0xdac17f958d2ee523a2206206994597c13d831ec7',6],'ETHEREUM'=>['0xdac17f958d2ee523a2206206994597c13d831ec7',6],'BEP20'=>['0x55d398326f99059ff775485246999027b3197955',18],'BSC'=>['0x55d398326f99059ff775485246999027b3197955',18]];
+        [$contract,$dec]=$contracts[$network]??['',6]; $transferTopic='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+        foreach(($receipt['logs']??[]) as $log){
+            if(strtolower((string)($log['address']??''))!==$contract)continue; $topics=$log['topics']??[]; if(strtolower((string)($topics[0]??''))!==$transferTopic)continue;
+            $toTopic=strtolower((string)($topics[2]??'')); $logTo='0x'.substr($toTopic,-40); if($logTo!==$to)continue;
+            $amount=hex_num((string)($log['data']??'0x0'))/(10**$dec); if($amount+0.000001 >= $need)return [true,'confirmed',['receipt'=>$receipt,'confirmations'=>$conf]];
+        }
+        return [false,'انتقال USDT با مبلغ/آدرس مورد انتظار در لاگ تراکنش پیدا نشد.',['receipt'=>$receipt,'confirmations'=>$conf]];
+    }
+    return [false,'دارایی انتخاب‌شده روی این شبکه verifier ندارد.',$receipt];
+}
+function verify_bitcoin_payment(array $check): array {
+    $tx=urlencode((string)$check['tx_hash']); $j=http_json_get("https://blockstream.info/api/tx/{$tx}");
+    if(empty($j['status']['confirmed']))return [false,'تراکنش Bitcoin هنوز تایید نشده است.',$j];
+    $to=(string)$check['address']; $need=(float)$check['expected_amount']; $got=0.0;
+    foreach(($j['vout']??[]) as $out){ if((string)($out['scriptpubkey_address']??'')===$to)$got+=((float)($out['value']??0))/100000000; }
+    if($got+0.00000001 >= $need)return [true,'confirmed',$j]; return [false,'مبلغ یا آدرس تراکنش Bitcoin با سفارش تطابق ندارد.',$j];
 }
 function crypto_check_pending_all(int $limit=20): array {
     if(!table_exists('crypto_payment_checks')) return ['checked'=>0,'confirmed'=>0];

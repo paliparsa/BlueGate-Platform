@@ -373,9 +373,9 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     }
     if (str_starts_with($data, 'order_pay_crypto_')) {
         $oid=(int)substr($data, 17);
-        $wallets = crypto_wallets(true);
+        $wallets = array_values(array_filter(crypto_wallets(true), fn($w)=>crypto_wallet_supported((string)$w['asset'],(string)$w['network'])));
         if (!$wallets) { send_msg($chat_id, 'فعلاً کیف پول رمزارز فعالی تعریف نشده است.', main_menu_keyboard(is_full_admin($chat_id))); return; }
-        $rows=[]; foreach($wallets as $w){ $rows[] = [['text'=>'🪙 '.($w['title'] ?: ($w['asset'].' '.$w['network'])), 'callback_data'=>'order_crypto_wallet_'.$oid.'_'.$w['id']]]; }
+        $rows=[]; foreach($wallets as $w){ $tp=crypto_tracking_profile((string)$w['asset'],(string)$w['network']); $rows[] = [['text'=>'🪙 '.($w['title'] ?: ($w['asset'].' '.$w['network'])).' · ⚡', 'callback_data'=>'order_crypto_wallet_'.$oid.'_'.$w['id']]]; }
         $rows[]=[['text'=>'🔙 بازگشت', 'callback_data'=>'order_view_'.$oid]];
         send_msg($chat_id, 'کیف پول رمزارز را انتخاب کن:', json_markup(['inline_keyboard'=>$rows]));
         return;

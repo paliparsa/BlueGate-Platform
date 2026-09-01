@@ -1793,7 +1793,8 @@ function rateLine(r){return [(r.asset||'USDT').toUpperCase(),String(r.rate_toman
 function parseSettingsBuilders(){
   const st=adminState.settings||{};
   adminUiCards=parsePipeLines(st.card_accounts_text||'', ['title','card','owner','sheba']);
-  adminUiWallets=parsePipeLines(st.crypto_wallets_text||'', ['title','network','asset','address','rate_symbol','is_active','sort_order']);
+  const dbWallets=Array.isArray(st.crypto_wallets)?st.crypto_wallets:[];
+  adminUiWallets=dbWallets.length?dbWallets.map(w=>({...w,id:Number(w.id||0),is_active:String(w.is_active??1),sort_order:String(w.sort_order??99),min_confirmations:String(w.min_confirmations??1)})):parsePipeLines(st.crypto_wallets_text||'', ['title','network','asset','address','rate_symbol','is_active','sort_order']);
   adminUiRates=parsePipeLines(st.crypto_manual_rates_text||'USDT|0\nTRX|0\nTON|0', ['asset','rate_toman']);
 }
 function paymentListHtml(items,type){
@@ -1817,25 +1818,17 @@ function paymentListHtml(items,type){
       </div>`;
     }
     if(type==='wallet') {
-      const net = (it.network||'TRC20').toUpperCase();
-      const asset = (it.asset||'USDT').toUpperCase();
-      const addr = it.address || '';
-      const addrDisplay = addr ? (addr.slice(0,6) + '...' + addr.slice(-4)) : 'بدون آدرس';
-      const isActive = String(it.is_active ?? '1') !== '0';
-      return `<div class="builder-row compact-row">
-        <div class="builder-row-info">
-          <div class="builder-row-header">
-            <span class="builder-row-title">🪙 ${esc(it.title||asset)}</span>
-            <span class="chip-mini ${isActive?'chip-active':'chip-off'}">${isActive?'فعال':'غیرفعال'}</span>
-            <span class="chip-mini chip-featured">${esc(net)}</span>
-          </div>
-          <div class="builder-row-sub"><code>${esc(addrDisplay)}</code> · ${esc(asset)}</div>
-        </div>
-        <div class="builder-actions inline-actions">
-          <button class="icon-action-btn" data-builder-edit="wallet:${i}" title="ویرایش">✏️</button>
-          <button class="icon-action-btn danger-icon" data-builder-del="wallet:${i}" title="حذف">🗑️</button>
-        </div>
-      </div>`;
+      const net=(it.network||'TRC20').toUpperCase(), asset=(it.asset||'USDT').toUpperCase(), addr=it.address||'';
+      const addrDisplay=addr?(addr.slice(0,7)+'…'+addr.slice(-5)):'بدون آدرس';
+      const isActive=String(it.is_active??'1')!=='0';
+      const track=it.tracking_supported!==undefined?!!it.tracking_supported:walletMiniTracking(asset,net).supported;
+      const provider=it.tracking_provider||walletMiniTracking(asset,net).provider;
+      return `<article class="crypto-wallet-card-mini ${isActive?'':'is-off'}">
+        <div class="crypto-wallet-card-head"><div class="crypto-coin-mark">${walletAssetIcon(asset)}</div><div><b>${esc(it.title||asset)}</b><small>${esc(asset)} · ${esc(net)}</small></div><span class="chip-mini ${isActive?'chip-active':'chip-off'}">${isActive?'فعال':'غیرفعال'}</span></div>
+        <code class="crypto-wallet-address-mini">${esc(addrDisplay)}</code>
+        <div class="crypto-wallet-meta-mini"><span class="${track?'auto':'manual'}">${track?'● پیگیری خودکار':'● بررسی دستی'}</span><small>${esc(provider)}</small><small>${nf(it.min_confirmations||1)} تأیید</small></div>
+        <div class="crypto-wallet-actions-mini"><button class="secondary" data-builder-edit="wallet:${i}">ویرایش</button><button class="danger ghost" data-builder-del="wallet:${i}">حذف</button></div>
+      </article>`;
     }
     return `<div class="builder-row compact-row">
       <div class="builder-row-info">
@@ -1890,10 +1883,10 @@ function setupCardValidation(){
 function openCardBuilder(index=null){
   const c=index===null?{}:adminUiCards[index]||{};
   openEdit(index===null?'افزودن کارت جدید':'ویرایش کارت',[
-    field('عنوان کارت',`<input id="bc_title" value="${esc(c.title||'')}" placeholder="کارت اصلی">`),
-    field('شماره کارت',`<input id="bc_card" value="${esc(c.card||'')}" inputmode="numeric" placeholder="6037..."><div id="bc_card_val" class="valid-indicator warn"></div>`),
-    field('نام صاحب کارت',`<input id="bc_owner" value="${esc(c.owner||'')}" placeholder="نام و نام خانوادگی">`),
-    field('شبا اختیاری',`<input id="bc_sheba" value="${esc(c.sheba||'')}" placeholder="IR..."><div id="bc_sheba_val" class="valid-indicator warn"></div>`)
+    `<label class="full mini-stack-field"><span>عنوان کارت</span><input id="bc_title" value="${esc(c.title||'')}" placeholder="مثلاً کارت اصلی"></label>`,
+    `<label class="full mini-stack-field"><span>شماره کارت</span><input id="bc_card" value="${esc(c.card||'')}" inputmode="numeric" maxlength="19" placeholder="6037 ・・・・ ・・・・ ・・・・"><div id="bc_card_val" class="valid-indicator warn"></div></label>`,
+    `<label class="full mini-stack-field"><span>نام صاحب کارت</span><input id="bc_owner" value="${esc(c.owner||'')}" placeholder="نام و نام خانوادگی"></label>`,
+    `<label class="full mini-stack-field"><span>شماره شبا <small>اختیاری</small></span><input id="bc_sheba" value="${esc(c.sheba||'')}" maxlength="26" placeholder="IR••••••••••••••••••••••••"><div id="bc_sheba_val" class="valid-indicator warn"></div></label>`
   ],async()=>{
     const obj={title:val('bc_title'),card:val('bc_card'),owner:val('bc_owner'),sheba:val('bc_sheba')};
     if(!obj.card&&!obj.owner) throw new Error('شماره کارت یا صاحب کارت را وارد کن');
@@ -1904,118 +1897,47 @@ function openCardBuilder(index=null){
 }
 let cachedCryptoRates = null;
 
+const MINI_CRYPTO_PRESETS={
+  USDT:{icon:'₮',networks:[['TRC20','TRON'],['ERC20','Ethereum'],['BEP20','BNB Chain']]},
+  TRX:{icon:'◆',networks:[['TRON','TRON']]},
+  TON:{icon:'💎',networks:[['TON','TON']]},
+  ETH:{icon:'Ξ',networks:[['ETHEREUM','Ethereum']]},
+  BNB:{icon:'⬡',networks:[['BSC','BNB Chain']]},
+  BTC:{icon:'₿',networks:[['BITCOIN','Bitcoin']]}
+};
+function walletAssetIcon(asset){return MINI_CRYPTO_PRESETS[String(asset||'').toUpperCase()]?.icon||'◈'}
+function walletMiniTracking(asset,network){asset=String(asset||'').toUpperCase();network=String(network||'').toUpperCase();let provider='';let supported=false;if((asset==='USDT'&&['TRC20','ERC20','BEP20'].includes(network))||(asset==='TRX'&&network==='TRON')){supported=true;provider=['TRC20','TRON'].includes(network)?'TronScan':network==='ERC20'?'Ethereum RPC':'BSC RPC'}else if(asset==='TON'&&network==='TON'){supported=true;provider='TON Center'}else if(asset==='ETH'&&['ETHEREUM','ERC20'].includes(network)){supported=true;provider='Ethereum RPC'}else if(asset==='BNB'&&['BSC','BEP20'].includes(network)){supported=true;provider='BSC RPC'}else if(asset==='BTC'&&['BITCOIN','BTC'].includes(network)){supported=true;provider='Blockstream'}return{supported,provider:provider||'Manual'}}
+function cryptoAssetPickerHtml(selected){return `<div class="crypto-choice-grid asset-grid">${Object.entries(MINI_CRYPTO_PRESETS).map(([a,c])=>`<button type="button" data-bw-asset-choice="${a}" class="${a===selected?'active':''}"><span>${c.icon}</span><b>${a}</b></button>`).join('')}</div>`}
+function cryptoNetworkPickerHtml(asset,selected){const rows=MINI_CRYPTO_PRESETS[asset]?.networks||[];return `<div class="crypto-choice-grid network-grid" id="bw_network_choices">${rows.map(([n,label])=>`<button type="button" data-bw-network-choice="${n}" class="${n===selected?'active':''}"><b>${n}</b><small>${label}</small></button>`).join('')}</div>`}
 function setupWalletValidation(){
   setTimeout(async()=>{
-    const assetSelect = $('bw_asset');
-    const netSelect = $('bw_network');
-    const rateInput = $('bw_rate');
-    const addrInput = $('bw_address');
-    const rateInfo = $('bw_rate_info');
-
-    if(!cachedCryptoRates){
-      try {
-        const res = await api('get_crypto_rates');
-        if(res && res.rates) cachedCryptoRates = res.rates;
-      } catch(e){}
-    }
-
-    const networkOptions = {
-      'USDT': [
-        { value: 'TRC20', label: 'TRC20 (TRON Network - پیش‌فرض)' },
-        { value: 'TON', label: 'TON (The Open Network)' },
-        { value: 'BEP20', label: 'BEP20 (BNB Smart Chain)' },
-        { value: 'ERC20', label: 'ERC20 (Ethereum)' }
-      ],
-      'TRX': [
-        { value: 'TRON', label: 'TRON (شبکه اختصاصی ترون)' }
-      ],
-      'TON': [
-        { value: 'TON', label: 'TON (شبکه اختصاصی تن)' }
-      ]
-    };
-
-    const updateNetworkOptions = ()=>{
-      const asset = (assetSelect?.value || 'USDT').toUpperCase();
-      if(rateInput) rateInput.value = asset;
-      
-      if(netSelect && networkOptions[asset]) {
-        const currentNet = netSelect.value;
-        const opts = networkOptions[asset];
-        netSelect.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
-        const exists = opts.some(o => o.value === currentNet);
-        netSelect.value = exists ? currentNet : opts[0].value;
-      }
-
-      if(rateInfo && cachedCryptoRates && cachedCryptoRates[asset]) {
-        const rData = cachedCryptoRates[asset];
-        const formattedRate = nf(rData.rate);
-        const sourceName = rData.source || 'Live';
-        rateInfo.innerHTML = `📈 <b>نرخ زنده:</b> ۱ ${asset} = ${formattedRate} تومان <small class="muted">(${esc(sourceName)})</small>`;
-      } else if(rateInfo) {
-        rateInfo.textContent = '';
-      }
-
-      updateAddrVal();
-    };
-
-    const updateAddrVal = ()=>{
-      const addr = (addrInput?.value || '').trim();
-      const net = (netSelect?.value || 'TRC20').trim().toUpperCase();
-      const asset = (assetSelect?.value || 'USDT').trim().toUpperCase();
-      const ind = $('bw_address_val');
-      if(!ind) return;
-
-      if(!addr) {
-        ind.className='valid-indicator warn'; ind.textContent='⚠️ آدرس کیف پول را وارد کنید';
-      } else if((net==='TRC20'||net==='TRON'||asset==='TRX') && addr.startsWith('T') && addr.length===34) {
-        ind.className='valid-indicator ok'; ind.textContent='✅ آدرس TRC20 / TRON معتبر است (۳۴ کاراکتر با T)';
-      } else if((net==='TON'||asset==='TON') && (addr.startsWith('EQ')||addr.startsWith('UQ')) && addr.length>=44) {
-        ind.className='valid-indicator ok'; ind.textContent='✅ آدرس شبکه TON معتبر است (EQ/UQ)';
-      } else if((net==='EVM'||net==='BEP20'||net==='ERC20') && addr.startsWith('0x') && addr.length===42) {
-        ind.className='valid-indicator ok'; ind.textContent='✅ آدرس EVM معتبر است (0x + ۴۰ کاراکتر)';
-      } else if(addr.length >= 10) {
-        ind.className='valid-indicator ok'; ind.textContent='✅ آدرس ثبت شد';
-      } else {
-        ind.className='valid-indicator warn'; ind.textContent='⚠️ آدرس کوتاه یا فرمت نامشخص است';
-      }
-    };
-
-    if(assetSelect) { assetSelect.addEventListener('change', updateNetworkOptions); }
-    if(netSelect) { netSelect.addEventListener('change', updateAddrVal); }
-    if(addrInput) { addrInput.addEventListener('input', updateAddrVal); }
-
-    updateNetworkOptions();
-  }, 50);
+    const assetInput=$('bw_asset'), netInput=$('bw_network'), rateInput=$('bw_rate'), addrInput=$('bw_address'), rateInfo=$('bw_rate_info');
+    const host=assetInput?.closest('.presentation-body')||document;
+    if(!cachedCryptoRates){try{const res=await api('get_crypto_rates');if(res?.rates)cachedCryptoRates=res.rates}catch(_){}}
+    const showRate=()=>{const a=(assetInput?.value||'USDT').toUpperCase(), r=cachedCryptoRates?.[a], rate=typeof r==='object'?Number(r.rate||0):Number(r||0);const tr=walletMiniTracking(a,netInput?.value);if(rateInfo)rateInfo.innerHTML=`<span class="tracking-dot ${tr.supported?'ok':'bad'}"></span><b>${tr.supported?'پیگیری خودکار':'بررسی دستی'}</b> · ${esc(tr.provider)}${rate?`<small> · نرخ: ${nf(rate)} تومان</small>`:''}`;if(rateInput)rateInput.value=a};
+    const renderNetworks=(asset,wanted='')=>{const cfg=MINI_CRYPTO_PRESETS[asset]||MINI_CRYPTO_PRESETS.USDT;const chosen=cfg.networks.some(x=>x[0]===wanted)?wanted:cfg.networks[0][0];if(netInput)netInput.value=chosen;const box=$('bw_network_choices');if(box)box.outerHTML=cryptoNetworkPickerHtml(asset,chosen);bindNetwork();showRate();validateAddress()};
+    const bindNetwork=()=>{host.querySelectorAll('[data-bw-network-choice]').forEach(btn=>btn.addEventListener('click',()=>{host.querySelectorAll('[data-bw-network-choice]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(netInput)netInput.value=btn.dataset.bwNetworkChoice;showRate();validateAddress()}))};
+    const validateAddress=()=>{const addr=(addrInput?.value||'').trim(), net=(netInput?.value||'').toUpperCase(), ind=$('bw_address_val');if(!ind)return;if(!addr){ind.className='valid-indicator warn';ind.textContent='⚠ آدرس کیف پول را وارد کنید';return}let ok=addr.length>=10;if(['ERC20','ETHEREUM','BEP20','BSC'].includes(net))ok=/^0x[a-fA-F0-9]{40}$/.test(addr);else if(net==='BITCOIN')ok=/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{20,}$/.test(addr);ind.className='valid-indicator '+(ok?'ok':'warn');ind.textContent=ok?'✓ فرمت آدرس قابل قبول است':'⚠ فرمت آدرس با شبکه انتخاب‌شده هماهنگ نیست'};
+    host.querySelectorAll('[data-bw-asset-choice]').forEach(btn=>btn.addEventListener('click',()=>{host.querySelectorAll('[data-bw-asset-choice]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const a=btn.dataset.bwAssetChoice;if(assetInput)assetInput.value=a;renderNetworks(a,'')}));
+    bindNetwork();addrInput?.addEventListener('input',validateAddress);showRate();validateAddress();
+  },50);
+}
+async function saveMiniCryptoWallet(index,obj){
+  const existing=index===null?null:adminUiWallets[index];
+  const r=await api('admin_crypto_wallet_save',{wallet_id:Number(existing?.id||0),...obj});
+  adminState.settings=adminState.settings||{};adminState.settings.crypto_wallets=r.wallets||[];adminState.settings.crypto_wallets_text=r.crypto_wallets_text||'';parseSettingsBuilders();showStatus('کیف پول ذخیره شد');return r;
 }
 function openWalletBuilder(index=null){
-  const w=index===null?{network:'TRC20',asset:'USDT',rate_symbol:'USDT',is_active:'1',sort_order:'99'}:adminUiWallets[index]||{};
-  const currentAsset = (w.asset || 'USDT').toUpperCase();
+  const w=index===null?{network:'TRC20',asset:'USDT',rate_symbol:'USDT',is_active:'1',sort_order:'99',min_confirmations:'1'}:adminUiWallets[index]||{};
+  const asset=MINI_CRYPTO_PRESETS[(w.asset||'USDT').toUpperCase()]?(w.asset||'USDT').toUpperCase():'USDT';
+  const allowed=MINI_CRYPTO_PRESETS[asset].networks.map(x=>x[0]);const network=allowed.includes((w.network||'').toUpperCase())?(w.network||'').toUpperCase():allowed[0];
   openEdit(index===null?'افزودن کیف پول رمزارز':'ویرایش کیف پول رمزارز',[
-    field('ارز رمزنگاری',`<select id="bw_asset">
-      <option value="USDT" ${currentAsset==='USDT'?'selected':''}>USDT (تتر / دلار)</option>
-      <option value="TRX" ${currentAsset==='TRX'?'selected':''}>TRX (ترون)</option>
-      <option value="TON" ${currentAsset==='TON'?'selected':''}>TON (تن کوین)</option>
-    </select><div id="bw_rate_info" style="margin-top:6px;font-size:13.5px;color:var(--accent)"></div>`),
-    field('عنوان ولت',`<input id="bw_title" value="${esc(w.title||'')}" placeholder="مثلاً ولت اختصاصی تتر">`),
-    field('شبکه کیف پول',`<select id="bw_network">
-      <option value="TRC20">TRC20 (TRON Network)</option>
-      <option value="TON">TON Network</option>
-      <option value="BEP20">BEP20 (BNB Smart Chain)</option>
-      <option value="ERC20">ERC20 (Ethereum)</option>
-    </select>`),
-    field('آدرس ولت',`<textarea id="bw_address" placeholder="آدرس کیف پول">${esc(w.address||'')}</textarea><div id="bw_address_val" class="valid-indicator warn"></div>`),
-    field('نماد نرخ',`<input id="bw_rate" value="${esc((w.rate_symbol||w.asset||'USDT').toUpperCase())}" readonly placeholder="USDT">`),
-    field('ترتیب نمایش',`<input id="bw_sort" value="${esc(w.sort_order||'99')}" inputmode="numeric">`),
-    `<label class="switch-line">فعال باشد؟ <input id="bw_active" type="checkbox" ${String(w.is_active??'1')!=='0'?'checked':''}></label>`
+    `<div class="crypto-wallet-editor"><input type="hidden" id="bw_asset" value="${asset}"><input type="hidden" id="bw_network" value="${network}"><input type="hidden" id="bw_rate" value="${asset}"><section><span class="crypto-editor-label">ارز رمزارزی</span>${cryptoAssetPickerHtml(asset)}<div id="bw_rate_info" class="crypto-tracking-info"></div></section><section><span class="crypto-editor-label">شبکه کیف پول</span>${cryptoNetworkPickerHtml(asset,network)}</section><label class="mini-stack-field"><span>عنوان Wallet</span><input id="bw_title" value="${esc(w.title||'')}" placeholder="مثلاً تتر اصلی"></label><label class="mini-stack-field"><span>آدرس Wallet</span><textarea id="bw_address" dir="ltr" placeholder="آدرس دریافت روی شبکه انتخاب‌شده">${esc(w.address||'')}</textarea><div id="bw_address_val" class="valid-indicator warn"></div></label><div class="crypto-wallet-mini-options"><label><span>تعداد تأیید</span><input id="bw_confirm" type="number" min="1" max="50" value="${esc(w.min_confirmations||1)}"></label><label><span>ترتیب</span><input id="bw_sort" type="number" value="${esc(w.sort_order||99)}"></label></div><label class="switch-line crypto-active-switch"><span>Wallet فعال باشد</span><input id="bw_active" type="checkbox" ${String(w.is_active??'1')!=='0'?'checked':''}></label></div>`
   ],async()=>{
-    const obj={title:val('bw_title'),network:val('bw_network'),asset:val('bw_asset'),address:val('bw_address'),rate_symbol:val('bw_rate'),is_active:val('bw_active')?'1':'0',sort_order:val('bw_sort')};
-    if(!obj.address) throw new Error('آدرس ولت را وارد کن');
-    const duplicate=adminUiWallets.findIndex((x,i)=>i!==index&&String(x.asset||'').toUpperCase()===obj.asset.toUpperCase()&&String(x.network||'').toUpperCase()===obj.network.toUpperCase()&&String(x.address||'').trim()===obj.address.trim());
-    if(duplicate>=0) throw new Error('این Wallet از قبل ثبت شده است؛ مورد موجود را ویرایش کن.');
-    if(index===null)adminUiWallets.push(obj);else adminUiWallets[index]=obj;
-    syncPaymentBuilders(); showStatus('ولت ذخیره شد');
-  });
-  setupWalletValidation();
+    const obj={title:val('bw_title'),network:val('bw_network'),asset:val('bw_asset'),address:val('bw_address'),rate_symbol:val('bw_rate'),is_active:val('bw_active')?1:0,sort_order:Number(val('bw_sort')||99),min_confirmations:Number(val('bw_confirm')||1)};
+    if(!obj.address)throw new Error('آدرس Wallet را وارد کن');const tr=walletMiniTracking(obj.asset,obj.network);if(!tr.supported)throw new Error('این ارز/شبکه قابلیت پیگیری خودکار ندارد.');
+    await saveMiniCryptoWallet(index,obj); renderAdmin();
+  });setupWalletValidation();
 }
 function openRateBuilder(index=null){const r=index===null?{asset:'USDT',rate_toman:'0'}:adminUiRates[index]||{};openEdit(index===null?'افزودن نرخ دستی':'ویرایش نرخ دستی',[field('نماد ارز',`<input id="br_asset" value="${esc((r.asset||'USDT').toUpperCase())}" placeholder="USDT">`),field('قیمت تومان',`<input id="br_rate" value="${esc(r.rate_toman||0)}" inputmode="decimal" placeholder="95000">`)],async()=>{const obj={asset:val('br_asset'),rate_toman:val('br_rate')}; if(!obj.asset) throw new Error('نماد ارز را وارد کن'); if(index===null)adminUiRates.push(obj);else adminUiRates[index]=obj; syncPaymentBuilders(); showStatus('نرخ دستی ذخیره شد')})}
 const adminPaletteColors=['#1d9bf0','#2563eb','#8b5cf6','#22c55e','#14b8a6','#f59e0b','#f97316','#ef4444','#ec4899','#64748b'];
@@ -2273,7 +2195,7 @@ function renderAdminSettings(){
     </div>
 
     <!-- PANE 2: PAYMENTS -->
-    <div class="settings-subtab-pane ${isPay?'':'hidden'}" data-pane="payments">
+    <div class="settings-subtab-pane ${isPay?'':'hidden'}" data-pane="payments"><button class="crypto-wallet-shortcut" data-settings-subtab="crypto"><span>🪙</span><div><b>کیف پول‌های رمزارز</b><small>${nf((s.crypto_wallets||[]).length)} Wallet ثبت‌شده · مدیریت و ویرایش</small></div><i>‹</i></button>
       <article class="settings-card admin-card">
         <div class="admin-card-head"><div class="admin-card-icon"><span>💳</span></div><div><h3>روش‌های فعال پرداخت</h3><p class="muted">روش‌هایی که در مرحله نهایی فاکتور به کاربر پیشنهاد می‌شوند.</p></div></div>
         <div class="settings-toggles">
@@ -2304,7 +2226,7 @@ function renderAdminSettings(){
     <!-- PANE 3: CRYPTO -->
     <div class="settings-subtab-pane ${isCry?'':'hidden'}" data-pane="crypto">
       <article class="settings-card admin-card builder-card">
-        <div class="admin-card-head"><div class="admin-card-icon"><span>🪙</span></div><div><h3>تنظیمات نرخ و کیف‌پول‌های رمزارز</h3><p class="muted">منبع نرخ، درصد احتیاط و آدرس‌های دریافت.</p></div></div>
+        <div class="admin-card-head"><div class="admin-card-icon"><span>🪙</span></div><div><h3>کیف پول‌های رمزارز</h3><p class="muted">${nf((s.crypto_wallets||[]).length)} Wallet ثبت‌شده · همه گزینه‌های قابل افزودن، پیگیری خودکار دارند.</p></div></div>
         <div class="form-grid settings-form compact-form">
           <label><span>منبع نرخ</span><select id="as_crypto_source"><option value="auto">خودکار: Wallex → Ramzinex → Nobitex → دستی/cache</option><option value="wallex">اولویت با Wallex + fallback</option><option value="ramzinex">اولویت با Ramzinex + fallback</option><option value="nobitex">اولویت با Nobitex + fallback</option><option value="manual">فقط نرخ دستی</option></select></label>
           <label><span>درصد احتیاط نرخ</span><input id="as_crypto_markup" value="${esc(s.crypto_rate_markup_percent||1)}" inputmode="decimal" placeholder="مثلاً 1"></label><label><span>رفرش نرخ هر چند ثانیه</span><input id="as_crypto_refresh_interval" value="${esc(s.crypto_rate_refresh_interval_seconds||600)}" inputmode="numeric" placeholder="60"></label>
@@ -2312,7 +2234,7 @@ function renderAdminSettings(){
         </div>
         <input type="hidden" id="as_crypto_wallets">
         <div id="walletBuilderList"></div>
-        <button class="secondary wide" data-builder-add="wallet">➕ افزودن ولت جدید</button>
+        <button class="primary wide crypto-add-wallet-btn" data-builder-add="wallet">＋ افزودن کیف پول رمزارز</button>
       </article>
       <article class="settings-card admin-card builder-card">
         <div class="admin-card-head"><div class="admin-card-icon"><span>📈</span></div><div><h3>نرخ دستی fallback و وضعیت کش</h3><p class="muted">اگر Providerها جواب ندادند یا منبع دستی باشد.</p></div></div>
@@ -2486,7 +2408,7 @@ document.addEventListener('click',async(e)=>{
   if(b.dataset.adminColor){const [id,c]=b.dataset.adminColor.split(':'); if($(id)){$(id).value=c; const t=$(id+'_text'); if(t)t.value=c; showStatus('رنگ انتخاب شد')}}
   if(b.dataset.builderAdd){ if(b.dataset.builderAdd==='card')openCardBuilder(); if(b.dataset.builderAdd==='wallet')openWalletBuilder(); if(b.dataset.builderAdd==='rate')openRateBuilder(); return; }
   if(b.dataset.builderEdit){const [type,idx]=b.dataset.builderEdit.split(':'); const i=Number(idx); if(type==='card')openCardBuilder(i); if(type==='wallet')openWalletBuilder(i); if(type==='rate')openRateBuilder(i); return; }
-  if(b.dataset.builderDel){const [type,idx]=b.dataset.builderDel.split(':'); const i=Number(idx); if(!await BlueGateUI.confirm({title:'حذف مورد',message:'این مورد حذف شود؟',confirmText:'حذف',danger:true}))return; if(type==='card')adminUiCards.splice(i,1); if(type==='wallet')adminUiWallets.splice(i,1); if(type==='rate')adminUiRates.splice(i,1); syncPaymentBuilders(); showStatus('حذف شد'); return; }
+  if(b.dataset.builderDel){const [type,idx]=b.dataset.builderDel.split(':');const i=Number(idx);if(!await BlueGateUI.confirm({title:'حذف مورد',message:'این مورد حذف شود؟',confirmText:'حذف',danger:true}))return;if(type==='wallet'){const w=adminUiWallets[i];if(w?.id){try{const r=await api('admin_crypto_wallet_delete',{wallet_id:Number(w.id)});adminState.settings=adminState.settings||{};adminState.settings.crypto_wallets=r.wallets||[];adminState.settings.crypto_wallets_text=r.crypto_wallets_text||'';parseSettingsBuilders();renderAdmin();showStatus('Wallet حذف شد')}catch(err){showStatus(err.message||'حذف Wallet انجام نشد','error')}return}adminUiWallets.splice(i,1)}if(type==='card')adminUiCards.splice(i,1);if(type==='rate')adminUiRates.splice(i,1);syncPaymentBuilders();showStatus('حذف شد');return;}
 },true);
 // Removed capture-phase palette persistence to server — palette is local-only now.
 

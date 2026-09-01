@@ -4,7 +4,7 @@
  * Engine: manual wallets + TXID verification + multi-provider cached rates
  *
  * This file intentionally does NOT run migrations.
- * It is the only place that contacts Wallex/Ramzinex/Nobitex / TronScan / Toncenter so the
+ * It is the only place that contacts Wallex/Ramzinex/Nobitex / TronScan / TON Center / Ethereum RPC / BSC RPC / Blockstream so the
  * Mini App and bot webhook stay fast.
  *
  * Modes:
