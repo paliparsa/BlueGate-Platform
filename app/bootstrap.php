@@ -3123,27 +3123,23 @@ function refresh_crypto_order_amount_if_open(int $orderId): ?array {
 
 
 function validate_service_delivery_url(string $url): string {
-    // Subscription URLs frequently use non-standard HTTPS ports (for example :2096).
-    // Normalize harmless pasted whitespace first, then validate scheme/host/port explicitly.
-    $url = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', trim($url));
+    // Subscription links may use any valid HTTPS port, including :2096.
+    // Validation is syntactic/security-only; the destination is not probed.
+    $url = trim($url);
+    $url = preg_replace('/[\x{200B}-\x{200D}\x{2060}\x{FEFF}]/u', '', $url) ?? $url;
+    $url = trim($url, " \t\n\r\0\x0B\\\"'“”‘’<>«»");
     if ($url === '' || strlen($url) > 4096 || preg_match('/[\r\n\x00]/', $url)) throw new RuntimeException('SERVICE_URL_INVALID');
     $parts = @parse_url($url);
-    if (!is_array($parts) || strtolower((string)($parts['scheme'] ?? '')) !== 'https' || empty($parts['host'])) {
-        throw new RuntimeException('SERVICE_URL_HTTPS_REQUIRED');
-    }
+    if (!is_array($parts)) throw new RuntimeException('SERVICE_URL_INVALID');
+    $scheme = strtolower((string)($parts['scheme'] ?? ''));
+    if ($scheme !== 'https') throw new RuntimeException('SERVICE_URL_HTTPS_REQUIRED');
+    if (empty($parts['host'])) throw new RuntimeException('SERVICE_URL_HOST_INVALID');
     if (!empty($parts['user']) || !empty($parts['pass'])) throw new RuntimeException('SERVICE_URL_USERINFO_BLOCKED');
-    if (isset($parts['port'])) {
-        $port=(int)$parts['port'];
-        if($port < 1 || $port > 65535) throw new RuntimeException('SERVICE_URL_INVALID_PORT');
-    }
+    if (isset($parts['port'])) { $port=(int)$parts['port']; if($port<1||$port>65535) throw new RuntimeException('SERVICE_URL_INVALID_PORT'); }
     $host = strtolower(rtrim((string)$parts['host'], '.'));
-    if ($host === 'localhost' || str_ends_with($host, '.local') || str_ends_with($host, '.internal')) {
-        throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
-    }
+    if ($host === 'localhost' || str_ends_with($host, '.local') || str_ends_with($host, '.internal')) throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
     if (filter_var($host, FILTER_VALIDATE_IP)) {
-        if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-            throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
-        }
+        if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
     } elseif (!preg_match('/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i', $host)) {
         throw new RuntimeException('SERVICE_URL_HOST_INVALID');
     }

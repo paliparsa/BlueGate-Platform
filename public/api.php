@@ -1066,13 +1066,26 @@ if ($action === 'admin_order_status') { require_admin($user); $oid=(int)($input[
 if ($action === 'admin_deliver_order') { require_admin($user); $oid=(int)($input['order_id']??0); $delivery=trim((string)($input['delivery']??'')); if($delivery==='') api_out(['ok'=>false,'message'=>'متن تحویل خالی است.'],400); $order=deliver_order($oid,$delivery); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); send_msg($order['telegram_id'], "📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h($order['product_name'])."</b>\n\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>", main_menu_keyboard(is_full_admin($order['telegram_id']))); api_out(admin_payload()); }
 if ($action === 'admin_set_service_delivery') {
     require_admin($user);
-    $oid=(int)($input['order_id']??0); $url=trim((string)($input['delivery_url']??''));
+    $oid=(int)($input['order_id']??0); $rawUrl=(string)($input['delivery_url']??'');
     $title=trim((string)($input['delivery_title']??'مدیریت سرویس')); $note=trim((string)($input['delivery_note']??''));
-    if($oid<=0 || $url==='') api_out(['ok'=>false,'message'=>'شماره سفارش و لینک HTTPS سرویس الزامی است.'],400);
+    if($oid<=0 || trim($rawUrl)==='') api_out(['ok'=>false,'message'=>'شماره سفارش و لینک HTTPS سرویس الزامی است.'],400);
+    try { $url=validate_service_delivery_url($rawUrl); }
+    catch(Throwable $e){
+        $code=api_exception_code($e,'SERVICE_URL_INVALID');
+        $msg=str_contains($code,'HTTPS')?'لینک سرویس باید با https:// شروع شود.'
+            :(str_contains($code,'HOST_BLOCKED')?'آدرس‌های localhost، شبکه خصوصی یا رزروشده برای تحویل سرویس مجاز نیستند.'
+            :(str_contains($code,'PORT')?'پورت لینک سرویس معتبر نیست.'
+            :'لینک سرویس معتبر نیست. آدرس HTTPS دامنه عمومی، شامل پورت‌هایی مثل :2096، مجاز است.'));
+        api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400);
+    }
     try { $order=set_order_service_delivery($oid,$url,$title,$note,true); }
-    catch(Throwable $e){ $code=api_exception_code($e,'SERVICE_URL_INVALID'); $msg=str_contains($code,'HTTPS')?'لینک سرویس باید با https:// شروع شود.':(str_contains($code,'HOST_BLOCKED')?'آدرس‌های localhost، شبکه خصوصی یا رزروشده برای تحویل سرویس مجاز نیستند.':(str_contains($code,'PORT')?'پورت لینک سرویس معتبر نیست.':'لینک سرویس معتبر نیست؛ لینک‌های HTTPS با پورت سفارشی مثل :2096 نیز پشتیبانی می‌شوند.')); api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400); }
+    catch(Throwable $e){
+        error_log('[BlueGate service delivery #'.$oid.'] '.$e->getMessage());
+        api_out(['ok'=>false,'error'=>api_exception_code($e,'SERVICE_DELIVERY_FAILED'),'message'=>'لینک معتبر است، اما ثبت/تحویل سفارش کامل نشد. دوباره تلاش کن یا وضعیت سفارش را بررسی کن.'],500);
+    }
     if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404);
-    if(!empty($order['telegram_id'])) send_msg((int)$order['telegram_id'], "✅ سرویس سفارش <code>#{$oid}</code> آماده شد.\nبرای مشاهده یا کپی لینک، وارد «سفارش‌های من» شوید.", main_menu_keyboard(is_full_admin((int)$order['telegram_id'])));
+    if(!empty($order['telegram_id'])) send_msg((int)$order['telegram_id'], "✅ سرویس سفارش <code>#{$oid}</code> آماده شد.
+برای مشاهده یا کپی لینک، وارد «سفارش‌های من» شوید.", main_menu_keyboard(is_full_admin((int)$order['telegram_id'])));
     api_out(admin_payload());
 }
 if ($action === 'admin_order_note') { require_admin($user); $oid=(int)($input['order_id']??0); $note=trim((string)($input['note']??'')); $order=order_by_id($oid); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); db()->prepare('UPDATE orders SET admin_note=? WHERE id=?')->execute([$note, $oid]); add_order_event($oid, 'note', 'یادداشت داخلی ثبت/ویرایش شد', $note, false); api_out(admin_payload()); }
