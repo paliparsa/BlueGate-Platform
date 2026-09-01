@@ -561,6 +561,22 @@ if ($action === 'get_receipt_url') {
     }
     api_out(['ok'=>false,'error'=>'RECEIPT_REMOTE_UNAVAILABLE','message'=>'این رسید از طریق بات ثبت شده و پیش‌نمایش وب آن در دسترس نیست.'],409);
 }
+
+if ($action === 'get_credit_topup_receipt_url') {
+    $tid=(int)($input['topup_id']??0);$topup=credit_topup_by_id($tid);
+    if(!$topup)api_out(['ok'=>false,'error'=>'TOPUP_NOT_FOUND','message'=>'درخواست شارژ پیدا نشد.'],404);
+    $owner=(int)$topup['user_id']===(int)$user['id'];$admin=is_admin($user);
+    if(!$owner&&!$admin)api_out(['ok'=>false,'error'=>'FORBIDDEN','message'=>'دسترسی به این رسید مجاز نیست.'],403);
+    $fid=trim((string)($topup['receipt_file_id']??''));
+    if($fid==='')api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'برای این درخواست شارژ رسید تصویری ثبت نشده است.'],404);
+    if(str_starts_with($fid,'uploads/')){
+        $rel=ltrim($fid,'/');$full=__DIR__.'/'.$rel;$base=realpath(__DIR__.'/uploads/receipts');$real=is_file($full)?realpath($full):false;
+        if(!$base||!$real||!str_starts_with($real,$base.DIRECTORY_SEPARATOR))api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'فایل رسید روی سرور پیدا نشد یا مسیر آن معتبر نیست.'],404);
+        api_out(['ok'=>true,'url'=>'/'.$rel,'topup_id'=>$tid]);
+    }
+    api_out(['ok'=>false,'error'=>'RECEIPT_REMOTE_UNAVAILABLE','message'=>'این رسید به‌صورت فایل محلی قابل پیش‌نمایش نیست.'],409);
+}
+
 if ($action === 'service_link' || $action === 'service_viewer_ticket') {
     // v1.5: return the direct admin-provided URL only to the authenticated owner.
     // service_viewer_ticket is kept as a compatibility alias for stale v1.4 clients.

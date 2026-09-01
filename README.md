@@ -1,6 +1,6 @@
 # پلتفرم BlueGate
 
-**نسخه فعلی: v3.0.7.2 — Welcome, Notifications & Account Security**
+**نسخه فعلی: v3.0.7.3 — Credit Top-up Receipt Review**
 
 BlueGate Platform هسته اصلی فروش و مدیریت سرویس‌های BlueGate است. این پروژه شامل وب‌سایت فروشگاهی، حساب کاربری، پنل مدیریت، Telegram Mini App و ربات تلگرام است و همه این بخش‌ها از یک Backend، دیتابیس، کاتالوگ و سیستم سفارش مشترک استفاده می‌کنند.
 
@@ -23,6 +23,7 @@ BlueGate Platform هسته اصلی فروش و مدیریت سرویس‌های
 - Telegram Bot و Webhook
 - Catalog Studio
 - مدیریت پرداخت‌ها
+- پیش‌نمایش امن رسیدهای افزایش اعتبار برای ادمین وب و Mini App
 - کوپن و تخفیف
 - مدیریت موجودی و Inventory
 - اعلان‌های کاربری
