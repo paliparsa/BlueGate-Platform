@@ -51,8 +51,7 @@ const adminFlag = getUrlFlag('admin') || getUrlFlag('mode') || getUrlFlag('start
 const isAdminMode = adminFlag === '1' || String(adminFlag).toLowerCase() === 'admin';
 let state = null, adminState = null, currentTab = 'shop', currentAdminTab = 'dashboard', settingsSubTab = 'general', searchTerm = '', activeCategory = 'all', pendingEdit = null, currentOrderId = null, orderFilter = 'all', adminOrderViewMode = 'board', adminOrdersLimit = 25, lastSpinPrize = null, searchTimeout = null, shopSort = 'newest', shopFilterInStock = false, shopFilterFeatured = false, shopFilterWishlist = false, _shareUrl = '';
 // Product card display mode: 'compact' (grid) or 'detailed' (list)
-let productCardMode = 'compact';
-try { productCardMode = localStorage.getItem('blue_ref_card_mode') || 'compact'; } catch(_) {}
+let productCardMode = localStorage.getItem('blue_ref_card_mode') || 'compact';
 
 function saveAppLastState(){
   try {
@@ -253,33 +252,25 @@ function showStatus(text,type='success'){
   clearTimeout(_statusTimer);
   _statusTimer=setTimeout(()=>el.classList.add('hidden'),3500);
 }
-async function apiRequest(action,payload={},opts={}){
+async function api(action,payload={}){
   refreshTelegramContext();
-  const includeInitData = opts.includeInitData !== false;
-  const timeoutMs = Math.max(2500, Number(opts.timeoutMs || 12000));
-  const body = JSON.stringify({action,initData:includeInitData?initData:'',...payload});
+  const body = JSON.stringify({action,initData,...payload});
   const headers = {'Content-Type':'application/json'};
   const candidateEndpoints = ['../api.php', 'api.php', '/api.php'];
   let res = null, data = null, fetchErr = null;
   for (const ep of candidateEndpoints) {
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer = controller ? setTimeout(()=>controller.abort(), timeoutMs) : null;
     try {
-      const r = await fetch(ep, {method:'POST', headers, body, credentials:'include', ...(controller?{signal:controller.signal}:{})});
-      if (timer) clearTimeout(timer);
+      const r = await fetch(ep, {method:'POST', headers, body, credentials:'include'});
       if (r.status !== 404) {
         res = r;
         data = await r.json().catch(()=>({}));
         break;
       }
-    } catch(e) {
-      if (timer) clearTimeout(timer);
-      fetchErr = e?.name === 'AbortError' ? new Error('پاسخ سرور بیش از حد طول کشید.') : e;
-    }
+    } catch(e) { fetchErr = e; }
   }
   if(!res || !res.ok || data?.ok===false){
-    if(data?.error === 'AUTH_REQUIRED' && !initData && opts.openAuth !== false){
-      try{openAuthModal()}catch(_){}
+    if(data?.error === 'AUTH_REQUIRED' && !initData){
+      openAuthModal();
     }
     const err = new Error(data?.message || data?.error || fetchErr?.message || 'خطا در ارتباط با سرور');
     if (data) Object.assign(err, data);
@@ -287,9 +278,6 @@ async function apiRequest(action,payload={},opts={}){
   }
   return data;
 }
-async function api(action,payload={}){ return apiRequest(action,payload,{includeInitData:true,timeoutMs:12000}); }
-async function publicApi(action,payload={}){ return apiRequest(action,payload,{includeInitData:false,timeoutMs:8000,openAuth:false}); }
-
 /* ===== Batch 1 utilities: haptic, chime, confetti, pull-to-refresh, charts, lightbox, stepper ===== */
 function haptic(t='light'){try{tg?.HapticFeedback?.impactOccurred?.(t)}catch(e){}}
 function hapticNotify(t='success'){try{tg?.HapticFeedback?.notificationOccurred?.(t)}catch(e){}}
@@ -312,7 +300,7 @@ function miniBootContext(){
     mode:isAdminMode?'admin':'user',
     telegram:Boolean(initData),
     platform:String(tg?.platform||'unknown'),
-    version:'3.0.5.4'
+    version:'2.9.2'
   };
 }
 function setMiniBootState(kind, message=''){
@@ -321,7 +309,6 @@ function setMiniBootState(kind, message=''){
   if(!app)return;
   let box=$('miniBootState');
   if(kind==='ready'){
-    try{if(window.__bluegateMiniBootWatch){clearTimeout(window.__bluegateMiniBootWatch);window.__bluegateMiniBootWatch=null}}catch(_){}
     box?.remove();
     app.classList.remove('boot-pending','boot-failed');
     return;
@@ -348,23 +335,6 @@ function syncMiniAuthChrome(){
   const loggedIn=Boolean(state?.user&&!state?.is_guest&&!state?.user?.is_guest);
   if(authBtn) authBtn.classList.toggle('hidden', loggedIn);
 }
-let _miniEnhancementsPromise=null;
-function hydrateMiniEnhancements(){
-  if(isAdminMode || state?.is_guest || !state?.user) return Promise.resolve(null);
-  if(_miniEnhancementsPromise) return _miniEnhancementsPromise;
-  _miniEnhancementsPromise=api('mini_enhancements').then(r=>{
-    if(Array.isArray(r.services)) state.services=r.services;
-    if(Array.isArray(r.wishlist_product_ids)){state.wishlist_product_ids=r.wishlist_product_ids;try{localStorage.setItem('blue_ref_wishlist',JSON.stringify(r.wishlist_product_ids))}catch(_){}}
-    if(Array.isArray(r.notifications)) state.notifications=r.notifications;
-    if(r.notification_unread!==undefined) state.notification_unread=Number(r.notification_unread||0);
-    updateNotificationBadge();
-    if(currentTab==='home') renderHome();
-    else if(currentTab==='shop' && shopFilterWishlist) renderShopSections();
-    return r;
-  }).catch(e=>{console.warn('[BlueGate MiniApp enhancements skipped]',e?.message||e);return null}).finally(()=>{_miniEnhancementsPromise=null});
-  return _miniEnhancementsPromise;
-}
-
 async function load({force=false}={}){
   if(_bootPromise&&!force)return _bootPromise;
   _bootPromise=(async()=>{
@@ -372,82 +342,56 @@ async function load({force=false}={}){
     console.info('[BlueGate MiniApp boot]',ctx);
     setMiniBootState('loading');
     try{showSkeleton();}catch(_){}
-
-    // Admin keeps the authenticated path; user storefront must never wait for Telegram auth.
-    if(isAdminMode){
-      try{
-        try{tg?.ready?.();tg?.expand?.();}catch(_){}
-        if(isTelegramMiniAppContext()){
-          const readyInitData=await waitForTelegramInitData(2500);
-          if(!readyInitData) throw new Error('اطلاعات ورود تلگرام دریافت نشد. Mini App را دوباره از داخل ربات باز کن.');
-          await apiRequest('telegram_boot',{}, {includeInitData:true,timeoutMs:8000});
-        }
-        adminState=await apiRequest('admin_summary',{}, {includeInitData:true,timeoutMs:10000});
-        applyTheme(adminState.settings||{});
-        $('userApp')?.classList.add('hidden');$('adminApp')?.classList.remove('hidden');
-        renderAdmin();try{startAdminLivePolling()}catch(_){}
-        try{hideSkeleton()}catch(_){};setMiniBootState('ready');return adminState;
-      }catch(e){
-        console.error('[BlueGate MiniApp admin boot failed]',e);
-        try{hideSkeleton()}catch(_){};setMiniBootState('error',e?.message||'پنل ادمین بارگذاری نشد.');throw e;
-      }
-    }
-
-    // 1) Guaranteed first paint: load the public storefront without initData/auth.
     try{
-      const store=await publicApi('storefront');
-      state={
-        ok:true,is_guest:true,user:{is_guest:true,balance:0,referrals_count:0,total_earned:0},orders:[],services:[],
-        wishlist_product_ids:[],notifications:[],notification_unread:0,
-        ...store
-      };
-      applyTheme(state||{});
-      $('adminApp')?.classList.add('hidden');$('userApp')?.classList.remove('hidden');
-      currentTab='shop';hidePages();$('shopPage')?.classList.remove('hidden');renderShop();updateMiniHeader();
-      try{hideSkeleton()}catch(_){};setMiniBootState('ready');
-    }catch(storeErr){
-      console.error('[BlueGate MiniApp storefront first paint failed]',storeErr);
-      try{hideSkeleton()}catch(_){};
-      setMiniBootState('error',storeErr?.message||'فروشگاه از سرور دریافت نشد.');
-      throw storeErr;
-    }
-
-    // 2) Authenticate/hydrate after first paint. Failure here must NOT blank the shop.
-    (async()=>{
-      try{
-        try{tg?.ready?.();tg?.expand?.();}catch(_){}
-        const telegramContext=isTelegramMiniAppContext();
-        let full=null;
-        if(telegramContext){
-          const readyInitData=await waitForTelegramInitData(2500);
-          if(!readyInitData) throw new Error('اطلاعات ورود تلگرام دریافت نشد.');
-          full=await apiRequest('telegram_boot',{}, {includeInitData:true,timeoutMs:8000,openAuth:false});
-        }else{
-          full=await apiRequest('me',{}, {includeInitData:false,timeoutMs:8000,openAuth:false});
+      try{tg?.ready?.();tg?.expand?.();}catch(e){console.warn('[BlueGate MiniApp] Telegram ready/expand failed',e?.message||e)}
+      applyDeviceLayout();
+      const telegramContext=isTelegramMiniAppContext();
+      if(telegramContext){
+        const readyInitData=await waitForTelegramInitData();
+        if(!readyInitData){
+          const err=new Error('اطلاعات ورود تلگرام دریافت نشد. Mini App را کامل ببند و دوباره از داخل ربات باز کن.');
+          err.error='TELEGRAM_INIT_DATA_MISSING';
+          throw err;
         }
-        if(full&&full.ok){
-          state=full;
-          applyTheme(state||{});
-          initAuthHandlers();updateAuthUI(state);syncMiniAuthChrome();
-          // Preserve shop first paint. Only restore a non-shop tab after account data exists.
-          const saved=currentTab;
-          if(saved!=='shop') renderUser(); else {renderShop();updateMiniHeader();}
-          try{checkAndCelebrate()}catch(_){}
-          try{handleDeepLink()}catch(e){console.warn('[BlueGate MiniApp] deep link failed',e?.message||e)}
-          try{showOnboarding()}catch(_){}
-          setTimeout(()=>hydrateMiniEnhancements(),150);
-        }
-      }catch(authErr){
-        console.warn('[BlueGate MiniApp auth hydration skipped]',authErr?.message||authErr);
-        // Shop is already usable. Expose login instead of replacing content with a fatal screen.
-        try{initAuthHandlers();updateAuthUI(state);syncMiniAuthChrome()}catch(_){}
       }
-    })();
-    return state;
+      if(isAdminMode){
+        if(telegramContext) await api('telegram_boot');
+        adminState=await api('admin_summary');
+        applyTheme(adminState.settings||{});
+        $('userApp')?.classList.add('hidden');
+        $('adminApp')?.classList.remove('hidden');
+        renderAdmin();
+        try{startAdminLivePolling();}catch(_){}
+      }else{
+        state=telegramContext ? await api('telegram_boot') : await api('me');
+        if(telegramContext && (state?.is_guest || state?.user?.is_guest || !state?.user)){
+          const err=new Error('تلگرام هویت کاربر را تأیید نکرد. Mini App را دوباره از داخل ربات باز کن.');
+          err.error='TELEGRAM_SESSION_NOT_RESOLVED';
+          throw err;
+        }
+        applyTheme(state||{});
+        $('adminApp')?.classList.add('hidden');
+        $('userApp')?.classList.remove('hidden');
+        renderUser();
+        initAuthHandlers();
+        updateAuthUI(state);
+        syncMiniAuthChrome();
+        try{checkAndCelebrate();}catch(_){}
+        try{handleDeepLink();}catch(e){console.warn('[BlueGate MiniApp] deep link failed',e?.message||e)}
+        try{showOnboarding();}catch(_){}
+      }
+      try{hideSkeleton();}catch(_){}
+      setMiniBootState('ready');
+      return isAdminMode?adminState:state;
+    }catch(e){
+      console.error('[BlueGate MiniApp boot failed]',{...ctx,code:e?.error||'',message:e?.message||String(e)});
+      try{hideSkeleton();}catch(_){}
+      setMiniBootState('error',e?.message||'اتصال به BlueGate برقرار نشد.');
+      throw e;
+    }
   })();
-  try{return await _bootPromise}finally{_bootPromise=null}
+  try{return await _bootPromise}finally{if(document.documentElement.dataset.bootState==='error')_bootPromise=null}
 }
-
 /* Charts (SVG / CSS, no external lib) */
 function last7DaysRevenue(orders){const days=[];const now=new Date();for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);const rev=orders.filter(o=>{const od=String(o.created_at||'').slice(0,10);return ds===od&&['payment_confirmed','preparing','delivered'].includes(o.status)}).reduce((s,o)=>s+Number(o.final_amount||0),0);days.push({date:ds,label:['ی','د','س','چ','پ','ج','ش'][d.getDay()],rev})}return days}
 function sparklineHtml(data){if(!data||!data.length)return '';const max=Math.max(...data.map(d=>d.rev),1);const w=280,h=56,pad=4;const pts=data.map((d,i)=>{const x=pad+(i*(w-2*pad))/(data.length-1);const y=h-pad-(d.rev/max)*(h-2*pad);return [x,y]});const poly=pts.map(p=>p.join(',')).join(' ');const area=`${pad},${h-pad} ${poly} ${w-pad},${h-pad}`;const labels=data.map((d,i)=>`<text x="${pad+(i*(w-2*pad))/(data.length-1)}" y="${h-1}" text-anchor="middle" font-size="9" fill="#9fb0c8">${d.label}</text>`).join('');const dots=pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--accent)"/>`).join('');return `<svg class="sparkline" viewBox="0 0 ${w} ${h+12}" width="100%" height="68"><polygon points="${area}" fill="color-mix(in srgb,var(--accent) 18%,transparent)" stroke="none"/><polyline points="${poly}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg>`}
@@ -461,8 +405,7 @@ async function loadReceiptImage(orderId){try{haptic('light');showStatus('در ح
 let _adminLastTodayCount=-1;
 function startAdminLivePolling(){if(!isAdminMode||currentAdminTab!=='dashboard')return;setTimeout(async()=>{if(!isAdminMode||currentAdminTab!=='dashboard')return;try{const snap=await api('admin_summary');const c=Number(snap.report?.today?.c||0);if(_adminLastTodayCount>=0&&c>_adminLastTodayCount){hapticNotify('success');playChime();const el=document.querySelector('.admin-stat-card:first-child');if(el){el.classList.add('pulse-alert');setTimeout(()=>el.classList.remove('pulse-alert'),2000)}showStatus(`🛎 سفارش جدید! (${nf(c-_adminLastTodayCount)} عدد)`)}_adminLastTodayCount=c;adminState=snap;renderAdmin()}catch(e){}finally{if(isAdminMode&&currentAdminTab==='dashboard')startAdminLivePolling()}},30000)}
 /* ===== Batch 2 utilities: cart, referral tree, customer 360, CSV export ===== */
-let _cart=[];
-try { const raw=localStorage.getItem('blue_ref_cart'); const parsed=raw?JSON.parse(raw):[]; _cart=Array.isArray(parsed)?parsed:[]; } catch(_) { _cart=[]; try{localStorage.removeItem('blue_ref_cart')}catch(__){} }
+let _cart=JSON.parse(localStorage.getItem('blue_ref_cart')||'[]');
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',updateCartFab);}else{setTimeout(updateCartFab,0);}
 setTimeout(updateCartFab,300);
 setTimeout(updateCartFab,1000);
@@ -473,7 +416,41 @@ function cartAdd(pid,vid=0){const p=(state.shop_products||[]).find(x=>Number(x.i
 function cartRemove(idx){_cart.splice(idx,1);saveCart();renderCartSheet()}
 function cartQty(idx,delta){const it=_cart[idx];if(!it)return;it.qty=Math.max(1,Number(it.qty)+delta);saveCart();renderCartSheet()}
 function cartClear(){_cart=[];saveCart();renderCartSheet()}
-async function cartCheckout(){if(!_cart.length)return;if(!await BlueGateUI.confirm({title:'ثبت سبد خرید',message:`${nf(cartCount())} سفارش در یک مرحله ثبت شود؟`,confirmText:'ثبت سبد'}))return;const btn=$('cartCheckoutBtn');if(btn){btn.disabled=true;btn.textContent='در حال ثبت…'}try{const items=_cart.map(it=>({product_id:Number(it.pid),variant_id:Number(it.vid)||null,qty:Math.max(1,Number(it.qty||1))}));const r=await api('create_cart_orders',{items});state=r;_cart=[];saveCart();closeCartSheet();applyTheme(state);currentTab='orders';currentOrderId=Number(r.created_order_ids?.[0]||state.orders?.[0]?.id||0)||null;renderUser();showStatus(`✅ ${nf(r.created_order_ids?.length||0)} سفارش با موفقیت ثبت شد`,'success')}catch(e){showStatus(e.message||'ثبت سبد انجام نشد؛ هیچ سفارشی ساخته نشد.','error');if(btn){btn.disabled=false;btn.textContent=`⚡ ثبت ${nf(cartCount())} سفارش`}}}
+async function cartCheckout(){if(!_cart.length)return;if(!await BlueGateUI.confirm({title:'ثبت سبد خرید',message:`${nf(cartCount())} سفارش ساخته شود؟`,confirmText:'ثبت سفارش‌ها'}))return;const btn=$('cartCheckoutBtn');if(btn)btn.disabled=true;let ok=0,fail=0;const remaining=[];for(const item of _cart){let failedQty=0;const qty=Math.max(1,Number(item.qty||1));for(let i=0;i<qty;i++){try{await api('create_order',{product_id:item.pid,variant_id:item.vid||null,use_wallet:0});ok++}catch(e){fail++;failedQty++}}if(failedQty>0)remaining.push({...item,qty:failedQty})}_cart=remaining;saveCart();if(!_cart.length)closeCartSheet();if(btn)btn.disabled=false;showStatus(`${ok?'✅':'⚠️'} ${nf(ok)} سفارش ساخته شد${fail?` · ${nf(fail)} ناموفق و در سبد باقی ماند`:''}`);state=await api('me');applyTheme(state);if(ok>0){currentTab='orders';renderUser()}else{renderCartSheet&&renderCartSheet()}}
+function updateCartFab(){const fab=$('cartFab');if(!fab)return;const c=cartCount();fab.classList.toggle('hidden',c===0||isAdminMode);if(c>0&&!isAdminMode){fab.style.display='flex';}else{fab.style.display='none';}const badge=fab.querySelector('.cart-fab-badge');if(badge)badge.textContent=nf(c)}
+function openCartSheet(){const s=$('cartSheet');if(!s)return;s.innerHTML=cartSheetHtml();s.classList.add('open');s.style.display='flex';haptic('light');bindCartEvents(s)}
+function closeCartSheet(){const s=$('cartSheet');if(s){s.classList.remove('open');setTimeout(()=>{if(!s.classList.contains('open'))s.style.display='none';},300)}}
+function bindCartEvents(s){if(!s)return;s.querySelector('#cartCloseBtn')?.addEventListener('click',closeCartSheet);s.querySelector('.cart-sheet-handle')?.addEventListener('click',closeCartSheet);s.querySelector('#cartClearBtn')?.addEventListener('click',()=>{cartClear();openCartSheet()});s.querySelector('#cartCheckoutBtn')?.addEventListener('click',cartCheckout);s.querySelectorAll('[data-cart-inc]').forEach(btn=>{btn.addEventListener('click',e=>{const idx=Number(e.currentTarget.dataset.cartInc);cartQty(idx,1);openCartSheet()})});s.querySelectorAll('[data-cart-dec]').forEach(btn=>{btn.addEventListener('click',e=>{const idx=Number(e.currentTarget.dataset.cartDec);cartQty(idx,-1);openCartSheet()})});s.querySelectorAll('[data-cart-del]').forEach(btn=>{btn.addEventListener('click',e=>{const idx=Number(e.currentTarget.dataset.cartDel);cartRemove(idx);openCartSheet()})});s.addEventListener('click',e=>{if(e.target===s)closeCartSheet()})}
+function cartSheetHtml(){if(!_cart.length)return `<div class="cart-sheet-inner"><div class="cart-sheet-handle"></div><div class="cart-sheet-head"><h3>🛒 سبد خرید</h3><button class="ghost" id="cartCloseBtn">✕</button></div><p class="muted empty-state" style="padding:40px 20px;text-align:center;">سبد خرید شما خالی است. از فروشگاه محصول اضافه کنید.</p></div>`;return `<div class="cart-sheet-inner"><div class="cart-sheet-handle"></div><div class="cart-sheet-head"><h3>🛒 سبد خرید (${nf(cartCount())})</h3><button class="ghost" id="cartCloseBtn">✕</button></div><div class="cart-items">${_cart.map((it,i)=>`<div class="cart-item"><div class="cart-item-thumb">${it.img?`<img src="${esc(it.img)}" alt="">`:'<span>🛍</span>'}</div><div class="cart-item-info"><b>${esc(it.name)}</b><span class="muted" style="font-size:14px;color:var(--muted);">${fmt(it.price)} × ${nf(it.qty)}</span></div><div class="cart-item-qty"><button class="ghost" data-cart-dec="${i}">−</button><span>${nf(it.qty)}</span><button class="ghost" data-cart-inc="${i}">+</button></div><button class="ghost cart-item-del" data-cart-del="${i}">🗑</button></div>`).join('')}</div><div class="cart-sheet-foot"><div class="cart-total"><span>مجموع کل</span><b style="color:var(--cyan);font-size:17px;font-weight:900;">${fmt(cartTotal())}</b></div><div class="cart-actions"><button class="secondary" id="cartClearBtn">پاکسازی</button><button class="primary" id="cartCheckoutBtn" style="background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#000;font-weight:900;">⚡ ثبت ${nf(cartCount())} سفارش</button></div></div></div>`}
+function renderCartSheet(){const s=$('cartSheet');if(s&&s.classList.contains('open'))openCartSheet()}
+/* Referral tree */
+async function loadReferralTree(){try{const r=await api('my_referrals');return r.referrals||[]}catch(e){return[]}}
+function referralTreeHtml(refs){
+  if(!refs||!refs.length)return `<article class="wallet-card referral-tree-card referral-tree-v2"><div class="referral-tree-head"><span class="admin-card-icon">👥</span><div><h3>زیرمجموعه‌های من</h3><p class="muted">اولین معرفی که انجام بشه اینجا می‌بینی.</p></div></div><div class="ref-empty-mini"><b>هنوز کسی با لینک شما ثبت‌نام نکرده</b><p class="muted">لینکت رو بفرست و اولین معرفی رو شروع کن.</p><button class="primary" id="shareInviteEmpty">اشتراک لینک دعوت</button></div></article>`;
+  return `<article class="wallet-card referral-tree-card referral-tree-v2"><div class="referral-tree-head"><span class="admin-card-icon">👥</span><div><h3>زیرمجموعه‌های من</h3><p class="muted">${nf(refs.length)} مورد اخیر</p></div></div><div class="referral-tree-list referral-tree-list-v2">${refs.slice(0,8).map(r=>`<div class="referral-node"><div class="referral-node-avatar">${esc(String(r.first_name||r.username||'?').slice(0,1).toUpperCase())}</div><div class="referral-node-info"><b>${esc(r.first_name||r.username||'کاربر')}</b><span class="muted">${Number(r.orders_count||0)>0?nf(r.orders_count)+' خرید':'بدون خرید'} · ${esc(String(r.joined_at||r.created_at||'').slice(0,10))}</span></div><div class="referral-node-reward">+${fmt(r.reward_amount||0)}</div></div>`).join('')}</div></article>`}
+/* Customer 360 */
+async function openCustomer360(userId){try{haptic('light');const r=await api('admin_customer_view',{user_id:userId});const d=$('custDrawer');if(!d)return;const u=r.user,cs=r.customer_stats||{};const initial=esc(String(u.first_name||u.username||'?').slice(0,1).toUpperCase());d.innerHTML=`<div class="cust-drawer-inner" style="padding-top:0; overflow-x:hidden"><div class="contact-card-header"><div class="contact-card-bg"><div class="contact-card-blur">${initial}</div></div><div class="contact-card-content"><div class="cust-drawer-handle" style="background:rgba(255,255,255,0.4); margin-top:8px"></div><button class="ghost close-contact" id="custCloseBtn">✕</button><div class="contact-avatar-large">${initial}</div><h2>${esc(u.first_name||u.username||'کاربر')}</h2><p class="muted" style="margin-top:2px">ID: <code>${u.telegram_id}</code>${u.username?'<br>@'+esc(u.username):''}</p><div class="contact-actions-row">${u.username?`<div class="contact-action-btn" data-chat-user="${esc(u.username)}"><div class="ca-icon">💬</div><span>پیام</span></div>`:''}<div class="contact-action-btn" data-contact-wallet="${u.telegram_id}"><div class="ca-icon">💳</div><span>موجودی</span></div><div class="contact-action-btn danger" data-contact-ban="${u.telegram_id}"><div class="ca-icon">🚫</div><span>مسدود</span></div></div></div></div><div class="cust-stats-grid" style="margin-top:16px; padding:0 16px"><div class="cust-stat"><b>${fmt(u.balance)}</b><span>موجودی</span></div><div class="cust-stat"><b>${fmt(r.total_spent)}</b><span>کل خرید</span></div><div class="cust-stat"><b>${nf(u.referrals_count)}</b><span>زیرمجموعه</span></div><div class="cust-stat"><b>${esc(cs.tier?.emoji||'🥉')}</b><span>${esc(cs.tier?.fa||'برنز')}</span></div></div><div class="cust-section" style="padding:0 16px"><h4>🧾 سفارش‌ها (${nf(r.orders?.length||0)})</h4><div class="cust-orders">${(r.orders||[]).slice(0,8).map(o=>`<div class="cust-order-row"><div><b>#${nf(o.id)}</b> ${esc(o.display_name)}</div><span class="chip-mini chip-${o.status==='delivered'?'active':o.status==='rejected'?'off':'featured'}">${esc(o.status_fa||o.status)}</span></div>`).join('')||'<p class="muted">سفارشی نیست.</p>'}</div></div><div class="cust-section" style="padding:0 16px 20px 16px"><h4>📊 عضو از ${esc(String(u.created_at||'').slice(0,10))}</h4></div></div>`;d.classList.add('open');d.querySelector('#custCloseBtn')?.addEventListener('click',()=>closeCustomer360());d.querySelector('.cust-drawer-handle')?.addEventListener('click',()=>closeCustomer360())}catch(e){showStatus(e.message||'خطا در دریافت اطلاعات کاربر','error')}}
+function closeCustomer360(){const d=$('custDrawer');if(d)d.classList.remove('open')}
+/* CSV export */
+function exportCsv(filename,rows){const csv=rows.map(r=>r.map(c=>{const s=String(c??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(',')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);haptic('light');showStatus(`📊 ${filename} دانلود شد`)}
+function exportOrdersCsv(){const rows=[['#','کاربر','محصول','مبلغ نهایی','روش پرداخت','وضعیت','تاریخ']];(adminState.orders||[]).forEach(o=>rows.push([o.id,o.telegram_id,o.display_name,o.final_amount,o.payment_method_fa||o.payment_method,o.status_fa||o.status,o.created_at]));exportCsv('orders-'+new Date().toISOString().slice(0,10)+'.csv',rows)}
+function exportProductsCsv(){const rows=[['#','نام','دسته','قیمت','واحد','فعال','ویژه','موجودی']];(adminState.products||[]).forEach(p=>rows.push([p.id,p.name,p.category_title||'',p.price,p.price_currency,p.is_active,p.is_featured,p.inventory_available||0]));exportCsv('products-'+new Date().toISOString().slice(0,10)+'.csv',rows)}
+/* ===== Batch 3 utilities: balance counter, long-press, VIP bar, onboarding, recent, QR, light theme, badges, search, bulk, inline-edit, reorder, command palette, activity log, roles, flash sale, forecast, chat shortcut ===== */
+function animateCount(el,end,duration=900){if(!el)return;const start=0;const t0=performance.now();const tick=now=>{const p=Math.min(1,(now-t0)/duration);const ease=1-Math.pow(1-p,3);el.textContent=nf(Math.round(start+(end-start)*ease));if(p<1)requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+function triggerBalanceAnims(){document.querySelectorAll('[data-count-anim]').forEach(el=>{if(el.dataset.counted)return;el.dataset.counted='1';animateCount(el,Number(el.dataset.countAnim||0))})}
+/* Long-press: products + order rows */
+let _lpTimer=null,_lpTarget=null,_lpAttached=false;
+function _showOrderQuickMenu(orderId){
+  const o=(state?.orders||[]).find(x=>Number(x.id)===Number(orderId));
+  if(!o) return;
+  haptic('medium');
+  const ss=$('shareSheet'); // reuse share-sheet overlay
+  if(!ss) return;
+  _shareUrl=''; // not a share context
+  ss.innerHTML=`<div class="share-sheet-inner"><div class="share-sheet-handle" data-close-share></div><div class="share-sheet-head"><div class="share-product-thumb" style="font-size:26px;display:grid;place-items:center">🧾</div><div class="share-product-info"><h3>سفارش #${nf(o.id)}</h3><p class="muted">${esc(o.display_name)} · ${esc(o.status_fa||o.status)}</p></div><button class="ghost" data-close-share>✕</button></div><div class="share-actions"><button class="share-btn" data-order-quick-copy="${o.id}"><span class="share-btn-icon">📋</span><div><b>کپی شناسه سفارش</b><small>#${nf(o.id)}</small></div></button>${state?.support_username?`<button class="share-btn" data-order-quick-support><span class="share-btn-icon">💬</span><div><b>تماس با پشتیبانی</b><small>@${esc(state.support_username)}</small></div></button>`:''}<button class="share-btn" data-order-open="${o.id}"><span class="share-btn-icon">📄</span><div><b>باز کردن جزئیات</b><small>مشاهده کامل سفارش</small></div></button></div></div>`;
+  ss.classList.add('open');
+  ss.addEventListener('click',ev=>{if(ev.target===ss)closeShareSheet();},{once:true});
+}
 function attachLongPress(){if(_lpAttached)return;_lpAttached=true;
   let _lpOrderTarget=null, _lpOrderTimer=null;
   document.addEventListener('touchstart',e=>{
@@ -1159,7 +1136,7 @@ function orderDetailHtml(o){
     <!-- Sticky Bottom Actions Bar -->
     <div class="actions sticky-actions od-sticky-actions">
       ${(o.has_service_delivery||o.has_service_viewer) ? `<button class="primary btn-v2 mini-service-open-btn" data-service-view="${o.id}" data-service-url="${esc(o.service_url||'')}" data-service-title="${esc(o.service_title||'مدیریت سرویس')}">باز کردن سرویس</button><button class="secondary btn-v2 mini-service-copy-btn" data-service-copy-link="${o.id}" data-service-url="${esc(o.service_url||'')}">کپی لینک</button>` : `<button class="secondary btn-v2" data-customer-note="${o.id}">یادداشت سفارش</button>`}
-      ${String(o.status)==="delivered"?`<button class="secondary btn-v2" data-renew-order="${o.id}">🔄 تمدید</button>`:""}<button class="ghost btn-v2 od-more-btn" data-order-more="${o.id}">••• بیشتر</button>
+      <button class="ghost btn-v2 od-more-btn" data-order-more="${o.id}">••• بیشتر</button>
     </div>
   </section>`
 }
@@ -1188,8 +1165,9 @@ function handleDeepLink(){
   // 1) Telegram startapp param: ?startapp=product_5 or tg.initDataUnsafe.start_param = 'product_5'
   const startParam = tg?.initDataUnsafe?.start_param || getUrlFlag('startapp') || '';
   let pid = null;
-  if(startParam && /^product_(\d+)$/i.test(startParam)){pid=startParam.replace(/^product_/i,'');}
-  if(startParam && /^plan_(\d+)$/i.test(startParam)){const planId=Number(startParam.replace(/^plan_/i,''));for(const s of (state?.catalog?.services||[])){for(const g of (s.groups||[])){const p=(g.plans||[]).find(x=>Number(x.id)===planId);if(p){pid=p.legacy_product_id||s.legacy_product_id;const vp=p.legacy_variant_id||null;if(pid){currentTab='shop';renderUser();showProduct(pid,vp);return}}}}}
+  if(startParam && /^product_(\d+)$/i.test(startParam)){
+    pid = startParam.replace(/^product_/i,'');
+  }
   // 2) Web fallback: ?product=5
   if(!pid){ pid = getUrlFlag('product'); }
   if(pid && Number(pid) > 0){
@@ -1207,34 +1185,27 @@ function updateMiniHeader(){
 function hidePages(){
   ['homePage','shopPage','ordersPage','walletPage'].forEach(id=>$(id)?.classList.add('hidden'));
   document.querySelectorAll('.bottom-nav [data-tab], .topbar-desktop-nav [data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===currentTab));
-  updateMiniHeader();updateNotificationBadge();syncOrderPolling();
+  updateMiniHeader();
 }
-let _orderPollTimer=null,_orderPollBusy=false;
-function updateNotificationBadge(){const btn=$('miniNotificationsBtn'),badge=$('miniNotificationBadge');const n=Number(state?.notification_unread||0);btn?.classList.toggle('hidden',Boolean(state?.is_guest));if(badge){badge.textContent=n>99?'99+':String(n);badge.classList.toggle('hidden',n<=0)}}
-function openNotifications(){const list=state?.notifications||[];BlueGateUI.openSheet({type:'action',eyebrow:'BLUEGATE',title:'اعلان‌ها',body:`<div class="mini-notification-list">${list.length?list.map(n=>`<button class="mini-notification-row ${n.is_read?'':'unread'}" ${n.order_id?`data-notification-order="${n.order_id}"`:''}><span>${n.type==='delivered'?'✅':n.type==='wallet'?'💳':'🔔'}</span><div><b>${esc(n.title)}</b><small>${esc(n.body||'')}</small><em>${esc(String(n.created_at||'').slice(0,16))}</em></div></button>`).join(''):'<div class="u-empty"><div class="u-empty-icon">🔔</div><h3>اعلانی نداری</h3><p>تغییر وضعیت سفارش‌ها و اعتبار اینجا نمایش داده می‌شود.</p></div>'}</div>`,onOpen:(host)=>{host.querySelectorAll('[data-notification-order]').forEach(x=>x.addEventListener('click',()=>{currentTab='orders';currentOrderId=Number(x.dataset.notificationOrder);BlueGateUI.closeSheet();renderUser()}));}});if(Number(state?.notification_unread||0)>0){state.notification_unread=0;(state.notifications||[]).forEach(n=>n.is_read=1);updateNotificationBadge();api('notifications_read').catch(()=>{})}}
-async function refreshOrdersLive(){if(_orderPollBusy||document.hidden||currentTab!=='orders'||state?.is_guest)return;_orderPollBusy=true;try{const r=await api('my_orders');const before=JSON.stringify((state.orders||[]).map(o=>[o.id,o.status,o.updated_at,o.delivery_url]));const after=JSON.stringify((r.orders||[]).map(o=>[o.id,o.status,o.updated_at,o.delivery_url]));state.orders=r.orders||[];if(Array.isArray(r.services))state.services=r.services;if(Array.isArray(r.notifications))state.notifications=r.notifications;if(r.notification_unread!==undefined)state.notification_unread=Number(r.notification_unread||0);updateNotificationBadge();if(before!==after){renderOrders();hapticNotify('success')}}catch(e){}finally{_orderPollBusy=false}}
-function syncOrderPolling(){if(_orderPollTimer){clearInterval(_orderPollTimer);_orderPollTimer=null}if(currentTab==='orders'&&!state?.is_guest){_orderPollTimer=setInterval(refreshOrdersLive,18000);setTimeout(refreshOrdersLive,700)}}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncOrderPolling()});
 function renderUser(){
   saveAppLastState();hidePages();updateCartFab();
-  const showPage=(id)=>{const el=$(id);if(el)el.classList.remove('hidden');return Boolean(el)};
-  if(currentTab==='home'){ if(showPage('homePage')) renderHome(); else currentTab='shop'; }
-  else if(currentTab==='orders'){ if(showPage('ordersPage')) renderOrders(); else currentTab='shop'; }
-  else if(currentTab==='wallet'){ if(showPage('walletPage')) renderWallet(); else currentTab='shop'; }
-  if(currentTab==='shop'){ showPage('shopPage'); renderShop(); }
+  if(currentTab==='home'){ $('homePage').classList.remove('hidden'); renderHome(); }
+  else if(currentTab==='orders'){ $('ordersPage').classList.remove('hidden'); renderOrders(); }
+  else if(currentTab==='wallet'){ $('walletPage').classList.remove('hidden'); renderWallet(); }
+  else { currentTab='shop'; $('shopPage').classList.remove('hidden'); renderShop(); }
   updateMiniHeader();
 }
 function renderHome(){
-  const u=state.user||{};const c=u.customer?.tier||{};const isGuest=state?.is_guest||u?.is_guest;const orders=state.orders||[];const activeOrders=orders.filter(o=>!['delivered','canceled','rejected','refunded'].includes(String(o.status||'')));const activeServices=(state.services||[]);const recent=activeServices.slice(0,3);const tgConnected=!!u.telegram_connected;const completion=Math.round([!!String(u.first_name||'').trim(),!!(u.web_username||u.username),!!u.email_verified_at,tgConnected].filter(Boolean).length/4*100);
+  const u=state.user||{};const c=u.customer?.tier||{};const isGuest=state?.is_guest||u?.is_guest;const orders=state.orders||[];const activeOrders=orders.filter(o=>!['delivered','canceled','rejected','refunded'].includes(String(o.status||'')));const recent=activeOrders.slice(0,3);const tgConnected=!!u.telegram_connected;const completion=Math.round([!!String(u.first_name||'').trim(),!!(u.web_username||u.username),!!u.email_verified_at,tgConnected].filter(Boolean).length/4*100);
   const guestBanner=isGuest?`<div class="guest-banner"><div class="guest-banner-text"><strong>حالت میهمان</strong><span>برای سفارش و مدیریت اعتبار وارد حساب شو.</span></div><button class="primary" onclick="openAuthModal()">ورود / ثبت‌نام</button></div>`:'';
-  const services=recent.length?recent.map(o=>`<div class="hub-service-row"><button class="hub-order-row" data-order-open="${o.id}"><div><b>${esc(o.display_name||o.product_name||'سرویس')}</b><small>${o.expires_at?'فعال تا '+esc(String(o.expires_at).slice(0,10)):'سرویس فعال'}</small></div><span>›</span></button><button class="mini-renew-inline" data-renew-order="${o.id}">تمدید</button></div>`).join(''):`<div class="u-empty"><div class="u-empty-icon">◇</div><h3>هنوز سرویس فعالی نداری</h3><p>از فروشگاه اولین سرویس BlueGate خودت رو انتخاب کن.</p><button class="primary" data-tab-jump="shop">رفتن به فروشگاه</button></div>`;
+  const services=recent.length?recent.map(o=>`<button class="hub-order-row" data-order-open="${o.id}"><div><b>${esc(o.display_name||o.product_name||'سفارش')}</b><small>${esc(o.status_fa||o.status||'')}</small></div><span>›</span></button>`).join(''):`<div class="u-empty"><div class="u-empty-icon">◇</div><h3>هنوز سرویس فعالی نداری</h3><p>از فروشگاه اولین سرویس BlueGate خودت رو انتخاب کن.</p><button class="primary" data-tab-jump="shop">رفتن به فروشگاه</button></div>`;
   $('homePage').innerHTML=`${guestBanner}
     <section class="account-center-mini-hero">
       <div class="mini-profile-main">${userProfileAvatar(u,'account-center-photo')}<div><small>BLUEGATE MEMBER</small><h2>${esc(u.first_name||u.username||'کاربر BlueGate')}</h2><p>${u.username?'@'+esc(u.username):'حساب BlueGate'} · ${tgConnected?'Telegram متصل ✓':'حساب وب'}</p></div><button class="account-edit-mini" id="editMiniProfile">ویرایش</button></div>
       <div class="mini-profile-completion"><div><span>تکمیل حساب</span><b>${nf(completion)}٪</b></div><i><em style="width:${completion}%"></em></i></div>
       <div class="mini-account-stats"><button data-tab-jump="wallet"><span>اعتبار</span><b data-count-anim="${u.balance||0}">${fmt(u.balance||0)}</b></button><button data-tab-jump="orders"><span>سفارش فعال</span><b>${nf(activeOrders.length)}</b></button><button data-credit-view="referral"><span>دعوت موفق</span><b>${nf(u.referrals_count||0)}</b></button></div>
     </section>
-    <article class="account-hub-card"><div class="hub-card-head"><span>◇</span><div><b>سرویس‌های من</b><small>${nf(activeServices.length)} سرویس فعال</small></div><button data-tab-jump="orders">مشاهده همه</button></div>${services}</article>
+    <article class="account-hub-card"><div class="hub-card-head"><span>◇</span><div><b>سرویس‌های من</b><small>${nf(activeOrders.length)} مورد فعال</small></div><button data-tab-jump="orders">مشاهده همه</button></div>${services}</article>
     <article class="account-hub-card account-menu-card">
       <button class="account-menu-row" id="editMiniProfile2"><span class="account-menu-icon">○</span><div><b>اطلاعات حساب</b><small>${esc(u.email||'ایمیل ثبت نشده')} · ${esc(u.phone_number||'شماره تماس ثبت نشده')}</small></div><em>‹</em></button>
       <button class="account-menu-row" ${u.has_password?'id="changeMiniPassword"':'type="button" disabled'}><span class="account-menu-icon">⌁</span><div><b>امنیت و ورود</b><small>${u.has_password?'تغییر رمز عبور':'ورود امن با Telegram'} · ${u.email_verified_at?'ایمیل تایید شده':'ایمیل نیازمند تایید'}</small></div><em>${u.has_password?'‹':'✓'}</em></button>
@@ -1274,9 +1245,8 @@ function openMiniPasswordEditor(){
 function openPalettePopup(){const colors=['#1d9bf0','#8b5cf6','#22c55e','#ef4444','#f97316','#ec4899','#06b6d4','#f59e0b','#14b8a6','#64748b'];const p=$('palettePopup');if(!p)return;p.innerHTML=`<div class="palette-popup-backdrop" data-close-palette></div><div class="palette-popup-inner"><button class="palette-popup-close" data-close-palette>✕</button><h3>🎨 رنگ دلخواه Mini App</h3><p class="muted">یکی از رنگ‌ها را بزن یا رنگ اختصاصی خودت را انتخاب کن. این رنگ فقط روی همین دستگاه ذخیره می‌شود.</p><div class="palette">${colors.map(c=>`<button class="swatch" data-color="${c}" style="background:${c}"></button>`).join('')}<label class="custom-color"><span>رنگ دلخواه</span><input id="userCustomColor" type="color" value="${esc(localStorage.getItem('blue_ref_color')||state?.theme_color||'#1d9bf0')}"></label><button class="secondary wide" id="applyCustomColor">اعمال رنگ</button><button class="ghost wide" id="resetColor">پیش‌فرض</button></div></div>`;p.classList.add('open');p.querySelectorAll('[data-close-palette]').forEach(el=>el.addEventListener('click',closePalettePopup))}
 function closePalettePopup(){const p=$('palettePopup');if(p){p.classList.remove('open');p.innerHTML=''}}
 function missionCard(m){const today=Number(state.user?.today_referrals||0);const target=Math.max(1,Number(m.target||1));const pct=Math.max(0,Math.min(100,Math.round(today/target*100)));const done=m.claimed?'claimed':(m.done?'done':'todo');return `<article class="mission-card ${done}"><div class="mission-top"><div><small>${nf(Math.min(today,target))} از ${nf(target)}</small><h3>${nf(target)} دعوت امروز</h3><p class="muted">پاداش: <b>${fmt(m.reward)}</b></p></div><div class="mission-icon">${m.claimed?'✅':(m.done?'🎁':'✌️')}</div></div><div class="progress-track"><span style="width:${pct}%"></span></div><div class="mission-foot"><span>${pct}% تکمیل شده</span><b>${m.claimed?'دریافت شد':(m.done?'آماده دریافت':'در حال انجام')}</b></div></article>`}
-function getWishlist(){if(Array.isArray(state?.wishlist_product_ids))return state.wishlist_product_ids.map(Number);try{return JSON.parse(localStorage.getItem('blue_ref_wishlist')||'[]').map(Number)}catch(e){return []}}
-async function toggleWishlist(pid){pid=Number(pid);let w=getWishlist();const was=w.includes(pid);w=was?w.filter(id=>id!==pid):[...w,pid];if(state&&!state.is_guest)state.wishlist_product_ids=w;localStorage.setItem('blue_ref_wishlist',JSON.stringify(w));document.querySelectorAll(`[data-wishlist-pid="${pid}"]`).forEach(el=>{el.textContent=w.includes(pid)?'❤️':'🤍';el.classList.toggle('active',w.includes(pid))});if(!was)haptic('success');if(shopFilterWishlist)renderShopSections();if(!state?.is_guest){try{const r=await api('wishlist_toggle',{product_id:pid});state.wishlist_product_ids=r.wishlist_product_ids||w;localStorage.setItem('blue_ref_wishlist',JSON.stringify(state.wishlist_product_ids));if(shopFilterWishlist)renderShopSections()}catch(e){state.wishlist_product_ids=was?[...w,pid]:w.filter(id=>id!==pid);showStatus(e.message||'ذخیره علاقه‌مندی انجام نشد','error')}}}
-
+function getWishlist(){try{return JSON.parse(localStorage.getItem('blue_ref_wishlist')||'[]').map(Number)}catch(e){return []}}
+function toggleWishlist(pid){let w=getWishlist();pid=Number(pid);if(w.includes(pid))w=w.filter(id=>id!==pid);else{w.push(pid);haptic('success');}localStorage.setItem('blue_ref_wishlist',JSON.stringify(w));document.querySelectorAll(`[data-wishlist-pid="${pid}"]`).forEach(el=>{el.textContent=w.includes(pid)?'❤️':'🤍';el.classList.toggle('active',w.includes(pid))});if(shopFilterWishlist)renderShopSections();}
 function filteredProducts(){let list=(state.shop_products||[]).filter(p=>(activeCategory==='all'||Number(p.category_id)===Number(activeCategory)||(activeCategory==='featured'&&Number(p.is_featured)===1))&&(!searchTerm||`${p.name} ${p.short_description} ${p.full_description}`.toLowerCase().includes(searchTerm.toLowerCase())));if(shopFilterInStock)list=list.filter(p=>Number(p.inventory_available||0)>0);if(shopFilterFeatured)list=list.filter(p=>Number(p.is_featured)===1);if(shopFilterWishlist){const w=getWishlist();list=list.filter(p=>w.includes(Number(p.id)));}if(shopSort==='price_low')list=[...list].sort((a,b)=>Number(a.price||0)-Number(b.price||0));else if(shopSort==='price_high')list=[...list].sort((a,b)=>Number(b.price||0)-Number(a.price||0));else if(shopSort==='newest')list=[...list].sort((a,b)=>Number(b.id)-Number(a.id));return list}
 function productDiscountInfo(p){
   const variants=(p?.variants||[]).filter(v=>Number(v.discount_percent||0)>0);
@@ -1307,7 +1277,7 @@ function openShopFilters(){
   const body=`<div class="filter-sheet-group"><label>مرتب‌سازی</label><div class="filter-choice-grid"><button data-u-sort="newest" class="${shopSort==='newest'?'active':''}">جدیدترین</button><button data-u-sort="price_low" class="${shopSort==='price_low'?'active':''}">ارزان‌ترین</button><button data-u-sort="price_high" class="${shopSort==='price_high'?'active':''}">گران‌ترین</button></div></div><div class="filter-sheet-group"><label>نمایش</label><div class="filter-switch-row"><span>فقط محصولات موجود</span><button data-u-toggle="instock" class="${shopFilterInStock?'active':''}">${shopFilterInStock?'روشن':'خاموش'}</button></div><div class="filter-switch-row"><span>فقط علاقه‌مندی‌ها</span><button data-u-toggle="wishlist" class="${shopFilterWishlist?'active':''}">${shopFilterWishlist?'روشن':'خاموش'}</button></div></div>`;
   BlueGateUI.openSheet({type:'action',eyebrow:'فروشگاه',title:'فیلتر و مرتب‌سازی',subtitle:'فقط گزینه‌های موردنیازت رو فعال کن.',body,footer:'<button class="secondary" data-u-filter-reset>پاک کردن فیلتر</button><button class="primary" data-u-filter-apply>اعمال</button>',onOpen:(host)=>{let sort=shopSort,stock=shopFilterInStock,wish=shopFilterWishlist;const sync=()=>{host.querySelectorAll('[data-u-sort]').forEach(b=>b.classList.toggle('active',b.dataset.uSort===sort));host.querySelector('[data-u-toggle="instock"]')?.classList.toggle('active',stock);host.querySelector('[data-u-toggle="wishlist"]')?.classList.toggle('active',wish);const a=host.querySelector('[data-u-toggle="instock"]'),b=host.querySelector('[data-u-toggle="wishlist"]');if(a)a.textContent=stock?'روشن':'خاموش';if(b)b.textContent=wish?'روشن':'خاموش'};host.querySelectorAll('[data-u-sort]').forEach(b=>b.addEventListener('click',()=>{sort=b.dataset.uSort;sync()}));host.querySelector('[data-u-toggle="instock"]')?.addEventListener('click',()=>{stock=!stock;sync()});host.querySelector('[data-u-toggle="wishlist"]')?.addEventListener('click',()=>{wish=!wish;sync()});host.querySelector('[data-u-filter-reset]')?.addEventListener('click',()=>{sort='newest';stock=false;wish=false;sync()});host.querySelector('[data-u-filter-apply]')?.addEventListener('click',()=>{shopSort=sort;shopFilterInStock=stock;shopFilterWishlist=wish;BlueGateUI.closeSheet();renderShop()})}});
 }
-function renderShop(){document.getElementById('miniInitialLoader')?.remove();const cats=state.shop_categories||[];const filters=activeShopFilterSummary();$('shopPage').innerHTML=`<section class="shop-page-intro"><div><h2>فروشگاه</h2><p>سرویس موردنظرت رو سریع پیدا کن.</p></div></section><div class="shop-header-sticky"><div class="searchbar-modern"><span class="search-icon">⌕</span><input id="searchInput" autocomplete="off" inputmode="search" placeholder="جستجوی سرویس یا اشتراک..." value="${esc(searchTerm)}"><button class="secondary shop-filter-trigger" id="openShopFilters" aria-label="فیلتر">☷</button></div><div class="shop-active-filters">${filters.map((x,i)=>`<span class="${i||filters.length===1?'on':''}">${esc(x)}</span>`).join('')}</div><div class="category-strip modern-cats"><button class="cat-pill ${activeCategory==='all'?'active':''}" data-cat="all"><span>●</span><b>همه</b></button><button class="cat-pill ${activeCategory==='featured'?'active':''}" data-cat="featured"><span>★</span><b>ویژه</b></button>${cats.map(c=>`<button class="cat-pill ${Number(activeCategory)===Number(c.id)?'active':''}" data-cat="${c.id}">${c.image_url?`<img src="${esc(c.image_url)}">`:`<span>${esc(c.emoji||'◇')}</span>`}<b>${esc(c.title)}</b></button>`).join('')}</div></div><div id="shopSections">${shopSectionsHtml()}</div>`}
+function renderShop(){const cats=state.shop_categories||[];const filters=activeShopFilterSummary();$('shopPage').innerHTML=`<section class="shop-page-intro"><div><h2>فروشگاه</h2><p>سرویس موردنظرت رو سریع پیدا کن.</p></div></section><div class="shop-header-sticky"><div class="searchbar-modern"><span class="search-icon">⌕</span><input id="searchInput" autocomplete="off" inputmode="search" placeholder="جستجوی سرویس یا اشتراک..." value="${esc(searchTerm)}"><button class="secondary shop-filter-trigger" id="openShopFilters" aria-label="فیلتر">☷</button></div><div class="shop-active-filters">${filters.map((x,i)=>`<span class="${i||filters.length===1?'on':''}">${esc(x)}</span>`).join('')}</div><div class="category-strip modern-cats"><button class="cat-pill ${activeCategory==='all'?'active':''}" data-cat="all"><span>●</span><b>همه</b></button><button class="cat-pill ${activeCategory==='featured'?'active':''}" data-cat="featured"><span>★</span><b>ویژه</b></button>${cats.map(c=>`<button class="cat-pill ${Number(activeCategory)===Number(c.id)?'active':''}" data-cat="${c.id}">${c.image_url?`<img src="${esc(c.image_url)}">`:`<span>${esc(c.emoji||'◇')}</span>`}<b>${esc(c.title)}</b></button>`).join('')}</div></div><div id="shopSections">${shopSectionsHtml()}</div>`}
 function renderShopSections(){const box=$('shopSections'); if(box) box.innerHTML=shopSectionsHtml();}
 function sectionHtml(title,products,categoryId='all',allowViewAll=true){const viewBtn=allowViewAll?`<button type="button" class="section-view-all" data-cat="${esc(String(categoryId))}">View All</button>`:'';return `<section class="section-row catalog-section"><div class="section-title"><h2>${title}</h2>${viewBtn}</div><div class="h-scroll product-grid-wrap">${products.slice(0,12).map(productCard).join('')}</div></section>`}
 function gridHtml(products){return products.length ? `<section class="section-row catalog-section catalog-grid-view"><div class="h-scroll product-grid-wrap">${products.map(productCard).join('')}</div></section>` : ''}
@@ -2515,7 +2485,7 @@ document.addEventListener('click',async(e)=>{
     openCartSheet();
     return;
   }
-  const t=e.target.closest('button,a,[data-admin-tab],[data-settings-subtab],[data-admin-view-mode],[data-admin-action-sheet],[data-tab],[data-tab-jump],[data-color],[data-cat],[data-shop-sort],[data-shop-toggle],[data-clear-filters],[data-product],[data-product-preview],[data-back-shop],[data-wallet-order],[data-select-card],[data-pay-stars],[data-select-crypto],[data-select-crypto-tab],[data-reset-payment-method],[data-show-crypto],[data-crypto-hash],[data-check-crypto],[data-bulk-action],[data-reorder],[data-chat-user],[data-edit-role],[data-admin-remove-role],[data-contact-wallet],[data-contact-ban],[data-edit-inventory],[data-admin-delete-inventory],[data-admin-hard-delete-inventory],[data-admin-status],[data-admin-order-note],[data-admin-archive-order],[data-admin-delete-order],[data-admin-cleanup],[data-admin-deliver],[data-admin-service],[data-service-view],[data-service-copy-link],[data-view-receipt],[data-admin-save-settings],[data-open-url],[data-copy],[data-receipt],[data-customer-note],[data-order-filter],[data-order-open],[data-order-back],[data-order-more],[data-hide-order],[data-clear-canceled],[data-cancel],[data-refresh-crypto-rates],[data-admin-backup-create],[data-admin-backup-sendbot],[data-admin-backup-delete],[data-admin-backup-restore-server],[data-admin-backup-upload],[data-admin-load-more-orders],[data-accordion-toggle],[data-accordion-add-variant],[data-edit-coupon],[data-admin-toggle-coupon],[data-admin-delete-coupon],[data-credit-topup-approve],[data-credit-topup-reject],[data-credit-topup-receipt],[data-credit-topup-tx],[data-mini-topup-change],[data-mini-topup-cancel],[data-renew-order]')||e.target;if(t.id==='openShopFilters'){openShopFilters();return}if(t.id==='orderAdvancedFilter'){openOrderFiltersSheet();return}if(t.id==='ordersManageBtn'){openOrdersManageSheet();return}if(t.dataset.orderMore){openOrderMoreActions(t.dataset.orderMore);return}if(t.dataset.creditView){openCreditSubview(t.dataset.creditView);return}if(t.dataset.serviceView){openDirectServiceViewer(t.dataset.serviceView,t.dataset.serviceUrl||'',t.dataset.serviceTitle||'مدیریت سرویس');return}if(t.dataset.serviceCopyLink){copyMiniServiceUrl(t.dataset.serviceCopyLink,t.dataset.serviceUrl||'');return}if(t.dataset.settingsSubtab){if(typeof haptic==='function')haptic('light');settingsSubTab=t.dataset.settingsSubtab;document.querySelectorAll('.settings-subtab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.settingsSubtab===settingsSubTab));document.querySelectorAll('.settings-subtab-pane').forEach(pane=>pane.classList.toggle('hidden',pane.dataset.pane!==settingsSubTab));const settingsTabLabels = { general: '🏪 عمومی', payments: '💳 روش‌های پرداخت', crypto: '🪙 کریپتو & ارزها', appearance: '🎨 ظاهر & تم', gamification: '🎡 پاداش & گردونه' };const lbl=$('activeSettingsTabLabel');if(lbl)lbl.textContent=settingsTabLabels[settingsSubTab]||'';const muted=$('activeSettingsTabMuted');if(muted)muted.textContent=settingsTabLabels[settingsSubTab]||'';return}if(t.dataset.adminViewMode){adminOrderViewMode=t.dataset.adminViewMode;renderAdmin();return}if(t.dataset.adminActionSheet){const [type,id]=t.dataset.adminActionSheet.split(':');openAdminActionSheet(type,id);return}if(t.dataset.tab){setTab(t.dataset.tab)}if(t.dataset.tabJump){setTab(t.dataset.tabJump)}if(t.id==='paletteQuick'){openPalettePopup();return}if(t.id==='editMiniProfile'||t.id==='editMiniProfile2'){openMiniProfileEditor();return}if(t.id==='miniChangeEmailBtn'||t.id==='miniChangeEmailInlineBtn'){openMiniEmailChangeFlow();return}if(t.id==='changeMiniPassword'){openMiniPasswordEditor();return}if(t.id==='shareInviteHome'){const link=state.user?.referral_link||'';if(link){if(TG?.openTelegramLink)TG.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(link));else navigator.clipboard?.writeText(link);showStatus('لینک دعوت آماده اشتراک است')}return}if(t.id==='miniReferralJump'){openCreditSubview('referral');return}if(['miniCreditTopup','miniCreditTopup2','miniCreditTopupEmpty','miniCreditTopupHistory','miniCreditTopupHistoryEmpty','miniCreditTopupHome'].includes(t.id)){openMiniCreditTopup();return}if(t.dataset.miniTopupCancel){if(await BlueGateUI.confirm({title:'لغو درخواست شارژ',message:'این درخواست شارژ لغو شود؟ اگر رسید یا TXID فرستاده‌ای، دیگر بررسی نخواهد شد.',confirmText:'لغو درخواست',danger:true})){try{state=await api('cancel_credit_topup',{topup_id:Number(t.dataset.miniTopupCancel)});renderWallet();showStatus('درخواست شارژ لغو شد')}catch(e){showStatus(e.message||'لغو درخواست انجام نشد','error')}}return}if(t.dataset.miniTopupChange){if(await BlueGateUI.confirm({title:'تغییر روش پرداخت',message:'درخواست فعلی بسته می‌شود و یک درخواست جدید با همان مبلغ برای انتخاب روش تازه ساخته می‌شود.',confirmText:'تغییر روش'})){try{const r=await api('credit_topup_change_method',{topup_id:Number(t.dataset.miniTopupChange)});state=r;renderWallet();openMiniTopupMethods(r.topup);showStatus('روش پرداخت جدید را انتخاب کن')}catch(e){showStatus(e.message||'تغییر روش پرداخت انجام نشد','error')}}return}if(t.id==='miniSupportBtn'){openMiniSupport();return}if(t.id==='miniNotificationsBtn'){openNotifications();return}if(t.dataset.renewOrder){try{const r=await api('renew_order',{order_id:Number(t.dataset.renewOrder)});state=r;currentTab='orders';currentOrderId=Number(r.order?.id||state.orders?.[0]?.id||0);renderUser();showStatus('🔄 سفارش تمدید ساخته شد','success')}catch(e){showStatus(e.message||'تمدید انجام نشد','error')}return}if(t.dataset.color){localStorage.setItem('blue_ref_color',t.dataset.color);applyTheme({...state,theme_color:t.dataset.color});showStatus('رنگ تغییر کرد')}if(t.id==='resetColor'){localStorage.removeItem('blue_ref_color');applyTheme(state);showStatus('رنگ پیش‌فرض برگشت')}if(t.id==='applyCustomColor'){const c=$('userCustomColor')?.value||'#1d9bf0';localStorage.setItem('blue_ref_color',c);applyTheme({...state,theme_color:c});showStatus('رنگ دلخواه اعمال شد')}if(t.dataset.cat){activeCategory=t.dataset.cat;document.querySelectorAll('.cat-pill').forEach(el=>el.classList.toggle('active',el.dataset.cat===activeCategory));renderShopSections()}if(t.dataset.shopSort!==undefined){shopSort=t.dataset.shopSort;document.querySelectorAll('[data-shop-sort]').forEach(el=>el.classList.toggle('active',el.dataset.shopSort===shopSort));renderShopSections()}if(t.dataset.shopToggle!==undefined){if(t.dataset.shopToggle==='instock'){shopFilterInStock=!shopFilterInStock;t.textContent=shopFilterInStock?'⚡':'📦'}else if(t.dataset.shopToggle==='featured')shopFilterFeatured=!shopFilterFeatured;else if(t.dataset.shopToggle==='wishlist'){shopFilterWishlist=!shopFilterWishlist;t.textContent=shopFilterWishlist?'❤️':'🤍'}t.classList.toggle('active');renderShopSections()}if(t.dataset.clearFilters!==undefined){searchTerm='';activeCategory='all';shopSort='newest';shopFilterInStock=false;shopFilterFeatured=false;shopFilterWishlist=false;renderShop()}if(t.id==='searchInput')return;if(t.dataset.product)showProduct(t.dataset.product);if(t.dataset.productPreview)showProduct(t.dataset.productPreview);if(t.dataset.backShop!==undefined){currentTab='shop';renderUser()}// Purchase actions are handled exclusively by the single capture-phase validated handler below (avoids duplicate listeners/API calls).
+  const t=e.target.closest('button,a,[data-admin-tab],[data-settings-subtab],[data-admin-view-mode],[data-admin-action-sheet],[data-tab],[data-tab-jump],[data-color],[data-cat],[data-shop-sort],[data-shop-toggle],[data-clear-filters],[data-product],[data-product-preview],[data-back-shop],[data-wallet-order],[data-select-card],[data-pay-stars],[data-select-crypto],[data-select-crypto-tab],[data-reset-payment-method],[data-show-crypto],[data-crypto-hash],[data-check-crypto],[data-bulk-action],[data-reorder],[data-chat-user],[data-edit-role],[data-admin-remove-role],[data-contact-wallet],[data-contact-ban],[data-edit-inventory],[data-admin-delete-inventory],[data-admin-hard-delete-inventory],[data-admin-status],[data-admin-order-note],[data-admin-archive-order],[data-admin-delete-order],[data-admin-cleanup],[data-admin-deliver],[data-admin-service],[data-service-view],[data-service-copy-link],[data-view-receipt],[data-admin-save-settings],[data-open-url],[data-copy],[data-receipt],[data-customer-note],[data-order-filter],[data-order-open],[data-order-back],[data-order-more],[data-hide-order],[data-clear-canceled],[data-cancel],[data-refresh-crypto-rates],[data-admin-backup-create],[data-admin-backup-sendbot],[data-admin-backup-delete],[data-admin-backup-restore-server],[data-admin-backup-upload],[data-admin-load-more-orders],[data-accordion-toggle],[data-accordion-add-variant],[data-edit-coupon],[data-admin-toggle-coupon],[data-admin-delete-coupon],[data-credit-topup-approve],[data-credit-topup-reject],[data-credit-topup-receipt],[data-credit-topup-tx],[data-mini-topup-change],[data-mini-topup-cancel]')||e.target;if(t.id==='openShopFilters'){openShopFilters();return}if(t.id==='orderAdvancedFilter'){openOrderFiltersSheet();return}if(t.id==='ordersManageBtn'){openOrdersManageSheet();return}if(t.dataset.orderMore){openOrderMoreActions(t.dataset.orderMore);return}if(t.dataset.creditView){openCreditSubview(t.dataset.creditView);return}if(t.dataset.serviceView){openDirectServiceViewer(t.dataset.serviceView,t.dataset.serviceUrl||'',t.dataset.serviceTitle||'مدیریت سرویس');return}if(t.dataset.serviceCopyLink){copyMiniServiceUrl(t.dataset.serviceCopyLink,t.dataset.serviceUrl||'');return}if(t.dataset.settingsSubtab){if(typeof haptic==='function')haptic('light');settingsSubTab=t.dataset.settingsSubtab;document.querySelectorAll('.settings-subtab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.settingsSubtab===settingsSubTab));document.querySelectorAll('.settings-subtab-pane').forEach(pane=>pane.classList.toggle('hidden',pane.dataset.pane!==settingsSubTab));const settingsTabLabels = { general: '🏪 عمومی', payments: '💳 روش‌های پرداخت', crypto: '🪙 کریپتو & ارزها', appearance: '🎨 ظاهر & تم', gamification: '🎡 پاداش & گردونه' };const lbl=$('activeSettingsTabLabel');if(lbl)lbl.textContent=settingsTabLabels[settingsSubTab]||'';const muted=$('activeSettingsTabMuted');if(muted)muted.textContent=settingsTabLabels[settingsSubTab]||'';return}if(t.dataset.adminViewMode){adminOrderViewMode=t.dataset.adminViewMode;renderAdmin();return}if(t.dataset.adminActionSheet){const [type,id]=t.dataset.adminActionSheet.split(':');openAdminActionSheet(type,id);return}if(t.dataset.tab){setTab(t.dataset.tab)}if(t.dataset.tabJump){setTab(t.dataset.tabJump)}if(t.id==='paletteQuick'){openPalettePopup();return}if(t.id==='editMiniProfile'||t.id==='editMiniProfile2'){openMiniProfileEditor();return}if(t.id==='miniChangeEmailBtn'||t.id==='miniChangeEmailInlineBtn'){openMiniEmailChangeFlow();return}if(t.id==='changeMiniPassword'){openMiniPasswordEditor();return}if(t.id==='shareInviteHome'){const link=state.user?.referral_link||'';if(link){if(TG?.openTelegramLink)TG.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(link));else navigator.clipboard?.writeText(link);showStatus('لینک دعوت آماده اشتراک است')}return}if(t.id==='miniReferralJump'){openCreditSubview('referral');return}if(['miniCreditTopup','miniCreditTopup2','miniCreditTopupEmpty','miniCreditTopupHistory','miniCreditTopupHistoryEmpty','miniCreditTopupHome'].includes(t.id)){openMiniCreditTopup();return}if(t.dataset.miniTopupCancel){if(await BlueGateUI.confirm({title:'لغو درخواست شارژ',message:'این درخواست شارژ لغو شود؟ اگر رسید یا TXID فرستاده‌ای، دیگر بررسی نخواهد شد.',confirmText:'لغو درخواست',danger:true})){try{state=await api('cancel_credit_topup',{topup_id:Number(t.dataset.miniTopupCancel)});renderWallet();showStatus('درخواست شارژ لغو شد')}catch(e){showStatus(e.message||'لغو درخواست انجام نشد','error')}}return}if(t.dataset.miniTopupChange){if(await BlueGateUI.confirm({title:'تغییر روش پرداخت',message:'درخواست فعلی بسته می‌شود و یک درخواست جدید با همان مبلغ برای انتخاب روش تازه ساخته می‌شود.',confirmText:'تغییر روش'})){try{const r=await api('credit_topup_change_method',{topup_id:Number(t.dataset.miniTopupChange)});state=r;renderWallet();openMiniTopupMethods(r.topup);showStatus('روش پرداخت جدید را انتخاب کن')}catch(e){showStatus(e.message||'تغییر روش پرداخت انجام نشد','error')}}return}if(t.id==='miniSupportBtn'){openMiniSupport();return}if(t.dataset.color){localStorage.setItem('blue_ref_color',t.dataset.color);applyTheme({...state,theme_color:t.dataset.color});showStatus('رنگ تغییر کرد')}if(t.id==='resetColor'){localStorage.removeItem('blue_ref_color');applyTheme(state);showStatus('رنگ پیش‌فرض برگشت')}if(t.id==='applyCustomColor'){const c=$('userCustomColor')?.value||'#1d9bf0';localStorage.setItem('blue_ref_color',c);applyTheme({...state,theme_color:c});showStatus('رنگ دلخواه اعمال شد')}if(t.dataset.cat){activeCategory=t.dataset.cat;document.querySelectorAll('.cat-pill').forEach(el=>el.classList.toggle('active',el.dataset.cat===activeCategory));renderShopSections()}if(t.dataset.shopSort!==undefined){shopSort=t.dataset.shopSort;document.querySelectorAll('[data-shop-sort]').forEach(el=>el.classList.toggle('active',el.dataset.shopSort===shopSort));renderShopSections()}if(t.dataset.shopToggle!==undefined){if(t.dataset.shopToggle==='instock'){shopFilterInStock=!shopFilterInStock;t.textContent=shopFilterInStock?'⚡':'📦'}else if(t.dataset.shopToggle==='featured')shopFilterFeatured=!shopFilterFeatured;else if(t.dataset.shopToggle==='wishlist'){shopFilterWishlist=!shopFilterWishlist;t.textContent=shopFilterWishlist?'❤️':'🤍'}t.classList.toggle('active');renderShopSections()}if(t.dataset.clearFilters!==undefined){searchTerm='';activeCategory='all';shopSort='newest';shopFilterInStock=false;shopFilterFeatured=false;shopFilterWishlist=false;renderShop()}if(t.id==='searchInput')return;if(t.dataset.product)showProduct(t.dataset.product);if(t.dataset.productPreview)showProduct(t.dataset.productPreview);if(t.dataset.backShop!==undefined){currentTab='shop';renderUser()}// Purchase actions are handled exclusively by the single capture-phase validated handler below (avoids duplicate listeners/API calls).
 if(t.dataset.walletOrder){openWalletConfirmSheet(t.dataset.walletOrder);return}if(t.dataset.selectCard){await loadAfterAction('select_payment_method',{order_id:t.dataset.selectCard,method:'card',details:{}});currentTab='orders';currentOrderId=t.dataset.selectCard;renderUser();showStatus('کارت به کارت انتخاب شد')}if(t.dataset.selectCryptoTab){await loadAfterAction('select_payment_method',{order_id:t.dataset.selectCryptoTab,method:'crypto',details:{}});currentTab='orders';currentOrderId=t.dataset.selectCryptoTab;renderUser();showStatus('پرداخت رمزارز انتخاب شد');return}if(t.dataset.resetPaymentMethod){const oid=t.dataset.resetPaymentMethod;await loadAfterAction('select_payment_method',{order_id:oid,method:'none',details:{}});const o=orderById(oid);if(o){o.payment_method='';o.payment_method_fa='انتخاب نشده';}currentTab='orders';currentOrderId=oid;renderOrders();showStatus('انتخاب روش پرداخت بازنشانی شد');return}if(t.dataset.payStars){await loadAfterAction('start_stars_invoice',{order_id:t.dataset.payStars});currentTab='orders';currentOrderId=t.dataset.payStars;renderUser();showStatus('فاکتور Stars داخل تلگرام ارسال شد')}if(t.dataset.selectCrypto){const [oid,wid]=t.dataset.selectCrypto.split(':');await loadAfterAction('select_crypto_wallet',{order_id:oid,wallet_id:wid});currentTab='orders';currentOrderId=oid;renderUser();showStatus('کیف پول رمزارز انتخاب شد')}if(t.dataset.showCrypto){showStatus('کمی پایین‌تر کیف پول رمزارز را انتخاب کن')}if(t.dataset.cryptoHash){openDialog('ثبت TXID / Hash',`هش تراکنش رمزارز سفارش #${t.dataset.cryptoHash} را وارد کن.`, 'TXID / Hash', async(txt)=>{await loadAfterAction('submit_crypto_hash',{order_id:t.dataset.cryptoHash,tx_hash:txt});currentTab='orders';currentOrderId=t.dataset.cryptoHash;renderUser();showStatus('هش ثبت شد و در صف بررسی قرار گرفت')})}if(t.dataset.checkCrypto){await loadAfterAction('check_crypto_payment',{order_id:t.dataset.checkCrypto});currentTab='orders';currentOrderId=t.dataset.checkCrypto;renderUser();showStatus('بررسی پرداخت انجام شد')}
   if(t.id==='openQrHome'||t.id==='openQrWallet'){openQrSheet();return}if(t.id==='openReferralShareMini'){openReferralShareMini();return}if(t.id==='openCustomReferralCode'){openCustomReferralCodeMini();return}if(t.id==='shareInviteEmpty'){openReferralShareMini();return}if(t.id==='openPromoSheetBtn'){openPromoSheet();return}if(t.id==='adminOrderSearchBtn'){adminOrderSearch=$('adminOrderSearchInput')?.value||'';adminOrderStatusFilter=$('adminOrderStatusSelect')?.value||'all';adminSearchOrdersNow();return}if(t.id==='adminOrderResetBtn'){adminOrderSearch='';adminOrderStatusFilter='all';adminSearchOrdersNow();return}if(t.id==='bulkClearBtn'){selectedOrderIds.clear();renderAdmin();return}if(t.dataset.bulkAction){bulkOrderAction(t.dataset.bulkAction);return}if(t.dataset.reorder){const [type,id,dir]=t.dataset.reorder.split(':');reorderItem(type,Number(id),dir);return}if(t.dataset.chatUser){openUserChat(t.dataset.chatUser);return}if(t.dataset.editRole){const r=(adminState.admin_roles||[]).find(x=>Number(x.id)===Number(t.dataset.editRole));if(!r)return;openEdit(`ویرایش نقش ${esc(r.display_name||'')}`,[{title:'سطح دسترسی',fields:[{id:'erl_name',label:'نام نمایشی',value:r.display_name||''},{id:'erl_role',label:'نوع دسترسی',type:'select',options:`<option value="full" ${r.role==='full'?'selected':''}>ادمین کامل</option><option value="orders" ${r.role==='orders'?'selected':''}>فقط سفارش‌ها</option><option value="products" ${r.role==='products'?'selected':''}>فقط محصولات</option><option value="finance" ${r.role==='finance'?'selected':''}>فقط مالی</option>`}]}],async()=>adminAction('admin_set_role',{telegram_id:r.telegram_id,role:val('erl_role'),display_name:val('erl_name')}));return}if(t.dataset.adminRemoveRole&&await BlueGateUI.confirm({title:'حذف نقش',message:'نقش مدیریتی این کاربر حذف شود؟',confirmText:'حذف نقش',danger:true})){adminAction('admin_remove_role',{telegram_id:Number(t.dataset.adminRemoveRole)});return}
 if(t.dataset.creditTopupReceipt){const u=t.dataset.creditTopupReceipt;if(TG?.openLink)TG.openLink(new URL(u,location.origin).href);else window.open(u,'_blank');return}if(t.dataset.creditTopupTx){navigator.clipboard?.writeText(t.dataset.creditTopupTx);showStatus('TXID کپی شد');return}if(t.dataset.creditTopupApprove){if(await BlueGateUI.confirm({title:'تأیید شارژ',message:'این شارژ تأیید و به اعتبار کاربر اضافه شود؟',confirmText:'تأیید شارژ'}))adminAction('admin_credit_topup_approve',{topup_id:Number(t.dataset.creditTopupApprove)});return}if(t.dataset.creditTopupReject){if(await BlueGateUI.confirm({title:'رد شارژ',message:'این درخواست شارژ رد شود؟',confirmText:'رد درخواست',danger:true}))adminAction('admin_credit_topup_reject',{topup_id:Number(t.dataset.creditTopupReject)});return}if(t.dataset.contactWallet){openDialog('افزایش/کاهش اعتبار',`مبلغی که می‌خواهید به اعتبار کاربر با ID ${t.dataset.contactWallet} اضافه شود را وارد کنید. برای کاهش، عدد منفی وارد کنید.`,'مثلا 50000 یا -20000',async(txt)=>{const amount=Number(txt);if(isNaN(amount)||!amount)return showStatus('مبلغ نامعتبر است','error');const ok=await adminAction('admin_add_balance',{telegram_id:t.dataset.contactWallet,amount});if(ok){showStatus('اعتبار تغییر کرد');closeCustomer360();setTimeout(()=>openCustomer360(t.dataset.contactWallet),500)}});return}if(t.dataset.contactBan){if(await BlueGateUI.confirm({title:'مسدود کردن کاربر',message:'دسترسی این کاربر مسدود شود؟',confirmText:'مسدود کن',danger:true})){const ok=await adminAction('admin_ban_user',{telegram_id:t.dataset.contactBan});if(ok)showStatus('کاربر مسدود شد')}return}if(t.dataset.catalogApplyOne!==undefined){const legacyId=Number(t.dataset.catalogApplyOne||0);if(legacyId&&await BlueGateUI.confirm({title:'نگاشت مورد قدیمی',message:'این مورد Needs Review به کاتالوگ جدید نگاشت شود؟',confirmText:'نگاشت'}))adminAction('admin_catalog_apply_one',{legacy_product_id:legacyId,confirm:'APPLY'});return}if(t.dataset.catalogPreview!==undefined){adminAction('admin_catalog_preview');return}if(t.dataset.catalogApply!==undefined){if(await BlueGateUI.confirm({title:'Migration کاتالوگ',message:'Migration کاتالوگ اعمال شود؟ هیچ محصول یا سفارش قدیمی حذف نمی‌شود.',confirmText:'اعمال Migration'}))adminAction('admin_catalog_apply',{confirm:'APPLY'});return}if(t.dataset.catalogFast!==undefined){openCatalogFast();return}if(t.dataset.catalogMoveGroup!==undefined){openCatalogMoveGroup();return}if(t.dataset.catalogMovePlan!==undefined){openCatalogMovePlan();return}if(t.dataset.catalogAddService!==undefined){openCatalogAddService();return}if(t.dataset.catalogAddGroup!==undefined){openCatalogAddGroup();return}if(t.dataset.catalogAddPlan!==undefined){openCatalogAddPlan();return}if(t.dataset.adminTab){setAdminTab(t.dataset.adminTab)}if(t.id==='reloadAdmin')loadAdmin();if(t.id==='openCmdPalette'){openCommandPalette();return}if(t.dataset.editInventory)editInventory(t.dataset.editInventory);if(t.dataset.adminDeleteInventory&&await BlueGateUI.confirm({title:'حذف امن آیتم',message:'این آیتم از انبار به‌صورت امن حذف شود؟',confirmText:'حذف',danger:true}))adminAction('admin_delete_inventory',{inventory_id:t.dataset.adminDeleteInventory});if(t.dataset.adminHardDeleteInventory&&await BlueGateUI.confirm({title:'حذف کامل آیتم',message:'این آیتم برای همیشه حذف شود؟ این عملیات قابل برگشت نیست.',confirmText:'حذف کامل',danger:true}))adminAction('admin_hard_delete_inventory',{inventory_id:t.dataset.adminHardDeleteInventory});if(t.dataset.adminStatus){const [id,status]=t.dataset.adminStatus.split(':');adminAction('admin_order_status',{order_id:id,status})}if(t.dataset.adminOrderNote){const id=t.dataset.adminOrderNote;const o=(adminState.orders||[]).find(x=>Number(x.id)===Number(id));if(o)openEdit(`یادداشت داخلی #${id}`,[{title:'یادداشت داخلی (مخفی)',fields:[{id:'adm_note',label:'متن یادداشت',type:'textarea',placeholder:'فقط شما می‌بینید...',value:o.admin_note||''}]}],async()=>adminAction('admin_order_note',{order_id:id,note:val('adm_note')}))}if(t.dataset.adminArchiveOrder&&await BlueGateUI.confirm({title:'آرشیو سفارش',message:'این سفارش آرشیو شود؟',confirmText:'آرشیو'}))adminAction('admin_archive_order',{order_id:t.dataset.adminArchiveOrder});if(t.dataset.adminDeleteOrder&&await BlueGateUI.confirm({title:'حذف کامل سفارش',message:'این عملیات قابل برگشت نیست.',confirmText:'حذف کامل',danger:true}))adminAction('admin_delete_order',{order_id:t.dataset.adminDeleteOrder});if(t.dataset.adminCleanup&&await BlueGateUI.confirm({title:'پاکسازی سفارش‌ها',message:'سفارش‌های لغو و ردشده پاکسازی شوند؟',confirmText:'پاکسازی',danger:true}))adminAction('admin_cleanup_orders',{older_days:t.dataset.adminCleanup==='all'?null:t.dataset.adminCleanup});if(t.dataset.adminService){const oid=t.dataset.adminService;const o=(adminState.orders||[]).find(x=>Number(x.id)===Number(oid))||{};openEdit(`لینک سرویس #${oid}`,[{title:'دسترسی سرویس',fields:[{id:'svc_url',label:'لینک HTTPS پنل / Subscription',placeholder:'https://...',value:o.delivery_url||''},{id:'svc_title',label:'عنوان دکمه برای مشتری',value:o.delivery_title||'مدیریت سرویس'},{id:'svc_note',label:'پیام تحویل',type:'textarea',value:o.delivery_text||'سرویس شما آماده است. از سفارش‌ها می‌توانید لینک سرویس را باز یا کپی کنید.'}]}],async()=>{const ok=await adminAction('admin_set_service_delivery',{order_id:oid,delivery_url:val('svc_url'),delivery_title:val('svc_title'),delivery_note:val('svc_note')});if(ok){currentAdminTab='orders';showStatus('لینک مستقیم سرویس ثبت شد')}});return}if(t.dataset.adminDeliver){const oid=t.dataset.adminDeliver;openDialog('تحویل سفارش',`متن تحویل سفارش #${oid} را وارد کن.`, 'ایمیل/پسورد، لینک ساب یا کد', async(txt)=>{const ok=await adminAction('admin_deliver_order',{order_id:oid,delivery:txt});if(ok){currentAdminTab='orders';showStatus('تحویل ثبت شد و برای کاربر ارسال شد')}})}if(t.dataset.viewReceipt!==undefined){loadReceiptImage(t.dataset.viewReceipt)}if(t.dataset.adminSaveSettings!==undefined){syncPaymentBuilders();adminAction('admin_save_settings',{brand_name:val('as_brand_name'),default_base_currency:val('as_default_base_currency'),theme_color:val('as_theme'),button_colors_enabled:val('as_btn_enabled')?1:0,require_contact_auth:val('as_require_contact')?1:0,notify_new_user:val('as_notify_new')?1:0,resend_api_key:val('as_resend_api_key'),resend_from_email:val('as_resend_from_email'),require_email_verification:val('as_require_email_verif')?1:0,button_colors:{primary:val('as_primary'),secondary:val('as_secondary'),success:val('as_success'),warning:val('as_warning'),danger:val('as_danger')},payment_instructions:val('as_payment'),payment_methods_enabled:{wallet:val('as_pay_wallet')?1:0,card:val('as_pay_card')?1:0,stars:val('as_pay_stars')?1:0,crypto:val('as_pay_crypto')?1:0},credit_topup_enabled:val('as_topup_enabled')?1:0,credit_topup_min:val('as_topup_min'),credit_topup_max:val('as_topup_max'),credit_topup_presets:val('as_topup_presets'),credit_topup_methods:{card:val('as_topup_card')?1:0,stars:val('as_topup_stars')?1:0,crypto:val('as_topup_crypto')?1:0},card_accounts_text:val('as_cards'),stars_rate_toman:val('as_stars_rate'),crypto_wallets_text:val('as_crypto_wallets'),crypto_manual_rates_text:val('as_crypto_rates'),crypto_rate_source:val('as_crypto_source'),crypto_rate_provider_priority:'wallex,ramzinex,nobitex',crypto_rate_markup_percent:val('as_crypto_markup'),crypto_rate_refresh_interval_seconds:val('as_crypto_refresh_interval'),crypto_notify_rate_fail:val('as_crypto_notify')?1:0,spin_referrals_per_chance:val('as_spin_every'),spin_rewards_text:val('as_spin_rewards')})}
@@ -2952,9 +2922,6 @@ function initAuthHandlers() {
 }
 
 
-
-window.addEventListener('error',e=>{try{console.error('[BlueGate MiniApp uncaught]',e?.error||e?.message||e)}catch(_){}});
-window.addEventListener('unhandledrejection',e=>{try{console.error('[BlueGate MiniApp rejection]',e?.reason||e)}catch(_){}});
 load().catch(()=>{});
 if (typeof attachPullToRefresh === 'function') attachPullToRefresh();
 if (typeof attachLongPress === 'function') attachLongPress();
