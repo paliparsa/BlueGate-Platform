@@ -4546,3 +4546,27 @@ small{font-size:var(--bg-font-micro)!important;line-height:1.65}
 
 /* v3.0.6.2 grouped catalog picker */
 .catalog-group-picker{display:grid;gap:10px;padding:2px 0 4px}.catalog-group-option{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:right;border:1px solid var(--line,#223248);background:rgba(255,255,255,.035);border-radius:14px;padding:14px 15px;color:inherit}.catalog-group-option span{display:grid;gap:4px}.catalog-group-option b{font-size:14px}.catalog-group-option small{font-size:12px;opacity:.68}.catalog-group-option i{font-style:normal;font-size:24px;opacity:.6}.catalog-group-option:active{transform:scale(.99);background:rgba(29,155,240,.10)}
+
+/* v3.0.6.2.3 — My Services detail */
+.my-service-detail-page{padding:8px 0 110px;direction:rtl}
+.my-service-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 2px 12px}
+.my-service-back{border:0;background:transparent;color:var(--muted);display:flex;align-items:center;gap:7px;font-weight:800;font-size:13px;padding:8px 2px;cursor:pointer}
+.my-service-back:first-letter{font-size:22px}
+.my-service-status{font-size:11px;font-weight:900;padding:7px 10px;border-radius:999px;background:rgba(34,197,94,.11);color:#4ade80;border:1px solid rgba(34,197,94,.22)}
+.my-service-status.vpn{background:rgba(29,155,240,.12);color:#72c7ff;border-color:rgba(29,155,240,.28)}
+.my-service-hero{display:flex;align-items:center;gap:15px;padding:18px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012));box-shadow:0 14px 35px rgba(0,0,0,.16);margin-bottom:12px}
+.my-service-hero.vpn{background:radial-gradient(circle at 88% 0%,rgba(29,155,240,.2),transparent 42%),linear-gradient(145deg,rgba(17,36,60,.95),rgba(8,19,34,.98));border-color:rgba(61,169,255,.23)}
+.my-service-hero-icon{width:58px;height:58px;display:grid;place-items:center;flex:0 0 58px;border-radius:18px;font-size:26px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.06)}
+.my-service-hero.vpn .my-service-hero-icon{background:linear-gradient(145deg,rgba(29,155,240,.22),rgba(14,116,194,.08));box-shadow:0 10px 28px rgba(29,155,240,.14)}
+.my-service-hero-copy{min-width:0;flex:1}.my-service-hero-copy small{font-size:9px;letter-spacing:1.6px;color:#64c1ff;font-weight:900}.my-service-hero-copy h2{font-size:20px;margin:4px 0 2px}.my-service-hero-copy p{font-size:12px;color:var(--muted);margin:0}
+.my-service-expiry{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:11px;color:var(--muted)}.my-service-expiry b{color:var(--text);font-size:12px}
+.vpn-service-actions{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin:12px 0 14px}
+.vpn-action{min-width:0;border-radius:18px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.035);padding:13px 9px 11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text);cursor:pointer;min-height:92px;transition:transform .15s ease,border-color .15s ease,background .15s ease}
+.vpn-action:active{transform:scale(.97)}.vpn-action-icon{font-size:22px;line-height:1;margin-bottom:3px}.vpn-action b{font-size:12px;white-space:nowrap}.vpn-action small{font-size:8.5px;color:var(--muted);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.vpn-action.vpn-open{background:linear-gradient(145deg,#1898ea,#0f7ccc);border-color:#35adf8;color:white;box-shadow:0 10px 28px rgba(29,155,240,.22)}.vpn-action.vpn-open small{color:rgba(255,255,255,.78)}
+.vpn-action.vpn-copy{background:rgba(40,100,148,.12);border-color:rgba(67,166,232,.2)}.vpn-action.vpn-renew{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.2)}
+.my-service-main-actions{display:flex;gap:8px;margin:12px 0}.my-service-main-actions button{flex:1}
+.my-service-info-card,.vpn-link-card{border:1px solid var(--line);border-radius:20px;background:var(--card);padding:6px 15px;margin-top:10px}
+.my-service-info-card>div{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px 0;border-bottom:1px solid var(--line)}.my-service-info-card>div:last-child{border-bottom:0}.my-service-info-card span{font-size:11px;color:var(--muted)}.my-service-info-card b{font-size:12px;text-align:left;max-width:65%;overflow-wrap:anywhere}.my-service-info-card .service-ok{color:#4ade80}
+.vpn-link-card{padding:14px}.vpn-link-card>div span{font-size:12px;font-weight:900}.vpn-link-card>div small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.vpn-link-card code{direction:ltr;text-align:left;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(0,0,0,.18);padding:10px;border-radius:12px;margin:10px 0;font-size:10px;color:#88d2ff}.vpn-link-card button{width:100%;border:1px solid rgba(29,155,240,.24);background:rgba(29,155,240,.09);color:#7acbff;border-radius:12px;padding:10px;font-weight:900}
+@media(max-width:390px){.vpn-service-actions{grid-template-columns:1.2fr 1fr 1fr;gap:6px}.vpn-action{padding:11px 5px;min-height:84px}.vpn-action b{font-size:11px}.vpn-action small{font-size:7.5px}.my-service-hero{padding:15px}.my-service-hero-icon{width:50px;height:50px;flex-basis:50px}}
