@@ -699,6 +699,48 @@ if ($action === 'submit_receipt') {
     }catch(Throwable $e){if($fileId){@unlink(__DIR__.'/'.$fileId);}api_out(['ok'=>false,'error'=>api_exception_code($e,'ORDER_NOT_FOUND'),'message'=>'سفارش پیدا نشد یا در وضعیت قابل ارسال رسید نیست.'],400);}
 }
 
+if ($action === 'create_credit_topup') {
+    api_rate_limit('credit_topup_create',(string)$user['id'],12,300,300);
+    try{
+        $amount=(int)($input['amount']??0);
+        $topup=create_credit_topup((int)$user['id'],$amount);
+        api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['topup'=>credit_topup_public($topup)]);
+    }catch(Throwable $e){
+        api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'ساخت درخواست شارژ انجام نشد.')],400);
+    }
+}
+if ($action === 'credit_topup_set_method') {
+    api_rate_limit('credit_topup_method',(string)$user['id'],20,300,300);
+    try{
+        $topup=set_credit_topup_method((int)($input['topup_id']??0),(int)$user['id'],(string)($input['method']??''),is_array($input['details']??null)?$input['details']:[]);
+        api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['topup'=>credit_topup_public($topup)]);
+    }catch(Throwable $e){
+        api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'انتخاب روش پرداخت انجام نشد.')],400);
+    }
+}
+if ($action === 'credit_topup_start_stars') {
+    api_rate_limit('credit_topup_stars',(string)$user['id'],10,300,300);
+    try{
+        $topup=set_credit_topup_method((int)($input['topup_id']??0),(int)$user['id'],'stars',[]);
+        if(empty($topup['telegram_id'])) throw new RuntimeException('TELEGRAM_NOT_CONNECTED');
+        $res=send_stars_invoice_for_topup($topup);
+        if(empty($res['ok'])) throw new RuntimeException('STARS_INVOICE_FAILED');
+        api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['topup'=>credit_topup_public(credit_topup_by_id((int)$topup['id'])),'stars_invoice_sent'=>true]);
+    }catch(Throwable $e){
+        api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'ارسال فاکتور Stars انجام نشد.')],400);
+    }
+}
+if ($action === 'credit_topup_submit_crypto_hash') {
+    api_rate_limit('credit_topup_crypto_hash',(string)$user['id'],15,600,600);
+    try{
+        $topup=submit_credit_topup_crypto_hash((int)($input['topup_id']??0),(int)$user['id'],(string)($input['tx_hash']??''));
+        notify_admins('🪙 TXID شارژ اعتبار ثبت شد\\nTop-up: <code>#'.$topup['id'].'</code>\\nمبلغ: <b>'.money((int)$topup['amount']).'</b>');
+        api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['topup'=>credit_topup_public($topup)]);
+    }catch(Throwable $e){
+        api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'ثبت TXID انجام نشد.')],400);
+    }
+}
+
 if ($action === 'credit_topup_submit_receipt') { api_rate_limit('credit_topup_receipt',(string)$user['id'],12,900,900); $id=(int)($input['topup_id']??0);$note=trim((string)($input['note']??''));$fileId=null;if(!empty($input['receipt_b64'])){$raw=(string)$input['receipt_b64'];if(strlen($raw)>8*1024*1024)api_out(['ok'=>false,'message'=>'حجم رسید بیشتر از حد مجاز است.'],400);if(!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,#i',$raw))api_out(['ok'=>false,'message'=>'فرمت رسید معتبر نیست.'],400);$b64=preg_replace('#^data:image/(jpeg|jpg|png|webp);base64,#i','',$raw);$bin=base64_decode($b64,true);if($bin&&strlen($bin)>100&&strlen($bin)<=5*1024*1024){$fi=new finfo(FILEINFO_MIME_TYPE);$mime=$fi->buffer($bin);$ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;if(!$ext)api_out(['ok'=>false,'message'=>'محتوای تصویر معتبر نیست.'],400);$dir=__DIR__.'/uploads/receipts/'.date('Ymd');if(!is_dir($dir))@mkdir($dir,0775,true);$fileId='uploads/receipts/'.date('Ymd').'/topup_'.bin2hex(random_bytes(12)).'.'.$ext;file_put_contents(__DIR__.'/'.$fileId,$bin,LOCK_EX);}}
     try{$t=submit_credit_topup_receipt($id,(int)$user['id'],$note,$fileId);notify_admins('💳 رسید شارژ اعتبار ثبت شد\\nTop-up: <code>#'.$t['id'].'</code>\\nمبلغ: <b>'.money((int)$t['amount']).'</b>');api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['topup'=>credit_topup_public($t)]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ثبت رسید شارژ انجام نشد.'],400);} }
 if ($action === 'cancel_credit_topup') {
