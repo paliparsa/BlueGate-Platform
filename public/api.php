@@ -279,14 +279,9 @@ function dashboard_payload(array $user): array {
     foreach (mission_rows() as $m) $missions[] = ['target'=>(int)$m['target'], 'reward'=>(int)$m['reward'], 'done'=>$todayCount >= (int)$m['target'], 'claimed'=>is_mission_claimed((int)$user['id'], $today, (int)$m['target'])];
     $tx = db()->prepare('SELECT type, amount, description, created_at FROM transactions WHERE user_id=? ORDER BY id DESC LIMIT 15'); $tx->execute([$user['id']]);
     $products = array_map(fn($p)=>product_payload($p, true), storefront_shop_products());
-    // One order read per boot. v3.0.5 previously re-read up to 80 orders just to build My Services.
-    $orders = array_map('order_public_payload', user_orders((int)$user['id'], 30));
-    $services = active_services_from_order_payloads($orders,12);
-    // New Mini App conveniences must never take down authentication/bootstrap.
-    $wishlist = safe_mini_optional(fn()=>wishlist_product_ids((int)$user['id']), []);
-    $notifications = safe_mini_optional(fn()=>user_notifications((int)$user['id'],30), []);
-    $notificationUnread = safe_mini_optional(fn()=>user_notification_unread_count((int)$user['id']), 0);
-    return ['ok'=>true, 'is_guest'=>false, 'bot_username'=>app_config('BOT_USERNAME',''), 'brand'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'theme_color'=>setting('theme_color', app_config('DEFAULT_THEME_COLOR', '#1d9bf0')), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'start_reward'=>setting_int('start_reward', 2000), 'spin_every'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards'=>spin_rewards_public(), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'custom_code_min'=>setting_int('custom_code_min_referrals', 3), 'is_admin'=>is_admin($user), 'user'=>user_payload($user), 'missions'=>$missions, 'leaderboard'=>array_map(function($r){ return ['name'=>strip_tags(display_name($r)), 'referrals'=>(int)$r['referrals_count'], 'earned'=>(int)$r['total_earned']]; }, top_users(10)), 'transactions'=>$tx->fetchAll(), 'credit_topup'=>credit_topup_config(), 'credit_topups'=>array_map('credit_topup_public',credit_topups_for_user((int)$user['id'],12)), 'shop_categories'=>array_map('category_payload', shop_categories(true)), 'shop_products'=>$products, 'catalog'=>catalog_public_payload(), 'orders'=>$orders, 'services'=>$services, 'wishlist_product_ids'=>$wishlist, 'notifications'=>$notifications, 'notification_unread'=>(int)$notificationUnread, 'payment_methods'=>payment_methods_public($user), 'payment_instructions'=>setting('payment_instructions', 'لطفاً پرداخت را انجام دهید و رسید را ارسال کنید.'), 'storefront_settings'=>storefront_settings_payload(), 'storefront_content'=>storefront_content_payload(), 'storefront_rates'=>storefront_rates_payload(), 'achievements'=>user_achievements($user)];
+    // Keep authentication/bootstrap deliberately small. Mini App enhancements are hydrated after first paint.
+    $orders = array_map('order_public_payload', user_orders((int)$user['id'], 20));
+    return ['ok'=>true, 'is_guest'=>false, 'bot_username'=>app_config('BOT_USERNAME',''), 'brand'=>setting('brand_name', app_config('BRAND_NAME', 'BlueGate')), 'theme_color'=>setting('theme_color', app_config('DEFAULT_THEME_COLOR', '#1d9bf0')), 'button_colors_enabled'=>setting_bool('button_colors_enabled', true), 'button_colors'=>button_colors(), 'require_contact_auth'=>setting_bool('require_contact_auth', false), 'notify_new_user'=>setting_bool('notify_new_user', true), 'start_reward'=>setting_int('start_reward', 2000), 'spin_every'=>setting_int('spin_referrals_per_chance', 5), 'spin_rewards'=>spin_rewards_public(), 'support_username'=>setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')), 'custom_code_min'=>setting_int('custom_code_min_referrals', 3), 'is_admin'=>is_admin($user), 'user'=>user_payload($user), 'missions'=>$missions, 'leaderboard'=>array_map(function($r){ return ['name'=>strip_tags(display_name($r)), 'referrals'=>(int)$r['referrals_count'], 'earned'=>(int)$r['total_earned']]; }, top_users(10)), 'transactions'=>$tx->fetchAll(), 'credit_topup'=>credit_topup_config(), 'credit_topups'=>array_map('credit_topup_public',credit_topups_for_user((int)$user['id'],12)), 'shop_categories'=>array_map('category_payload', shop_categories(true)), 'shop_products'=>$products, 'catalog'=>catalog_public_payload(), 'orders'=>$orders, 'payment_methods'=>payment_methods_public($user), 'payment_instructions'=>setting('payment_instructions', 'لطفاً پرداخت را انجام دهید و رسید را ارسال کنید.'), 'storefront_settings'=>storefront_settings_payload(), 'storefront_content'=>storefront_content_payload(), 'storefront_rates'=>storefront_rates_payload(), 'achievements'=>user_achievements($user)];
 }
 function require_admin(array $user): void { if (!is_admin($user)) api_out(['ok'=>false,'error'=>'ADMIN_ONLY','message'=>'دسترسی ادمین لازم است.'],403); }
 function require_admin_perm(array $user,string $perm): void { require_admin($user);if(!admin_can((int)$user['telegram_id'],$perm))api_out(['ok'=>false,'error'=>'ADMIN_PERMISSION_DENIED','message'=>'نقش ادمین شما اجازه این عملیات را نمی‌دهد.'],403);}
@@ -516,6 +511,17 @@ if ($action === 'logout') {
     }
     api_clear_session_cookie();api_out(['ok'=>true]);
 }
+if ($action === 'mini_enhancements') {
+    $op = array_map('order_public_payload', user_orders((int)$user['id'], 30));
+    api_out([
+        'ok'=>true,
+        'services'=>active_services_from_order_payloads($op,12),
+        'wishlist_product_ids'=>safe_mini_optional(fn()=>wishlist_product_ids((int)$user['id']), []),
+        'notifications'=>safe_mini_optional(fn()=>user_notifications((int)$user['id'],30), []),
+        'notification_unread'=>(int)safe_mini_optional(fn()=>user_notification_unread_count((int)$user['id']), 0),
+    ]);
+}
+
 if ($action === 'wishlist_toggle') { try{$r=toggle_user_wishlist((int)$user['id'],(int)($input['product_id']??0));api_out(['ok'=>true,'wishlist_product_ids'=>$r['ids'],'active'=>$r['active']]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'تغییر علاقه‌مندی انجام نشد.'],400);} }
 if ($action === 'notifications_read') { mark_user_notifications_read((int)$user['id']);api_out(['ok'=>true,'notification_unread'=>0]); }
 if ($action === 'create_cart_orders') {

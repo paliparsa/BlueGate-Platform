@@ -51,7 +51,8 @@ const adminFlag = getUrlFlag('admin') || getUrlFlag('mode') || getUrlFlag('start
 const isAdminMode = adminFlag === '1' || String(adminFlag).toLowerCase() === 'admin';
 let state = null, adminState = null, currentTab = 'shop', currentAdminTab = 'dashboard', settingsSubTab = 'general', searchTerm = '', activeCategory = 'all', pendingEdit = null, currentOrderId = null, orderFilter = 'all', adminOrderViewMode = 'board', adminOrdersLimit = 25, lastSpinPrize = null, searchTimeout = null, shopSort = 'newest', shopFilterInStock = false, shopFilterFeatured = false, shopFilterWishlist = false, _shareUrl = '';
 // Product card display mode: 'compact' (grid) or 'detailed' (list)
-let productCardMode = localStorage.getItem('blue_ref_card_mode') || 'compact';
+let productCardMode = 'compact';
+try { productCardMode = localStorage.getItem('blue_ref_card_mode') || 'compact'; } catch(_) {}
 
 function saveAppLastState(){
   try {
@@ -300,7 +301,7 @@ function miniBootContext(){
     mode:isAdminMode?'admin':'user',
     telegram:Boolean(initData),
     platform:String(tg?.platform||'unknown'),
-    version:'3.0.5.2'
+    version:'3.0.5.3'
   };
 }
 function setMiniBootState(kind, message=''){
@@ -336,6 +337,23 @@ function syncMiniAuthChrome(){
   const loggedIn=Boolean(state?.user&&!state?.is_guest&&!state?.user?.is_guest);
   if(authBtn) authBtn.classList.toggle('hidden', loggedIn);
 }
+let _miniEnhancementsPromise=null;
+function hydrateMiniEnhancements(){
+  if(isAdminMode || state?.is_guest || !state?.user) return Promise.resolve(null);
+  if(_miniEnhancementsPromise) return _miniEnhancementsPromise;
+  _miniEnhancementsPromise=api('mini_enhancements').then(r=>{
+    if(Array.isArray(r.services)) state.services=r.services;
+    if(Array.isArray(r.wishlist_product_ids)){state.wishlist_product_ids=r.wishlist_product_ids;try{localStorage.setItem('blue_ref_wishlist',JSON.stringify(r.wishlist_product_ids))}catch(_){}}
+    if(Array.isArray(r.notifications)) state.notifications=r.notifications;
+    if(r.notification_unread!==undefined) state.notification_unread=Number(r.notification_unread||0);
+    updateNotificationBadge();
+    if(currentTab==='home') renderHome();
+    else if(currentTab==='shop' && shopFilterWishlist) renderShopSections();
+    return r;
+  }).catch(e=>{console.warn('[BlueGate MiniApp enhancements skipped]',e?.message||e);return null}).finally(()=>{_miniEnhancementsPromise=null});
+  return _miniEnhancementsPromise;
+}
+
 async function load({force=false}={}){
   if(_bootPromise&&!force)return _bootPromise;
   _bootPromise=(async()=>{
@@ -390,6 +408,10 @@ async function load({force=false}={}){
       }
       try{hideSkeleton();}catch(_){}
       setMiniBootState('ready');
+      if(!isAdminMode){
+        // First paint wins: optional account conveniences hydrate only after the shop is usable.
+        setTimeout(()=>hydrateMiniEnhancements(),120);
+      }
       return isAdminMode?adminState:state;
     }catch(e){
       console.error('[BlueGate MiniApp boot failed]',{...ctx,code:e?.error||'',message:e?.message||String(e)});
@@ -413,7 +435,8 @@ async function loadReceiptImage(orderId){try{haptic('light');showStatus('در ح
 let _adminLastTodayCount=-1;
 function startAdminLivePolling(){if(!isAdminMode||currentAdminTab!=='dashboard')return;setTimeout(async()=>{if(!isAdminMode||currentAdminTab!=='dashboard')return;try{const snap=await api('admin_summary');const c=Number(snap.report?.today?.c||0);if(_adminLastTodayCount>=0&&c>_adminLastTodayCount){hapticNotify('success');playChime();const el=document.querySelector('.admin-stat-card:first-child');if(el){el.classList.add('pulse-alert');setTimeout(()=>el.classList.remove('pulse-alert'),2000)}showStatus(`🛎 سفارش جدید! (${nf(c-_adminLastTodayCount)} عدد)`)}_adminLastTodayCount=c;adminState=snap;renderAdmin()}catch(e){}finally{if(isAdminMode&&currentAdminTab==='dashboard')startAdminLivePolling()}},30000)}
 /* ===== Batch 2 utilities: cart, referral tree, customer 360, CSV export ===== */
-let _cart=JSON.parse(localStorage.getItem('blue_ref_cart')||'[]');
+let _cart=[];
+try { const raw=localStorage.getItem('blue_ref_cart'); const parsed=raw?JSON.parse(raw):[]; _cart=Array.isArray(parsed)?parsed:[]; } catch(_) { _cart=[]; try{localStorage.removeItem('blue_ref_cart')}catch(__){} }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',updateCartFab);}else{setTimeout(updateCartFab,0);}
 setTimeout(updateCartFab,300);
 setTimeout(updateCartFab,1000);
