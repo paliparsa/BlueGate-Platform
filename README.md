@@ -371,7 +371,7 @@ BlueGate Platform is an application repository, not a reusable public framework.
 This release hardens Catalog Studio edits against stale browser drafts. Group and plan IDs are now validated against their actual parent records before saving, and incompatible older Web/Mini App drafts are discarded automatically. This specifically fixes false “duplicate plan title” errors when editing existing catalog entries.
 
 
-## Web routes (v3.0.4.2)
+## Web routes (v3.0.5)
 
 The website uses real browser paths instead of hash-only member navigation. Useful routes include:
 

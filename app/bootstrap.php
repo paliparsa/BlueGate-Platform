@@ -112,6 +112,20 @@ function migrate(): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
 
+    db()->exec('CREATE TABLE IF NOT EXISTS user_wishlists (
+        user_id BIGINT UNSIGNED NOT NULL, product_id BIGINT UNSIGNED NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id,product_id), INDEX(product_id),
+        CONSTRAINT fk_wishlist_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_wishlist_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    db()->exec('CREATE TABLE IF NOT EXISTS user_notifications (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, type VARCHAR(32) NOT NULL DEFAULT \'info\',
+        title VARCHAR(255) NOT NULL, body VARCHAR(1000) NULL, order_id BIGINT UNSIGNED NULL, is_read TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(user_id,is_read), INDEX(created_at),
+        CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_notification_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
     db()->exec('CREATE TABLE IF NOT EXISTS credit_topups (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, amount BIGINT NOT NULL,
         status VARCHAR(32) NOT NULL DEFAULT \'pending_payment\', payment_method VARCHAR(32) NULL, payment_details LONGTEXT NULL,
@@ -2894,6 +2908,7 @@ function update_order_status(int $orderId, string $status, string $title='', str
     $sql .= ' WHERE id=?'; $params[]=$orderId;
     db()->prepare($sql)->execute($params);
     add_order_event($orderId, $status, $title ?: order_status_fa($status), $note, $public);
+    if($public){$fresh=order_by_id($orderId);if($fresh)notify_user_event((int)$fresh['user_id'],'order_status',$title ?: order_status_fa($status),$note ?: order_catalog_display_name($fresh),$orderId);}
     return order_by_id($orderId);
 }
 function submit_order_receipt(int $orderId, int $userId, string $note='', ?string $fileId=null): array {
@@ -3054,6 +3069,8 @@ function deliver_order(int $orderId, string $deliveryText): ?array {
         throw $e;
     }
 
+    $deliveredFresh=order_by_id($orderId);if($deliveredFresh)notify_user_event((int)$deliveredFresh['user_id'],'delivered','سفارش تحویل داده شد',order_catalog_display_name($deliveredFresh),$orderId);
+
     if($notifyRef){
         try {
             send_msg((int)$notifyRef['telegram_id'],"🎁 زیرمجموعه شما خرید انجام داد و سفارش تحویل شد.\nپورسانت: <b>".money((int)$notifyRef['reward'])."</b>\nسفارش: <code>#{$orderId}</code>",main_menu_keyboard(is_full_admin((int)$notifyRef['telegram_id'])));
@@ -3140,6 +3157,36 @@ function set_order_service_delivery(int $orderId, string $url, string $title='',
     return order_by_id($orderId);
 }
 
+function wishlist_product_ids(int $userId): array {
+    if (!table_exists('user_wishlists')) return [];
+    $q=db()->prepare('SELECT product_id FROM user_wishlists WHERE user_id=? ORDER BY created_at DESC');$q->execute([$userId]);
+    return array_map('intval',$q->fetchAll(PDO::FETCH_COLUMN)?:[]);
+}
+function toggle_user_wishlist(int $userId,int $productId): array {
+    $p=shop_product($productId);if(!$p||(int)($p['is_active']??0)!==1)throw new RuntimeException('PRODUCT_NOT_FOUND');
+    $q=db()->prepare('SELECT 1 FROM user_wishlists WHERE user_id=? AND product_id=?');$q->execute([$userId,$productId]);
+    if($q->fetchColumn()){db()->prepare('DELETE FROM user_wishlists WHERE user_id=? AND product_id=?')->execute([$userId,$productId]);$active=false;}
+    else{db()->prepare('INSERT IGNORE INTO user_wishlists (user_id,product_id) VALUES (?,?)')->execute([$userId,$productId]);$active=true;}
+    return ['active'=>$active,'ids'=>wishlist_product_ids($userId)];
+}
+function notify_user_event(int $userId,string $type,string $title,string $body='',?int $orderId=null): void {
+    if($userId<=0||!table_exists('user_notifications'))return;
+    try{db()->prepare('INSERT INTO user_notifications (user_id,type,title,body,order_id) VALUES (?,?,?,?,?)')->execute([$userId,mb_substr($type,0,32),mb_substr($title,0,255),mb_substr($body,0,1000),$orderId]);}catch(Throwable $e){}
+}
+function user_notifications(int $userId,int $limit=30): array {
+    if(!table_exists('user_notifications'))return [];$limit=max(1,min(100,$limit));
+    $q=db()->prepare('SELECT id,type,title,body,order_id,is_read,created_at FROM user_notifications WHERE user_id=? ORDER BY id DESC LIMIT '.$limit);$q->execute([$userId]);
+    return array_map(function($r){$r['id']=(int)$r['id'];$r['order_id']=$r['order_id']!==null?(int)$r['order_id']:null;$r['is_read']=(int)$r['is_read'];return $r;},$q->fetchAll()?:[]);
+}
+function mark_user_notifications_read(int $userId): void {if(table_exists('user_notifications'))db()->prepare('UPDATE user_notifications SET is_read=1 WHERE user_id=? AND is_read=0')->execute([$userId]);}
+function user_notification_unread_count(int $userId): int {if(!table_exists('user_notifications'))return 0;$q=db()->prepare('SELECT COUNT(*) FROM user_notifications WHERE user_id=? AND is_read=0');$q->execute([$userId]);return (int)$q->fetchColumn();}
+function user_active_services(int $userId,int $limit=12): array {
+    $rows=user_orders($userId,80,true);$seen=[];$out=[];$now=time();
+    foreach($rows as $o){if(normalize_order_status((string)$o['status'])!=='delivered')continue;if(!empty($o['expires_at'])&&strtotime((string)$o['expires_at'])<$now)continue;
+        $key=!empty($o['catalog_plan_id'])?'p'.(int)$o['catalog_plan_id']:'l'.(int)$o['product_id'].'v'.(int)($o['variant_id']??0);if(isset($seen[$key]))continue;$seen[$key]=1;
+        $x=order_public_payload($o);$x['renewable']=1;$out[]=$x;if(count($out)>=$limit)break;
+    }return $out;
+}
 function order_public_payload(array $o, bool $is_admin = false): array {
     if (!empty($o['id']) && ($o['payment_method'] ?? '') === 'crypto') { $o = refresh_crypto_order_amount_if_open((int)$o['id']) ?: $o; }
     $name = order_catalog_display_name($o);
