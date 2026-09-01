@@ -608,8 +608,16 @@ function productMinPriceNumber(p){
   return direct>0?direct:0;
 }
 function productCardPriceLine(p){
+  const discount=productDiscountInfo(p);
+  if(discount?.kind==='variant'&&discount.variantId){
+    const v=(p?.variants||[]).find(x=>Number(x.id)===Number(discount.variantId));
+    const sale=Number(v?.price||0);
+    if(sale>0) return `<span>از</span><strong>${fmt(sale)}</strong><em>تومان</em>`;
+  }
+  const directDiscount=Number(p?.discount_percent||0)>0&&Number(p?.price||0)>0?Number(p.price):0;
+  if(directDiscount>0) return `<span>از</span><strong>${fmt(directDiscount)}</strong><em>تومان</em>`;
   const min=productMinPriceNumber(p);
-  if(min>0) return `<strong>${fmt(min)}</strong><span>از</span><em>تومان</em>`;
+  if(min>0) return `<span>از</span><strong>${fmt(min)}</strong><em>تومان</em>`;
   const raw=String(p?.price_label||'مشاهده پلن‌ها').trim();
   return `<strong>${esc(raw)}</strong>`;
 }
@@ -1274,13 +1282,13 @@ function renderShopSections(){const box=$('shopSections'); if(box) box.innerHTML
 function sectionHtml(title,products,categoryId='all',allowViewAll=true){const viewBtn=allowViewAll?`<button type="button" class="section-view-all" data-cat="${esc(String(categoryId))}">View All</button>`:'';return `<section class="section-row catalog-section"><div class="section-title"><h2>${title}</h2>${viewBtn}</div><div class="h-scroll product-grid-wrap">${products.slice(0,12).map(productCard).join('')}</div></section>`}
 function gridHtml(products){return products.length ? `<section class="section-row catalog-section catalog-grid-view"><div class="h-scroll product-grid-wrap">${products.map(productCard).join('')}</div></section>` : ''}
 function productCard(p){
-  const discountNote=productCardDiscountNoteText(p);
+  const hasDiscount=Boolean(productDiscountInfo(p));
   const w=getWishlist();
   const wishBtn=`<button class="wishlist-fab ${w.includes(Number(p.id))?'active':''}" data-wishlist-pid="${p.id}" aria-label="نشان‌کردن">${w.includes(Number(p.id))?'❤️':'🤍'}</button>`;
   const badgeHtml=productDiscountBadgeHtml(p);
-  return `<article class="product-tile catalog-tile ${discountNote?'discount-tile':''}" data-product-preview="${p.id}">`+
+  return `<article class="product-tile catalog-tile ${hasDiscount?'discount-tile':''}" data-product-preview="${p.id}">`+
     `<div class="tile-img tile-visual">${cardImage(p,'🛍')}${badgeHtml}${wishBtn}</div>`+
-    `<div class="tile-body tile-caption"><h3 class="tile-name">${esc(p.name)}</h3>${discountNote?`<small class="product-card-discount-note">${discountNote}</small>`:''}<div class="product-price-stack">${productCardPriceLine(p)}</div></div></article>`;
+    `<div class="tile-body tile-caption"><h3 class="tile-name">${esc(p.name)}</h3><div class="product-price-stack">${productCardPriceLine(p)}</div></div></article>`;
 }
 /* Legacy inline product purchase renderer removed in v2.8. Product Sheet owns selection and actions. */
 function openVariantDetails(pid,vid){ showProduct(pid,vid); }

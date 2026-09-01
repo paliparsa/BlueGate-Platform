@@ -104,6 +104,13 @@ function genericDiscountInfo(product){
   return d>0?{percent:d,title:''}:null;
 }
 function genericPriceLine(product){
+  const discount=genericDiscountInfo(product);
+  if(discount?.title){
+    const v=(product?.variants||[]).find(x=>String(x.title||'')===String(discount.title));
+    const sale=Number(v?.price||0);
+    if(sale>0)return `از ${fmt(sale)} تومان`;
+  }
+  if(Number(product?.discount_percent||0)>0&&Number(product?.price||0)>0)return `از ${fmt(product.price)} تومان`;
   const base=genericLowestPrice(product);
   return base>0?`از ${fmt(base)} تومان`:(product?.price_label||'مشاهده پلن‌ها');
 }
@@ -120,11 +127,9 @@ function renderGenericProductGrid(){
     card.style.setProperty('--generic-accent',index%4===1?'145,112,255':index%4===2?'73,215,165':index%4===3?'255,176,77':'59,159,255');
     const discount=genericDiscountInfo(p);
     const discountChip=discount?`<span class="generic-catalog-badge">${discount.title?`${discount.percent}٪ · ${esc(discount.title)}`:`${discount.percent}٪ تخفیف`}</span>`:'';
-    const subtitle=esc(p.category_title||'BlueGate Service');
-    card.innerHTML=`${discountChip}<div class="generic-card-media">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}">`:`<span>${esc(emoji)}</span>`}</div><div class="generic-card-copy"><small class="generic-card-kicker">${subtitle}</small><h3 class="generic-card-name">${esc(p.name)}</h3><div class="generic-card-price">${genericPriceLine(p)}</div><button class="btn primary generic-buy" type="button"><span>${variants.length?'مشاهده و انتخاب پلن':'مشاهده و خرید'}</span><b>←</b></button></div>`;
+    card.innerHTML=`${discountChip}<div class="generic-card-media">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}">`:`<span>${esc(emoji)}</span>`}</div><div class="generic-card-copy"><h3 class="generic-card-name">${esc(p.name)}</h3><div class="generic-card-price">${genericPriceLine(p)}</div></div>`;
     const openProduct=()=>BGCheckout.open({scope:'generic',product:p.name,description:p.full_description||p.short_description||'',image:p.image_url||'',icon:emoji,badge:p.category_title||'BlueGate Service',delivery:p.delivery_type_fa||'تحویل از حساب BlueGate',toman:Number(p.price||genericLowestPrice(p)||0),rates:state.rates,productId:p.id,variantId:variants[0]?.id||null,variants:variants.map(v=>({id:v.id,title:v.title,price:Number(v.price||0),duration_days:Number(v.duration_days||0),description:v.description||'',old_price:Number(v.old_price||0),discount_percent:Number(v.discount_percent||0),product_id:Number(v.product_id||p.id)}))});
     card.addEventListener('click',openProduct);
-    card.querySelector('.generic-buy').addEventListener('click',(ev)=>{ev.stopPropagation();openProduct()});
     grid.appendChild(card);
   });
 }

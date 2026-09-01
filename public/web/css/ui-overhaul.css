@@ -1174,3 +1174,16 @@ html.vpn-picker-open,body.vpn-picker-open{overflow:hidden}
 .generic-card-price{font-size:15px;font-weight:900;color:#f7fbff}
 .generic-product-card--catalog .generic-buy{margin-top:auto;width:100%;min-width:0!important;min-height:46px!important;border-radius:14px!important;box-shadow:none!important}
 @media (max-width:860px){.generic-products-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:14px!important}.generic-card-copy{padding:12px 12px 14px}.generic-card-name{font-size:15px;min-height:44px}.generic-card-price{font-size:14px}}
+
+
+/* v3.0.1 reference-style web catalog cards */
+.generic-products-grid{grid-template-columns:repeat(auto-fill,minmax(156px,1fr))!important;gap:16px!important}
+.generic-product-card--catalog{max-width:220px!important;border-radius:20px!important;background:#121b28!important;border-color:rgba(255,255,255,.09)!important;box-shadow:0 10px 28px rgba(0,0,0,.18)!important}
+.generic-card-media{aspect-ratio:1/1!important;padding:18px!important;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018))!important}
+.generic-card-media img{object-fit:contain!important;object-position:center!important;width:100%!important;height:100%!important}
+.generic-card-copy{padding:11px 12px 13px!important;gap:5px!important;background:rgba(255,255,255,.025)!important}
+.generic-card-kicker,.generic-product-card--catalog .generic-buy{display:none!important}
+.generic-card-name{font-size:14px!important;line-height:1.45!important;min-height:41px!important;margin:0!important}
+.generic-card-price{font-size:12.5px!important;line-height:1.4!important;color:#f0f4f8!important}
+.generic-catalog-badge{top:9px!important;right:9px!important;padding:4px 8px!important;font-size:10.5px!important;max-width:calc(100% - 18px)!important}
+@media(max-width:860px){.generic-products-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important;gap:12px!important}.generic-card-media{padding:15px!important}.generic-card-name{font-size:13.5px!important;min-height:39px!important}.generic-card-price{font-size:12px!important}}
