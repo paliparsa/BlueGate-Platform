@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
   theme_color VARCHAR(16) NULL,
   phone_number VARCHAR(64) NULL,
   phone_verified_at DATETIME NULL,
+  welcome_version_seen INT NOT NULL DEFAULT 0,
   is_banned TINYINT(1) NOT NULL DEFAULT 0,
   deleted_at DATETIME NULL,
   start_notified TINYINT(1) NOT NULL DEFAULT 0,
@@ -551,10 +552,29 @@ CREATE TABLE IF NOT EXISTS user_notifications (
   title VARCHAR(255) NOT NULL,
   body VARCHAR(1000) NULL,
   order_id BIGINT UNSIGNED NULL,
+  action_type VARCHAR(32) NULL,
+  action_value VARCHAR(255) NULL,
+  campaign_id BIGINT UNSIGNED NULL,
   is_read TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX(user_id,is_read),
   INDEX(created_at),
+  INDEX(campaign_id),
   CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_notification_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS notification_campaigns (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  admin_telegram_id BIGINT NULL,
+  type VARCHAR(32) NOT NULL DEFAULT 'info',
+  title VARCHAR(255) NOT NULL,
+  body VARCHAR(1000) NULL,
+  action_type VARCHAR(32) NULL,
+  action_value VARCHAR(255) NULL,
+  audience VARCHAR(32) NOT NULL DEFAULT 'all',
+  recipient_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX(created_at),
+  INDEX(audience)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

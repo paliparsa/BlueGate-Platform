@@ -1,37 +1,71 @@
-# BlueGate Platform
+# پلتفرم BlueGate
 
-> **Current release:** v3.0.6 — Mini App Enhancements (Safe). The stable v3.0.5.5 boot is preserved; user enhancements hydrate only after first paint.
+**نسخه فعلی: v3.0.7 — Welcome, Notifications & Account Security**
 
-BlueGate Platform is the main commerce stack behind BlueGate: a PHP/MySQL storefront, customer account area, administration panel, Telegram Mini App and Telegram Bot running on one catalog, one order system and one source of truth.
+BlueGate Platform هسته اصلی فروش و مدیریت سرویس‌های BlueGate است. این پروژه شامل وب‌سایت فروشگاهی، حساب کاربری، پنل مدیریت، Telegram Mini App و ربات تلگرام است و همه این بخش‌ها از یک Backend، دیتابیس، کاتالوگ و سیستم سفارش مشترک استفاده می‌کنند.
 
-**Current build: v3.0.6**
-
-This repository is intended to be deployed as a complete application. The Website and Telegram Mini App use the same backend and catalog data, so a product edited in Admin is not maintained separately for each client.
+این نسخه به‌صورت کامل برای نصب روی سرور طراحی شده و تغییرات محصولات، پلن‌ها، سفارش‌ها و کاربران بین وب و Mini App مشترک است.
 
 ---
 
-## What is included
+## امکانات اصلی
 
-- Storefront Website
-- Customer account and authentication
-- Order lifecycle and delivery flow
-- BlueGate Credit
-- Referral system
-- Web Admin
+- فروشگاه وب BlueGate
 - Telegram Mini App
-- Telegram Bot/Webhook
+- حساب و پروفایل کاربری
+- سیستم ثبت و مدیریت سفارش‌ها
+- بخش «سرویس‌های من» و مدیریت سرویس‌های فعال
+- اکشن‌های اختصاصی سرویس VPN مانند باز کردن سرویس، کپی لینک Subscription و تمدید
+- کیف پول / BlueGate Credit
+- سیستم معرفی دوستان و Referral
+- پنل مدیریت تحت وب
+- پنل مدیریت داخل Mini App
+- Telegram Bot و Webhook
 - Catalog Studio
-- Payment configuration
-- Coupon and inventory tools
-- Backup/restore and activity logging
-
-The backend is PHP with MySQL/MariaDB. `api.php` is the central application API used by the web clients and Mini App.
+- مدیریت پرداخت‌ها
+- کوپن و تخفیف
+- مدیریت موجودی و Inventory
+- اعلان‌های کاربری
+- Backup / Restore و ثبت فعالیت‌های مدیریتی
 
 ---
 
-## Catalog Studio
+## قابلیت‌های جدید v3.0.7
 
-The catalog hierarchy is:
+### Welcome / Onboarding
+
+در وب و Telegram Mini App برای کاربران یک صفحه/پنجره خوش‌آمدگویی اضافه شده است که امکانات اصلی BlueGate را به‌صورت کوتاه معرفی می‌کند.
+
+کاربر می‌تواند گزینه «دیگر نمایش نده» را فعال کند. وضعیت نمایش Welcome روی حساب کاربر ذخیره می‌شود تا تجربه کاربری بین Web و Mini App هماهنگ بماند. در سمت کلاینت نیز fallback محلی در نظر گرفته شده است.
+
+### اعلان‌های مدیریتی داخل برنامه
+
+ادمین اکنون می‌تواند از بخش مدیریت اعلان ارسال کند و پیام‌ها در Notification Center کاربران در Web و Mini App نمایش داده می‌شوند.
+
+قابلیت‌های سیستم اعلان شامل موارد زیر است:
+
+- ارسال اعلان مدیریتی برای کاربران
+- عنوان و متن اختصاصی
+- انواع مختلف اعلان مانند عادی، مهم، تخفیف، سرویس و امنیتی
+- وضعیت خوانده‌شده / خوانده‌نشده برای هر کاربر
+- Badge تعداد اعلان‌های خوانده‌نشده
+- پشتیبانی از Action برای هدایت کاربر به بخش‌های مختلف سیستم یا لینک معتبر
+- ثبت Campaign و تاریخچه ارسال‌های مدیریتی
+- حفظ اعلان‌های سیستمی قبلی مانند تغییر وضعیت سفارش
+
+Backend اعلان بین Website و Mini App مشترک است.
+
+### هشدار تکمیل امنیت حساب
+
+در بخش حساب کاربری، اگر کاربر ایمیل یا شماره تماس خود را کامل نکرده باشد یک هشدار زرد نمایش داده می‌شود.
+
+این هشدار برای افزایش امنیت حساب و امکان بازیابی بهتر دسترسی طراحی شده و تا زمان تکمیل اطلاعات باقی می‌ماند. متن هشدار بر اساس فیلد ناقص تغییر می‌کند و کاربر مستقیماً به بخش تکمیل اطلاعات حساب هدایت می‌شود.
+
+---
+
+## ساختار کاتالوگ
+
+ساختار اصلی Catalog Studio به شکل زیر است:
 
 ```text
 Category
@@ -40,61 +74,55 @@ Category
         └── Plan / Product
 ```
 
-Catalog Studio is the supported place for day-to-day catalog management. Legacy product/variant tables are still maintained where required for checkout compatibility, but they should not be treated as a second catalog to edit manually.
+Catalog Studio محل اصلی مدیریت روزمره محصولات است. جداول Legacy مربوط به Product و Variant برای سازگاری با Checkout قدیمی همچنان حفظ شده‌اند، اما نباید به‌عنوان یک کاتالوگ جداگانه به‌صورت دستی مدیریت شوند.
 
-### Service controls
+### موارد قابل مدیریت برای Service
 
-Administrators can manage:
+- عنوان
+- Slug
+- توضیحات
+- تصویر
+- Theme
+- Badge
+- Featured
+- فعال / غیرفعال
+- ترتیب نمایش
 
-- title
-- slug
-- description
-- image
-- theme
-- badge
-- featured state
-- active state
-- display order
+### موارد قابل مدیریت برای Group / Sub-service
 
-### Group / sub-service controls
+- عنوان
+- Slug
+- توضیحات
+- تصویر
+- فعال / غیرفعال
+- ترتیب نمایش
 
-Administrators can manage:
+### موارد قابل مدیریت برای Plan / Product
 
-- title
-- slug
-- description
-- image
-- active state
-- display order
+- عنوان
+- توضیحات
+- تصویر
+- فعال / غیرفعال
+- ترتیب نمایش
+- مدت سرویس
+- تخفیف
+- نوع تحویل
+- نوع و مقدار کمیسیون
+- واحد قیمت
+- قیمت تومان
+- قیمت دلار
 
-### Plan / product controls
-
-Administrators can manage:
-
-- title
-- description
-- image
-- active state
-- display order
-- duration
-- discount
-- delivery type
-- commission type and value
-- price currency
-- toman price
-- USD price
-
-The same catalog controls are available from both **Web Admin** and **Telegram Mini App Admin**.
+مدیریت کاتالوگ از Web Admin و Mini App Admin در دسترس است.
 
 ---
 
-## USD pricing
+## قیمت‌گذاری دلاری
 
-Plans can be priced directly in toman or entered in USD.
+پلن‌ها می‌توانند مستقیماً با قیمت تومان یا USD تعریف شوند.
 
-When `USD` is selected, BlueGate uses the existing USDT/toman rate pipeline to calculate the payable toman value. The catalog keeps the original USD value together with the conversion metadata instead of replacing it with an unexplained fixed number.
+اگر قیمت USD انتخاب شود، BlueGate با استفاده از سیستم نرخ USDT/Toman مقدار قابل پرداخت به تومان را محاسبه می‌کند و اطلاعات نرخ تبدیل را نیز نگه می‌دارد.
 
-Relevant plan fields include:
+فیلدهای مرتبط شامل موارد زیر هستند:
 
 ```text
 price
@@ -105,15 +133,15 @@ price_rate_source
 price_rate_updated_at
 ```
 
-This allows an administrator to keep a product defined in USD while the storefront continues to operate with the local toman amount expected by the checkout flow.
+به این ترتیب ادمین می‌تواند قیمت اصلی محصول را دلاری نگه دارد و Checkout همچنان مبلغ نهایی تومان را دریافت کند.
 
 ---
 
-## Catalog images
+## تصاویر کاتالوگ
 
-Images can be entered as an existing URL or uploaded directly from Admin.
+تصویر Service، Group و Plan را می‌توان از طریق URL یا Upload مستقیم از پنل مدیریت ثبت کرد.
 
-Supported formats:
+فرمت‌های پشتیبانی‌شده:
 
 ```text
 JPG
@@ -122,59 +150,51 @@ PNG
 WEBP
 ```
 
-Maximum upload size: **6 MB**
+حداکثر حجم فایل: **6 MB**
 
-Uploaded files are stored under:
+فایل‌های Upload شده در مسیر زیر ذخیره می‌شوند:
 
 ```text
 public/uploads/catalog/YYYYMM/
 ```
 
-Image upload is available for:
-
-- services
-- groups / sub-services
-- plans / products
-
-The upload endpoint validates the file type on the server and is restricted to authenticated Admin use.
-
-> Make sure the web server user can write to `public/uploads/catalog/`.
+وب‌سرور باید اجازه نوشتن در مسیر `public/uploads/catalog/` را داشته باشد.
 
 ---
 
-## Main routes
+## مسیرهای اصلی
 
-For a deployment on `https://example.com`:
+برای نمونه اگر پروژه روی `https://example.com` نصب شده باشد:
 
 ```text
-/                 Storefront
-/account          Customer account
-/orders           Orders
-/wallet           BlueGate Credit
-/referral         Referral
-/profile          Profile
-/admin             Web Admin
-/miniapp/          Telegram Mini App
-/api.php           Main API
-/bot.php           Telegram Bot webhook
-/portal/           Compatibility redirect
+/                 فروشگاه
+/account          حساب کاربری
+/orders           سفارش‌ها
+/wallet           کیف پول BlueGate Credit
+/referral         معرفی دوستان
+/profile          پروفایل
+/admin            پنل مدیریت وب
+/miniapp/         Telegram Mini App
+/api.php          API اصلی برنامه
+/bot.php          Telegram Bot Webhook
+/portal/          مسیر سازگاری / Redirect
 ```
 
 ---
 
-## Server requirements
+## نیازمندی‌های سرور
 
-Recommended baseline:
+پیشنهاد پایه:
 
-- Ubuntu or Debian VPS
+- Ubuntu یا Debian
 - Nginx
 - PHP-FPM
 - PHP CLI
-- MySQL or MariaDB
-- HTTPS-enabled domain/subdomain
-- at least 1 GB RAM; 2 GB+ recommended
+- MySQL یا MariaDB
+- دامنه یا Subdomain با HTTPS
+- حداقل 1GB RAM؛ پیشنهاد 2GB یا بیشتر
 
-Typical PHP packages used by the project:
+پکیج‌های متداول PHP مورد استفاده پروژه:
 
 ```text
 php-fpm
@@ -185,68 +205,70 @@ php-mbstring
 php-xml
 ```
 
-The installer can provision the common system dependencies on a clean supported server.
+اسکریپت نصب می‌تواند وابستگی‌های متداول را روی یک سرور تمیز نصب و تنظیم کند.
 
 ---
 
-## Fresh install
+## نصب تازه
 
-Upload or clone the repository to the server, then run the installer as a privileged user:
+فایل‌های پروژه را روی سرور Upload یا Clone کنید و سپس Installer را با دسترسی مناسب اجرا کنید:
 
 ```bash
 chmod +x install.sh
 sudo ./install.sh
 ```
 
-The installer will ask for the values it needs for the deployment, including database/application settings and public host information.
+Installer اطلاعات لازم مانند تنظیمات دیتابیس، آدرس عمومی سایت و تنظیمات برنامه را دریافت می‌کند.
 
-A sample configuration is available in:
+نمونه فایل تنظیمات:
 
 ```text
 config.example.php
 ```
 
-Do not commit a production configuration containing passwords, API keys or bot tokens.
+فایل تنظیمات Production که شامل Password، API Key یا Bot Token است را داخل Repository عمومی قرار ندهید.
 
 ---
 
-## Updating an existing installation
+## آپدیت نسخه موجود
 
-Before updating a production instance, create a database backup and keep a copy of the current application configuration.
+قبل از آپدیت Production:
 
-Then use the project update script:
+1. از دیتابیس Backup بگیرید.
+2. یک کپی از Config فعلی نگه دارید.
+3. سپس Update Script را اجرا کنید.
 
 ```bash
 chmod +x update.sh
 sudo ./update.sh
 ```
 
-The update path applies required database migrations. In this build that includes catalog changes such as support for plan images on installations created before the field existed.
+سیستم Migration تغییرات مورد نیاز دیتابیس را اعمال می‌کند. در v3.0.7 این تغییرات شامل فیلدهای مورد نیاز Welcome، Actionهای Notification و Campaignهای اعلان نیز می‌شود.
 
-Do not replace the database manually with `schema.sql` on an existing production installation.
+روی نصب موجود، `schema.sql` را به‌صورت دستی جایگزین دیتابیس Production نکنید.
 
 ---
 
 ## Telegram Mini App
 
-The Mini App uses Telegram `initData` for Telegram-side authentication and talks to the same API/database as the Website.
+Mini App برای احراز هویت تلگرامی از `initData` استفاده می‌کند و با همان API و دیتابیس Website کار می‌کند.
 
-For a production Mini App:
+برای راه‌اندازی Production:
 
-1. deploy BlueGate over HTTPS;
-2. configure the bot token in the application configuration;
-3. point the Telegram Mini App URL to `/miniapp/`;
-4. configure the bot webhook to the deployed `bot.php` endpoint where applicable.
+1. BlueGate را روی HTTPS نصب کنید.
+2. Bot Token را در Config تنظیم کنید.
+3. آدرس Telegram Mini App را روی `/miniapp/` قرار دهید.
+4. در صورت استفاده از Bot Webhook، آدرس `bot.php` را به‌عنوان Webhook تنظیم کنید.
 
-If the Mini App opens as a blank page, first check the browser console/network log and the API response rather than treating it as a Telegram UI problem. Authentication failures, stale frontend assets and API errors can all surface as a failed Mini App boot.
+اگر Mini App صفحه خالی نمایش داد، ابتدا Console مرورگر، Network Requests و پاسخ API بررسی شود؛ خطای Authentication، Cache قدیمی Frontend یا خطای API می‌تواند باعث Boot ناقص Mini App شود.
 
 ---
 
-## Permissions for image uploads
+## دسترسی پوشه تصاویر
 
-If product image upload fails with a permission error, verify the upload directory exists and is writable by the PHP/Nginx runtime user.
+اگر Upload تصویر با Permission Error مواجه شد، مسیر Upload را ایجاد و دسترسی آن را بررسی کنید.
 
-Example on a typical Debian/Ubuntu deployment:
+نمونه برای Ubuntu/Debian:
 
 ```bash
 sudo mkdir -p public/uploads/catalog
@@ -255,141 +277,31 @@ sudo find public/uploads -type d -exec chmod 755 {} \;
 sudo find public/uploads -type f -exec chmod 644 {} \;
 ```
 
-Avoid making the directory globally writable with `chmod 777`.
+از `chmod 777` برای پوشه‌های پروژه استفاده نکنید.
 
 ---
 
-## Database and compatibility layer
-
-MySQL/MariaDB is the source of truth.
-
-Catalog Studio writes to the current service/group/plan model. Where the checkout still relies on legacy product/variant records, BlueGate mirrors the required pricing/product metadata internally. This compatibility layer exists so the storefront can evolve without forcing a destructive catalog migration.
-
-In normal operation:
-
-- edit catalog data through Catalog Studio;
-- do not independently edit mirrored legacy rows;
-- let migrations add new fields to existing installations.
-
----
-
-## Useful files
+## فایل‌های مهم پروژه
 
 ```text
-api.php                 Main backend API
-bot.php                 Telegram webhook/bot entry point
-schema.sql              Fresh-install database schema
-config.example.php      Configuration example
-install.sh              Fresh installation
-update.sh               Existing-install update path
-uninstall.sh            Removal helper
-public/                  Public/static assets and uploads
-miniapp/                 Telegram Mini App frontend
+app/bootstrap.php       هسته اصلی برنامه و Migrationها
+app/catalog.php         منطق Catalog Studio
+public/api.php          API مشترک Web و Mini App
+public/web/             رابط وب کاربر و مدیریت
+public/miniapp/         Telegram Mini App
+public/bot.php          ورودی Telegram Bot
+app/bot_logic.php       منطق Bot
+schema.sql              Schema نصب تازه
+install.sh              نصب پروژه
+update.sh               آپدیت پروژه
+config.example.php      نمونه تنظیمات
+VERSION                 نسخه فعلی پروژه
 ```
 
-The exact frontend/admin implementation may be split into additional files under the project tree; use the routes above as the public interface rather than assuming every page maps one-to-one to a directory.
-
 ---
 
-## Troubleshooting
-
-### "A plan with this title already exists in this sub-service"
-
-On edit, the current plan must keep its original plan ID. v3.0.2.1 includes a compatibility fix for existing Catalog Studio drafts where that ID was missing: the backend can resolve the existing plan inside the same group before deciding that the title is a real duplicate.
-
-A genuine second plan with the same title in the same sub-service is still rejected.
-
-### USD price does not convert
-
-Check that:
-
-- the plan currency is set to `USD`;
-- a valid USD value is supplied;
-- the USDT/toman rate source is returning a usable rate;
-- the API request completes successfully.
-
-The stored rate metadata can be used to see which conversion rate was applied.
-
-### Image upload fails
-
-Check:
-
-- file size is 6 MB or less;
-- format is JPG/JPEG/PNG/WEBP;
-- PHP upload limits are not lower than the application limit;
-- `public/uploads/catalog/` is writable;
-- the request is authenticated as Admin.
-
-Useful PHP settings to inspect:
-
-```ini
-upload_max_filesize
-post_max_size
-```
-
-### Web Admin works but Mini App Admin looks outdated
-
-Clear or invalidate cached versioned assets and reopen the Mini App. The two admin surfaces use the same backend, but Telegram's webview can retain older frontend assets longer than a normal browser session.
-
----
-
-## Production checklist
-
-Before putting a build live:
-
-- HTTPS is valid
-- database is backed up
-- production config is outside public exposure
-- Admin credentials are changed from installation defaults
-- Telegram bot token is configured correctly
-- upload directory is writable but not globally writable
-- Web Admin can create and edit a test plan
-- Mini App Admin can edit the same plan
-- IRT checkout works
-- USD conversion works
-- image upload works from both admin surfaces
-- an end-to-end test order can reach the intended delivery state
-
----
-
-## Release notes
-
-Release-specific changes are kept in the `RELEASE-NOTES-v*.md` files. For this build see:
+## نسخه
 
 ```text
-RELEASE-NOTES-v3.0.2.1.md
+3.0.7
 ```
-
----
-
-BlueGate Platform is an application repository, not a reusable public framework. Keep production secrets out of source control, deploy updates through the migration path, and treat the database as persistent state rather than something to recreate on every release.
-
----
-
-## v3.0.3.1 — Catalog identity repair
-
-This release hardens Catalog Studio edits against stale browser drafts. Group and plan IDs are now validated against their actual parent records before saving, and incompatible older Web/Mini App drafts are discarded automatically. This specifically fixes false “duplicate plan title” errors when editing existing catalog entries.
-
-
-## Web routes (v3.0.5)
-
-The website uses real browser paths instead of hash-only member navigation. Useful routes include:
-
-```text
-/account
-/orders
-/wallet
-/referral
-/profile
-/admin
-/admin/orders
-/admin/catalog
-/admin/inventory
-/admin/users
-/admin/settings
-/admin/activity
-/admin/roles
-/admin/backups
-```
-
-Nginx installations created by BlueGate already use an `index.php` fallback. Apache uses the rules in `public/.htaccess`. Old hash links are migrated by the browser router.

@@ -120,10 +120,16 @@ function migrate(): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     db()->exec('CREATE TABLE IF NOT EXISTS user_notifications (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, type VARCHAR(32) NOT NULL DEFAULT \'info\',
-        title VARCHAR(255) NOT NULL, body VARCHAR(1000) NULL, order_id BIGINT UNSIGNED NULL, is_read TINYINT(1) NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(user_id,is_read), INDEX(created_at),
+        title VARCHAR(255) NOT NULL, body VARCHAR(1000) NULL, order_id BIGINT UNSIGNED NULL, action_type VARCHAR(32) NULL, action_value VARCHAR(255) NULL, campaign_id BIGINT UNSIGNED NULL, is_read TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(user_id,is_read), INDEX(created_at), INDEX(campaign_id),
         CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         CONSTRAINT fk_notification_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
+    db()->exec('CREATE TABLE IF NOT EXISTS notification_campaigns (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, admin_telegram_id BIGINT NULL, type VARCHAR(32) NOT NULL DEFAULT \'info\',
+        title VARCHAR(255) NOT NULL, body VARCHAR(1000) NULL, action_type VARCHAR(32) NULL, action_value VARCHAR(255) NULL, audience VARCHAR(32) NOT NULL DEFAULT \'all\',
+        recipient_count INT NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(created_at), INDEX(audience)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
     db()->exec('CREATE TABLE IF NOT EXISTS credit_topups (
@@ -147,6 +153,7 @@ function migrate(): void {
     add_column_if_missing('users', 'theme_color', 'VARCHAR(16) NULL AFTER step_payload');
     add_column_if_missing('users', 'phone_number', 'VARCHAR(64) NULL AFTER theme_color');
     add_column_if_missing('users', 'phone_verified_at', 'DATETIME NULL AFTER phone_number');
+    add_column_if_missing('users', 'welcome_version_seen', 'INT NOT NULL DEFAULT 0 AFTER phone_verified_at');
     add_column_if_missing('users', 'is_banned', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER phone_verified_at');
     add_column_if_missing('users', 'deleted_at', 'DATETIME NULL AFTER is_banned');
     add_column_if_missing('users', 'start_notified', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER deleted_at');
@@ -162,6 +169,9 @@ function migrate(): void {
     try { db()->exec('CREATE INDEX idx_users_auth_token_hash ON users(auth_token_hash)'); } catch (Throwable $e) {}
     try { db()->exec('CREATE INDEX idx_users_auth_token_expires ON users(auth_token_expires_at)'); } catch (Throwable $e) {}
     try { db()->exec('CREATE INDEX idx_users_is_banned ON users(is_banned)'); } catch (Throwable $e) {}
+    add_column_if_missing('user_notifications', 'action_type', 'VARCHAR(32) NULL AFTER order_id');
+    add_column_if_missing('user_notifications', 'action_value', 'VARCHAR(255) NULL AFTER action_type');
+    add_column_if_missing('user_notifications', 'campaign_id', 'BIGINT UNSIGNED NULL AFTER action_value');
     try { db()->exec('ALTER TABLE users MODIFY COLUMN telegram_id BIGINT NULL'); } catch (Throwable $e) {}
     try { db()->exec('ALTER TABLE transactions MODIFY COLUMN type VARCHAR(64) NOT NULL'); } catch (Throwable $e) {}
     try { db()->exec("UPDATE users u SET ref_rewarded=1 WHERE referrer_id IS NOT NULL AND EXISTS (SELECT 1 FROM transactions t WHERE t.type='ref_start' AND t.related_user_id=u.id)"); } catch (Throwable $e) {}
@@ -3196,14 +3206,37 @@ function toggle_user_wishlist(int $userId,int $productId): array {
     else{db()->prepare('INSERT IGNORE INTO user_wishlists (user_id,product_id) VALUES (?,?)')->execute([$userId,$productId]);$active=true;}
     return ['active'=>$active,'ids'=>wishlist_product_ids($userId)];
 }
-function notify_user_event(int $userId,string $type,string $title,string $body='',?int $orderId=null): void {
+function notify_user_event(int $userId,string $type,string $title,string $body='',?int $orderId=null,?string $actionType=null,?string $actionValue=null,?int $campaignId=null): void {
     if($userId<=0||!table_exists('user_notifications'))return;
-    try{db()->prepare('INSERT INTO user_notifications (user_id,type,title,body,order_id) VALUES (?,?,?,?,?)')->execute([$userId,mb_substr($type,0,32),mb_substr($title,0,255),mb_substr($body,0,1000),$orderId]);}catch(Throwable $e){}
+    try{db()->prepare('INSERT INTO user_notifications (user_id,type,title,body,order_id,action_type,action_value,campaign_id) VALUES (?,?,?,?,?,?,?,?)')->execute([$userId,mb_substr($type,0,32),mb_substr($title,0,255),mb_substr($body,0,1000),$orderId,$actionType?mb_substr($actionType,0,32):null,$actionValue?mb_substr($actionValue,0,255):null,$campaignId]);}catch(Throwable $e){}
 }
 function user_notifications(int $userId,int $limit=30): array {
     if(!table_exists('user_notifications'))return [];$limit=max(1,min(100,$limit));
-    $q=db()->prepare('SELECT id,type,title,body,order_id,is_read,created_at FROM user_notifications WHERE user_id=? ORDER BY id DESC LIMIT '.$limit);$q->execute([$userId]);
-    return array_map(function($r){$r['id']=(int)$r['id'];$r['order_id']=$r['order_id']!==null?(int)$r['order_id']:null;$r['is_read']=(int)$r['is_read'];return $r;},$q->fetchAll()?:[]);
+    $q=db()->prepare('SELECT id,type,title,body,order_id,action_type,action_value,campaign_id,is_read,created_at FROM user_notifications WHERE user_id=? ORDER BY id DESC LIMIT '.$limit);$q->execute([$userId]);
+    return array_map(function($r){$r['id']=(int)$r['id'];$r['order_id']=$r['order_id']!==null?(int)$r['order_id']:null;$r['campaign_id']=$r['campaign_id']!==null?(int)$r['campaign_id']:null;$r['is_read']=(int)$r['is_read'];return $r;},$q->fetchAll()?:[]);
+}
+function admin_notification_campaigns(int $limit=50): array {
+    if(!table_exists('notification_campaigns'))return [];$limit=max(1,min(100,$limit));
+    return db()->query('SELECT id,admin_telegram_id,type,title,body,action_type,action_value,audience,recipient_count,created_at FROM notification_campaigns ORDER BY id DESC LIMIT '.(int)$limit)->fetchAll()?:[];
+}
+function create_notification_campaign(int $adminTid,string $type,string $title,string $body,string $actionType='',string $actionValue='',string $audience='all'): array {
+    $type=in_array($type,['info','important','promo','service','security'],true)?$type:'info';
+    $audience=in_array($audience,['all','service','vpn'],true)?$audience:'all';
+    $allowedActions=['','store','orders','wallet','account','profile','service','url'];
+    if(!in_array($actionType,$allowedActions,true))$actionType='';
+    $pdo=db();$pdo->beginTransaction();
+    try{
+        $sql='SELECT DISTINCT u.id FROM users u WHERE u.deleted_at IS NULL AND u.is_banned=0';
+        if($audience==='service')$sql.=" AND EXISTS (SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered')";
+        if($audience==='vpn')$sql.=" AND EXISTS (SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered' AND (LOWER(COALESCE(o.delivery_type,''))='vpn' OR LOWER(COALESCE(o.delivery_url,'')) LIKE '%/sub/%'))";
+        $ids=$pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN)?:[];
+        $q=$pdo->prepare('INSERT INTO notification_campaigns (admin_telegram_id,type,title,body,action_type,action_value,audience,recipient_count) VALUES (?,?,?,?,?,?,?,?)');
+        $q->execute([$adminTid,$type,mb_substr($title,0,255),mb_substr($body,0,1000),$actionType?:null,$actionValue?mb_substr($actionValue,0,255):null,$audience,count($ids)]);
+        $cid=(int)$pdo->lastInsertId();
+        $ins=$pdo->prepare('INSERT INTO user_notifications (user_id,type,title,body,action_type,action_value,campaign_id) VALUES (?,?,?,?,?,?,?)');
+        foreach($ids as $uid)$ins->execute([(int)$uid,$type,mb_substr($title,0,255),mb_substr($body,0,1000),$actionType?:null,$actionValue?mb_substr($actionValue,0,255):null,$cid]);
+        $pdo->commit(); return ['id'=>$cid,'recipient_count'=>count($ids)];
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
 }
 function mark_user_notifications_read(int $userId): void {if(table_exists('user_notifications'))db()->prepare('UPDATE user_notifications SET is_read=1 WHERE user_id=? AND is_read=0')->execute([$userId]);}
 function user_notification_unread_count(int $userId): int {if(!table_exists('user_notifications'))return 0;$q=db()->prepare('SELECT COUNT(*) FROM user_notifications WHERE user_id=? AND is_read=0');$q->execute([$userId]);return (int)$q->fetchColumn();}
