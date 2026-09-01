@@ -58,3 +58,8 @@ p,.muted{line-height:1.8}
   .mobile-member-nav button{font-size:13.5px!important}
   .btn.small{font-size:14.5px!important}
 }
+
+/* v3.0.7.5 — deterministic admin scroll lock */
+html.bg-admin-lock,body.bg-admin-lock{overflow:hidden!important;overscroll-behavior:none!important}
+body:not(.bg-admin-lock){touch-action:auto!important}
+.bg-admin-modal,.bg-admin-prompt{overscroll-behavior:contain}

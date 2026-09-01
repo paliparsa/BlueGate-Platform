@@ -65,7 +65,7 @@ async function submit(){
   catch(e){if(btn&&overlay){btn.disabled=false;btn.textContent=`⚡ تایید و ثبت سفارش (${fmt(payablePrice())})`}try{current?.onError?.(e)}catch(_){}}
   finally{busy=false}
 }
-function open(data){if(busy)return null;current=normalize(data||{});if(!current.productId)return null;close(false);overlay=document.createElement('div');overlay.id='miniPurchaseOverlay';overlay.className='purchase-confirm-overlay mini-purchase-overlay';document.body.appendChild(overlay);document.documentElement.classList.add('purchase-confirm-open');document.body.classList.add('purchase-confirm-open');overlay.addEventListener('click',e=>{if(e.target===overlay)close()});render();requestAnimationFrame(()=>overlay.classList.add('open'));return overlay}
+function open(data){if(busy)return null;try{window.BlueGateUI?.beforeOpen?.('miniPurchaseOverlay')}catch(_){}current=normalize(data||{});if(!current.productId)return null;close(false);overlay=document.createElement('div');overlay.id='miniPurchaseOverlay';overlay.className='purchase-confirm-overlay mini-purchase-overlay';document.body.appendChild(overlay);document.documentElement.classList.add('purchase-confirm-open');document.body.classList.add('purchase-confirm-open');overlay.addEventListener('click',e=>{if(e.target===overlay)close()});render();requestAnimationFrame(()=>overlay.classList.add('open'));return overlay}
 function close(reset=true){if(overlay){overlay.classList.remove('open');const old=overlay;overlay=null;setTimeout(()=>old.remove(),160)}document.documentElement.classList.remove('purchase-confirm-open');document.body.classList.remove('purchase-confirm-open');if(reset)current=null}
 window.BlueGatePurchase={open,close};
 })();

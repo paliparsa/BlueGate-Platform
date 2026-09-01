@@ -1,8 +1,10 @@
-/* BlueGate Mini App UI System v2.9.2 */
+/* BlueGate Mini App UI System v3.0.7.5 — single active layer */
 (() => {
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
   let cleanup = null;
+
+  function beforeOpen(id='appSheet'){try{document.dispatchEvent(new CustomEvent('bluegate:before-layer-open',{detail:{id}}))}catch(_){}}
 
   function closeSheet(){
     const host = $('appSheet');
@@ -16,6 +18,7 @@
   }
 
   function openSheet(opts={}){
+    beforeOpen('appSheet');
     const host = $('appSheet');
     if(!host) return null;
     if(typeof cleanup === 'function') { try{ cleanup(); }catch(_){} }
@@ -47,6 +50,7 @@
   }
 
   function confirmSheet(opts={}){
+    beforeOpen('confirmLayer');
     return new Promise(resolve => {
       let settled=false;
       const layer=document.createElement('div');
@@ -69,5 +73,5 @@
   }
 
 
-  window.BlueGateUI = { openSheet, closeSheet, confirm: confirmSheet };
+  window.BlueGateUI = { openSheet, closeSheet, confirm: confirmSheet, beforeOpen };
 })();
