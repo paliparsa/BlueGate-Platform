@@ -1,4 +1,4 @@
-const CACHE = 'bluegate-platform-v3.0.4.2';
+const CACHE = 'bluegate-platform-v3.0.6.1';
 const ASSETS = [
   './',
   './index.html',

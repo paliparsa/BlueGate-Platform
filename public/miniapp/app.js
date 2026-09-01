@@ -1073,6 +1073,7 @@ function orderDetailHtml(o){
       <h2 class="od-title">${esc(o.display_name)}</h2>
       <div class="od-badges-row">
         ${orderStatusBadge(o)}
+        ${o.is_renewal?`<span class="badge">🔄 تمدید سفارش #${nf(o.renewal_of_order_id||'')}</span>`:''}
         ${nativeCurrencyPill}
       </div>
       ${topTimerHtml}
@@ -1672,11 +1673,11 @@ function renderAdminOrders(){
         html += colOrders.map(o => `
           <div class="kanban-card" data-admin-action-sheet="order:${o.id}">
             <div class="kanban-card-head"><span class="kanban-card-id">#${nf(o.id)}</span><span class="kanban-card-amount">${fmt(o.final_amount)}</span></div>
-            <div class="kanban-card-title">${esc(o.display_name)}</div>
+            <div class="kanban-card-title">${o.is_renewal?'🔄 تمدید · ':''}${esc(o.display_name)}</div>
             <div class="kanban-card-meta">
               <span>👤 ${esc(o.username ? '@' + o.username : 'کاربر')}</span>
               <span>📅 ${esc(String(o.created_at || '').slice(0, 16))}</span>
-              ${o.receipt_file_id ? '<span>🖼 دارای رسید عکس</span>' : ''}
+              ${o.receipt_file_id ? `<button class="chip-mini chip-active" data-view-receipt="${o.id}">🖼 مشاهده رسید</button>` : ''}
               <span style="color:var(--accent);margin-top:4px">وضعیت: ${esc(o.status_fa || o.status)}</span>
             </div>
           </div>`).join('');
@@ -1685,7 +1686,7 @@ function renderAdminOrders(){
     }
     html+=`</div>`;
   }else{
-    html+=(visibleOrders.map(o=>`<div class="admin-item order-admin-item"><div class="admin-item-head"><input type="checkbox" class="bulk-check" data-bulk-check="${o.id}" ${selectedOrderIds.has(Number(o.id))?'checked':''}><div class="admin-item-thumb" data-admin-action-sheet="order:${o.id}" style="cursor:pointer">${o.image_url?`<img src="${esc(o.image_url)}" alt="">`:'<span>🧾</span>'}</div><div class="admin-item-main" data-admin-action-sheet="order:${o.id}" style="cursor:pointer"><h4>#${nf(o.id)} ${esc(o.display_name)} <span class="admin-id-badge">${esc(o.status_fa||o.status)}</span></h4><p class="muted">${fmt(o.final_amount)} · ${esc(o.created_at||'')}${o.payment_method_fa?' · '+esc(o.payment_method_fa):''}${o.receipt_file_id?' · <span class="chip-mini chip-active">🖼 رسید عکس</span>':''}${o.username?' · @'+esc(o.username):''}</p></div></div></div>`).join('')||'<p class="muted">سفارشی نیست.</p>');
+    html+=(visibleOrders.map(o=>`<div class="admin-item order-admin-item"><div class="admin-item-head"><input type="checkbox" class="bulk-check" data-bulk-check="${o.id}" ${selectedOrderIds.has(Number(o.id))?'checked':''}><div class="admin-item-thumb" data-admin-action-sheet="order:${o.id}" style="cursor:pointer">${o.image_url?`<img src="${esc(o.image_url)}" alt="">`:'<span>🧾</span>'}</div><div class="admin-item-main" data-admin-action-sheet="order:${o.id}" style="cursor:pointer"><h4>#${nf(o.id)} ${o.is_renewal?'<span class="chip-mini chip-active">🔄 تمدید</span> ':''}${esc(o.display_name)} <span class="admin-id-badge">${esc(o.status_fa||o.status)}</span></h4><p class="muted">${fmt(o.final_amount)} · ${esc(o.created_at||'')}${o.renewal_of_order_id?' · تمدید #'+nf(o.renewal_of_order_id):''}${o.payment_method_fa?' · '+esc(o.payment_method_fa):''}${o.receipt_file_id?' · <button class="chip-mini chip-active" data-view-receipt="'+o.id+'">🖼 مشاهده رسید</button>':''}${o.username?' · @'+esc(o.username):''}</p></div></div></div>`).join('')||'<p class="muted">سفارشی نیست.</p>');
   }
   if(orders.length > visibleOrders.length){
     html+=`<div style="margin-top:16px;text-align:center"><button class="secondary wide" data-admin-load-more-orders>نمایش سفارش‌های بیشتر (${nf(orders.length - visibleOrders.length)} مانده)</button></div>`;
@@ -2477,15 +2478,18 @@ document.addEventListener('click',async(e)=>{
       return;
     }
 
-    await loadAfterAction('submit_receipt', {
+    const ok = await loadAfterAction('submit_receipt', {
       order_id: oid,
       note: note || 'رسید واریز کارت به کارت',
       receipt_b64: b64 || ''
     });
+    if(!ok) return;
+    const fresh=(state.orders||[]).find(x=>Number(x.id)===Number(oid));
+    if(fresh){fresh.status='receipt_submitted';fresh.status_fa='رسید ارسال شده';if(b64)fresh.receipt_file_id=fresh.receipt_file_id||'uploaded';}
     currentTab = 'orders';
     currentOrderId = oid;
     renderUser();
-    showStatus('رسید با موفقیت ثبت شد و در صف بررسی قرار گرفت ⚡');
+    showStatus('رسید با موفقیت ثبت شد؛ منتظر بررسی ادمین است ⚡','success');
     return;
   }
   const cartBtn = e.target.closest('#cartFab, .cart-fab');

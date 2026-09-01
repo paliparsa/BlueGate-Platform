@@ -292,6 +292,8 @@ function migrate(): void {
     add_column_if_missing('orders', 'delivery_title', 'VARCHAR(120) NULL AFTER delivery_url');
     add_column_if_missing('orders', 'expires_at', 'DATETIME NULL AFTER delivery_title');
     add_column_if_missing('orders', 'payment_expires_at', 'DATETIME NULL AFTER expires_at');
+    add_column_if_missing('orders', 'renewal_of_order_id', 'BIGINT UNSIGNED NULL AFTER payment_expires_at');
+    add_column_if_missing('orders', 'is_renewal', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER renewal_of_order_id');
     add_column_if_missing('orders', 'delivered_inventory_id', 'BIGINT UNSIGNED NULL AFTER delivery_text');
     add_column_if_missing('orders', 'customer_note', 'TEXT NULL AFTER payment_note');
     add_column_if_missing('orders', 'review_started_at', 'DATETIME NULL AFTER receipt_file_id');
@@ -2233,7 +2235,8 @@ function show_order_invoice(int $chat_id, $message_id, array $order): void {
 function order_admin_card(array $order): string {
     $name = order_catalog_display_name($order);
     $cust = customer_stats((int)$order['user_id']);
-    return "🧾 <b>سفارش #{$order['id']}</b>\n".
+    $renew = !empty($order['is_renewal']) ? "🔄 <b>تمدید سفارش</b>".(!empty($order['renewal_of_order_id'])?" #".(int)$order['renewal_of_order_id']:"")."\n" : '';
+    return "🧾 <b>سفارش #{$order['id']}</b>\n".$renew.
         "کاربر: @".h($order['username'] ?: 'بدون یوزرنیم')." | <code>{$order['telegram_id']}</code>\n".
         "سطح مشتری: {$cust['tier']['emoji']} {$cust['tier']['fa']} | خرید موفق: <b>{$cust['orders_count']}</b> | ".money($cust['total_spent'])."\n".
         "محصول: <b>".h($name)."</b>\n".
@@ -3120,13 +3123,19 @@ function refresh_crypto_order_amount_if_open(int $orderId): ?array {
 
 
 function validate_service_delivery_url(string $url): string {
-    $url = trim($url);
-    if ($url === '' || strlen($url) > 4096) throw new RuntimeException('SERVICE_URL_INVALID');
+    // Subscription URLs frequently use non-standard HTTPS ports (for example :2096).
+    // Normalize harmless pasted whitespace first, then validate scheme/host/port explicitly.
+    $url = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', trim($url));
+    if ($url === '' || strlen($url) > 4096 || preg_match('/[\r\n\x00]/', $url)) throw new RuntimeException('SERVICE_URL_INVALID');
     $parts = @parse_url($url);
     if (!is_array($parts) || strtolower((string)($parts['scheme'] ?? '')) !== 'https' || empty($parts['host'])) {
         throw new RuntimeException('SERVICE_URL_HTTPS_REQUIRED');
     }
     if (!empty($parts['user']) || !empty($parts['pass'])) throw new RuntimeException('SERVICE_URL_USERINFO_BLOCKED');
+    if (isset($parts['port'])) {
+        $port=(int)$parts['port'];
+        if($port < 1 || $port > 65535) throw new RuntimeException('SERVICE_URL_INVALID_PORT');
+    }
     $host = strtolower(rtrim((string)$parts['host'], '.'));
     if ($host === 'localhost' || str_ends_with($host, '.local') || str_ends_with($host, '.internal')) {
         throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
@@ -3135,6 +3144,8 @@ function validate_service_delivery_url(string $url): string {
         if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
             throw new RuntimeException('SERVICE_URL_HOST_BLOCKED');
         }
+    } elseif (!preg_match('/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i', $host)) {
+        throw new RuntimeException('SERVICE_URL_HOST_INVALID');
     }
     return $url;
 }
@@ -3155,6 +3166,22 @@ function set_order_service_delivery(int $orderId, string $url, string $title='',
     }
     add_order_event($orderId, 'delivered', 'لینک سرویس ثبت شد', 'لینک مستقیم تحویل برای مشتری فعال شد', true);
     return order_by_id($orderId);
+}
+
+function create_renewal_order_from_order(int $userId, int $oldOrderId): array {
+    $old=order_by_id($oldOrderId);
+    if(!$old || (int)$old['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
+    if(normalize_order_status((string)$old['status']) !== 'delivered') throw new RuntimeException('ORDER_NOT_RENEWABLE');
+    $order=create_storefront_order($userId,(int)$old['product_id'],!empty($old['variant_id'])?(int)$old['variant_id']:null,null);
+    $carryUrl=null;$carryTitle=null;
+    if(normalize_delivery_type((string)($old['delivery_type']??'manual'))==='vpn' && !empty($old['delivery_url'])){
+        try{$carryUrl=validate_service_delivery_url((string)$old['delivery_url']);}catch(Throwable $e){$carryUrl=null;}
+        $carryTitle=trim((string)($old['delivery_title']??'')) ?: 'مدیریت سرویس';
+    }
+    db()->prepare('UPDATE orders SET is_renewal=1, renewal_of_order_id=?, delivery_url=COALESCE(?,delivery_url), delivery_title=COALESCE(?,delivery_title) WHERE id=?')
+        ->execute([$oldOrderId,$carryUrl,$carryTitle,(int)$order['id']]);
+    add_order_event((int)$order['id'],'pending_payment','سفارش تمدید ثبت شد','تمدید سفارش #'.$oldOrderId,true);
+    return order_by_id((int)$order['id']);
 }
 
 function wishlist_product_ids(int $userId): array {
@@ -3219,7 +3246,8 @@ function order_public_payload(array $o, bool $is_admin = false): array {
         'payment_method'=>$o['payment_method'] ?? null, 'payment_method_fa'=>payment_method_fa($o['payment_method'] ?? null), 'payment_details'=>$o['payment_details'] ?? null, 'stars_amount'=>(int)($o['stars_amount'] ?? 0),
         'crypto_amount'=>isset($o['crypto_amount'])?(float)$o['crypto_amount']:null, 'crypto_asset'=>$o['crypto_asset'] ?? null, 'crypto_network'=>$o['crypto_network'] ?? null, 'crypto_check'=>crypto_check_payload(get_crypto_check_by_order((int)$o['id'])), 'crypto_fee_notice'=>'این مبلغ باید دقیقاً به کیف پول مقصد برسد؛ کارمزد صرافی/شبکه بر عهده شماست.', 'swapwallet_invoice'=>null,
         'status'=>$status, 'status_fa'=>order_status_fa($o['status']),
-        'payment_note'=>$o['payment_note'] ?? null, 'customer_note'=>$o['customer_note'] ?? null, 'receipt_file_id'=>$o['receipt_file_id'] ?? null,
+        'is_renewal'=>(int)($o['is_renewal'] ?? 0), 'renewal_of_order_id'=>!empty($o['renewal_of_order_id'])?(int)$o['renewal_of_order_id']:null,
+        'payment_note'=>$o['payment_note'] ?? null, 'customer_note'=>$o['customer_note'] ?? null, 'receipt_file_id'=>$o['receipt_file_id'] ?? null, 'receipt_url'=>!empty($o['receipt_file_id'])?('/'.ltrim((string)$o['receipt_file_id'],'/')):null,
         'user_id'=>(int)($o['user_id'] ?? 0), 'telegram_id'=>isset($o['telegram_id'])?(int)$o['telegram_id']:null, 'username'=>$o['username'] ?? null, 'first_name'=>$o['first_name'] ?? null,
         'delivery_type'=>$o['delivery_type'], 'delivery_type_fa'=>delivery_type_fa($o['delivery_type']), 'delivery_text'=>$o['delivery_text'],
         'has_service_delivery'=>($status === 'delivered' && !empty($o['delivery_url'])),
