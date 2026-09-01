@@ -253,25 +253,33 @@ function showStatus(text,type='success'){
   clearTimeout(_statusTimer);
   _statusTimer=setTimeout(()=>el.classList.add('hidden'),3500);
 }
-async function api(action,payload={}){
+async function apiRequest(action,payload={},opts={}){
   refreshTelegramContext();
-  const body = JSON.stringify({action,initData,...payload});
+  const includeInitData = opts.includeInitData !== false;
+  const timeoutMs = Math.max(2500, Number(opts.timeoutMs || 12000));
+  const body = JSON.stringify({action,initData:includeInitData?initData:'',...payload});
   const headers = {'Content-Type':'application/json'};
   const candidateEndpoints = ['../api.php', 'api.php', '/api.php'];
   let res = null, data = null, fetchErr = null;
   for (const ep of candidateEndpoints) {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = controller ? setTimeout(()=>controller.abort(), timeoutMs) : null;
     try {
-      const r = await fetch(ep, {method:'POST', headers, body, credentials:'include'});
+      const r = await fetch(ep, {method:'POST', headers, body, credentials:'include', ...(controller?{signal:controller.signal}:{})});
+      if (timer) clearTimeout(timer);
       if (r.status !== 404) {
         res = r;
         data = await r.json().catch(()=>({}));
         break;
       }
-    } catch(e) { fetchErr = e; }
+    } catch(e) {
+      if (timer) clearTimeout(timer);
+      fetchErr = e?.name === 'AbortError' ? new Error('پاسخ سرور بیش از حد طول کشید.') : e;
+    }
   }
   if(!res || !res.ok || data?.ok===false){
-    if(data?.error === 'AUTH_REQUIRED' && !initData){
-      openAuthModal();
+    if(data?.error === 'AUTH_REQUIRED' && !initData && opts.openAuth !== false){
+      try{openAuthModal()}catch(_){}
     }
     const err = new Error(data?.message || data?.error || fetchErr?.message || 'خطا در ارتباط با سرور');
     if (data) Object.assign(err, data);
@@ -279,6 +287,9 @@ async function api(action,payload={}){
   }
   return data;
 }
+async function api(action,payload={}){ return apiRequest(action,payload,{includeInitData:true,timeoutMs:12000}); }
+async function publicApi(action,payload={}){ return apiRequest(action,payload,{includeInitData:false,timeoutMs:8000,openAuth:false}); }
+
 /* ===== Batch 1 utilities: haptic, chime, confetti, pull-to-refresh, charts, lightbox, stepper ===== */
 function haptic(t='light'){try{tg?.HapticFeedback?.impactOccurred?.(t)}catch(e){}}
 function hapticNotify(t='success'){try{tg?.HapticFeedback?.notificationOccurred?.(t)}catch(e){}}
@@ -301,7 +312,7 @@ function miniBootContext(){
     mode:isAdminMode?'admin':'user',
     telegram:Boolean(initData),
     platform:String(tg?.platform||'unknown'),
-    version:'3.0.5.3'
+    version:'3.0.5.4'
   };
 }
 function setMiniBootState(kind, message=''){
@@ -361,67 +372,82 @@ async function load({force=false}={}){
     console.info('[BlueGate MiniApp boot]',ctx);
     setMiniBootState('loading');
     try{showSkeleton();}catch(_){}
-    try{
-      try{tg?.ready?.();tg?.expand?.();}catch(e){console.warn('[BlueGate MiniApp] Telegram ready/expand failed',e?.message||e)}
-      applyDeviceLayout();
-      const telegramContext=isTelegramMiniAppContext();
-      if(telegramContext){
-        const readyInitData=await waitForTelegramInitData();
-        if(!readyInitData){
-          const err=new Error('اطلاعات ورود تلگرام دریافت نشد. Mini App را کامل ببند و دوباره از داخل ربات باز کن.');
-          err.error='TELEGRAM_INIT_DATA_MISSING';
-          throw err;
+
+    // Admin keeps the authenticated path; user storefront must never wait for Telegram auth.
+    if(isAdminMode){
+      try{
+        try{tg?.ready?.();tg?.expand?.();}catch(_){}
+        if(isTelegramMiniAppContext()){
+          const readyInitData=await waitForTelegramInitData(2500);
+          if(!readyInitData) throw new Error('اطلاعات ورود تلگرام دریافت نشد. Mini App را دوباره از داخل ربات باز کن.');
+          await apiRequest('telegram_boot',{}, {includeInitData:true,timeoutMs:8000});
         }
-      }
-      if(isAdminMode){
-        if(telegramContext) await api('telegram_boot');
-        adminState=await api('admin_summary');
+        adminState=await apiRequest('admin_summary',{}, {includeInitData:true,timeoutMs:10000});
         applyTheme(adminState.settings||{});
-        $('userApp')?.classList.add('hidden');
-        $('adminApp')?.classList.remove('hidden');
-        renderAdmin();
-        try{startAdminLivePolling();}catch(_){}
-      }else{
-        state=telegramContext ? await api('telegram_boot') : await api('me');
-        if(telegramContext && (state?.is_guest || state?.user?.is_guest || !state?.user)){
-          const err=new Error('تلگرام هویت کاربر را تأیید نکرد. Mini App را دوباره از داخل ربات باز کن.');
-          err.error='TELEGRAM_SESSION_NOT_RESOLVED';
-          throw err;
-        }
-        applyTheme(state||{});
-        $('adminApp')?.classList.add('hidden');
-        $('userApp')?.classList.remove('hidden');
-        try { renderUser(); }
-        catch (renderErr) {
-          console.error('[BlueGate MiniApp render failed]', renderErr);
-          // Keep the Mini App usable even if an optional widget breaks.
-          currentTab='shop';
-          try { hidePages(); $('shopPage')?.classList.remove('hidden'); renderShop(); }
-          catch (shopErr) { throw renderErr; }
-        }
-        initAuthHandlers();
-        updateAuthUI(state);
-        syncMiniAuthChrome();
-        try{checkAndCelebrate();}catch(_){}
-        try{handleDeepLink();}catch(e){console.warn('[BlueGate MiniApp] deep link failed',e?.message||e)}
-        try{showOnboarding();}catch(_){}
+        $('userApp')?.classList.add('hidden');$('adminApp')?.classList.remove('hidden');
+        renderAdmin();try{startAdminLivePolling()}catch(_){}
+        try{hideSkeleton()}catch(_){};setMiniBootState('ready');return adminState;
+      }catch(e){
+        console.error('[BlueGate MiniApp admin boot failed]',e);
+        try{hideSkeleton()}catch(_){};setMiniBootState('error',e?.message||'پنل ادمین بارگذاری نشد.');throw e;
       }
-      try{hideSkeleton();}catch(_){}
-      setMiniBootState('ready');
-      if(!isAdminMode){
-        // First paint wins: optional account conveniences hydrate only after the shop is usable.
-        setTimeout(()=>hydrateMiniEnhancements(),120);
-      }
-      return isAdminMode?adminState:state;
-    }catch(e){
-      console.error('[BlueGate MiniApp boot failed]',{...ctx,code:e?.error||'',message:e?.message||String(e)});
-      try{hideSkeleton();}catch(_){}
-      setMiniBootState('error',e?.message||'اتصال به BlueGate برقرار نشد.');
-      throw e;
     }
+
+    // 1) Guaranteed first paint: load the public storefront without initData/auth.
+    try{
+      const store=await publicApi('storefront');
+      state={
+        ok:true,is_guest:true,user:{is_guest:true,balance:0,referrals_count:0,total_earned:0},orders:[],services:[],
+        wishlist_product_ids:[],notifications:[],notification_unread:0,
+        ...store
+      };
+      applyTheme(state||{});
+      $('adminApp')?.classList.add('hidden');$('userApp')?.classList.remove('hidden');
+      currentTab='shop';hidePages();$('shopPage')?.classList.remove('hidden');renderShop();updateMiniHeader();
+      try{hideSkeleton()}catch(_){};setMiniBootState('ready');
+    }catch(storeErr){
+      console.error('[BlueGate MiniApp storefront first paint failed]',storeErr);
+      try{hideSkeleton()}catch(_){};
+      setMiniBootState('error',storeErr?.message||'فروشگاه از سرور دریافت نشد.');
+      throw storeErr;
+    }
+
+    // 2) Authenticate/hydrate after first paint. Failure here must NOT blank the shop.
+    (async()=>{
+      try{
+        try{tg?.ready?.();tg?.expand?.();}catch(_){}
+        const telegramContext=isTelegramMiniAppContext();
+        let full=null;
+        if(telegramContext){
+          const readyInitData=await waitForTelegramInitData(2500);
+          if(!readyInitData) throw new Error('اطلاعات ورود تلگرام دریافت نشد.');
+          full=await apiRequest('telegram_boot',{}, {includeInitData:true,timeoutMs:8000,openAuth:false});
+        }else{
+          full=await apiRequest('me',{}, {includeInitData:false,timeoutMs:8000,openAuth:false});
+        }
+        if(full&&full.ok){
+          state=full;
+          applyTheme(state||{});
+          initAuthHandlers();updateAuthUI(state);syncMiniAuthChrome();
+          // Preserve shop first paint. Only restore a non-shop tab after account data exists.
+          const saved=currentTab;
+          if(saved!=='shop') renderUser(); else {renderShop();updateMiniHeader();}
+          try{checkAndCelebrate()}catch(_){}
+          try{handleDeepLink()}catch(e){console.warn('[BlueGate MiniApp] deep link failed',e?.message||e)}
+          try{showOnboarding()}catch(_){}
+          setTimeout(()=>hydrateMiniEnhancements(),150);
+        }
+      }catch(authErr){
+        console.warn('[BlueGate MiniApp auth hydration skipped]',authErr?.message||authErr);
+        // Shop is already usable. Expose login instead of replacing content with a fatal screen.
+        try{initAuthHandlers();updateAuthUI(state);syncMiniAuthChrome()}catch(_){}
+      }
+    })();
+    return state;
   })();
-  try{return await _bootPromise}finally{if(document.documentElement.dataset.bootState==='error')_bootPromise=null}
+  try{return await _bootPromise}finally{_bootPromise=null}
 }
+
 /* Charts (SVG / CSS, no external lib) */
 function last7DaysRevenue(orders){const days=[];const now=new Date();for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);const rev=orders.filter(o=>{const od=String(o.created_at||'').slice(0,10);return ds===od&&['payment_confirmed','preparing','delivered'].includes(o.status)}).reduce((s,o)=>s+Number(o.final_amount||0),0);days.push({date:ds,label:['ی','د','س','چ','پ','ج','ش'][d.getDay()],rev})}return days}
 function sparklineHtml(data){if(!data||!data.length)return '';const max=Math.max(...data.map(d=>d.rev),1);const w=280,h=56,pad=4;const pts=data.map((d,i)=>{const x=pad+(i*(w-2*pad))/(data.length-1);const y=h-pad-(d.rev/max)*(h-2*pad);return [x,y]});const poly=pts.map(p=>p.join(',')).join(' ');const area=`${pad},${h-pad} ${poly} ${w-pad},${h-pad}`;const labels=data.map((d,i)=>`<text x="${pad+(i*(w-2*pad))/(data.length-1)}" y="${h-1}" text-anchor="middle" font-size="9" fill="#9fb0c8">${d.label}</text>`).join('');const dots=pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--accent)"/>`).join('');return `<svg class="sparkline" viewBox="0 0 ${w} ${h+12}" width="100%" height="68"><polygon points="${area}" fill="color-mix(in srgb,var(--accent) 18%,transparent)" stroke="none"/><polyline points="${poly}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${labels}</svg>`}

@@ -58,7 +58,9 @@ function get_authenticated_user(string $initData, ?string $authToken = null): ar
             $tgUser = json_decode($validated['user'], true);
             if ($tgUser && !empty($tgUser['id'])) {
                 $user = create_or_update_user($tgUser, null);
-                if (is_joined_channel((int)$tgUser['id'])) try_reward_referrer($user);
+                // Never block Mini App authentication on a Telegram Bot API network call.
+                // Referral reward / force-join housekeeping is handled by the bot flow and can
+                // be retried independently; authentication itself must remain local and fast.
                 $fullUser = get_user_by_tid((int)$tgUser['id']);
                 if ($fullUser && !user_is_blocked($fullUser)) return $fullUser;
             }
