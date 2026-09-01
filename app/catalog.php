@@ -57,7 +57,7 @@ function catalog_public_payload(): array {
                 $plans[]=[
                     'id'=>(int)$p['id'],'title'=>$p['title'],'price'=>(int)$p['price'],'price_currency'=>$p['price_currency'],
                     'price_usd'=>$p['price_usd']!==null?(float)$p['price_usd']:null,'duration_days'=>(int)$p['duration_days'],
-                    'discount_percent'=>(float)$p['discount_percent'],'description'=>$p['description']??'',
+                    'discount_percent'=>(float)$p['discount_percent'],'description'=>$p['description']??'','image_url'=>$p['image_url']??null,
                     'delivery_type'=>$p['delivery_type'],'commission_type'=>$p['commission_type'],'commission_value'=>(int)$p['commission_value'],
                     'legacy_product_id'=>$p['legacy_product_id']!==null?(int)$p['legacy_product_id']:null,
                     'legacy_variant_id'=>$p['legacy_variant_id']!==null?(int)$p['legacy_variant_id']:null,
@@ -290,8 +290,8 @@ function catalog_create_service(array $d): int {
     $name=trim((string)($d['name']??''));if($name==='')throw new RuntimeException('SERVICE_NAME_REQUIRED');
     $categoryId=(int)($d['category_id']??0);if($categoryId<=0){$legacyCat=!empty($d['legacy_category_id'])?(int)$d['legacy_category_id']:null;$categoryId=catalog_upsert_store_category($legacyCat);}
     $legacyCat=catalog_ensure_legacy_category($categoryId);
-    db()->prepare('INSERT INTO products (category_id,parent_id,slug,product_type,config_json,name,price,short_description,full_description,delivery_type,is_active,is_featured,sort_order) VALUES (?,NULL,?,"normal",?,?,0,?,?,"manual",1,?,?)')->execute([$legacyCat,catalog_unique_slug('products',$name,'service'),json_encode(['theme'=>$d['theme']??'blue','badge'=>$d['badge']??''],JSON_UNESCAPED_UNICODE),$name,$d['description']??'',$d['description']??'',!empty($d['is_featured'])?1:0,(int)($d['sort_order']??99)]);$legacyProductId=(int)db()->lastInsertId();
-    db()->prepare('INSERT INTO services (category_id,legacy_product_id,name,slug,description,image_url,theme,badge,is_featured,is_active,sort_order) VALUES (?,?,?,?,?,?,?,?,?,1,?)')->execute([$categoryId,$legacyProductId,$name,catalog_unique_slug('services',$name,'service'),$d['description']??'',trim((string)($d['image_url']??''))?:null,$d['theme']??'blue',$d['badge']??'',!empty($d['is_featured'])?1:0,(int)($d['sort_order']??99)]);$serviceId=(int)db()->lastInsertId();
+    db()->prepare('INSERT INTO products (category_id,parent_id,slug,product_type,config_json,name,price,short_description,full_description,image_url,delivery_type,is_active,is_featured,sort_order) VALUES (?,NULL,?,"normal",?,?,0,?,?,?,"manual",1,?,?)')->execute([$legacyCat,catalog_unique_slug('products',(string)($d['slug']??$name),'service'),json_encode(['theme'=>$d['theme']??'blue','badge'=>$d['badge']??''],JSON_UNESCAPED_UNICODE),$name,$d['description']??'',$d['description']??'',trim((string)($d['image_url']??''))?:null,!empty($d['is_featured'])?1:0,(int)($d['sort_order']??99)]);$legacyProductId=(int)db()->lastInsertId();
+    db()->prepare('INSERT INTO services (category_id,legacy_product_id,name,slug,description,image_url,theme,badge,is_featured,is_active,sort_order) VALUES (?,?,?,?,?,?,?,?,?,1,?)')->execute([$categoryId,$legacyProductId,$name,catalog_unique_slug('services',(string)($d['slug']??$name),'service'),$d['description']??'',trim((string)($d['image_url']??''))?:null,$d['theme']??'blue',$d['badge']??'',!empty($d['is_featured'])?1:0,(int)($d['sort_order']??99)]);$serviceId=(int)db()->lastInsertId();
     if(empty($d['skip_default_group']))catalog_create_group(['service_id'=>$serviceId,'name'=>'Default Group','is_default'=>1]);
     return $serviceId;
 }
@@ -303,19 +303,22 @@ function catalog_create_group(array $d): int {
     if($isDefault){$legacyProduct=$legacyService;$name='Default Group';$slug='default';}
     else{
         db()->prepare('UPDATE products SET product_type="service_group" WHERE id=?')->execute([$legacyService]);
-        $root=shop_product($legacyService);db()->prepare('INSERT INTO products (category_id,parent_id,slug,product_type,name,price,short_description,full_description,delivery_type,is_active,is_featured,sort_order) VALUES (?,?,?,"normal",?,0,?,?,"manual",1,0,?)')->execute([(int)($root['category_id']??0)?:null,$legacyService,catalog_unique_slug('products',$name,'group'),$name,$d['description']??'',$d['description']??'',(int)($d['sort_order']??99)]);$legacyProduct=(int)db()->lastInsertId();$slug=catalog_unique_slug('service_groups',$name,'group');
+        $root=shop_product($legacyService);db()->prepare('INSERT INTO products (category_id,parent_id,slug,product_type,name,price,short_description,full_description,image_url,delivery_type,is_active,is_featured,sort_order) VALUES (?,?,?,"normal",?,0,?,?,?,"manual",1,0,?)')->execute([(int)($root['category_id']??0)?:null,$legacyService,catalog_unique_slug('products',$name,'group'),$name,$d['description']??'',$d['description']??'',trim((string)($d['image_url']??''))?:null,(int)($d['sort_order']??99)]);$legacyProduct=(int)db()->lastInsertId();$slug=catalog_unique_slug('service_groups',$name,'group');
     }
     $check=db()->prepare('SELECT id FROM service_groups WHERE service_id=? AND is_default=? LIMIT 1');$check->execute([$serviceId,$isDefault?1:0]);$existing=$isDefault?$check->fetch():false;if($existing)return (int)$existing['id'];
-    db()->prepare('INSERT INTO service_groups (service_id,legacy_product_id,name,slug,description,is_default,is_active,sort_order) VALUES (?,?,?,?,?,?,1,?)')->execute([$serviceId,$legacyProduct,$name,$slug,$d['description']??'',$isDefault?1:0,(int)($d['sort_order']??99)]);return (int)db()->lastInsertId();
+    db()->prepare('INSERT INTO service_groups (service_id,legacy_product_id,name,slug,description,image_url,is_default,is_active,sort_order) VALUES (?,?,?,?,?,?,?,1,?)')->execute([$serviceId,$legacyProduct,$name,$slug,$d['description']??'',trim((string)($d['image_url']??''))?:null,$isDefault?1:0,(int)($d['sort_order']??99)]);return (int)db()->lastInsertId();
 }
 
 function catalog_create_plan(array $d): int {
     $groupId=(int)($d['group_id']??0);$title=trim((string)($d['title']??''));if(!$groupId||$title==='')throw new RuntimeException('PLAN_DATA_REQUIRED');
     $q=db()->prepare('SELECT g.*,s.legacy_product_id service_legacy_product FROM service_groups g JOIN services s ON s.id=g.service_id WHERE g.id=?');$q->execute([$groupId]);$g=$q->fetch();if(!$g)throw new RuntimeException('GROUP_NOT_FOUND');
     $legacyProduct=(int)($g['legacy_product_id']?:$g['service_legacy_product']);
-    $price=max(0,(int)($d['price']??0));if($price<=0)throw new RuntimeException('PLAN_PRICE_REQUIRED');
-    db()->prepare('INSERT INTO product_variants (product_id,title,price,price_currency,duration_days,discount_percent,description,sort_order,is_active) VALUES (?,?,?,"IRT",?,?,?,?,1)')->execute([$legacyProduct,$title,$price,max(0,(int)($d['duration_days']??0)),max(0,min(100,(float)($d['discount_percent']??0))),$d['description']??'',(int)($d['sort_order']??99)]);$legacyVariant=(int)db()->lastInsertId();
-    $product=shop_product($legacyProduct);$variant=product_variant($legacyVariant);return catalog_upsert_plan_from_legacy($groupId,$product,$variant,(int)($d['sort_order']??99));
+    $pp=price_admin_payload_from_input($d);
+    $days=max(0,(int)($d['duration_days']??0));$discount=max(0,min(100,(float)($d['discount_percent']??0)));$desc=(string)($d['description']??'');$delivery=normalize_delivery_type((string)($d['delivery_type']??'manual'));
+    $commissionType=in_array((string)($d['commission_type']??'none'),['none','percent','fixed'],true)?(string)$d['commission_type']:'none';$commissionValue=max(0,(int)($d['commission_value']??0));$sort=(int)($d['sort_order']??99);$active=catalog_bool_value($d['is_active']??1,1);$image=trim((string)($d['image_url']??''))?:null;
+    db()->prepare('INSERT INTO product_variants (product_id,title,price,price_currency,price_usd,price_rate_toman,price_rate_source,price_rate_updated_at,duration_days,discount_percent,description,sort_order,is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute([$legacyProduct,$title,$pp['price'],$pp['price_currency'],$pp['price_usd'],$pp['price_rate_toman'],$pp['price_rate_source'],$pp['price_rate_updated_at'],$days,$discount,$desc,$sort,$active]);$legacyVariant=(int)db()->lastInsertId();
+    db()->prepare('INSERT INTO service_plans (group_id,legacy_product_id,legacy_variant_id,title,price,price_currency,price_usd,price_rate_toman,price_rate_source,price_rate_updated_at,duration_days,discount_percent,description,image_url,delivery_type,commission_type,commission_value,is_active,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute([$groupId,$legacyProduct,$legacyVariant,$title,$pp['price'],$pp['price_currency'],$pp['price_usd'],$pp['price_rate_toman'],$pp['price_rate_source'],$pp['price_rate_updated_at'],$days,$discount,$desc,$image,$delivery,$commissionType,$commissionValue,$active,$sort]);
+    return (int)db()->lastInsertId();
 }
 
 
@@ -382,7 +385,7 @@ function catalog_save_group(array $d): int {
     $q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$serviceId]);$svc=$q->fetch();if(!$svc)throw new RuntimeException('سرویس مقصد پیدا نشد.');
     if(!$isDefault){$dupe=db()->prepare('SELECT id FROM service_groups WHERE service_id=? AND LOWER(name)=LOWER(?) AND id<>? AND is_default=0 AND is_archived=0 LIMIT 1');$dupe->execute([$serviceId,$name,$id]);if($dupe->fetch())throw new RuntimeException('این زیرسرویس قبلاً برای همین سرویس ساخته شده.');}
     if($id<=0){
-        $newId=catalog_create_group(['service_id'=>$serviceId,'name'=>$name,'description'=>$d['description']??'','is_default'=>$isDefault,'sort_order'=>(int)($d['sort_order']??99)]);
+        $newId=catalog_create_group(['service_id'=>$serviceId,'name'=>$name,'description'=>$d['description']??'','image_url'=>$d['image_url']??'','is_default'=>$isDefault,'sort_order'=>(int)($d['sort_order']??99)]);
         $active=catalog_bool_value($d['is_active']??1,1);
         if(!$active)db()->prepare('UPDATE service_groups SET is_active=0,is_archived=0 WHERE id=?')->execute([$newId]);
         catalog_sync_service_legacy_visibility($serviceId);
@@ -403,28 +406,20 @@ function catalog_save_group(array $d): int {
 }
 
 function catalog_save_plan(array $d): int {
-    $id=(int)($d['id']??$d['plan_id']??0);$groupId=(int)($d['group_id']??0);$title=trim((string)($d['title']??''));$price=max(0,(int)($d['price']??0));
+    $id=(int)($d['id']??$d['plan_id']??0);$groupId=(int)($d['group_id']??0);$title=trim((string)($d['title']??''));
     if($groupId<=0||$title==='')throw new RuntimeException('عنوان پلن و زیرسرویس را کامل کن.');
-    if($price<=0)throw new RuntimeException('قیمت پلن باید بیشتر از صفر باشد.');
     $q=db()->prepare('SELECT g.*,s.legacy_product_id service_legacy_product FROM service_groups g JOIN services s ON s.id=g.service_id WHERE g.id=?');$q->execute([$groupId]);$g=$q->fetch();if(!$g)throw new RuntimeException('زیرسرویس پیدا نشد.');
     $dupe=db()->prepare('SELECT id FROM service_plans WHERE group_id=? AND LOWER(title)=LOWER(?) AND id<>? AND is_archived=0 LIMIT 1');$dupe->execute([$groupId,$title,$id]);if($dupe->fetch())throw new RuntimeException('پلنی با این عنوان در همین زیرسرویس وجود دارد.');
-    if($id<=0){
-        $newId=catalog_create_plan($d+['group_id'=>$groupId,'title'=>$title,'price'=>$price]);
-        $active=catalog_bool_value($d['is_active']??1,1);
-        if(!$active){
-            db()->prepare('UPDATE service_plans SET is_active=0,is_archived=0 WHERE id=?')->execute([$newId]);
-            $q2=db()->prepare('SELECT legacy_variant_id FROM service_plans WHERE id=?');$q2->execute([$newId]);$np=$q2->fetch();
-            if(!empty($np['legacy_variant_id']))db()->prepare('UPDATE product_variants SET is_active=0 WHERE id=?')->execute([(int)$np['legacy_variant_id']]);
-        }
-        return $newId;
-    }
+    if($id<=0)return catalog_create_plan($d+['group_id'=>$groupId,'title'=>$title]);
     $q=db()->prepare('SELECT * FROM service_plans WHERE id=?');$q->execute([$id]);$row=$q->fetch();if(!$row)throw new RuntimeException('پلن پیدا نشد.');
-    $days=max(0,(int)($d['duration_days']??$row['duration_days']??0));$discount=max(0,min(100,(float)($d['discount_percent']??$row['discount_percent']??0)));$desc=(string)($d['description']??$row['description']??'');$delivery=(string)($d['delivery_type']??$row['delivery_type']??'manual');$active=catalog_bool_value($d['is_active']??$row['is_active'],(int)$row['is_active']);$sort=(int)($d['sort_order']??$row['sort_order']??99);
+    $priceInput=$d; if(!array_key_exists('price_currency',$priceInput))$priceInput['price_currency']=$row['price_currency']??'IRT'; if(!array_key_exists('price',$priceInput))$priceInput['price']=$row['price']??0; if(!array_key_exists('price_usd',$priceInput))$priceInput['price_usd']=$row['price_usd']??null;
+    $pp=price_admin_payload_from_input($priceInput);
+    $days=max(0,(int)($d['duration_days']??$row['duration_days']??0));$discount=max(0,min(100,(float)($d['discount_percent']??$row['discount_percent']??0)));$desc=(string)($d['description']??$row['description']??'');$image=trim((string)($d['image_url']??$row['image_url']??''))?:null;$delivery=normalize_delivery_type((string)($d['delivery_type']??$row['delivery_type']??'manual'));$commissionType=in_array((string)($d['commission_type']??$row['commission_type']??'none'),['none','percent','fixed'],true)?(string)($d['commission_type']??$row['commission_type']):'none';$commissionValue=max(0,(int)($d['commission_value']??$row['commission_value']??0));$active=catalog_bool_value($d['is_active']??$row['is_active'],(int)$row['is_active']);$sort=(int)($d['sort_order']??$row['sort_order']??99);
     $legacyProduct=(int)($g['legacy_product_id']?:$g['service_legacy_product']);
-    db()->prepare('UPDATE service_plans SET group_id=?,legacy_product_id=?,title=?,price=?,duration_days=?,discount_percent=?,description=?,delivery_type=?,is_active=?,is_archived=0,sort_order=? WHERE id=?')->execute([$groupId,$legacyProduct,$title,$price,$days,$discount,$desc,$delivery,$active,$sort,$id]);
+    db()->prepare('UPDATE service_plans SET group_id=?,legacy_product_id=?,title=?,price=?,price_currency=?,price_usd=?,price_rate_toman=?,price_rate_source=?,price_rate_updated_at=?,duration_days=?,discount_percent=?,description=?,image_url=?,delivery_type=?,commission_type=?,commission_value=?,is_active=?,is_archived=0,sort_order=? WHERE id=?')->execute([$groupId,$legacyProduct,$title,$pp['price'],$pp['price_currency'],$pp['price_usd'],$pp['price_rate_toman'],$pp['price_rate_source'],$pp['price_rate_updated_at'],$days,$discount,$desc,$image,$delivery,$commissionType,$commissionValue,$active,$sort,$id]);
     $legacyVariant=(int)($row['legacy_variant_id']??0);
-    if($legacyVariant>0){db()->prepare('UPDATE product_variants SET product_id=?,title=?,price=?,duration_days=?,discount_percent=?,description=?,is_active=?,sort_order=? WHERE id=?')->execute([$legacyProduct,$title,$price,$days,$discount,$desc,$active,$sort,$legacyVariant]);}
-    elseif(!empty($row['legacy_product_id'])){db()->prepare('UPDATE products SET name=?,price=?,short_description=?,full_description=?,delivery_type=?,is_active=?,sort_order=? WHERE id=?')->execute([$title,$price,$desc,$desc,$delivery,$active,$sort,(int)$row['legacy_product_id']]);}
+    if($legacyVariant>0){db()->prepare('UPDATE product_variants SET product_id=?,title=?,price=?,price_currency=?,price_usd=?,price_rate_toman=?,price_rate_source=?,price_rate_updated_at=?,duration_days=?,discount_percent=?,description=?,is_active=?,sort_order=? WHERE id=?')->execute([$legacyProduct,$title,$pp['price'],$pp['price_currency'],$pp['price_usd'],$pp['price_rate_toman'],$pp['price_rate_source'],$pp['price_rate_updated_at'],$days,$discount,$desc,$active,$sort,$legacyVariant]);}
+    elseif(!empty($row['legacy_product_id'])){db()->prepare('UPDATE products SET name=?,price=?,price_currency=?,price_usd=?,price_rate_toman=?,price_rate_source=?,price_rate_updated_at=?,short_description=?,full_description=?,image_url=?,delivery_type=?,commission_type=?,commission_value=?,is_active=?,sort_order=? WHERE id=?')->execute([$title,$pp['price'],$pp['price_currency'],$pp['price_usd'],$pp['price_rate_toman'],$pp['price_rate_source'],$pp['price_rate_updated_at'],$desc,$desc,$image,$delivery,$commissionType,$commissionValue,$active,$sort,(int)$row['legacy_product_id']]);}
     return $id;
 }
 
@@ -493,7 +488,16 @@ function catalog_save_blueprint(array $d): array {
             $default=null;foreach($existingGroups as $g)if((int)$g['is_default']===1){$default=(int)$g['id'];break;}
             $payload=$groups[0]??['plans'=>[]];$gid=catalog_save_group(['id'=>$default?:0,'service_id'=>$serviceId,'name'=>'Default Group','is_default'=>1,'description'=>'','is_active'=>1,'sort_order'=>0]);$keptGroups[$gid]=true;if(!$default)$madeGroups++;
             $plans=is_array($payload['plans']??null)?$payload['plans']:[];
-            foreach($plans as $i=>$pl){$pid=catalog_save_plan($pl+['group_id'=>$gid,'sort_order'=>$i]);$keptPlans[$pid]=true;if(empty($pl['id']))$madePlans++;}
+            foreach($plans as $i=>$pl){
+                // Older/restored wizard drafts may have lost the catalog plan id. While editing an
+                // existing service, reconcile the plan by its unique (group + title) identity so an
+                // ordinary edit is not incorrectly rejected as a duplicate.
+                if(!$wasNew && empty($pl['id']) && trim((string)($pl['title']??''))!==''){
+                    $rq=db()->prepare('SELECT id FROM service_plans WHERE group_id=? AND LOWER(title)=LOWER(?) AND is_archived=0 LIMIT 1');
+                    $rq->execute([$gid,trim((string)$pl['title'])]);$rid=$rq->fetchColumn();if($rid)$pl['id']=(int)$rid;
+                }
+                $wasPlanNew=empty($pl['id']);$pid=catalog_save_plan($pl+['group_id'=>$gid,'sort_order'=>$i]);$keptPlans[$pid]=true;if($wasPlanNew)$madePlans++;
+            }
         }else{
             // Keep a legacy/default group only when it still carries direct plans.
             foreach($groups as $gi=>$gr){
@@ -501,7 +505,13 @@ function catalog_save_blueprint(array $d): array {
                 if($isDefault && empty($gr['plans']))continue;
                 $gid=catalog_save_group($gr+['service_id'=>$serviceId,'sort_order'=>$gi]);$keptGroups[$gid]=true;if(empty($gr['id']))$madeGroups++;
                 $plans=is_array($gr['plans']??null)?$gr['plans']:[];
-                foreach($plans as $pi=>$pl){$pid=catalog_save_plan($pl+['group_id'=>$gid,'sort_order'=>$pi]);$keptPlans[$pid]=true;if(empty($pl['id']))$madePlans++;}
+                foreach($plans as $pi=>$pl){
+                    if(!$wasNew && empty($pl['id']) && trim((string)($pl['title']??''))!==''){
+                        $rq=db()->prepare('SELECT id FROM service_plans WHERE group_id=? AND LOWER(title)=LOWER(?) AND is_archived=0 LIMIT 1');
+                        $rq->execute([$gid,trim((string)$pl['title'])]);$rid=$rq->fetchColumn();if($rid)$pl['id']=(int)$rid;
+                    }
+                    $wasPlanNew=empty($pl['id']);$pid=catalog_save_plan($pl+['group_id'=>$gid,'sort_order'=>$pi]);$keptPlans[$pid]=true;if($wasPlanNew)$madePlans++;
+                }
             }
         }
         // Anything removed in the wizard is safely deactivated instead of deleted.

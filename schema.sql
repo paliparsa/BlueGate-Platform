@@ -384,6 +384,7 @@ CREATE TABLE IF NOT EXISTS service_plans (
   duration_days INT NOT NULL DEFAULT 0,
   discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   description TEXT NULL,
+  image_url VARCHAR(1000) NULL,
   delivery_type VARCHAR(32) NOT NULL DEFAULT 'manual',
   commission_type VARCHAR(16) NOT NULL DEFAULT 'none',
   commission_value BIGINT NOT NULL DEFAULT 0,

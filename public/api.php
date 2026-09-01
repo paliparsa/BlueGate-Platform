@@ -643,6 +643,24 @@ if ($action === 'admin_catalog_undo') {
     try{$meta=catalog_undo_meta((int)$user['telegram_id']);$r=catalog_undo_last((int)$user['telegram_id']);log_admin_action((int)$user['telegram_id'],'catalog_undo','service',(int)($r['service_id']??0),'undo last catalog change');api_out(admin_payload()+['catalog_undo_result'=>$r,'catalog_undo_meta'=>$meta]);}
     catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>api_exception_message($e,'بازگشت تغییر انجام نشد.')],400);}
 }
+if ($action === 'admin_catalog_upload_image') {
+    require_admin($user);
+    api_rate_limit('catalog_image_upload',(string)$user['id'],30,900,900);
+    $raw=(string)($input['image_b64']??'');
+    if($raw==='')api_out(['ok'=>false,'error'=>'NO_IMAGE','message'=>'تصویری انتخاب نشده است.'],400);
+    if(strlen($raw)>12*1024*1024)api_out(['ok'=>false,'error'=>'IMAGE_TOO_LARGE','message'=>'حجم تصویر بیشتر از حد مجاز است.'],400);
+    if(!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,#i',$raw))api_out(['ok'=>false,'error'=>'INVALID_IMAGE_TYPE','message'=>'فرمت تصویر باید JPG، PNG یا WEBP باشد.'],400);
+    $b64=preg_replace('#^data:image/(jpeg|jpg|png|webp);base64,#i','',$raw);$bin=base64_decode($b64,true);
+    if(!$bin||strlen($bin)<100||strlen($bin)>6*1024*1024)api_out(['ok'=>false,'error'=>'INVALID_IMAGE','message'=>'فایل تصویر معتبر نیست یا بیش از ۶ مگابایت است.'],400);
+    $fi=new finfo(FILEINFO_MIME_TYPE);$mime=$fi->buffer($bin);$ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;
+    if(!$ext)api_out(['ok'=>false,'error'=>'INVALID_IMAGE_CONTENT','message'=>'محتوای تصویر معتبر نیست.'],400);
+    $dir=__DIR__.'/uploads/catalog/'.date('Ym');if(!is_dir($dir)&&!@mkdir($dir,0775,true))api_out(['ok'=>false,'error'=>'UPLOAD_DIR_FAILED','message'=>'ساخت پوشه آپلود ناموفق بود.'],500);
+    $relative='uploads/catalog/'.date('Ym').'/catalog_'.bin2hex(random_bytes(12)).'.'.$ext;
+    if(file_put_contents(__DIR__.'/'.$relative,$bin,LOCK_EX)===false)api_out(['ok'=>false,'error'=>'UPLOAD_WRITE_FAILED','message'=>'ذخیره تصویر ناموفق بود.'],500);
+    $base=rtrim((string)app_config('PUBLIC_BASE_URL',''),'/');$url=$base!==''?$base.'/'.$relative:'/'.$relative;
+    log_admin_action((int)$user['telegram_id'],'catalog_upload_image','catalog_image',null,$relative);
+    api_out(['ok'=>true,'image_url'=>$url,'relative_path'=>$relative]);
+}
 if ($action === 'admin_catalog_save_service') {
     require_admin($user);
     try{$id=catalog_save_service($input);log_admin_action((int)$user['telegram_id'],'catalog_save_service','service',$id,(string)($input['name']??''));api_out(admin_payload()+['catalog_saved_id'=>$id]);}

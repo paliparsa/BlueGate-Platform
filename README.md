@@ -1,1265 +1,363 @@
-> **v2.9.2 Mobile UI Fix Pack:** Referral overlays, Mini App navigation/category rails, compact horizontal product cards, exact plan-specific discount labels, and mobile Credit Center sizing are fixed.
-
-> **v2.9.1 Performance & UX Fix Pack:** بارگذاری Website و Telegram Mini App با cache policy مناسب برای assetهای versioned، Service Worker سریع‌تر، gzip و deferred scripts سبک‌تر شده است. ثبت/پیش‌نمایش کد تخفیف به خرید Web و Mini App اضافه شده، لینک پشتیبانی Mini App اصلاح شده، ویرایش حساب/ایمیل با ظاهر Credit Top-up یکپارچه شده و درخواست‌های شارژ باز حالا به‌صورت امن قابل لغو یا تغییر روش پرداخت هستند.
-
-> **v2.9.0 UI Convergence:** تجربه خرید محصول در Telegram Mini App با زبان طراحی نسخه Website جایگزین شده و Product Sheet قدیمی حذف شده است. انتخاب پلن، مشخصات، قیمت، تخفیف، اشتراک‌گذاری و ثبت سفارش اکنون در یک Purchase Dialog یکپارچه و touch-friendly انجام می‌شود. ظاهر Mini App به Website نزدیک‌تر شده و Web Admin نیز منوها، Modalها، Prompt/Confirmها و Navigation موبایل یکپارچه دریافت کرده است.
-
-> **v2.8.4 Mini App Product & Palette Fix:** پنل Command Palette فقط در Admin Desktop و فقط پس از فراخوانی صریح نمایش داده می‌شود؛ نشت listener بین Product Sheetها رفع شده تا انتخاب پلن هر محصول فقط همان محصول را تغییر دهد، و handler واحد ثبت سفارش Mini App دوباره با اعتبارسنجی product/variant فعال شده است.
-
-> **v2.8.1 Telegram Boot Fix & Mobile Web Pass:** رگرشن Boot در Telegram Mini App برطرف شده، شناسایی خودکار کاربر با `initData` دوباره برقرار است و به‌جای صفحه سفید Error/Retry واقعی نمایش داده می‌شود. صفحه اصلی Website نیز با یک لایه Responsive نهایی برای Header، Hero، نرخ‌ها، انتخاب سرویس، VPN، Stars، Premium، FAQ، Footer و کنترل‌های Sticky روی موبایل بازطراحی و پایدار شده است.
-
-> **v2.8.0 Mini App Unification:** ساختار Telegram Mini App یکپارچه و سبک‌تر شده است: ناوبری کاربر به فروشگاه/سفارش‌ها/اعتبار/حساب محدود شده، Product Detail به یک Sheet واحد تبدیل شده، Credit و Account از داشبوردهای تکراری پاک‌سازی شده‌اند، Admin فقط چهار مقصد اصلی دارد و یک UI System مشترک برای Sheet/Confirm/Actionها اضافه شده است.
-
-> **v2.7.0 Credit Center:** مرکز اعتبار Website و Mini App بازطراحی شده و شارژ واقعی اعتبار با کارت، Telegram Stars و رمزارز به همراه تاریخچه، بررسی ادمین و تنظیمات min/max/presets اضافه شده است.
-
-> **v2.5.0 Auth & Account Navigation:** نوار ورود/ثبت‌نام Website از نو طراحی شده؛ Guest دو CTA واضح «ورود / ساخت حساب» دارد و بعد از ورود Header به Quick Credit + Account Menu تبدیل می‌شود. Auth حالا Modal/Bottom Sheet یکپارچه با Telegram Login، Password UX، بازیابی مرحله‌ای، OTP شش‌رقمی، Remember Session امن، Profile Completion و Telegram Link اختیاری است.
-
-> **v2.4.0 Account Center:** پروفایل Website و Mini App به Account Center یکپارچه ارتقا پیدا کرده، «کیف پول» کاربر به **اعتبار BlueGate** تبدیل شده و امکان برداشت موجودی از تمام مسیرهای اجرایی پروژه حذف شده است. سوابق تاریخی برداشت فقط برای Audit/Backup در دیتابیس نگهداری می‌شوند و هیچ عملیات جدیدی روی آن‌ها وجود ندارد.
-
-> **v2.3.1 VPN Popup & Premium Fix:** انتخاب BluePing حالا داخل Popup ریسپانسیو انجام می‌شود و باگ کشیدگی سبز کارت Premium با حذف pseudo-elementهای تداخلی برطرف شده.
-
-> **v2.3.0 Guided Service Flow:** انتخاب سرویس در موبایل به کارت‌های swipe/snap تبدیل شده، سوییچر فقط بعد از ورود به جزئیات Sticky می‌شود و BluePing حالا مسیر واقعی نوع سرویس → پکیج → تایید سفارش دارد.
-
-> **Security build note:** this archive is the Verified-35 variant of v2.2.0. Five previously unverified controls are intentionally excluded; see `RELEASE-NOTES-v2.2.0.md`.
-> **v2.3.0 Service Navigation UX:** انتخاب کارت سرویس در Storefront حالا مستقیماً با offset صحیح زیر Header/Service Switcher به جزئیات همان سرویس اسکرول می‌کند؛ مخصوصاً روی موبایل دیگر کاربر بالای بخش محصولات رها نمی‌شود.
->
-
 # BlueGate Platform
 
-> نسخه فعلی: **v2.9.2**  
-> هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
+BlueGate Platform is the main commerce stack behind BlueGate: a PHP/MySQL storefront, customer account area, administration panel, Telegram Mini App and Telegram Bot running on one catalog, one order system and one source of truth.
 
-> **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.
+**Current build: v3.0.2.1**
 
----
-
-## فهرست
-
-1. [معرفی](#معرفی)
-2. [معماری پروژه](#معماری-پروژه)
-3. [قابلیت‌های اصلی](#قابلیتهای-اصلی)
-4. [مسیرهای Website و Mini App](#مسیرهای-website-و-mini-app)
-5. [نیازمندی‌های سرور](#نیازمندیهای-سرور)
-6. [نصب خودکار از GitHub](#نصب-خودکار-از-github)
-7. [اطلاعاتی که Installer می‌پرسد](#اطلاعاتی-که-installer-میپرسد)
-8. [تنظیم Telegram Bot و Mini App](#تنظیم-telegram-bot-و-mini-app)
-9. [تنظیم Resend برای ایمیل](#تنظیم-resend-برای-ایمیل)
-10. [مدیریت پروژه روی VPS](#مدیریت-پروژه-روی-vps)
-11. [آپدیت پروژه](#آپدیت-پروژه)
-12. [Catalog Studio v2.1](#catalog-v2-و-organizer)
-13. [لایه سازگاری داخلی](#محصولات-دستهبندی-و-variant)
-
-14. [جریان خرید Website در v1.6.0](#جریان-خرید-website-در-v160)
-15. [سفارش‌ها و روش‌های پرداخت](#سفارشها-و-روشهای-پرداخت)
-16. [تحویل لینک سرویس و Subscription](#تحویل-لینک-سرویس-و-subscription)
-17. [Backup و Restore](#backup-و-restore)
-18. [انتقال فایل‌های Upload](#انتقال-فایلهای-upload)
-19. [مهاجرت از BlueReferral قدیمی](#مهاجرت-از-bluereferral-قدیمی)
-20. [امنیت و Permissionها](#امنیت-و-permissionها)
-21. [Cloudflare، Nginx و SSL](#cloudflare-nginx-و-ssl)
-22. [Troubleshooting](#troubleshooting)
-23. [Uninstall](#uninstall)
-24. [مسیر فایل‌های مهم](#مسیر-فایلهای-مهم)
+This repository is intended to be deployed as a complete application. The Website and Telegram Mini App use the same backend and catalog data, so a product edited in Admin is not maintained separately for each client.
 
 ---
 
-# معرفی
+## What is included
 
-**BlueGate Platform** نسخه یکپارچه فروشگاه BlueGate است. Backend اصلی بر پایه PHP + MySQL/MariaDB است و Website، Telegram Mini App و Bot همگی از یک دیتابیس و یک API استفاده می‌کنند.
+- Storefront Website
+- Customer account and authentication
+- Order lifecycle and delivery flow
+- BlueGate Credit
+- Referral system
+- Web Admin
+- Telegram Mini App
+- Telegram Bot/Webhook
+- Catalog Studio
+- Payment configuration
+- Coupon and inventory tools
+- Backup/restore and activity logging
 
-ساختار اصلی پروژه:
+The backend is PHP with MySQL/MariaDB. `api.php` is the central application API used by the web clients and Mini App.
+
+---
+
+## Catalog Studio
+
+The catalog hierarchy is:
 
 ```text
-Website / Storefront
-        │
-        ├── Account
-        ├── Orders
-        ├── BlueGate Credit
-        ├── Referral
-        ├── Profile
-        └── Admin
-        │
-      api.php
-        │
-      MySQL
-        │
-   ┌────┴─────┐
-   │          │
-Mini App   Telegram Bot
+Category
+└── Service
+    └── Group / Sub-service
+        └── Plan / Product
 ```
 
-Website و Portal قدیمی دیگر دو رابط جدا نیستند. `/portal/` فقط برای سازگاری با لینک‌های قدیمی نگه داشته شده و کاربر را به Dashboard جدید هدایت می‌کند.
+Catalog Studio is the supported place for day-to-day catalog management. Legacy product/variant tables are still maintained where required for checkout compatibility, but they should not be treated as a second catalog to edit manually.
 
-**Mini App عمداً ظاهر مستقل خودش را حفظ می‌کند** ولی اطلاعات آن با Website مشترک است.
+### Service controls
+
+Administrators can manage:
+
+- title
+- slug
+- description
+- image
+- theme
+- badge
+- featured state
+- active state
+- display order
+
+### Group / sub-service controls
+
+Administrators can manage:
+
+- title
+- slug
+- description
+- image
+- active state
+- display order
+
+### Plan / product controls
+
+Administrators can manage:
+
+- title
+- description
+- image
+- active state
+- display order
+- duration
+- discount
+- delivery type
+- commission type and value
+- price currency
+- toman price
+- USD price
+
+The same catalog controls are available from both **Web Admin** and **Telegram Mini App Admin**.
 
 ---
 
-# معماری پروژه
+## USD pricing
 
-BlueGate Platform از بخش‌های زیر تشکیل شده:
+Plans can be priced directly in toman or entered in USD.
 
-- **Storefront Website** برای معرفی و خرید محصولات
-- **Account Dashboard** برای کاربر
-- **Orders** برای مشاهده سفارش، پرداخت و تحویل
-- **Account Credit** برای اعتبار خرید، تراکنش و پاداش
-- **Referral / Affiliate** برای همکاری در فروش
-- **Admin** برای مدیریت کل فروشگاه
-- **Telegram Mini App** با UI مستقل
-- **Telegram Bot** برای تعامل تلگرامی، اعلان و مدیریت
-- **MySQL/MariaDB** به‌عنوان Source of Truth
-- **PHP API** برای ارتباط همه Frontendها
+When `USD` is selected, BlueGate uses the existing USDT/toman rate pipeline to calculate the payable toman value. The catalog keeps the original USD value together with the conversion metadata instead of replacing it with an unexplained fixed number.
 
-Supabase در نسخه فعلی هسته اصلی پروژه نیست و اطلاعات فروشگاه از MySQL/API مرکزی خوانده می‌شود.
-
----
-
-# قابلیت‌های اصلی
-
-## فروشگاه و محصول
-
-- Catalog Studio v2.1: Category → Service → Group → Plan
-- Wizard پنج‌مرحله‌ای مشترک برای ساخت و ویرایش سرویس‌های فعلی
-- Product / Variant قدیمی فقط به‌عنوان لایه سازگاری داخلی و خارج از منوی عادی Admin
-- Guided Migration Assistant با Preview، Confidence و Manual Review
-- Draft محلی، Preview قبل از انتشار، Undo آخرین تغییر و حذف امن/Archive
-- Dynamic product types
-- Inventory
-- Coupon
-- تصویر محصول
-- ترتیب نمایش دسته‌ها
-- وضعیت فعال/غیرفعال محصول
-- VPN Standard / Pro / Emergency
-- Telegram Premium
-- Telegram Stars با مقدار Dynamic
-- محصولات عمومی مثل AI، Music، Subscription و هر محصول جدیدی که از Admin ساخته شود
-
-## حساب کاربری
-
-- Register / Login
-- Telegram Login
-- Email verification
-- Password reset
-- Order history
-- Wallet
-- Referral
-- Profile
-- حذف حساب
-
-## سفارش
-
-Lifecycle سفارش شامل وضعیت‌هایی مثل:
+Relevant plan fields include:
 
 ```text
-pending_payment
-reviewing
-payment_confirmed
-preparing
-delivered
-rejected
-canceled
-refunded
+price
+price_currency
+price_usd
+price_rate_toman
+price_rate_source
+price_rate_updated_at
 ```
 
-## پرداخت
-
-- Wallet
-- Card to Card
-- Telegram Stars
-- Crypto
-- Coupon
-- Upload receipt
-
-## ادمین
-
-- Dashboard فروش
-- Products
-- Variants
-- Categories
-- Orders
-- Inventory
-- Users
-- Wallet adjustment
-- Coupons
-- Payment settings
-- Crypto settings
-- Storefront settings
-- Broadcast
-- Backup / Restore
-- Activity log
-- Admin roles
+This allows an administrator to keep a product defined in USD while the storefront continues to operate with the local toman amount expected by the checkout flow.
 
 ---
 
-# مسیرهای Website و Mini App
+## Catalog images
 
-پس از نصب روی دامنه `example.com`:
+Images can be entered as an existing URL or uploaded directly from Admin.
+
+Supported formats:
 
 ```text
-https://example.com/              Storefront
-https://example.com/web/          Storefront compatibility path
-https://example.com/account       Dashboard کاربر
-https://example.com/orders        سفارش‌ها
-https://example.com/wallet        اعتبار حساب
-https://example.com/referral      همکاری در فروش
-https://example.com/profile       پروفایل
-https://example.com/admin         پنل مدیریت Website
-https://example.com/portal/       Redirect سازگاری؛ Portal مستقل نیست
-https://example.com/miniapp/      Telegram Mini App
-https://example.com/api.php       API اصلی
-https://example.com/bot.php       Telegram Webhook
+JPG
+JPEG
+PNG
+WEBP
+```
+
+Maximum upload size: **6 MB**
+
+Uploaded files are stored under:
+
+```text
+public/uploads/catalog/YYYYMM/
+```
+
+Image upload is available for:
+
+- services
+- groups / sub-services
+- plans / products
+
+The upload endpoint validates the file type on the server and is restricted to authenticated Admin use.
+
+> Make sure the web server user can write to `public/uploads/catalog/`.
+
+---
+
+## Main routes
+
+For a deployment on `https://example.com`:
+
+```text
+/                 Storefront
+/account          Customer account
+/orders           Orders
+/wallet           BlueGate Credit
+/referral         Referral
+/profile          Profile
+/admin             Web Admin
+/miniapp/          Telegram Mini App
+/api.php           Main API
+/bot.php           Telegram Bot webhook
+/portal/           Compatibility redirect
 ```
 
 ---
 
-# نیازمندی‌های سرور
+## Server requirements
 
-پیشنهاد:
+Recommended baseline:
 
-- Ubuntu / Debian جدید
-- دسترسی root یا sudo
-- حداقل 1GB RAM؛ 2GB بهتر است
-- Domain یا Subdomain متصل به VPS
-- Port 80 و 443 باز
-- GitHub Repo قابل دسترسی از VPS
+- Ubuntu or Debian VPS
+- Nginx
+- PHP-FPM
+- PHP CLI
+- MySQL or MariaDB
+- HTTPS-enabled domain/subdomain
+- at least 1 GB RAM; 2 GB+ recommended
 
-Installer خودش این موارد را نصب می‌کند:
+Typical PHP packages used by the project:
 
 ```text
-nginx
-mariadb-server
-git
-curl
-unzip
-openssl
 php-fpm
 php-cli
 php-mysql
 php-curl
 php-mbstring
 php-xml
-certbot
-python3-certbot-nginx
+```
+
+The installer can provision the common system dependencies on a clean supported server.
+
+---
+
+## Fresh install
+
+Upload or clone the repository to the server, then run the installer as a privileged user:
+
+```bash
+chmod +x install.sh
+sudo ./install.sh
+```
+
+The installer will ask for the values it needs for the deployment, including database/application settings and public host information.
+
+A sample configuration is available in:
+
+```text
+config.example.php
+```
+
+Do not commit a production configuration containing passwords, API keys or bot tokens.
+
+---
+
+## Updating an existing installation
+
+Before updating a production instance, create a database backup and keep a copy of the current application configuration.
+
+Then use the project update script:
+
+```bash
+chmod +x update.sh
+sudo ./update.sh
+```
+
+The update path applies required database migrations. In this build that includes catalog changes such as support for plan images on installations created before the field existed.
+
+Do not replace the database manually with `schema.sql` on an existing production installation.
+
+---
+
+## Telegram Mini App
+
+The Mini App uses Telegram `initData` for Telegram-side authentication and talks to the same API/database as the Website.
+
+For a production Mini App:
+
+1. deploy BlueGate over HTTPS;
+2. configure the bot token in the application configuration;
+3. point the Telegram Mini App URL to `/miniapp/`;
+4. configure the bot webhook to the deployed `bot.php` endpoint where applicable.
+
+If the Mini App opens as a blank page, first check the browser console/network log and the API response rather than treating it as a Telegram UI problem. Authentication failures, stale frontend assets and API errors can all surface as a failed Mini App boot.
+
+---
+
+## Permissions for image uploads
+
+If product image upload fails with a permission error, verify the upload directory exists and is writable by the PHP/Nginx runtime user.
+
+Example on a typical Debian/Ubuntu deployment:
+
+```bash
+sudo mkdir -p public/uploads/catalog
+sudo chown -R www-data:www-data public/uploads
+sudo find public/uploads -type d -exec chmod 755 {} \;
+sudo find public/uploads -type f -exec chmod 644 {} \;
+```
+
+Avoid making the directory globally writable with `chmod 777`.
+
+---
+
+## Database and compatibility layer
+
+MySQL/MariaDB is the source of truth.
+
+Catalog Studio writes to the current service/group/plan model. Where the checkout still relies on legacy product/variant records, BlueGate mirrors the required pricing/product metadata internally. This compatibility layer exists so the storefront can evolve without forcing a destructive catalog migration.
+
+In normal operation:
+
+- edit catalog data through Catalog Studio;
+- do not independently edit mirrored legacy rows;
+- let migrations add new fields to existing installations.
+
+---
+
+## Useful files
+
+```text
+api.php                 Main backend API
+bot.php                 Telegram webhook/bot entry point
+schema.sql              Fresh-install database schema
+config.example.php      Configuration example
+install.sh              Fresh installation
+update.sh               Existing-install update path
+uninstall.sh            Removal helper
+public/                  Public/static assets and uploads
+miniapp/                 Telegram Mini App frontend
+```
+
+The exact frontend/admin implementation may be split into additional files under the project tree; use the routes above as the public interface rather than assuming every page maps one-to-one to a directory.
+
+---
+
+## Troubleshooting
+
+### "A plan with this title already exists in this sub-service"
+
+On edit, the current plan must keep its original plan ID. v3.0.2.1 includes a compatibility fix for existing Catalog Studio drafts where that ID was missing: the backend can resolve the existing plan inside the same group before deciding that the title is a real duplicate.
+
+A genuine second plan with the same title in the same sub-service is still rejected.
+
+### USD price does not convert
+
+Check that:
+
+- the plan currency is set to `USD`;
+- a valid USD value is supplied;
+- the USDT/toman rate source is returning a usable rate;
+- the API request completes successfully.
+
+The stored rate metadata can be used to see which conversion rate was applied.
+
+### Image upload fails
+
+Check:
+
+- file size is 6 MB or less;
+- format is JPG/JPEG/PNG/WEBP;
+- PHP upload limits are not lower than the application limit;
+- `public/uploads/catalog/` is writable;
+- the request is authenticated as Admin.
+
+Useful PHP settings to inspect:
+
+```ini
+upload_max_filesize
+post_max_size
+```
+
+### Web Admin works but Mini App Admin looks outdated
+
+Clear or invalidate cached versioned assets and reopen the Mini App. The two admin surfaces use the same backend, but Telegram's webview can retain older frontend assets longer than a normal browser session.
+
+---
+
+## Production checklist
+
+Before putting a build live:
+
+- HTTPS is valid
+- database is backed up
+- production config is outside public exposure
+- Admin credentials are changed from installation defaults
+- Telegram bot token is configured correctly
+- upload directory is writable but not globally writable
+- Web Admin can create and edit a test plan
+- Mini App Admin can edit the same plan
+- IRT checkout works
+- USD conversion works
+- image upload works from both admin surfaces
+- an end-to-end test order can reach the intended delivery state
+
+---
+
+## Release notes
+
+Release-specific changes are kept in the `RELEASE-NOTES-v*.md` files. For this build see:
+
+```text
+RELEASE-NOTES-v3.0.2.1.md
 ```
 
 ---
 
-# نصب خودکار از GitHub
-
-Repo اصلی مورد انتظار Installer:
-
-```text
-https://github.com/paliparsa/BlueGate-Platform
-```
-
-Branch پیش‌فرض:
-
-```text
-main
-```
-
-قبل از نصب، A Record دامنه را روی IP VPS قرار بده.
-
-سپس روی VPS:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/paliparsa/BlueGate-Platform/main/install.sh \
--o /tmp/bluegate-install.sh && \
-sudo bash /tmp/bluegate-install.sh --full
-```
-
-Installer این مراحل را انجام می‌دهد:
-
-1. نصب Packageها
-2. Clone یا Update Repo
-3. ساخت `config.php`
-4. ساخت Database و DB User
-5. Permissionها
-6. Nginx
-7. SSL با Certbot
-8. Migration / Seed
-9. Telegram Webhook
-10. Crypto Cron
-11. Health Check
-12. نصب دستور مدیریتی `bluegate`
-
-مسیر نصب پیش‌فرض:
-
-```text
-/var/www/bluegate-platform
-```
-
----
-
-# اطلاعاتی که Installer می‌پرسد
-
-Setup Wizard موارد زیر را می‌خواهد:
-
-```text
-Domain
-Telegram Bot Token
-Bot Username
-Admin Telegram IDs
-Support Username
-GitHub Repository URL
-Install Directory
-Database Name
-Database User
-Database Password
-Webhook Secret
-Brand Name
-Theme Color
-Force Join Channel (optional)
-Resend API Key (optional)
-Resend Sender Email (optional)
-SSL yes/no
-Let's Encrypt Email
-```
-
-### Domain
-
-فقط Hostname وارد شود:
-
-```text
-shop.example.com
-```
-
-نه:
-
-```text
-https://shop.example.com/
-```
-
-### Admin Telegram IDs
-
-مثال:
-
-```text
-123456789,987654321
-```
-
-باید Numeric Telegram ID باشند، نه Username.
-
-### Force Join Channel
-
-اختیاری:
-
-```text
-@BlueGate
-```
-
-برای غیرفعال بودن خالی بگذار.
-
----
-
-# تنظیم Telegram Bot و Mini App
-
-## Webhook
-
-Installer در نصب کامل Webhook را ست می‌کند.
-
-برای تنظیم مجدد:
-
-```bash
-sudo bluegate --webhook
-```
-
-## Telegram Login روی Website
-
-برای Login with Telegram باید در `@BotFather` یک‌بار دامنه را ثبت کنی:
-
-```text
-/setdomain
-```
-
-Bot را انتخاب کن و دامنه را بدون `https://` بده:
-
-```text
-example.com
-```
-
-## Mini App
-
-URL Mini App به‌صورت زیر ساخته می‌شود:
-
-```text
-https://example.com/miniapp/
-```
-
-Website و Mini App ظاهر مستقل دارند، ولی User / Order / Wallet / Referral / Products مشترک هستند.
-
----
-
-# تنظیم Resend برای ایمیل
-
-Resend برای Email Verification و Password Reset استفاده می‌شود.
-
-## API Key
-
-داخل حساب Resend:
-
-```text
-API Keys → Create API Key
-```
-
-کلید معمولاً به شکل زیر است:
-
-```text
-re_xxxxxxxxxxxxxxxxx
-```
-
-## Sender Email
-
-Sender Email را خودت انتخاب می‌کنی؛ مثلاً:
-
-```text
-noreply@example.com
-```
-
-اما دامنه `example.com` باید داخل Resend Verify شده باشد.
-
-پیشنهاد:
-
-```text
-BlueGate <noreply@example.com>
-```
-
-اگر ایمیل نمی‌خواهی، Resend API Key را خالی بگذار.
-
----
-
-
-# پنل مدیریت Website در v1.8.0
-
-از v1.8.0 پنل Admin سایت به سطح قابلیت‌های Admin Mini App ارتقا پیدا کرده و با فونت، فرم و کارت‌های بزرگ‌تر برای دسکتاپ/تبلت/موبایل طراحی شده است.
-
-بخش‌های اصلی:
-
-```text
-Dashboard
-Orders + Search + Kanban + Bulk Actions + Cleanup
-Products + Reorder + Soft/Hard Delete + CSV
-Categories + Reorder + Soft/Hard Delete
-Variants / Plans
-Inventory
-Coupons
-Withdrawals
-Customer 360 + Edit + Balance + Ban
-Activity Log
-Admin Roles
-Settings: General / Payments / Crypto / Appearance / Gamification
-Backup Center: Create / Send to Bot / Download / Restore / Upload Restore
-Broadcast with optional attachment
-Purchase Referral Reward
-```
-
-تمام این بخش‌ها از همان API و دیتابیس مشترک Mini App استفاده می‌کنند؛ بنابراین تغییرات Website Admin و Mini App Admin بلافاصله روی یک داده مشترک اعمال می‌شود.
-
----
-
-# مدیریت پروژه روی VPS
-
-بعد از نصب:
-
-```bash
-sudo bluegate
-```
-
-منوی مدیریتی شامل:
-
-```text
-1) Full install / reinstall
-2) Setup wizard
-3) Install/repair system packages
-4) Clone/update GitHub repository
-5) Generate/repair config.php
-6) Create/update database
-7) Set secure permissions
-8) Configure nginx
-9) Request/repair SSL
-10) Run database migrations
-11) Set Telegram webhook
-12) Install/repair manager command
-13) Update project from GitHub
-14) Status / diagnostics
-15) Install/repair crypto cron
-16) Health check
-17) Remove app files only
-```
-
-دستورهای سریع:
-
-```bash
-sudo bluegate --status
-sudo bluegate --health
-sudo bluegate --webhook
-sudo bluegate --update
-sudo bluegate --crypto-cron
-```
-
-Log Installer:
-
-```text
-/var/log/bluegate-platform-install.log
-```
-
-تنظیمات Installer:
-
-```text
-/etc/bluegate-platform.env
-```
-
----
-
-# آپدیت پروژه
-
-بعد از Push نسخه جدید روی GitHub:
-
-```bash
-sudo bluegate --update
-```
-
-Update این کارها را انجام می‌دهد:
-
-1. `git fetch`
-2. Reset روی `origin/main`
-3. Permission repair
-4. Database migrations
-5. Nginx repair/reload
-
-بعد از Update:
-
-```bash
-sudo bluegate --health
-```
-
-اگر Website هنوز فایل‌های قدیمی را نشان می‌دهد:
-
-```text
-Ctrl + Shift + R
-```
-
-برای Mini App بهتر است آن را کامل ببندی و دوباره از Telegram باز کنی.
-
-### اگر Manager قدیمی یا خراب بود
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/paliparsa/BlueGate-Platform/main/install.sh \
--o /tmp/bluegate-install.sh
-
-sudo bash /tmp/bluegate-install.sh --update
-```
-
----
-
-# Catalog v2 و Organizer
-
-از نسخه **v2.0.0** مدل فروشگاه به ساختار زیر ارتقا داده شده است:
-
-```text
-Store Category
-└── Service
-    └── Group
-        └── Plan
-```
-
-- **Category** فقط قفسه/دسته فروشگاه است.
-- **Service** سرویس مادر مثل BluePing، Spotify Premium یا ChatGPT است.
-- **Group** نوع یا زیرسرویس مثل Standard / Pro / Individual است.
-- **Plan** گزینه واقعی قابل خرید است.
-- برای سرویس‌هایی که Group ندارند، یک **Default Group** داخلی ساخته می‌شود و در UI مشتری مخفی می‌ماند.
-
-جداول جدید `store_categories`, `services`, `service_groups`, `service_plans` در کنار جداول Legacy ساخته می‌شوند. `products` و `product_variants` حذف نمی‌شوند و Checkout برای سازگاری همچنان Legacy ID واقعی را نگه می‌دارد. سفارش‌های جدید Snapshot مسیر Service/Group/Plan را ذخیره می‌کنند و هنگام Migration سفارش‌های قدیمی قابل نگاشت نیز Backfill می‌شوند.
-
-در **v2.1.0** مدیریت محصول به **Catalog Studio** تبدیل شده است. ساخت و اصلاح سرویس‌های فعلی هر دو با یک Wizard پنج‌مرحله‌ای انجام می‌شوند: اطلاعات سرویس → مدل انتخاب → زیرسرویس‌ها → پلن‌ها → Preview. برای سرویس‌های ساده، Default Group پشت صحنه می‌ماند و در UI نمایش داده نمی‌شود. Draft فرم به‌صورت محلی نگه‌داری و هنگام بازگشت بازیابی می‌شود، ذخیره‌ی نهایی یک Undo یک‌مرحله‌ای دارد و حذف Group/Plan به‌صورت Archive امن انجام می‌شود تا تاریخچه سفارش‌ها دست‌نخورده بماند.
-
-بخش‌های قدیمی Products / Categories / Variants دیگر در منوی عادی Web Admin یا Mini App نمایش داده نمی‌شوند و مسیرهای قدیمی نیز به Catalog هدایت می‌شوند. جدول‌های Legacy همچنان فقط برای سازگاری Checkout، Inventory و Order history در Backend باقی می‌مانند.
-
-Migration Assistant ابتدا فروشگاه قبلی را Scan می‌کند و پیشنهادها را با سه Confidence نمایش می‌دهد. Auto Apply فقط موارد مطمئن را پس از Preview و تأیید ادمین اعمال می‌کند؛ موارد `Needs Review` در صف اصلاح باقی می‌مانند. روی Desktop جابه‌جایی Group/Plan با Drag & Drop ممکن است و روی موبایل همان عملیات با selector و Sheet ریسپانسیو انجام می‌شود.
-
-تا قبل از تأیید Migration، Storefront از ساختار قبلی استفاده می‌کند. پس از فعال‌شدن Catalog جدید، ساختار نمایش از Catalog Studio خوانده می‌شود ولی آیتم‌های حل‌نشده تا زمان Review از دسترس خارج نمی‌شوند.
-
----
-
-# محصولات، دسته‌بندی و Variant
-
-> این بخش **لایه سازگاری داخلی** است و در v2.1 از منوی معمول Admin مخفی شده. برای ساخت یا ویرایش محصول از **Catalog Studio** استفاده کن.
-
-Product Engine قدیمی برای سازگاری Checkout، Inventory و سفارش‌های قبلی نگه داشته شده است.
-
-مثال:
-
-```text
-Category: AI
-Product: ChatGPT Plus
-Variants:
-- 1 Month
-- 3 Months
-```
-
-یا:
-
-```text
-Category: Music
-Product: Spotify Premium
-Variants:
-- Individual
-- Family
-```
-
-## دسته‌بندی
-
-Categoryها از دیتابیس خوانده می‌شوند. بخش «سرویس‌های بیشتر» Website در حالت اولیه بسته است و با باز کردن آن، دسته‌بندی‌ها از Database نمایش داده می‌شوند.
-
-فقط محصولات دسته انتخاب‌شده نمایش داده می‌شوند تا Catalog شلوغ نشود.
-
-## VPN
-
-VPNها از Product + Variant استفاده می‌کنند:
-
-```text
-BlueGate Standard
-BlueGate Pro
-BlueGate Emergency
-```
-
-هر Package یک Variant است.
-
-## Telegram Stars
-
-Stars مقدار Dynamic دارد و قیمت سمت PHP محاسبه/Validate می‌شود؛ Browser منبع نهایی قیمت نیست.
-
----
-
-# جریان خرید Website در v1.6.0
-
-از v1.6.0 ثبت سفارش Website دوباره Confirmation نهایی دارد.
-
-Flow:
-
-```text
-Product
-   ↓
-Purchase Confirmation Modal
-   ↓
-Variant / Package / Stars Selection
-   ↓
-نمایش قیمت و مشخصات نهایی
-   ↓
-تایید و ثبت سفارش
-   ↓
-Create Order
-   ↓
-Orders
-```
-
-تا زمانی که کاربر دکمه نهایی را نزند، Order ساخته نمی‌شود.
-
-## VPN
-
-انتخاب Package دیگر در Stage جداگانه پایین کارت نیست؛ داخل Confirmation Modal انجام می‌شود.
-
-## Premium و محصولات عمومی
-
-Variant داخل همان Confirmation قابل انتخاب است.
-
-## Stars
-
-تعداد Stars داخل Confirmation قابل تغییر است و قیمت Live Update می‌شود.
-
-## Coupon
-
-کد تخفیف اختیاری داخل Confirmation قابل وارد کردن است.
-
----
-
-# سفارش‌ها و روش‌های پرداخت
-
-در Website همه سفارش‌های کاربر به‌صورت پیش‌فرض **Accordion بسته** هستند.
-
-Summary سفارش فقط اطلاعات اصلی را نشان می‌دهد:
-
-```text
-نام محصول
-شماره سفارش
-مبلغ
-وضعیت
-```
-
-با باز کردن سفارش، این موارد نمایش داده می‌شوند:
-
-- Timeline وضعیت
-- روش پرداخت
-- Upload Receipt
-- Crypto payment
-- Wallet payment
-- Telegram Stars
-- Customer note
-- Delivery
-- Subscription link
-- Copy/Open service actions
-
-این طراحی باعث می‌شود با زیاد شدن تعداد سفارش‌ها صفحه شلوغ نشود.
-
----
-
-# تحویل لینک سرویس و Subscription
-
-Admin می‌تواند برای هر سفارش تحویل‌شده یک لینک اختصاصی سرویس ثبت کند.
-
-فیلدهای اصلی:
-
-```text
-delivery_url
-delivery_title
-```
-
-مثال:
-
-```text
-https://panel.example.com/sub/xxxxxxxx
-```
-
-بعد از Delivery، مشتری داخل Website یا Mini App می‌تواند:
-
-```text
-🌐 باز کردن سرویس
-📋 کپی لینک ساب
-```
-
-را ببیند.
-
-### نکته امنیتی
-
-Subscription URL در عمل شبیه Credential است. هر کسی که لینک را داشته باشد ممکن است بتواند از آن استفاده کند. پس:
-
-- فقط به صاحب سفارش تحویل بده.
-- لینک عمومی منتشر نشود.
-- در صورت Leak شدن، لینک را از سمت سرویس اصلی Rotate/Replace کن.
-
-BlueGate در نسخه فعلی لینک را مستقیم باز می‌کند؛ Reverse Proxy قدیمی حذف شده چون با بعضی پنل‌ها، CDNها، Cookieها و Anti-Botها سازگاری خوبی نداشت.
-
----
-
-# Backup و Restore
-
-BlueGate Backup دیتابیس را در فرمت `.json.gz` می‌سازد.
-
-مسیر Backupها روی VPS:
-
-```text
-/var/www/bluegate-platform/storage/backups/
-```
-
-## ساخت Backup از Admin
-
-داخل Admin → Backup می‌توان Backup ساخت، دانلود یا Restore کرد.
-
-## Backup از Telegram Bot
-
-برای Admin:
-
-```text
-/backup
-```
-
-سیستم Backup می‌سازد و داخل چت Bot می‌فرستد.
-
-## Restore از Telegram Bot
-
-```text
-/restore_backup
-```
-
-سپس فایل `.json.gz` را ارسال کن.
-
-قبل از Restore، سیستم تلاش می‌کند یک Safety Backup خودکار بسازد.
-
-## Restore از Website Admin
-
-Admin → Backup → Upload & Restore
-
-یا Restore یکی از Backupهای موجود روی سرور.
-
-### مهم
-
-Restore دیتابیس فعلی را با Backup جایگزین می‌کند. قبل از Restore روی Production حتماً Backup تازه بگیر.
-
-### Backup دیتابیس چه چیزهایی را شامل می‌شود؟
-
-مثل:
-
-- Users
-- Referrals
-- Transactions
-- Missions
-- Spins
-- Payment methods
-- Categories
-- Products
-- Variants
-- Orders
-- Order events
-- Coupons
-- Crypto data
-- Settings
-- Admin logs/roles
-- Inventory records
-
-### چه چیزهایی داخل Backup دیتابیس نیست؟
-
-فایل‌های فیزیکی مثل:
-
-```text
-public/uploads/
-```
-
-همچنین موارد سروری مثل:
-
-```text
-config.php
-Nginx config
-SSL certificates
-/etc/bluegate-platform.env
-```
-
-پس Backup دیتابیس را با Backup فایل‌های Upload اشتباه نگیر.
-
----
-
-# انتقال فایل‌های Upload
-
-محصولات ممکن است در دیتابیس فقط مسیر عکس را ذخیره کنند، اما خود فایل تصویر در Disk است.
-
-مسیر فعلی Uploadها:
-
-```text
-/var/www/bluegate-platform/public/uploads/
-```
-
-برای Backup دستی:
-
-```bash
-mkdir -p /root/bluegate-keep
-cp -a /var/www/bluegate-platform/public/uploads /root/bluegate-keep/uploads
-```
-
-برای Restore:
-
-```bash
-mkdir -p /var/www/bluegate-platform/public/uploads
-
-rsync -aHAX --info=progress2 \
-/root/bluegate-keep/uploads/ \
-/var/www/bluegate-platform/public/uploads/
-
-chown -R www-data:www-data /var/www/bluegate-platform/public/uploads
-
-find /var/www/bluegate-platform/public/uploads \
--type d -exec chmod 750 {} \;
-
-find /var/www/bluegate-platform/public/uploads \
--type f -exec chmod 640 {} \;
-```
-
-تعداد فایل‌ها را می‌توان مقایسه کرد:
-
-```bash
-echo BACKUP:
-find /root/bluegate-keep/uploads -type f | wc -l
-
-echo RESTORED:
-find /var/www/bluegate-platform/public/uploads -type f | wc -l
-```
-
----
-
-# مهاجرت از BlueReferral قدیمی
-
-BlueGate Platform از هسته BlueReferral تکامل پیدا کرده و بسیاری از جدول‌های اصلی با آن سازگار هستند.
-
-روش کم‌ریسک:
-
-1. از BlueReferral Backup بگیر.
-2. Uploadها را جدا ذخیره کن.
-3. BlueGate Platform را Fresh نصب کن.
-4. Backup دیتابیس را از Admin/Bot Restore کن.
-5. Migration نسخه جدید را اجرا کن.
-6. Uploadها را برگردان.
-7. Website / Bot / Mini App / Users / Orders / Wallet را تست کن.
-8. بعد نسخه قدیمی را حذف کن.
-
-Migration دستی:
-
-```bash
-cd /var/www/bluegate-platform
-sudo -u www-data php public/install.php
-```
-
-`public/install.php` از وب توسط Nginx بسته شده و برای Migration باید از CLI اجرا شود.
-
-### توصیه
-
-تا وقتی نسخه جدید کامل تست نشده، دیتابیس و پوشه BlueReferral قدیمی را حذف نکن.
-
----
-
-# امنیت و Permissionها
-
-Installer به‌صورت پیش‌فرض:
-
-- `config.php` را داخل Git قرار نمی‌دهد.
-- `config.php` را با Permission محدود نگه می‌دارد.
-- `public/install.php` را از Web مسدود می‌کند.
-- فقط `public/uploads` و `storage` را برای PHP writable می‌کند.
-- Webhook Secret و DB Password می‌توانند تصادفی تولید شوند.
-
-Permissionهای پروژه:
-
-```text
-Project files: root:www-data
-Directories:   750
-Files:         640
-Uploads:       www-data:www-data
-Storage:       www-data:www-data
-```
-
-هرگز `config.php`، Bot Token، DB Password یا API Key را داخل Public GitHub Repo Commit نکن.
-
----
-
-# Cloudflare، Nginx و SSL
-
-## DNS
-
-A Record دامنه باید به Public IP VPS اشاره کند.
-
-چک:
-
-```bash
-getent ahostsv4 example.com
-curl -4 -s https://api.ipify.org
-```
-
-IPها باید مطابق باشند.
-
-## Cloudflare
-
-برای گرفتن SSL اولیه اگر مشکل داشتی، Proxy را موقتاً روی:
-
-```text
-DNS Only
-```
-
-بگذار.
-
-پس از گرفتن Certificate می‌توان Proxy را دوباره فعال و SSL Mode را روی:
-
-```text
-Full (strict)
-```
-
-قرار داد.
-
-## SSL
-
-Repair:
-
-```bash
-sudo bluegate
-```
-
-و گزینه Request/repair SSL.
-
-یا مستقیم:
-
-```bash
-certbot --nginx -d example.com
-```
-
-## Nginx Test
-
-```bash
-nginx -t
-systemctl reload nginx
-```
-
-## Ports
-
-```bash
-ss -lntp | grep -E ':80|:443'
-```
-
----
-
-# Troubleshooting
-
-## وضعیت کلی
-
-```bash
-sudo bluegate --status
-```
-
-## Health Check
-
-```bash
-sudo bluegate --health
-```
-
-Health Check موارد اصلی PHP/API و HTTPS را بررسی می‌کند.
-
-## Installer Log
-
-```bash
-tail -n 200 /var/log/bluegate-platform-install.log
-```
-
-## Nginx
-
-```bash
-nginx -t
-systemctl status nginx --no-pager
-```
-
-## MariaDB
-
-```bash
-systemctl status mariadb --no-pager
-```
-
-## PHP-FPM Socket
-
-```bash
-find /run/php -name 'php*-fpm.sock'
-```
-
-## Webhook Bot کار نمی‌کند
-
-Webhook را دوباره ست کن:
-
-```bash
-sudo bluegate --webhook
-```
-
-بعد Bot را تست کن.
-
-## Website بعد از Update ظاهر قدیمی دارد
-
-```text
-Ctrl + Shift + R
-```
-
-و در صورت نیاز Cache مرورگر یا Service Worker را پاک کن.
-
-## Mini App ظاهر قدیمی دارد
-
-Mini App را کامل Close کن و دوباره از Telegram باز کن.
-
-فایل واقعی سرو شده را می‌توان بررسی کرد:
-
-```bash
-curl -sk https://example.com/miniapp/ | grep -E 'style\.css|app\.js'
-```
-
-## عکس‌ها 404 می‌شوند
-
-چک کن فایل‌ها واقعاً موجود باشند:
-
-```bash
-find /var/www/bluegate-platform/public/uploads -type f | head
-```
-
-و Permissionها:
-
-```bash
-chown -R www-data:www-data /var/www/bluegate-platform/public/uploads
-```
-
-## Migration
-
-```bash
-cd /var/www/bluegate-platform
-sudo -u www-data php public/install.php
-```
-
----
-
-# Uninstall
-
-برای حذف فایل‌های App:
-
-```bash
-cd /var/www/bluegate-platform
-sudo bash uninstall.sh
-```
-
-یا از:
-
-```bash
-sudo bluegate
-```
-
-گزینه Remove app files only.
-
-Uninstall پیش‌فرض این موارد را حذف می‌کند:
-
-- App files
-- Nginx site
-- Crypto cron
-
-ولی این موارد را نگه می‌دارد:
-
-- Database
-- `/etc/bluegate-platform.env`
-
-برای حذف Manager command در صورت نیاز:
-
-```bash
-rm -f /usr/local/bin/bluegate
-```
-
-**Database را فقط وقتی مطمئن هستی Backup لازم را داری، دستی Drop کن.**
-
----
-
-# مسیر فایل‌های مهم
-
-```text
-/var/www/bluegate-platform/                   Project root
-/var/www/bluegate-platform/config.php         Private config
-/var/www/bluegate-platform/public/            Web root
-/var/www/bluegate-platform/public/uploads/    Uploaded files/images
-/var/www/bluegate-platform/public/miniapp/    Telegram Mini App
-/var/www/bluegate-platform/storage/backups/   Database backups
-/var/www/bluegate-platform/storage/cache/     App cache
-/etc/bluegate-platform.env                    Installer/manager state
-/etc/nginx/sites-available/bluegate-platform  Nginx config
-/etc/cron.d/bluegate-platform                 Crypto cron
-/var/log/bluegate-platform-install.log        Installer log
-/usr/local/bin/bluegate                       Manager command
-```
-
----
-
-# وضعیت نسخه 1.8.0
-
-مهم‌ترین تغییرات v1.8.0:
-
-- Full Web Admin Parity با پنل Admin Mini App
-- Admin Sidebar/Responsive Navigation جدید
-- Typography و کنترل‌های بزرگ‌تر در کل Admin
-- Customer 360، Activity Log و Admin Roles در Website
-- Orders Kanban/List، Bulk Actions، Cleanup، Archive و Receipt Viewer
-- مدیریت کامل Product/Category/Variant/Inventory/Coupon با Hard Delete و Reorder
-- Backup Send-to-Bot و Upload & Restore از Website
-- Broadcast با فایل، Purchase Reward و VIP Rates
-- Settings پنج‌بخشی شامل General/Payments/Crypto/Appearance/Gamification
-
-قابلیت‌های خرید و سفارش v1.6.0 نیز حفظ شده‌اند:
-
-- رفع Horizontal Overflow / فضای سیاه اضافه در Mobile Website
-- بازگشت Confirmation پیش از ثبت سفارش Website
-- طراحی Confirmation بر اساس Invoice UI Mini App
-- انتخاب Package VPN داخل Confirmation
-- انتخاب Variant محصولات عمومی و Premium داخل Confirmation
-- تنظیم مقدار Stars داخل Confirmation
-- Coupon داخل Confirmation
-- Orders Accordion؛ همه سفارش‌ها در شروع بسته هستند
-- Timeline، Payment، Delivery و Subscription actions فقط بعد از باز کردن Order نمایش داده می‌شوند
-- Mini App در Flow خرید v1.6.0 عمداً تغییر نکرده است
-
----
-
-## نکته نهایی
-
-برای Production همیشه قبل از تغییرات بزرگ این دو چیز را جداگانه Backup کن:
-
-```text
-1) Database Backup (.json.gz)
-2) public/uploads/
-```
-
-داشتن فقط یکی از این دو، Backup کامل فروشگاه محسوب نمی‌شود.
-
-
-## Product hierarchy in v1.8.0
-
-The storefront supports parent/child products. Example:
-
-```text
-BluePing (service_group)
-├── Standard (vpn)
-│   ├── 20 GB
-│   ├── 30 GB
-│   └── 50 GB
-└── Pro (vpn)
-    ├── 5 GB
-    ├── 10 GB
-    └── 20 GB
-```
-
-`products.parent_id` links sub-products to a service product. `product_variants` are the purchasable plans. Website rendering is database-driven: names such as Standard/Pro are not used to infer behavior; icon, badge, theme and benefits come from product configuration.
-
-The website is dark-only in v1.8.0. Light mode and its toggle were removed.
-
-## v2.5.1 readability pass
-The storefront, account/auth UI, dashboard/admin and Mini App now use a larger unified typography scale. Form controls use a 16px baseline and previously tiny microcopy/badges/helper text have been raised to readable sizes across desktop and mobile.
-
-
-## v2.5.2 Profile refinement & secure email change
-
-- Profile completion is integrated into the profile hero instead of using a separate large card.
-- Account information, Telegram connections, security, support, and the danger zone use a cleaner visual hierarchy on web.
-- Support is compact and destructive account controls are collapsed under Sensitive settings.
-- Direct user-side email editing/removal is disabled.
-- Existing email changes require OTP verification of the current email, followed by a second OTP sent to the new email.
-- Accounts without an email can add one with verification of the new address.
-- Web and Mini App use the same secure email-change flow.
-- Pending email-change OTPs are purpose-separated from signup/password-reset OTPs and rate limited.
-
-
-## v2.6.0 Referral Center Refresh
-
-Referral/partner experience redesigned for Web and Mini App with a compact hero, unified stats, referral-tier progress, share sheet, QR, advanced custom-code section and compact referral list.
-
-
-## v2.7.0 Credit Center
-
-- مرکز اعتبار یکپارچه در Web و Mini App
-- شارژ حساب با مبلغ پیشنهادی یا دلخواه
-- کارت به کارت با رسید، Telegram Stars و پرداخت رمزارز/ثبت TXID
-- افزایش موجودی idempotent پس از تایید پرداخت
-- وضعیت و تاریخچه درخواست‌های شارژ
-- تنظیمات ادمین برای فعال/غیرفعال، حداقل/حداکثر، presetها و روش‌های پرداخت
-- بررسی و تایید/رد شارژهای دستی در Admin
-
-
-## v2.8.0 Mini App Unification
-
-- Bottom navigation کاربر به چهار مقصد فروشگاه، سفارش‌ها، اعتبار و حساب یکپارچه شد.
-- مسیر و صفحه Legacy محصول حذف شد؛ جزئیات محصول، انتخاب پلن و خرید در یک Product Sheet انجام می‌شود.
-- Popup دوم Variant و handlerهای قدیمی Quantity/Product حذف شدند.
-- Account به Hub خلاصه تبدیل شد و اطلاعات تکراری Credit/Referral از آن حذف شد.
-- Credit Center دیگر sub-tab داخلی ندارد؛ تاریخچه، دعوت دوستان و پاداش‌ها به viewهای متمرکز باز می‌شوند.
-- Shop hero بزرگ حذف و جستجو + دسته‌ها + Filter Sheet جایگزین کنترل‌های پراکنده شد.
-- Orders دارای سه فیلتر سریع، Filter Sheet پیشرفته و منوی More برای عملیات فرعی است.
-- Admin Mini App از ۹ تب به Dashboard / Catalog / Orders / More کاهش یافت.
-- UIهای Legacy Products/Categories/Variants از Mini App Admin حذف شدند و Catalog Studio تنها مسیر مدیریت کاتالوگ است.
-- Command Palette روی دستگاه‌های Touch مخفی و فقط برای Desktop نگه داشته شد.
-- UI System مشترک (`ui-system.js`) برای Sheet و Confirmationهای استاندارد اضافه شد و destructive actionهای اصلی از `window.confirm` خارج شدند.
-- لایه Design Token/override مشترک (`unified.css`) برای spacing، radius، typography، surface و motion اضافه شد.
-- Onboarding به دو پیام اصلی «خرید و مدیریت سرویس‌ها» و «دعوت و دریافت اعتبار» کاهش یافت.
-- Auth shortcut داخل Telegram authenticated پنهان می‌شود و فقط در Web fallback/Guest نمایش داده می‌شود.
-- منطق مالی/Payment Backend این نسخه تغییر نکرده است.
-
-
-## v2.8.1 Telegram Boot Fix & Mobile Web Pass
-
-- Boot controller واحد برای Telegram Mini App اضافه شد و رگرشن حذف‌شدن `load()` که باعث صفحه سفید می‌شد برطرف شد.
-- احراز هویت خودکار Telegram دوباره از `initData` به `api('me')` عبور می‌کند؛ در نشست Telegram معتبر Auth popup نمایش داده نمی‌شود.
-- خطای Boot به‌جای صفحه خالی با Error State و Retry قابل بازیابی نمایش داده می‌شود.
-- Cache busting Mini App برای `app.js`، `style.css`، `ui-system.js` و `unified.css` یکپارچه شد.
-- Website یک لایه Responsive نهایی با breakpointهای 1024 / 768 / 420 دریافت کرد.
-- Header، Hero، live rates، conversion rail، service carousel، sticky switcher، VPN bottom sheet، Stars، Premium، بخش‌های ثانویه، FAQ و Footer برای موبایل بهینه شدند.
-- روی موبایل جدول مقایسه می‌تواند به Comparison Card تبدیل شود و منو/Sticky checkout/sheets محدود به viewport و safe-area هستند.
-- Service Worker و asset versionهای Website به v2.8.1 ارتقا یافتند.
-- منطق مالی، Checkout و Payment Backend در این نسخه تغییر نکرده است.
+BlueGate Platform is an application repository, not a reusable public framework. Keep production secrets out of source control, deploy updates through the migration path, and treat the database as persistent state rather than something to recreate on every release.

@@ -77,6 +77,9 @@ function seed_setting(string $key, $value): void {
 function migrate(): void {
     run_sql_file(__DIR__ . '/../schema.sql');
 
+    // v3.0.2 catalog editor parity: allow an optional image on every purchasable plan.
+    add_column_if_missing('service_plans', 'image_url', 'VARCHAR(1000) NULL AFTER description');
+
     // v2.2 security-critical tables are also ensured explicitly so an older install
     // cannot silently lose rate limiting or queued broadcasts if a prior schema step failed.
     db()->exec('CREATE TABLE IF NOT EXISTS rate_limits (
