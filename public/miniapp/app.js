@@ -1706,7 +1706,7 @@ function mcStepHtml(){const w=mobileCatalogWizard;if(mobileCatalogStep===0)retur
 function renderCatalogMobileWizard(){
   const w=mobileCatalogWizard;if(!w)return;
   const footer=`${mobileCatalogStep>0?'<button type="button" class="secondary" data-mc-prev>قبلی</button>':'<span></span>'}${mobileCatalogStep<4?'<button type="button" class="primary" data-mc-next>ادامه</button>':`<button type="button" class="primary" data-mc-save>${w.id?'✓ ذخیره تغییرات':'🚀 ساخت و انتشار'}</button>`}`;
-  const body=`<div class="mcw-stepper">${[0,1,2,3,4].map(i=>`<span class="${i===mobileCatalogStep?'active':i<mobileCatalogStep?'done':''}">${i<mobileCatalogStep?'✓':i+1}</span>`).join('')}</div><div class="mcw-body">${mcStepHtml()}</div>`;
+  const labels=['اطلاعات','ساختار','زیرسرویس','پلن‌ها','بررسی'];const body=`<div class="mcw-stepper">${[0,1,2,3,4].map(i=>`<button type="button" data-mc-goto="${i}" class="${i===mobileCatalogStep?'active':i<mobileCatalogStep?'done':''}"><span>${i<mobileCatalogStep?'✓':i+1}</span><small>${labels[i]}</small></button>`).join('')}</div><div class="mcw-body">${mcStepHtml()}</div>`;
   BlueGateUI.openSheet({type:'fullscreen',eyebrow:'CATALOG STUDIO',title:w.id?'ویرایش سرویس':'سرویس جدید',subtitle:`مرحله ${mobileCatalogStep+1} از ۵`,body,footer,onOpen:(sheet)=>{
     sheet.querySelector('[data-mc-prev]')?.addEventListener('click',()=>{mcCollect();mobileCatalogStep=Math.max(0,mobileCatalogStep-1);renderCatalogMobileWizard()});
     sheet.querySelector('[data-mc-next]')?.addEventListener('click',()=>{mcCollect();const err=mcValidate();if(err)return showStatus(err,'error');mobileCatalogStep=Math.min(4,mobileCatalogStep+1);renderCatalogMobileWizard()});
@@ -1728,7 +1728,7 @@ async function catalogMobileApply(){if(await BlueGateUI.confirm({title:'اعما
 async function catalogMobileApplyOne(id){if(await BlueGateUI.confirm({title:'مرتب‌سازی محصول',message:'این محصول قدیمی در کاتالوگ جدید مرتب شود؟',confirmText:'مرتب‌سازی'}))await adminAction('admin_catalog_apply_one',{legacy_product_id:id,confirm:'APPLY'})}
 function openCatalogMoveGroup(){return openCatalogMobileOrganizer()}
 function openCatalogMovePlan(){return openCatalogMobileOrganizer()}
-function openCatalogFast(){openEdit('ساخت سریع سرویس',[{title:'اطلاعات سرویس',fields:[{id:'mcf_name',label:'نام سرویس',placeholder:'مثلاً BluePing'},{id:'mcf_cat',label:'دسته فروشگاه',type:'select',options:catalogCategoryOptions()},{id:'mcf_desc',label:'توضیح کوتاه',type:'textarea',placeholder:'توضیح سرویس'}]},{title:'ساختار سریع',fields:[{id:'mcf_groups',label:'هر زیرسرویس یک خط',type:'textarea',placeholder:'Standard: 20GB=99000, 30GB=149000\nPro: 10GB=149000, 20GB=249000'}]}],async()=>adminAction('admin_catalog_fast_create',{service_name:val('mcf_name'),category_id:val('mcf_cat'),description:val('mcf_desc'),groups_text:val('mcf_groups')}))}
+function openCatalogFast(){openEdit('ساخت سریع سرویس',[{html:`<div class="mini-fast-builder"><div class="mcw-copy"><small>QUICK CREATE</small><h3>نوع سرویس را انتخاب کن</h3><p class="muted">یک ساختار تمیز انتخاب کن؛ نمونه پلن‌ها خودکار آماده می‌شوند.</p></div><div class="mini-fast-presets"><button type="button" class="active" data-mini-fast="direct"><span>⚡</span><b>پلن مستقیم</b><small>اشتراک زمانی</small></button><button type="button" data-mini-fast="vpn"><span>🌐</span><b>VPN</b><small>Standard / Pro</small></button><button type="button" data-mini-fast="account"><span>🔑</span><b>اکانت</b><small>ماهانه / سالانه</small></button><button type="button" data-mini-fast="code"><span>🎟️</span><b>کد / گیفت</b><small>مقادیر مختلف</small></button></div></div>`},{title:'اطلاعات سرویس',fields:[{id:'mcf_name',label:'نام سرویس',placeholder:'مثلاً BluePing'},{id:'mcf_cat',label:'دسته فروشگاه',type:'select',options:catalogCategoryOptions()},{id:'mcf_desc',label:'توضیح کوتاه',type:'textarea',placeholder:'توضیح سرویس'}]},{html:`<div class="mini-fast-preview" id="miniFastPreview"></div><details class="mini-fast-advanced"><summary>ویرایش پیشرفته</summary><textarea id="mcf_groups">Plans: 1 Month=120000, 3 Months=300000</textarea></details>`}],async()=>adminAction('admin_catalog_fast_create',{service_name:val('mcf_name'),category_id:val('mcf_cat'),description:val('mcf_desc'),groups_text:val('mcf_groups')}));setTimeout(()=>{const presets={direct:'Plans: 1 Month=120000, 3 Months=300000',vpn:'Standard: 30GB=149000, 50GB=249000, 100GB=499000\nPro: 30GB=249000, 50GB=349000',account:'Plans: 1 Month=120000, 3 Months=300000, 12 Months=890000',code:'Plans: 10 USD=100000, 25 USD=240000, 50 USD=460000'};const draw=(type)=>{const v=presets[type]||presets.direct;const ta=$('mcf_groups');if(ta)ta.value=v;const box=$('miniFastPreview');if(box)box.innerHTML=v.split(/\n+/).map(line=>{const [name,rest='']=line.split(':');return `<article><b>${esc(name.trim()==='Plans'?'پلن‌های مستقیم':name.trim())}</b><div>${rest.split(',').filter(Boolean).map(x=>{const [t,p]=x.trim().split('=');return `<span>${esc(t)}<small>${fmt(Number(p||0))}</small></span>`}).join('')}</div></article>`}).join('')};document.querySelectorAll('[data-mini-fast]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-mini-fast]').forEach(x=>x.classList.toggle('active',x===b));draw(b.dataset.miniFast)}));draw('direct')},30)}
 function openCatalogAddService(){return openCatalogMobileWizard(0)}
 function openCatalogAddGroup(){return openCatalogMobileOrganizer()}
 function openCatalogAddPlan(){return openCatalogMobileOrganizer()}
@@ -2010,6 +2010,8 @@ function openWalletBuilder(index=null){
   ],async()=>{
     const obj={title:val('bw_title'),network:val('bw_network'),asset:val('bw_asset'),address:val('bw_address'),rate_symbol:val('bw_rate'),is_active:val('bw_active')?'1':'0',sort_order:val('bw_sort')};
     if(!obj.address) throw new Error('آدرس ولت را وارد کن');
+    const duplicate=adminUiWallets.findIndex((x,i)=>i!==index&&String(x.asset||'').toUpperCase()===obj.asset.toUpperCase()&&String(x.network||'').toUpperCase()===obj.network.toUpperCase()&&String(x.address||'').trim()===obj.address.trim());
+    if(duplicate>=0) throw new Error('این Wallet از قبل ثبت شده است؛ مورد موجود را ویرایش کن.');
     if(index===null)adminUiWallets.push(obj);else adminUiWallets[index]=obj;
     syncPaymentBuilders(); showStatus('ولت ذخیره شد');
   });
@@ -2822,6 +2824,8 @@ document.addEventListener('click', e => {
   }
 });
 
+
+document.addEventListener('click',e=>{const b=e.target.closest?.('[data-mc-goto]');if(!b||!mobileCatalogWizard)return;mcCollect();const target=Number(b.dataset.mcGoto||0);if(target>mobileCatalogStep){const err=mcValidate(mobileCatalogStep);if(err){showStatus(err,'error');return}}mobileCatalogStep=Math.max(0,Math.min(4,target));renderCatalogMobileWizard()});
 /* ===== Quick-win: haptic on tab & cat clicks ===== */
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-tab],[data-tab-jump],[data-cat],[data-shop-sort],[data-shop-toggle]');
