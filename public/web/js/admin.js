@@ -16,24 +16,54 @@ async function reload(show=true){S=await C.api('admin_summary');C?.setState?.(S)
 function fmtDate(v){if(!v)return '—';try{return new Intl.DateTimeFormat('fa-IR',{dateStyle:'medium',timeStyle:'short'}).format(new Date(String(v).replace(' ','T')))}catch(_){return esc(v)}}
 function downloadCsv(name,rows){const csv=rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function modal(title,html,opts={}){let m=document.getElementById('bgAdminModal');if(!m){m=document.createElement('div');m.id='bgAdminModal';m.className='bg-admin-modal hidden';document.body.appendChild(m)}m.innerHTML=`<div class="bg-admin-modal-backdrop" data-admin-modal-close></div><section class="bg-admin-modal-card ${opts.wide?'wide':''}" role="dialog" aria-modal="true"><header><div><small>${esc(opts.kicker||'BLUEGATE ADMIN')}</small><h3>${title}</h3></div><button type="button" class="bg-admin-icon" data-admin-modal-close>✕</button></header><div class="bg-admin-modal-body">${html}</div></section>`;m.classList.remove('hidden');m.setAttribute('aria-hidden','false');syncAdminLock();return m}
-let adminScrollY=0;
+let adminScrollY=null;
 function syncAdminLock(){
+  const html=document.documentElement,body=document.body;
   const openModal=Boolean(document.getElementById('bgAdminModal')&&!document.getElementById('bgAdminModal').classList.contains('hidden'));
   const openPrompt=Boolean(document.getElementById('bgAdminPrompt')&&!document.getElementById('bgAdminPrompt').classList.contains('hidden'));
   const shouldLock=openModal||openPrompt;
-  const wasLocked=document.documentElement.classList.contains('bg-admin-lock');
-  if(shouldLock&&!wasLocked){adminScrollY=window.scrollY||document.documentElement.scrollTop||0;document.documentElement.dataset.bgAdminScroll=String(adminScrollY)}
-  document.documentElement.classList.toggle('bg-admin-lock',shouldLock);
-  document.body.classList.toggle('bg-admin-lock',shouldLock);
-  if(!shouldLock){
-    document.documentElement.style.removeProperty('overflow');document.body.style.removeProperty('overflow');
-    document.documentElement.style.removeProperty('touch-action');document.body.style.removeProperty('touch-action');
-    const y=Number(document.documentElement.dataset.bgAdminScroll||adminScrollY||0);delete document.documentElement.dataset.bgAdminScroll;
-    requestAnimationFrame(()=>{if(!document.documentElement.classList.contains('bg-admin-lock'))window.scrollTo({top:y,left:0,behavior:'auto'})});
+  const wasLocked=html.classList.contains('bg-admin-lock')||body.classList.contains('bg-admin-lock');
+
+  if(shouldLock){
+    if(!wasLocked){
+      adminScrollY=window.scrollY||html.scrollTop||body.scrollTop||0;
+      html.dataset.bgAdminScroll=String(adminScrollY);
+    }
+    html.classList.add('bg-admin-lock');
+    body.classList.add('bg-admin-lock');
+    return;
+  }
+
+  /* IMPORTANT: only restore scroll on an actual locked -> unlocked transition.
+     The old watchdog called this function periodically and caused window.scrollTo(0)
+     even while no modal was open, which made normal page scrolling jump to the top. */
+  if(!wasLocked)return;
+
+  html.classList.remove('bg-admin-lock');
+  body.classList.remove('bg-admin-lock');
+  html.style.removeProperty('overflow');body.style.removeProperty('overflow');
+  html.style.removeProperty('touch-action');body.style.removeProperty('touch-action');
+
+  const saved=html.dataset.bgAdminScroll;
+  const y=saved!==undefined&&saved!==''?Number(saved):(Number.isFinite(adminScrollY)?adminScrollY:null);
+  delete html.dataset.bgAdminScroll;
+  adminScrollY=null;
+
+  if(Number.isFinite(y)){
+    requestAnimationFrame(()=>{
+      if(!html.classList.contains('bg-admin-lock')&&!body.classList.contains('bg-admin-lock')){
+        window.scrollTo({top:y,left:window.scrollX||0,behavior:'auto'});
+      }
+    });
   }
 }
 function closeModal(){const m=document.getElementById('bgAdminModal');if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true')}syncAdminLock()}
-function repairAdminScrollLock(){const modal=document.getElementById('bgAdminModal'),prompt=document.getElementById('bgAdminPrompt');if((!modal||modal.classList.contains('hidden'))&&(!prompt||prompt.classList.contains('hidden')))syncAdminLock()}
+function repairAdminScrollLock(){
+  const modal=document.getElementById('bgAdminModal'),prompt=document.getElementById('bgAdminPrompt');
+  const noLayerOpen=(!modal||modal.classList.contains('hidden'))&&(!prompt||prompt.classList.contains('hidden'));
+  const staleLock=document.documentElement.classList.contains('bg-admin-lock')||document.body.classList.contains('bg-admin-lock');
+  if(noLayerOpen&&staleLock)syncAdminLock();
+}
 function adminConfirm(message,opts={}){return new Promise(resolve=>{let h=document.getElementById('bgAdminPrompt');if(!h){h=document.createElement('div');h.id='bgAdminPrompt';h.className='bg-admin-prompt hidden';document.body.appendChild(h)}const danger=opts.danger!==false;h.innerHTML=`<div class="bg-admin-prompt-backdrop"></div><section class="bg-admin-prompt-card" role="alertdialog" aria-modal="true"><div class="bg-admin-prompt-icon ${danger?'danger':''}">${danger?'!':'?'}</div><h3>${esc(opts.title||'تایید عملیات')}</h3><p>${esc(message)}</p><div class="bg-admin-prompt-actions"><button type="button" data-ap-cancel>${esc(opts.cancelText||'انصراف')}</button><button type="button" class="${danger?'danger':'primary'}" data-ap-ok>${esc(opts.confirmText||'تایید')}</button></div></section>`;h.classList.remove('hidden');syncAdminLock();const done=v=>{h.classList.add('hidden');syncAdminLock();resolve(v)};h.querySelector('[data-ap-cancel]').onclick=()=>done(false);h.querySelector('[data-ap-ok]').onclick=()=>done(true);h.querySelector('.bg-admin-prompt-backdrop').onclick=()=>done(false);setTimeout(()=>h.querySelector('[data-ap-ok]')?.focus(),0)})}
 function adminPrompt(title,value='',opts={}){return new Promise(resolve=>{let h=document.getElementById('bgAdminPrompt');if(!h){h=document.createElement('div');h.id='bgAdminPrompt';h.className='bg-admin-prompt hidden';document.body.appendChild(h)}const textarea=opts.multiline!==false;h.innerHTML=`<div class="bg-admin-prompt-backdrop"></div><section class="bg-admin-prompt-card input-card" role="dialog" aria-modal="true"><div class="bg-admin-prompt-icon">✎</div><h3>${esc(title)}</h3>${opts.hint?`<p>${esc(opts.hint)}</p>`:''}${textarea?`<textarea id="bgAdminPromptInput" rows="4" placeholder="${esc(opts.placeholder||'')}">${esc(value)}</textarea>`:`<input id="bgAdminPromptInput" value="${esc(value)}" placeholder="${esc(opts.placeholder||'')}">`}<div class="bg-admin-prompt-actions"><button type="button" data-ap-cancel>انصراف</button><button type="button" class="primary" data-ap-ok>ادامه</button></div></section>`;h.classList.remove('hidden');syncAdminLock();const input=h.querySelector('#bgAdminPromptInput');const done=v=>{h.classList.add('hidden');syncAdminLock();resolve(v)};h.querySelector('[data-ap-cancel]').onclick=()=>done(null);h.querySelector('[data-ap-ok]').onclick=()=>done(input?.value??'');h.querySelector('.bg-admin-prompt-backdrop').onclick=()=>done(null);setTimeout(()=>{input?.focus();input?.select?.()},0)})}
 function formDataObj(f){const fd=new FormData(f),o={};for(const [k,v] of fd.entries())o[k]=v;return o}
