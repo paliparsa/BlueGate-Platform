@@ -105,14 +105,11 @@ function storefront_stars_amount(int $stars): int {
     if ($stars < $min || $stars > $max || (($stars - $min) % $step !== 0 && $stars !== $max)) {
         throw new RuntimeException('INVALID_STARS_AMOUNT');
     }
-    $basis = strtolower((string)setting('storefront_stars_price_basis', 'toman'));
-    if ($basis === 'usdt') {
-        $rate = crypto_rate_toman('USDT', false);
-        if ($rate <= 0) $rate = (float)setting('storefront_fallback_usdt_toman', '192000');
-        $unit = (float)setting('storefront_star_sell_per_unit_usdt', '0.018');
-        return storefront_round_amount($stars * $unit * $rate);
-    }
-    $unit = (float)setting('storefront_star_sell_per_unit_toman', '3456');
+    // Always follow the same USDT/Toman provider chain used by crypto rates.
+    // The old Toman value stays as a last-resort fallback only.
+    $meta = storefront_star_rate_meta();
+    $unit = (float)($meta['rate'] ?? 0);
+    if ($unit <= 0) throw new RuntimeException('STARS_RATE_NOT_AVAILABLE');
     return storefront_round_amount($stars * $unit);
 }
 

@@ -60,7 +60,10 @@ $PAYMENT_INSTRUCTIONS = 'شماره کارت/اطلاعات پرداخت را ا
 $CARD_ACCOUNTS = [
     ['title' => 'کارت اصلی BlueGate', 'card' => '6037-0000-0000-0000', 'owner' => 'نام صاحب کارت', 'sheba' => 'IR000000000000000000000000'],
 ];
-$STARS_RATE_TOMAN = 3200; // value of 1 Telegram Star in Toman for invoice conversion.
+$STARS_RATE_TOMAN = 3200; // manual fallback value of 1 Telegram Star in Toman.
+$STARS_RATE_MODE = 'auto'; // auto = Base USDT × live USDT/Toman from Wallex/Ramzinex/Nobitex.
+$STARS_BASE_USDT = 0.016; // base value of one Telegram Star in USDT.
+$STARS_RATE_MARKUP_PERCENT = 0; // optional markup on the derived Stars rate.
 
 // Crypto payments - optional. Admin can configure wallets/rates inside Mini App.
 $CRYPTO_RATE_SOURCE = 'auto'; // auto = Wallex -> Ramzinex -> Nobitex -> manual/cache; or wallex/ramzinex/nobitex/manual

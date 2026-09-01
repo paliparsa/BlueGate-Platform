@@ -203,6 +203,9 @@ function migrate(): void {
     seed_setting('payment_methods_enabled', ['wallet'=>true,'card'=>true,'stars'=>false,'crypto'=>false]);
     seed_setting('card_accounts', app_config('CARD_ACCOUNTS', []));
     seed_setting('stars_rate_toman', app_config('STARS_RATE_TOMAN', 3200));
+    seed_setting('stars_rate_mode', app_config('STARS_RATE_MODE', 'auto'));
+    seed_setting('stars_base_usdt', app_config('STARS_BASE_USDT', 0.016));
+    seed_setting('stars_rate_markup_percent', app_config('STARS_RATE_MARKUP_PERCENT', 0));
     seed_setting('crypto_rate_source', app_config('CRYPTO_RATE_SOURCE', 'auto')); // auto = Wallex -> Ramzinex -> Nobitex -> manual/cache
     seed_setting('crypto_manual_rates', app_config('CRYPTO_MANUAL_RATES', ['USDT'=>0,'TRX'=>0,'TON'=>0]));
     seed_setting('crypto_rate_markup_percent', app_config('CRYPTO_RATE_MARKUP_PERCENT', 1));
@@ -237,7 +240,7 @@ function migrate(): void {
     seed_setting('storefront_announcement_enabled', '1');
     seed_setting('storefront_announcement_text', 'سرویس موردنظرت رو انتخاب کن؛ سفارش داخل حساب BlueGate ثبت و پیگیری می‌شود.');
     seed_setting('storefront_footer_text', 'سرویس‌های دیجیتال با پشتیبانی واقعی.');
-    seed_setting('storefront_stars_price_basis', 'toman');
+    seed_setting('storefront_stars_price_basis', 'usdt');
     seed_setting('storefront_star_sell_per_unit_usdt', '0.018');
     seed_setting('storefront_star_sell_per_unit_toman', '3456');
     seed_setting('storefront_stars_min', '50');
@@ -451,11 +454,12 @@ function card_accounts_lines(): string {
 }
 function payment_methods_public(?array $user=null): array {
     $cards=parse_card_accounts();
-    $rate=max(1, setting_int('stars_rate_toman', 3200));
+    $starsMeta=stars_rate_meta();
+    $rate=max(1,(int)$starsMeta['rate']);
     return [
         'wallet'=>['enabled'=>payment_enabled('wallet'), 'title'=>'اعتبار BlueGate', 'balance'=>$user?(int)($user['balance']??0):0],
         'card'=>['enabled'=>payment_enabled('card'), 'title'=>'کارت به کارت', 'accounts'=>$cards, 'instructions'=>setting('payment_instructions','')],
-        'stars'=>['enabled'=>payment_enabled('stars'), 'title'=>'Telegram Stars', 'rate_toman'=>$rate],
+        'stars'=>['enabled'=>payment_enabled('stars'), 'title'=>'Telegram Stars', 'rate_toman'=>$rate, 'rate_meta'=>$starsMeta],
         'crypto'=>['enabled'=>payment_enabled('crypto'), 'title'=>'رمزارز', 'gateway'=>'manual_txid', 'wallets'=>crypto_wallets_public(null), 'rate_source'=>setting('crypto_rate_source','auto'), 'markup_percent'=>(float)setting('crypto_rate_markup_percent','1'), 'rate_cache'=>crypto_rate_cache()],
     ];
 }
@@ -545,8 +549,33 @@ function set_crypto_wallets_lines(string $text): void {
         throw $e;
     }
 }
+function stars_rate_meta(): array {
+    $mode=strtolower(trim((string)setting('stars_rate_mode','auto')));
+    $manual=max(1,(float)setting('stars_rate_toman',3200));
+    $base=max(0.000001,(float)setting('stars_base_usdt','0.016'));
+    $markup=max(0.0,(float)setting('stars_rate_markup_percent','0'));
+    $usdt=crypto_rate_meta('USDT');
+    $usdtRate=(float)($usdt['rate']??0);
+    if($mode!=='manual' && $usdtRate>0){
+        $rate=max(1,(int)round(($base*$usdtRate)*(1+$markup/100)));
+        return ['asset'=>'STARS','rate'=>$rate,'base_usdt'=>$base,'markup_percent'=>$markup,'usdt_rate'=>$usdtRate,'source'=>'stars_auto:'.($usdt['source']??'cache'),'provider'=>$usdt['source']??'cache','updated_at'=>$usdt['updated_at']??null,'is_live'=>!empty($usdt['is_live']),'mode'=>'auto'];
+    }
+    return ['asset'=>'STARS','rate'=>$manual,'base_usdt'=>$base,'markup_percent'=>$markup,'usdt_rate'=>$usdtRate,'source'=>'manual','provider'=>'manual','updated_at'=>null,'is_live'=>false,'mode'=>'manual'];
+}
+function stars_rate_toman(): int { return max(1,(int)round((float)stars_rate_meta()['rate'])); }
+function storefront_star_rate_meta(): array {
+    $base=max(0.000001,(float)setting('storefront_star_sell_per_unit_usdt','0.018'));
+    $usdt=crypto_rate_meta('USDT');
+    $usdtRate=(float)($usdt['rate']??0);
+    if($usdtRate<=0) $usdtRate=(float)setting('storefront_fallback_usdt_toman','192000');
+    if($usdtRate>0){
+        return ['rate'=>max(1,(int)round($base*$usdtRate)),'base_usdt'=>$base,'usdt_rate'=>$usdtRate,'source'=>'stars_storefront:'.($usdt['source']??'fallback'),'updated_at'=>$usdt['updated_at']??null,'is_live'=>!empty($usdt['is_live'])];
+    }
+    return ['rate'=>max(1,(int)round((float)setting('storefront_star_sell_per_unit_toman','3456'))),'base_usdt'=>$base,'usdt_rate'=>0,'source'=>'manual','updated_at'=>null,'is_live'=>false];
+}
 function crypto_rate_meta(string $asset): array {
     $asset = strtoupper($asset ?: 'USDT');
+    if (in_array($asset,['STAR','STARS','XTR'],true)) return stars_rate_meta();
     $cache = crypto_rate_cache();
     $manual = crypto_manual_rates();
     $row = $cache[$asset] ?? null;
@@ -1081,7 +1110,7 @@ function order_set_payment_method(int $orderId, int $userId, string $method, arr
     if (!$order || (int)$order['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
     if (!in_array(normalize_order_status($order['status']), ['pending_payment','rejected'], true)) throw new RuntimeException('ORDER_LOCKED');
     $stars=0;
-    if ($method==='stars') $stars = max(1, (int)ceil((int)$order['final_amount'] / max(1, setting_int('stars_rate_toman', 3200))));
+    if ($method==='stars') $stars = max(1, (int)ceil((int)$order['final_amount'] / max(1, stars_rate_toman())));
     $cleanMethod = ($method === 'none' ? '' : $method);
     db()->prepare('UPDATE orders SET payment_method=?, payment_details=?, stars_amount=? WHERE id=?')->execute([$cleanMethod, json_encode($details, JSON_UNESCAPED_UNICODE), $stars, $orderId]);
     add_order_event($orderId, normalize_order_status($order['status']), 'روش پرداخت تغییر کرد', payment_method_fa($cleanMethod), true);
@@ -1102,7 +1131,7 @@ function order_catalog_display_name(array $order): string {
 function send_stars_invoice_for_order(array $order): array {
     if (!payment_enabled('stars')) throw new RuntimeException('STARS_DISABLED');
     $amountStars = (int)($order['stars_amount'] ?? 0);
-    if ($amountStars <= 0) $amountStars = max(1, (int)ceil((int)$order['final_amount'] / max(1, setting_int('stars_rate_toman', 3200))));
+    if ($amountStars <= 0) $amountStars = max(1, (int)ceil((int)$order['final_amount'] / max(1, stars_rate_toman())));
     $payload = 'order_'.$order['id'].'_stars_'.$amountStars;
     $name = order_catalog_display_name($order);
     return tg('sendInvoice', [
@@ -1118,7 +1147,7 @@ function send_stars_invoice_for_order(array $order): array {
 }
 function stars_required_for_order(array $order): int {
     $stored=(int)($order['stars_amount']??0);if($stored>0)return $stored;
-    return max(1,(int)ceil((int)$order['final_amount']/max(1,setting_int('stars_rate_toman',3200))));
+    return max(1,(int)ceil((int)$order['final_amount']/max(1,stars_rate_toman())));
 }
 function validate_stars_precheckout(array $q): array|false {
     $payload=(string)($q['invoice_payload']??'');if(!preg_match('/^order_(\d+)_stars_(\d+)$/',$payload,$m))return false;
@@ -2630,9 +2659,9 @@ function price_runtime_meta(array $row, string $prefix=''): array {
         return ['currency'=>'FREE','usd'=>0,'toman'=>0,'rate_toman'=>null,'rate_source'=>null,'rate_updated_at'=>null,'dynamic'=>false,'label'=>'رایگان'];
     }
     if ($currency === 'STARS') {
-        $rate = (float)setting_int('stars_rate_toman', 3200);
+        $sm=stars_rate_meta(); $rate=(float)$sm['rate'];
         $toman = (int)round($usd * $rate);
-        return ['currency'=>'STARS','usd'=>$usd,'toman'=>$toman,'rate_toman'=>$rate,'rate_source'=>'settings','rate_updated_at'=>date('Y-m-d H:i:s'),'dynamic'=>true,'label'=>number_format($usd, 2).' ⭐️'];
+        return ['currency'=>'STARS','usd'=>$usd,'toman'=>$toman,'rate_toman'=>$rate,'rate_source'=>(string)$sm['source'],'rate_updated_at'=>$sm['updated_at']??date('Y-m-d H:i:s'),'dynamic'=>true,'label'=>number_format($usd, 2).' ⭐️'];
     }
     
     $rateMeta = usd_toman_rate_meta();
@@ -2657,9 +2686,9 @@ function price_admin_payload_from_input(array $input): array {
     if ($currency === 'STARS') {
         $stars = decimal_price($input['price_usd'] ?? $input['price'] ?? 0);
         if ($stars <= 0) throw new RuntimeException('INVALID_STARS_PRICE');
-        $rate = (float)setting_int('stars_rate_toman', 3200);
+        $sm=stars_rate_meta(); $rate=(float)$sm['rate'];
         $toman = (int)round($stars * $rate);
-        return ['price'=>$toman,'price_currency'=>'STARS','price_usd'=>$stars,'price_rate_toman'=>$rate,'price_rate_source'=>'settings','price_rate_updated_at'=>date('Y-m-d H:i:s')];
+        return ['price'=>$toman,'price_currency'=>'STARS','price_usd'=>$stars,'price_rate_toman'=>$rate,'price_rate_source'=>(string)$sm['source'],'price_rate_updated_at'=>$sm['updated_at']??date('Y-m-d H:i:s')];
     }
     if ($currency === 'USD') {
         $usd = decimal_price($input['price_usd'] ?? $input['price'] ?? 0);
@@ -2913,7 +2942,7 @@ function set_credit_topup_method(int $id,int $uid,string $method,array $details=
     $t=credit_topup_by_id($id);if(!$t||(int)$t['user_id']!==$uid)throw new RuntimeException('TOPUP_NOT_FOUND');if(!in_array($t['status'],['pending_payment','rejected'],true))throw new RuntimeException('TOPUP_LOCKED');$method=strtolower(trim($method));if(!credit_topup_method_allowed($method))throw new RuntimeException('TOPUP_METHOD_DISABLED');
     $payload=[];$stars=0;
     if($method==='card'){$payload=['instructions'=>setting('payment_instructions',''),'accounts'=>parse_card_accounts()];}
-    elseif($method==='stars'){$stars=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));$payload=['stars_amount'=>$stars];}
+    elseif($method==='stars'){$stars=max(1,(int)ceil((int)$t['amount']/max(1,stars_rate_toman())));$payload=['stars_amount'=>$stars];}
     elseif($method==='crypto'){
         $wid=(int)($details['wallet_id']??0);$w=crypto_wallet_by_id($wid);if(!$w||(int)$w['is_active']!==1)throw new RuntimeException('WALLET_NOT_FOUND');$rate=crypto_rate_toman((string)($w['rate_symbol']?:$w['asset']));if($rate<=0)throw new RuntimeException('CRYPTO_RATE_NOT_AVAILABLE');$markup=max(0,(float)setting('crypto_rate_markup_percent','1'))/100;$expected=round(((int)$t['amount']/$rate)*(1+$markup),6);$meta=crypto_rate_meta((string)($w['rate_symbol']?:$w['asset']));$payload=['wallet_id'=>$wid,'network'=>$w['network'],'asset'=>$w['asset'],'address'=>$w['address'],'expected_amount'=>$expected,'rate_toman'=>$rate,'rate_source'=>$meta['source'],'rate_updated_at'=>$meta['updated_at'],'fee_note'=>'کارمزد شبکه با پرداخت‌کننده است. مبلغ درج‌شده باید کامل به مقصد برسد.'];
         db()->prepare('UPDATE credit_topups SET crypto_wallet_id=?,crypto_amount=?,crypto_asset=?,crypto_network=?,tx_hash=NULL WHERE id=?')->execute([$wid,(string)$expected,$w['asset'],$w['network'],$id]);
@@ -2949,9 +2978,10 @@ function replace_credit_topup_payment(int $id,int $uid): array {
         $fresh=credit_topup_by_id($newId);if(!$fresh)throw new RuntimeException('TOPUP_CREATE_FAILED');return $fresh;
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
 }
-function send_stars_invoice_for_topup(array $t): array { if(!credit_topup_method_allowed('stars'))throw new RuntimeException('STARS_DISABLED');$stars=(int)($t['stars_amount']??0);if($stars<=0)$stars=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));$payload='topup_'.$t['id'].'_stars_'.$stars;return tg('sendInvoice',['chat_id'=>(int)$t['telegram_id'],'title'=>'شارژ اعتبار BlueGate','description'=>'افزایش اعتبار حساب به مبلغ '.money((int)$t['amount']),'payload'=>$payload,'provider_token'=>'','currency'=>'XTR','prices'=>json_encode([['label'=>'Credit top-up #'.$t['id'],'amount'=>$stars]],JSON_UNESCAPED_UNICODE),'start_parameter'=>'bluegate_topup_'.$t['id']]); }
-function validate_topup_stars_precheckout(array $q): array|false { $p=(string)($q['invoice_payload']??'');if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$p,$m))return false;$t=credit_topup_by_id((int)$m[1]);if(!$t)return false;$required=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));if((int)($q['from']['id']??0)!==(int)$t['telegram_id']||(int)$m[2]!==$required||(int)($q['total_amount']??0)!==$required||strtoupper((string)($q['currency']??''))!=='XTR')return false;if(!in_array($t['status'],['pending_payment','receipt_submitted','reviewing'],true))return false;return $t; }
-function confirm_topup_stars_payment(string $payload,array $payment,int $chatId=0): ?array { if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$payload,$m))return null;$id=(int)$m[1];$charge=trim((string)($payment['telegram_payment_charge_id']??''));$provider=trim((string)($payment['provider_payment_charge_id']??''));$total=(int)($payment['total_amount']??0);if($charge===''||strtoupper((string)($payment['currency']??''))!=='XTR')return null;$pdo=db();$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT t.*,u.telegram_id FROM credit_topups t JOIN users u ON u.id=t.user_id WHERE t.id=? FOR UPDATE');$q->execute([$id]);$t=$q->fetch();if(!$t||($chatId>0&&(int)$t['telegram_id']!==$chatId)){$pdo->rollBack();return null;}if(!in_array((string)$t['status'],['pending_payment','receipt_submitted','reviewing'],true)||(string)($t['payment_method']??'')!=='stars'){$pdo->rollBack();return null;}$required=max(1,(int)ceil((int)$t['amount']/max(1,setting_int('stars_rate_toman',3200))));if((int)$m[2]!==$required||$total!==$required){$pdo->rollBack();return null;}if(!empty($t['credited_at'])){$pdo->commit();return credit_topup_by_id($id);}$dup=$pdo->prepare('SELECT id FROM credit_topups WHERE stars_charge_id=? AND id<>? LIMIT 1');$dup->execute([$charge,$id]);if($dup->fetch()){$pdo->rollBack();return null;}$dup2=$pdo->prepare('SELECT id FROM orders WHERE stars_charge_id=? LIMIT 1');$dup2->execute([$charge]);if($dup2->fetch()){$pdo->rollBack();return null;}$pdo->prepare('UPDATE credit_topups SET payment_method="stars",stars_amount=?,stars_charge_id=?,stars_provider_charge_id=?,payment_details=?,status="reviewing" WHERE id=?')->execute([$required,$charge,$provider?:null,json_encode($payment,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$id]);$pdo->commit();return credit_topup_credit_once($id,'تایید خودکار Telegram Stars');}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();error_log('[Stars topup] '.$e->getMessage());return null;} }
+function stars_required_for_topup(array $t): int { $stored=(int)($t['stars_amount']??0); if($stored>0)return $stored; return max(1,(int)ceil((int)$t['amount']/max(1,stars_rate_toman()))); }
+function send_stars_invoice_for_topup(array $t): array { if(!credit_topup_method_allowed('stars'))throw new RuntimeException('STARS_DISABLED');$stars=stars_required_for_topup($t);$payload='topup_'.$t['id'].'_stars_'.$stars;return tg('sendInvoice',['chat_id'=>(int)$t['telegram_id'],'title'=>'شارژ اعتبار BlueGate','description'=>'افزایش اعتبار حساب به مبلغ '.money((int)$t['amount']),'payload'=>$payload,'provider_token'=>'','currency'=>'XTR','prices'=>json_encode([['label'=>'Credit top-up #'.$t['id'],'amount'=>$stars]],JSON_UNESCAPED_UNICODE),'start_parameter'=>'bluegate_topup_'.$t['id']]); }
+function validate_topup_stars_precheckout(array $q): array|false { $p=(string)($q['invoice_payload']??'');if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$p,$m))return false;$t=credit_topup_by_id((int)$m[1]);if(!$t)return false;$required=stars_required_for_topup($t);if((int)($q['from']['id']??0)!==(int)$t['telegram_id']||(int)$m[2]!==$required||(int)($q['total_amount']??0)!==$required||strtoupper((string)($q['currency']??''))!=='XTR')return false;if(!in_array($t['status'],['pending_payment','receipt_submitted','reviewing'],true))return false;return $t; }
+function confirm_topup_stars_payment(string $payload,array $payment,int $chatId=0): ?array { if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$payload,$m))return null;$id=(int)$m[1];$charge=trim((string)($payment['telegram_payment_charge_id']??''));$provider=trim((string)($payment['provider_payment_charge_id']??''));$total=(int)($payment['total_amount']??0);if($charge===''||strtoupper((string)($payment['currency']??''))!=='XTR')return null;$pdo=db();$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT t.*,u.telegram_id FROM credit_topups t JOIN users u ON u.id=t.user_id WHERE t.id=? FOR UPDATE');$q->execute([$id]);$t=$q->fetch();if(!$t||($chatId>0&&(int)$t['telegram_id']!==$chatId)){$pdo->rollBack();return null;}if(!in_array((string)$t['status'],['pending_payment','receipt_submitted','reviewing'],true)||(string)($t['payment_method']??'')!=='stars'){$pdo->rollBack();return null;}$required=stars_required_for_topup($t);if((int)$m[2]!==$required||$total!==$required){$pdo->rollBack();return null;}if(!empty($t['credited_at'])){$pdo->commit();return credit_topup_by_id($id);}$dup=$pdo->prepare('SELECT id FROM credit_topups WHERE stars_charge_id=? AND id<>? LIMIT 1');$dup->execute([$charge,$id]);if($dup->fetch()){$pdo->rollBack();return null;}$dup2=$pdo->prepare('SELECT id FROM orders WHERE stars_charge_id=? LIMIT 1');$dup2->execute([$charge]);if($dup2->fetch()){$pdo->rollBack();return null;}$pdo->prepare('UPDATE credit_topups SET payment_method="stars",stars_amount=?,stars_charge_id=?,stars_provider_charge_id=?,payment_details=?,status="reviewing" WHERE id=?')->execute([$required,$charge,$provider?:null,json_encode($payment,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$id]);$pdo->commit();return credit_topup_credit_once($id,'تایید خودکار Telegram Stars');}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();error_log('[Stars topup] '.$e->getMessage());return null;} }
 function apply_wallet_to_order(int $orderId, int $userId): array {
     $pdo=db();$pdo->beginTransaction();try{
         $q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order||(int)$order['user_id']!==$userId)throw new RuntimeException('ORDER_NOT_FOUND');

@@ -343,6 +343,9 @@ step_config() {
 \$PAYMENT_INSTRUCTIONS = 'اطلاعات پرداخت را از پنل مدیریت تنظیم کنید. بعد از پرداخت، کاربر می‌تواند رسید را ارسال کند.';
 \$CARD_ACCOUNTS = [];
 \$STARS_RATE_TOMAN = 3200;
+\$STARS_RATE_MODE = 'auto';
+\$STARS_BASE_USDT = 0.016;
+\$STARS_RATE_MARKUP_PERCENT = 0;
 
 \$CRYPTO_RATE_SOURCE = 'auto';
 \$CRYPTO_RATE_MARKUP_PERCENT = 1;

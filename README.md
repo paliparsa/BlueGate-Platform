@@ -339,3 +339,7 @@ VERSION                 نسخه فعلی پروژه
 - اضافه شدن Wallet Manager کارت‌محور در Web Admin؛ Walletهای ثبت‌شده قابل مشاهده، افزودن، ویرایش و حذف هستند.
 - بهبود Wallet Manager در Mini App و جلوگیری از ثبت Wallet تکراری با Asset/Network/Address یکسان.
 - داده Wallet همچنان با فرمت قبلی ذخیره می‌شود تا Backend و نسخه‌های قبلی سازگار بمانند.
+
+
+## نرخ خودکار Telegram Stars
+ارزش Stars برای پرداخت و قیمت فروش Stars از نرخ زنده USDT/تومان با همان زنجیره Wallex → Ramzinex → Nobitex مشتق می‌شود. Base دلاری و درصد افزایش قابل تنظیم است و نرخ دستی فقط fallback است.
