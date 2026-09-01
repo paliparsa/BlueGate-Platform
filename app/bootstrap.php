@@ -2481,11 +2481,11 @@ function shop_product(int $id) {
     $q->execute([$id]); return $q->fetch();
 }
 function product_variants(int $productId, bool $activeOnly=true): array {
-    $sql='SELECT * FROM product_variants WHERE product_id=?'.($activeOnly?' AND is_active=1':'').' ORDER BY sort_order ASC, id ASC';
+    $sql='SELECT v.*, sp.image_url plan_image_url, sp.delivery_type plan_delivery_type, sp.commission_type plan_commission_type, sp.commission_value plan_commission_value FROM product_variants v LEFT JOIN service_plans sp ON sp.legacy_variant_id=v.id WHERE v.product_id=?'.($activeOnly?' AND v.is_active=1':'').' ORDER BY v.sort_order ASC, v.id ASC';
     $q=db()->prepare($sql); $q->execute([$productId]); return $q->fetchAll();
 }
 function product_variant(int $variantId) {
-    $q=db()->prepare('SELECT v.*, p.name product_name, p.delivery_type, p.commission_type, p.commission_value FROM product_variants v JOIN products p ON p.id=v.product_id WHERE v.id=?');
+    $q=db()->prepare('SELECT v.*, p.name product_name, COALESCE(sp.delivery_type,p.delivery_type) delivery_type, COALESCE(sp.commission_type,p.commission_type) commission_type, COALESCE(sp.commission_value,p.commission_value) commission_value, sp.image_url plan_image_url FROM product_variants v JOIN products p ON p.id=v.product_id LEFT JOIN service_plans sp ON sp.legacy_variant_id=v.id WHERE v.id=?');
     $q->execute([$variantId]); return $q->fetch();
 }
 function find_or_create_category(string $title, string $emoji='🛒'): int {
@@ -2648,11 +2648,15 @@ function cancel_expired_orders(): int {
         $count = 0;
         foreach ($expired as $row) {
             $oid = (int)$row['id'];
-            db()->prepare('UPDATE orders SET status="canceled", canceled_at=NOW(), admin_note=CONCAT(COALESCE(admin_note,""), "\nانقضای خودکار مهلت پرداخت 20 دقیقه‌ای") WHERE id=? AND status="pending_payment"')->execute([$oid]);
+            $u = db()->prepare('UPDATE orders SET status="canceled", canceled_at=NOW(), admin_note=CONCAT(COALESCE(admin_note,""), "\nانقضای خودکار مهلت پرداخت") WHERE id=? AND status="pending_payment"');
+            $u->execute([$oid]);
+            if ($u->rowCount() !== 1) continue; // another request already changed this order
+            // Any wallet amount reserved/charged for a now-expired order must be returned exactly once.
+            refund_wallet_for_order($oid, 'بازگشت کیف پول سفارش منقضی‌شده');
             if (table_exists('inventory_items')) {
                 db()->prepare('UPDATE inventory_items SET status="available", order_id=NULL, reserved_at=NULL WHERE order_id=? AND status="reserved"')->execute([$oid]);
             }
-            add_order_event($oid, 'canceled', 'مهلت پرداخت به پایان رسید', 'لغو خودکار به دلیل انقضای مهلت پرداخت 20 دقیقه‌ای', true);
+            add_order_event($oid, 'canceled', 'مهلت پرداخت به پایان رسید', 'لغو خودکار به دلیل انقضای مهلت پرداخت', true);
             $count++;
         }
         return $count;
@@ -2689,29 +2693,34 @@ function create_shop_order(int $userId, int $productId, ?int $variantId=null): a
 }
 function order_by_id(int $id) {
     cancel_expired_orders();
-    $q=db()->prepare('SELECT o.*, p.name product_name, p.delivery_type, p.commission_type, p.commission_value, p.short_description, p.full_description, p.image_url, p.duration_days product_duration_days,
+    $q=db()->prepare('SELECT o.*, p.name product_name,
+        COALESCE(sp.delivery_type,p.delivery_type) delivery_type,
+        COALESCE(sp.commission_type,p.commission_type) commission_type,
+        COALESCE(sp.commission_value,p.commission_value) commission_value,
+        p.short_description, p.full_description, COALESCE(sp.image_url,p.image_url) image_url, p.duration_days product_duration_days,
         p.price_currency product_price_currency, p.price_usd product_price_usd, p.price_rate_toman product_price_rate_toman, p.price_rate_source product_price_rate_source, p.price_rate_updated_at product_price_rate_updated_at,
         v.title variant_title, v.price variant_price, v.price_currency variant_price_currency, v.price_usd variant_price_usd, v.price_rate_toman variant_price_rate_toman, v.price_rate_source variant_price_rate_source, v.price_rate_updated_at variant_price_rate_updated_at, v.duration_days variant_duration_days, v.discount_percent variant_discount_percent,
         u.telegram_id, u.username, u.first_name, u.referrer_id
         FROM orders o
         JOIN products p ON p.id=o.product_id
         LEFT JOIN product_variants v ON v.id=o.variant_id
+        LEFT JOIN service_plans sp ON sp.id=o.catalog_plan_id
         JOIN users u ON u.id=o.user_id
         WHERE o.id=?');
     $q->execute([$id]); return $q->fetch();
 }
 function user_orders(int $userId, int $limit=10, bool $includeHidden=false): array {
     cancel_expired_orders();
-    $sql='SELECT o.*, p.name product_name, p.delivery_type, p.image_url, v.title variant_title, v.discount_percent variant_discount_percent
-        FROM orders o JOIN products p ON p.id=o.product_id LEFT JOIN product_variants v ON v.id=o.variant_id
+    $sql='SELECT o.*, p.name product_name, COALESCE(sp.delivery_type,p.delivery_type) delivery_type, COALESCE(sp.image_url,p.image_url) image_url, v.title variant_title, v.discount_percent variant_discount_percent
+        FROM orders o JOIN products p ON p.id=o.product_id LEFT JOIN product_variants v ON v.id=o.variant_id LEFT JOIN service_plans sp ON sp.id=o.catalog_plan_id
         WHERE o.user_id=?'.($includeHidden?'':' AND o.user_hidden=0').' ORDER BY o.id DESC LIMIT ?';
     $q=db()->prepare($sql);
     $q->bindValue(1,$userId,PDO::PARAM_INT); $q->bindValue(2,$limit,PDO::PARAM_INT); $q->execute(); return $q->fetchAll();
 }
 function admin_orders($status=null, int $limit=20, string $search='', bool $archived=false): array {
     cancel_expired_orders();
-    $sql='SELECT o.*, p.name product_name, p.delivery_type, p.image_url, v.title variant_title, v.discount_percent variant_discount_percent, u.telegram_id, u.username
-        FROM orders o JOIN products p ON p.id=o.product_id LEFT JOIN product_variants v ON v.id=o.variant_id JOIN users u ON u.id=o.user_id';
+    $sql='SELECT o.*, p.name product_name, COALESCE(sp.delivery_type,p.delivery_type) delivery_type, COALESCE(sp.image_url,p.image_url) image_url, v.title variant_title, v.discount_percent variant_discount_percent, u.telegram_id, u.username
+        FROM orders o JOIN products p ON p.id=o.product_id LEFT JOIN product_variants v ON v.id=o.variant_id LEFT JOIN service_plans sp ON sp.id=o.catalog_plan_id JOIN users u ON u.id=o.user_id';
     $where=[]; $params=[];
     $where[] = $archived ? 'o.archived_at IS NOT NULL' : 'o.archived_at IS NULL';
     if ($status) {

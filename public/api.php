@@ -163,6 +163,11 @@ function product_payload(array $p, bool $activeVariants=true): array {
             'duration_days' => (int)$v['duration_days'],
             'discount_percent' => $vDiscount,
             'description' => $v['description'] ?? '',
+            'image_url' => $v['plan_image_url'] ?? null,
+            'delivery_type' => $v['plan_delivery_type'] ?? $v['delivery_type'] ?? null,
+            'delivery_type_fa' => delivery_type_fa($v['plan_delivery_type'] ?? $v['delivery_type'] ?? 'manual'),
+            'commission_type' => $v['plan_commission_type'] ?? $v['commission_type'] ?? 'none',
+            'commission_value' => (int)($v['plan_commission_value'] ?? $v['commission_value'] ?? 0),
             'sort_order' => (int)($v['sort_order'] ?? 0),
             'is_active' => (int)($v['is_active'] ?? 1)
         ];
@@ -507,7 +512,22 @@ if ($action === 'my_referrals') {
     api_out(['ok' => true, 'referrals' => $stmt->fetchAll()]);
 }
 if ($action === 'claim_missions') { [$count, $claimed] = claim_available_missions($user); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['claimed'=>$claimed, 'today_count'=>$count]); }
-if ($action === 'spin') { $user=get_user_by_id((int)$user['id']); if ((int)$user['spin_balance']<=0) api_out(['ok'=>false,'error'=>'NO_SPIN_BALANCE','message'=>'فعلاً شانس گردونه نداری.'],400); $rewards=spin_rewards_public(); $reward=weighted_spin_reward(); $title=$reward['title']??'جایزه گردونه'; $amount=(int)($reward['amount']??0); $idx=0; foreach($rewards as $i=>$r){ if(($r['title']??'')===$title && (int)($r['amount']??0)===$amount){ $idx=$i; break; } } db()->prepare('UPDATE users SET spin_balance=spin_balance-1 WHERE id=? AND spin_balance>0')->execute([$user['id']]); db()->prepare('INSERT INTO spin_logs (user_id, prize_title, prize_amount) VALUES (?,?,?)')->execute([$user['id'],$title,$amount]); if($amount>0)add_balance($user['id'],$amount,'spin_reward',$title,null); if(!empty($reward['notify_admin'])) notify_admins("🎡 جایزه Mini App نیازمند بررسی\nکاربر: <code>".h($user['first_name']??$user['username']??$user['id'])."</code>\nجایزه: <b>".h($title)."</b>"); api_out(dashboard_payload(get_user_by_id((int)$user['id'])) + ['prize'=>['title'=>$title,'amount'=>$amount,'index'=>$idx]]); }
+if ($action === 'spin') {
+    $uid=(int)$user['id']; $pdo=db(); $pdo->beginTransaction();
+    try {
+        $q=$pdo->prepare('SELECT spin_balance,first_name,username FROM users WHERE id=? FOR UPDATE'); $q->execute([$uid]); $locked=$q->fetch();
+        if(!$locked || (int)$locked['spin_balance']<=0){$pdo->rollBack();api_out(['ok'=>false,'error'=>'NO_SPIN_BALANCE','message'=>'فعلاً شانس گردونه نداری.'],400);}
+        $rewards=spin_rewards_public(); $reward=weighted_spin_reward(); $title=$reward['title']??'جایزه گردونه'; $amount=(int)($reward['amount']??0); $idx=0;
+        foreach($rewards as $i=>$r){if(($r['title']??'')===$title && (int)($r['amount']??0)===$amount){$idx=$i;break;}}
+        $u=$pdo->prepare('UPDATE users SET spin_balance=spin_balance-1 WHERE id=? AND spin_balance>0'); $u->execute([$uid]);
+        if($u->rowCount()!==1) throw new RuntimeException('SPIN_BALANCE_RACE');
+        $pdo->prepare('INSERT INTO spin_logs (user_id, prize_title, prize_amount) VALUES (?,?,?)')->execute([$uid,$title,$amount]);
+        if($amount>0)add_balance($uid,$amount,'spin_reward',$title,null);
+        $pdo->commit();
+        if(!empty($reward['notify_admin'])) notify_admins("🎡 جایزه Mini App نیازمند بررسی\nکاربر: <code>".h($locked['first_name']??$locked['username']??$uid)."</code>\nجایزه: <b>".h($title)."</b>");
+        api_out(dashboard_payload(get_user_by_id($uid)) + ['prize'=>['title'=>$title,'amount'=>$amount,'index'=>$idx]]);
+    } catch(Throwable $e) { if($pdo->inTransaction())$pdo->rollBack(); throw $e; }
+}
 if ($action === 'withdraw') { api_out(['ok'=>false,'error'=>'WITHDRAWALS_DISABLED','message'=>'برداشت موجودی در BlueGate غیرفعال است؛ اعتبار فقط برای خرید سرویس قابل استفاده است.'],410); }
 
 if ($action === 'email_change_start') {
