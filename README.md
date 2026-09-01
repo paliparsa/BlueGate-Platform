@@ -1,6 +1,6 @@
 # پلتفرم BlueGate
 
-**نسخه فعلی: v3.0.7 — Welcome, Notifications & Account Security**
+**نسخه فعلی: v3.0.7.1 — Welcome, Notifications & Account Security**
 
 BlueGate Platform هسته اصلی فروش و مدیریت سرویس‌های BlueGate است. این پروژه شامل وب‌سایت فروشگاهی، حساب کاربری، پنل مدیریت، Telegram Mini App و ربات تلگرام است و همه این بخش‌ها از یک Backend، دیتابیس، کاتالوگ و سیستم سفارش مشترک استفاده می‌کنند.
 
@@ -30,7 +30,7 @@ BlueGate Platform هسته اصلی فروش و مدیریت سرویس‌های
 
 ---
 
-## قابلیت‌های جدید v3.0.7
+## قابلیت‌های جدید v3.0.7.1
 
 ### Welcome / Onboarding
 
@@ -243,7 +243,7 @@ chmod +x update.sh
 sudo ./update.sh
 ```
 
-سیستم Migration تغییرات مورد نیاز دیتابیس را اعمال می‌کند. در v3.0.7 این تغییرات شامل فیلدهای مورد نیاز Welcome، Actionهای Notification و Campaignهای اعلان نیز می‌شود.
+سیستم Migration تغییرات مورد نیاز دیتابیس را اعمال می‌کند. در v3.0.7.1 این تغییرات شامل فیلدهای مورد نیاز Welcome، Actionهای Notification و Campaignهای اعلان نیز می‌شود.
 
 روی نصب موجود، `schema.sql` را به‌صورت دستی جایگزین دیتابیس Production نکنید.
 
@@ -303,5 +303,5 @@ VERSION                 نسخه فعلی پروژه
 ## نسخه
 
 ```text
-3.0.7
+3.0.7.1
 ```
