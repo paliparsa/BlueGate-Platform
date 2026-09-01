@@ -1138,9 +1138,9 @@ function orderDetailHtml(o){
     ${o.delivery_text ? `<div class="delivery-box clean-delivery">${textBlock(o.delivery_text)}</div>` : ''}
 
     <!-- Sticky Bottom Actions Bar -->
-    <div class="actions sticky-actions od-sticky-actions">
-      ${(o.has_service_delivery||o.has_service_viewer) ? `<button class="primary btn-v2 mini-service-open-btn" data-service-view="${o.id}" data-service-url="${esc(o.service_url||'')}" data-service-title="${esc(o.service_title||'مدیریت سرویس')}">باز کردن سرویس</button><button class="secondary btn-v2 mini-service-copy-btn" data-service-copy-link="${o.id}" data-service-url="${esc(o.service_url||'')}">کپی لینک</button>` : `<button class="secondary btn-v2" data-customer-note="${o.id}">یادداشت سفارش</button>`}
-      ${String(o.status)==="delivered"?`<button class="secondary btn-v2" data-renew-order="${o.id}">🔄 تمدید</button>`:""}<button class="ghost btn-v2 od-more-btn" data-order-more="${o.id}">••• بیشتر</button>
+    <div class="actions sticky-actions od-sticky-actions ${o.has_service_delivery||o.has_service_viewer?'has-service-actions':'note-actions'}">
+      ${(o.has_service_delivery||o.has_service_viewer) ? `<button class="primary btn-v2 mini-service-open-btn" data-service-view="${o.id}" data-service-url="${esc(o.service_url||'')}" data-service-title="${esc(o.service_title||'مدیریت سرویس')}"><span class="od-action-icon">↗</span><span>باز کردن سرویس</span></button><button class="secondary btn-v2 mini-service-copy-btn" data-service-copy-link="${o.id}" data-service-url="${esc(o.service_url||'')}"><span class="od-action-icon">⧉</span><span>کپی لینک</span></button>` : `<button class="od-note-btn btn-v2" data-customer-note="${o.id}"><span class="od-action-icon">✎</span><span>یادداشت سفارش</span></button>`}
+      ${String(o.status)==="delivered"?`<button class="secondary btn-v2 od-renew-btn" data-renew-order="${o.id}"><span class="od-action-icon">↻</span><span>تمدید</span></button>`:""}<button class="od-more-btn btn-v2" aria-label="گزینه‌های بیشتر سفارش" title="گزینه‌های بیشتر" data-order-more="${o.id}"><span class="od-more-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="od-more-label">بیشتر</span></button>
     </div>
   </section>`
 }
