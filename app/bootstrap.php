@@ -2024,12 +2024,9 @@ function keyboard_markup(array $rows, bool $resize=true, bool $oneTime=false): s
     return json_markup(['keyboard'=>$rows, 'resize_keyboard'=>$resize, 'one_time_keyboard'=>$oneTime, 'is_persistent'=>true]);
 }
 function main_menu_keyboard(bool $admin=false): string {
-    $mini = miniapp_url($admin);
-    $rows = [];
-    if ($mini) {
-        $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن Mini Panel ادمین' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
-    }
-    return keyboard_markup($rows);
+    // Keep actions attached to the message instead of creating a persistent
+    // WebApp reply keyboard above Telegram's composer.
+    return miniapp_inline_keyboard($admin);
 }
 function miniapp_url(bool $admin=false): string {
     $mini = trim((string)app_config('MINIAPP_URL', ''));
@@ -2043,8 +2040,12 @@ function miniapp_inline_keyboard(bool $admin=false): string {
     $mini = miniapp_url($admin);
     $rows = [];
     if ($mini) {
-        $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن Mini Panel ادمین' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
+        $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن BlueGate', 'web_app'=>['url'=>$mini]]];
     }
+    $rows[] = [
+        ['text'=>'📦 سفارش‌های من', 'callback_data'=>'u_orders'],
+        ['text'=>'💬 پشتیبانی', 'callback_data'=>'u_support'],
+    ];
     return json_markup(['inline_keyboard'=>$rows]);
 }
 function contact_request_keyboard(): string {
@@ -2387,7 +2388,7 @@ function force_join_keyboard(): string {
 }
 function main_text(array $user): string {
     $brand = h(setting('brand_name', app_config('BRAND_NAME', 'BlueGate')));
-    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای استفاده از فروشگاه، سفارش‌ها و اعتبار BlueGate، مینی اپلیکیشن اختصاصی را باز کنید.\nلطفاً از دکمه زیر برای باز کردن مینی اپ استفاده کنید 👇\n\n" . vip_line($user);
+    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای استفاده از فروشگاه، سفارش‌ها و اعتبار BlueGate، مینی اپلیکیشن اختصاصی را باز کنید.\nاز دکمه‌های زیر می‌تونی BlueGate رو باز کنی، سفارش‌هات رو ببینی یا با پشتیبانی در ارتباط باشی 👇\n\n" . vip_line($user);
 }
 function validate_theme_color(string $color): ?string {
     $color = trim($color);

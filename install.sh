@@ -551,6 +551,22 @@ step_webhook() {
   echo "$res" | grep -q '"ok":true' || return 1
 }
 
+step_bot_ui() {
+  require_root
+  [[ -n "${BOT_TOKEN:-}" ]] || { warn "BOT_TOKEN is empty; Telegram bot UI sync skipped."; return 0; }
+
+  local menu_res cmd_res
+  menu_res="$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/setChatMenuButton" \
+    --data-urlencode 'menu_button={"type":"commands"}')" || return 1
+  echo "Telegram menu button: $menu_res"
+  echo "$menu_res" | grep -q '"ok":true' || return 1
+
+  cmd_res="$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/setMyCommands" \
+    --data-urlencode 'commands=[{"command":"start","description":"باز کردن BlueGate"},{"command":"orders","description":"سفارش‌های من"},{"command":"support","description":"پشتیبانی"}]')" || return 1
+  echo "Telegram commands: $cmd_res"
+  echo "$cmd_res" | grep -q '"ok":true' || return 1
+}
+
 step_crypto_cron() {
   require_root
   [[ -f "$APP_DIR/public/cron_crypto.php" ]] || { fail "Missing cron_crypto.php"; return 1; }
@@ -589,6 +605,7 @@ step_update() {
   fi
   step_permissions || return 1
   step_migrate || return 1
+  step_bot_ui || warn "Telegram bot menu sync failed; web update still completed."
   step_nginx || return 1
   ok "Updated to latest GitHub version."
 }
@@ -636,6 +653,7 @@ full_install() {
   run_step "Request SSL certificate" step_ssl || { pause; return 1; }
   run_step "Run database migrations / seed" step_migrate || { pause; return 1; }
   run_step "Set Telegram webhook" step_webhook || { pause; return 1; }
+  run_step "Configure Telegram bot menu" step_bot_ui || { pause; return 1; }
   run_step "Install crypto cron" step_crypto_cron || { pause; return 1; }
   run_step "Health check" step_healthcheck || { pause; return 1; }
   echo

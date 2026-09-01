@@ -28,9 +28,26 @@ function handle_successful_payment(int $chat_id, array $payment): void {
     if ($order) {send_msg($chat_id, "✅ پرداخت Stars سفارش <code>#{$order['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($chat_id)));notify_admins("⭐️ پرداخت Telegram Stars تایید شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>{$order['stars_amount']} Stars</b>");}
 }
 
+function clear_legacy_reply_keyboard(int $chat_id): void {
+    // Existing users may still have the old persistent WebApp reply keyboard
+    // cached by Telegram. Remove it once, then immediately delete the tiny
+    // cleanup message so /start remains visually clean.
+    try {
+        $res = tg('sendMessage', [
+            'chat_id'=>$chat_id,
+            'text'=>"\u{2063}",
+            'reply_markup'=>json_markup(['remove_keyboard'=>true]),
+            'disable_notification'=>true,
+        ]);
+        $mid=(int)($res['result']['message_id'] ?? 0);
+        if ($mid > 0) tg('deleteMessage', ['chat_id'=>$chat_id,'message_id'=>$mid]);
+    } catch (Throwable $e) {}
+}
 function send_home_message(int $chat_id, array $user, bool $withKeyboard=true): void {
+    clear_legacy_reply_keyboard($chat_id);
+    // The welcome message is now the single source of navigation. We no longer
+    // create a persistent WebApp reply keyboard above the Telegram keyboard.
     send_msg($chat_id, main_text($user), miniapp_inline_keyboard(is_full_admin($chat_id)));
-    if ($withKeyboard) send_msg($chat_id, 'منوی پایین همیشه در دسترسه 👇', main_menu_keyboard(is_full_admin($chat_id)));
 }
 function save_user_contact_from_message(int $chat_id, array $message): bool {
     if (empty($message['contact']) || !is_array($message['contact'])) return false;
@@ -145,6 +162,16 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
         send_home_message($chat_id, $user);
         return;
     }
+    if (preg_match('~^/orders(?:@\w+)?$~i', $text)) {
+        clear_step($chat_id);
+        handle_user_callback($chat_id, null, $user, 'u_orders');
+        return;
+    }
+    if (preg_match('~^/support(?:@\w+)?$~i', $text)) {
+        clear_step($chat_id);
+        handle_user_callback($chat_id, null, $user, 'u_support');
+        return;
+    }
 
     // No public command flow. Any free text is interpreted only when a button has opened an input step.
     if (!empty($user['step'])) {
@@ -154,7 +181,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
 
     if (handle_keyboard_text($chat_id, $user, $text)) return;
 
-    send_msg($chat_id, "برای استفاده از امکانات ربات لطفاً مینی اپلیکیشن را باز کنید 👇", main_menu_keyboard(is_full_admin($chat_id)));
+    send_msg($chat_id, "برای ادامه از دکمه‌های زیر استفاده کن 👇", miniapp_inline_keyboard(is_full_admin($chat_id)));
 }
 
 
