@@ -666,20 +666,50 @@ if ($action === 'admin_catalog_undo') {
 if ($action === 'admin_catalog_upload_image') {
     require_admin($user);
     api_rate_limit('catalog_image_upload',(string)$user['id'],30,900,900);
-    $raw=(string)($input['image_b64']??'');
-    if($raw==='')api_out(['ok'=>false,'error'=>'NO_IMAGE','message'=>'تصویری انتخاب نشده است.'],400);
-    if(strlen($raw)>12*1024*1024)api_out(['ok'=>false,'error'=>'IMAGE_TOO_LARGE','message'=>'حجم تصویر بیشتر از حد مجاز است.'],400);
-    if(!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,#i',$raw))api_out(['ok'=>false,'error'=>'INVALID_IMAGE_TYPE','message'=>'فرمت تصویر باید JPG، PNG یا WEBP باشد.'],400);
-    $b64=preg_replace('#^data:image/(jpeg|jpg|png|webp);base64,#i','',$raw);$bin=base64_decode($b64,true);
-    if(!$bin||strlen($bin)<100||strlen($bin)>6*1024*1024)api_out(['ok'=>false,'error'=>'INVALID_IMAGE','message'=>'فایل تصویر معتبر نیست یا بیش از ۶ مگابایت است.'],400);
-    $fi=new finfo(FILEINFO_MIME_TYPE);$mime=$fi->buffer($bin);$ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;
-    if(!$ext)api_out(['ok'=>false,'error'=>'INVALID_IMAGE_CONTENT','message'=>'محتوای تصویر معتبر نیست.'],400);
-    $dir=__DIR__.'/uploads/catalog/'.date('Ym');if(!is_dir($dir)&&!@mkdir($dir,0775,true))api_out(['ok'=>false,'error'=>'UPLOAD_DIR_FAILED','message'=>'ساخت پوشه آپلود ناموفق بود.'],500);
-    $relative='uploads/catalog/'.date('Ym').'/catalog_'.bin2hex(random_bytes(12)).'.'.$ext;
-    if(file_put_contents(__DIR__.'/'.$relative,$bin,LOCK_EX)===false)api_out(['ok'=>false,'error'=>'UPLOAD_WRITE_FAILED','message'=>'ذخیره تصویر ناموفق بود.'],500);
-    $base=rtrim((string)app_config('PUBLIC_BASE_URL',''),'/');$url=$base!==''?$base.'/'.$relative:'/'.$relative;
-    log_admin_action((int)$user['telegram_id'],'catalog_upload_image','catalog_image',null,$relative);
-    api_out(['ok'=>true,'image_url'=>$url,'relative_path'=>$relative]);
+    try {
+        $raw=(string)($input['image_b64']??'');
+        if($raw==='')api_out(['ok'=>false,'error'=>'NO_IMAGE','message'=>'تصویری انتخاب نشده است.'],400);
+        if(strlen($raw)>12*1024*1024)api_out(['ok'=>false,'error'=>'IMAGE_TOO_LARGE','message'=>'حجم تصویر بیشتر از حد مجاز است.'],400);
+        if(!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,#i',$raw))api_out(['ok'=>false,'error'=>'INVALID_IMAGE_TYPE','message'=>'فرمت تصویر باید JPG، PNG یا WEBP باشد.'],400);
+        $b64=preg_replace('#^data:image/(jpeg|jpg|png|webp);base64,#i','',$raw);
+        $bin=base64_decode($b64,true);
+        if($bin===false||strlen($bin)<100||strlen($bin)>6*1024*1024)api_out(['ok'=>false,'error'=>'INVALID_IMAGE','message'=>'فایل تصویر معتبر نیست یا بیش از ۶ مگابایت است.'],400);
+
+        // Do not make catalog uploads depend on the optional fileinfo extension.
+        $mime='';
+        if(class_exists('finfo')){
+            try{$fi=new finfo(FILEINFO_MIME_TYPE);$mime=(string)$fi->buffer($bin);}catch(Throwable $ignored){}
+        }
+        if($mime===''){
+            $info=@getimagesizefromstring($bin);
+            $mime=is_array($info)?(string)($info['mime']??''):'';
+        }
+        $ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;
+        if(!$ext)api_out(['ok'=>false,'error'=>'INVALID_IMAGE_CONTENT','message'=>'محتوای تصویر معتبر نیست یا PHP امکان شناسایی این تصویر را ندارد.'],400);
+
+        $baseUploads=__DIR__.'/uploads';
+        $catalogRoot=$baseUploads.'/catalog';
+        $dir=$catalogRoot.'/'.date('Ym');
+        foreach([$baseUploads,$catalogRoot,$dir] as $d){
+            if(!is_dir($d)&&!@mkdir($d,0775,true))api_out(['ok'=>false,'error'=>'UPLOAD_DIR_FAILED','message'=>'ساخت پوشه آپلود ناموفق بود. Permission مسیر public/uploads را بررسی کن.'],500);
+        }
+        if(!is_writable($dir))api_out(['ok'=>false,'error'=>'UPLOAD_DIR_NOT_WRITABLE','message'=>'پوشه آپلود قابل نوشتن نیست. مالک public/uploads باید www-data باشد.'],500);
+
+        try{$token=bin2hex(random_bytes(12));}catch(Throwable $e){$token=sha1(uniqid('',true).mt_rand());}
+        $relative='uploads/catalog/'.date('Ym').'/catalog_'.$token.'.'.$ext;
+        $target=__DIR__.'/'.$relative;
+        $written=@file_put_contents($target,$bin,LOCK_EX);
+        if($written===false||$written!==strlen($bin))api_out(['ok'=>false,'error'=>'UPLOAD_WRITE_FAILED','message'=>'ذخیره تصویر روی سرور ناموفق بود. فضای دیسک و Permission پوشه uploads را بررسی کن.'],500);
+        @chmod($target,0640);
+
+        $base=rtrim((string)app_config('PUBLIC_BASE_URL',''),'/');
+        $url=$base!==''?$base.'/'.$relative:'/'.$relative;
+        try{log_admin_action((int)$user['telegram_id'],'catalog_upload_image','catalog_image',null,$relative);}catch(Throwable $logError){error_log('[BlueGate catalog upload log] '.$logError->getMessage());}
+        api_out(['ok'=>true,'image_url'=>$url,'relative_path'=>$relative]);
+    } catch(Throwable $e) {
+        error_log('[BlueGate catalog upload] '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+        api_out(['ok'=>false,'error'=>'CATALOG_UPLOAD_FAILED','message'=>'آپلود تصویر روی سرور انجام نشد. Permission پوشه uploads و افزونه‌های PHP را بررسی کن.'],500);
+    }
 }
 if ($action === 'admin_catalog_save_service') {
     require_admin($user);
