@@ -8,15 +8,33 @@
   <meta name="description" content="فروشگاه سرویس‌های دیجیتال BlueGate؛ VPN، Telegram Stars و Telegram Premium">
   <link rel="manifest" href="/web/manifest.json">
   <link rel="icon" href="/web/icon-192.png">
-  <link rel="stylesheet" href="/web/css/store.css?v=3.0.4">
-  <link rel="stylesheet" href="/web/css/account.css?v=3.0.4">
-  <link rel="stylesheet" href="/web/css/dashboard.css?v=3.0.4">
-  <link rel="stylesheet" href="/web/css/ui-overhaul.css?v=3.0.4">
-  <link rel="stylesheet" href="/web/css/admin-v18.css?v=3.0.4">
-  <link rel="stylesheet" href="/web/css/admin-unified.css?v=3.0.4">
-  <link rel="stylesheet" href="/web/css/mobile-v281.css?v=3.0.4">
+  <script>
+    (function(){
+      var p=(location.pathname||'/').replace(/\/+$/,'')||'/';
+      if (/^\/(account|orders|wallet|referral|profile|admin)(?:\/|$)/.test(p)) {
+        document.documentElement.classList.add('bg-route-boot');
+      }
+    })();
+  </script>
+  <style>
+    #bgRouteBoot{display:none}
+    html.bg-route-boot body{background:#06101d}
+    html.bg-route-boot #bgRouteBoot{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;background:#06101d;color:#d9e9ff;font-family:inherit}
+    html.bg-route-boot #bgRouteBoot>div{display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid rgba(116,170,225,.16);border-radius:14px;background:#0b1828;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+    html.bg-route-boot #bgRouteBoot i{width:17px;height:17px;border:2px solid rgba(99,196,255,.25);border-top-color:#63c4ff;border-radius:50%;animation:bgRouteSpin .7s linear infinite}
+    html.bg-route-boot #siteHeader,html.bg-route-boot #top,html.bg-route-boot .footer,html.bg-route-boot #announcement{visibility:hidden}
+    @keyframes bgRouteSpin{to{transform:rotate(360deg)}}
+  </style>
+  <link rel="stylesheet" href="/web/css/store.css?v=3.0.4.1">
+  <link rel="stylesheet" href="/web/css/account.css?v=3.0.4.1">
+  <link rel="stylesheet" href="/web/css/dashboard.css?v=3.0.4.1">
+  <link rel="stylesheet" href="/web/css/ui-overhaul.css?v=3.0.4.1">
+  <link rel="stylesheet" href="/web/css/admin-v18.css?v=3.0.4.1">
+  <link rel="stylesheet" href="/web/css/admin-unified.css?v=3.0.4.1">
+  <link rel="stylesheet" href="/web/css/mobile-v281.css?v=3.0.4.1">
 </head>
 <body>
+  <div id="bgRouteBoot" aria-live="polite"><div><i></i><span>در حال باز کردن بخش درخواستی…</span></div></div>
   <div id="announcement" class="announcement hidden"></div>
 
   <header class="site-header" id="siteHeader">
@@ -242,8 +260,8 @@
   </aside>
 
   <div id="toast" class="toast hidden"></div>
-  <script defer src="/web/js/config.js?v=3.0.4"></script><script defer src="/web/js/api.js?v=3.0.4"></script><script defer src="/web/js/rates.js?v=3.0.4"></script><script defer src="/web/js/pricing.js?v=3.0.4"></script><script defer src="/web/js/account.js?v=3.0.4"></script><script defer src="/web/js/admin.js?v=3.0.4"></script><script defer src="/web/js/dashboard.js?v=3.0.4"></script><script defer src="/web/js/checkout.js?v=3.0.4"></script>
-  <script defer src="/web/js/mobile-v281.js?v=3.0.4"></script>
-  <script defer src="/web/js/app.js?v=3.0.4"></script>
+  <script defer src="/web/js/config.js?v=3.0.4.1"></script><script defer src="/web/js/api.js?v=3.0.4.1"></script><script defer src="/web/js/rates.js?v=3.0.4.1"></script><script defer src="/web/js/pricing.js?v=3.0.4.1"></script><script defer src="/web/js/account.js?v=3.0.4.1"></script><script defer src="/web/js/admin.js?v=3.0.4.1"></script><script defer src="/web/js/dashboard.js?v=3.0.4.1"></script><script defer src="/web/js/checkout.js?v=3.0.4.1"></script>
+  <script defer src="/web/js/mobile-v281.js?v=3.0.4.1"></script>
+  <script defer src="/web/js/app.js?v=3.0.4.1"></script>
 </body>
 </html>
