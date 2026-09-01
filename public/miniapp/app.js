@@ -300,7 +300,7 @@ function miniBootContext(){
     mode:isAdminMode?'admin':'user',
     telegram:Boolean(initData),
     platform:String(tg?.platform||'unknown'),
-    version:'2.9.1'
+    version:'2.9.2'
   };
 }
 function setMiniBootState(kind, message=''){
@@ -1222,6 +1222,20 @@ function missionCard(m){const today=Number(state.user?.today_referrals||0);const
 function getWishlist(){try{return JSON.parse(localStorage.getItem('blue_ref_wishlist')||'[]').map(Number)}catch(e){return []}}
 function toggleWishlist(pid){let w=getWishlist();pid=Number(pid);if(w.includes(pid))w=w.filter(id=>id!==pid);else{w.push(pid);haptic('success');}localStorage.setItem('blue_ref_wishlist',JSON.stringify(w));document.querySelectorAll(`[data-wishlist-pid="${pid}"]`).forEach(el=>{el.textContent=w.includes(pid)?'❤️':'🤍';el.classList.toggle('active',w.includes(pid))});if(shopFilterWishlist)renderShopSections();}
 function filteredProducts(){let list=(state.shop_products||[]).filter(p=>(activeCategory==='all'||Number(p.category_id)===Number(activeCategory)||(activeCategory==='featured'&&Number(p.is_featured)===1))&&(!searchTerm||`${p.name} ${p.short_description} ${p.full_description}`.toLowerCase().includes(searchTerm.toLowerCase())));if(shopFilterInStock)list=list.filter(p=>Number(p.inventory_available||0)>0);if(shopFilterFeatured)list=list.filter(p=>Number(p.is_featured)===1);if(shopFilterWishlist){const w=getWishlist();list=list.filter(p=>w.includes(Number(p.id)));}if(shopSort==='price_low')list=[...list].sort((a,b)=>Number(a.price||0)-Number(b.price||0));else if(shopSort==='price_high')list=[...list].sort((a,b)=>Number(b.price||0)-Number(a.price||0));else if(shopSort==='newest')list=[...list].sort((a,b)=>Number(b.id)-Number(a.id));return list}
+function productDiscountInfo(p){
+  const variants=(p?.variants||[]).filter(v=>Number(v.discount_percent||0)>0);
+  if(variants.length){
+    const best=[...variants].sort((a,b)=>Number(b.discount_percent||0)-Number(a.discount_percent||0))[0];
+    return {percent:Number(best.discount_percent||0),title:String(best.title||'پلن منتخب'),variantId:Number(best.id||0),kind:'variant'};
+  }
+  const d=Number(p?.discount_percent||0);
+  return d>0?{percent:d,title:'',variantId:0,kind:'product'}:null;
+}
+function productDiscountBadgeHtml(p){
+  const d=productDiscountInfo(p); if(!d)return '';
+  const label=d.kind==='variant'&&d.title?`${d.percent}٪ · ${esc(d.title)}`:`${d.percent}٪ تخفیف`;
+  return `<span class="discount-badge discount-badge-exact"><span class="disc-val">${esc(label)}</span><span class="disc-fire">🔥</span></span>`;
+}
 function specialDiscountsBannerHtml(){
   const allProds = state.shop_products || [];
   const specialProducts = allProds.filter(p => {
@@ -1292,21 +1306,21 @@ function renderShopSections(){const box=$('shopSections'); if(box) box.innerHTML
 function sectionHtml(title,products){return `<details class="section-row section-collapsible" open><summary class="section-title"><h2>${title}</h2><span class="section-chevron">‹</span></summary><div class="h-scroll product-grid-wrap">${products.map(productCard).join('')}</div></details>`}
 function gridHtml(products){return products.length ? `<section class="section-row"><div class="h-scroll product-grid-wrap">${products.map(productCard).join('')}</div></section>` : ''}
 function productCard(p){
-  const maxDiscount = (p.variants||[]).reduce((max, v)=>Math.max(max, Number(v.discount_percent||0)), Number(p.discount_percent||0));
-  const hasDiscount = maxDiscount > 0;
-  const noVariants = (!p.variants || p.variants.length === 0);
-  const w = getWishlist();
-  const wishBtn = `<button class="wishlist-fab ${w.includes(Number(p.id))?'active':''}" data-wishlist-pid="${p.id}" aria-label="نشان‌کردن">${w.includes(Number(p.id))?'❤️':'🤍'}</button>`;
-  const badgeHtml = hasDiscount ? `<span class="discount-badge"><span class="disc-val">${maxDiscount}%-</span> <span class="disc-fire">🔥</span></span>` : '';
-  
+  const discount=productDiscountInfo(p);
+  const hasDiscount=Boolean(discount);
+  const w=getWishlist();
+  const wishBtn=`<button class="wishlist-fab ${w.includes(Number(p.id))?'active':''}" data-wishlist-pid="${p.id}" aria-label="نشان‌کردن">${w.includes(Number(p.id))?'❤️':'🤍'}</button>`;
+  const badgeHtml=productDiscountBadgeHtml(p);
+  const discountNote=discount?.kind==='variant'&&discount.title?`<small class="product-plan-discount-note">${nf(discount.percent)}٪ تخفیف روی ${esc(discount.title)}</small>`:'';
   if(productCardMode==='detailed'){
     return `<article class="product-tile detailed ${hasDiscount?'discount-tile':''}" data-product-preview="${p.id}">`+
       `<div class="tile-img">${cardImage(p,'🛍')}${badgeHtml}${wishBtn}</div>`+
       `<div class="tile-body"><h3>${esc(p.name)}</h3>`+
       (p.short_description?`<p class="tile-desc">${esc(p.short_description)}</p>`:'')+
+      discountNote+
       `<div class="price-row-mini"><span class="price-pill">${priceLabel(p)}</span>${Number(p.inventory_available||0)>0?'<span class="soon">آنی</span>':''}</div></div></article>`;
   }
-  return `<article class="product-tile compact-tile ${hasDiscount?'discount-tile':''}" data-product-preview="${p.id}"><div class="tile-img" style="position:relative">${cardImage(p,'🛍')}<div class="overlay-price" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px;z-index:2;max-width:calc(100% - 16px)"><span class="compact-price">${priceLabel(p)}</span></div>${badgeHtml}${wishBtn}</div><div class="tile-body" style="padding:10px;padding-bottom:12px"><h3>${esc(p.name)}</h3></div></article>`;
+  return `<article class="product-tile compact-tile ${hasDiscount?'discount-tile':''}" data-product-preview="${p.id}"><div class="tile-img" style="position:relative">${cardImage(p,'🛍')}<div class="overlay-price"><span class="compact-price">${priceLabel(p)}</span></div>${badgeHtml}${wishBtn}</div><div class="tile-body"><h3>${esc(p.name)}</h3>${discountNote}</div></article>`;
 }
 /* Legacy inline product purchase renderer removed in v2.8. Product Sheet owns selection and actions. */
 function openVariantDetails(pid,vid){ showProduct(pid,vid); }
@@ -2582,7 +2596,7 @@ document.addEventListener('keydown',e=>{if(isAdminMode&&(e.metaKey||e.ctrlKey)&&
 document.addEventListener('click',e=>{const item=e.target.closest('[data-cmd-idx]');if(item){const cp2=$('cmdPalette');const idx=Number(item.dataset.cmdIdx);cp2?._cmds?.[idx]?.action?.();closeCommandPalette();return}const inside=e.target.closest('#cmdPalette');if(!inside&&$('cmdPalette')?.classList.contains('open'))closeCommandPalette()})
 
 
-/* ===== v2.9.1: shared web-parity purchase flow ===== */
+/* ===== v2.9.2: shared web-parity purchase flow ===== */
 let _purchaseBusy=false;
 function resolveMiniPurchase(productId,variantId){
   const p=(state?.shop_products||[]).find(x=>Number(x.id)===Number(productId));

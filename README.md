@@ -1,3 +1,5 @@
+> **v2.9.2 Mobile UI Fix Pack:** Referral overlays, Mini App navigation/category rails, compact horizontal product cards, exact plan-specific discount labels, and mobile Credit Center sizing are fixed.
+
 > **v2.9.1 Performance & UX Fix Pack:** بارگذاری Website و Telegram Mini App با cache policy مناسب برای assetهای versioned، Service Worker سریع‌تر، gzip و deferred scripts سبک‌تر شده است. ثبت/پیش‌نمایش کد تخفیف به خرید Web و Mini App اضافه شده، لینک پشتیبانی Mini App اصلاح شده، ویرایش حساب/ایمیل با ظاهر Credit Top-up یکپارچه شده و درخواست‌های شارژ باز حالا به‌صورت امن قابل لغو یا تغییر روش پرداخت هستند.
 
 > **v2.9.0 UI Convergence:** تجربه خرید محصول در Telegram Mini App با زبان طراحی نسخه Website جایگزین شده و Product Sheet قدیمی حذف شده است. انتخاب پلن، مشخصات، قیمت، تخفیف، اشتراک‌گذاری و ثبت سفارش اکنون در یک Purchase Dialog یکپارچه و touch-friendly انجام می‌شود. ظاهر Mini App به Website نزدیک‌تر شده و Web Admin نیز منوها، Modalها، Prompt/Confirmها و Navigation موبایل یکپارچه دریافت کرده است.
@@ -24,7 +26,7 @@
 
 # BlueGate Platform
 
-> نسخه فعلی: **v2.9.1**  
+> نسخه فعلی: **v2.9.2**  
 > هسته یکپارچه فروشگاه BlueGate شامل Website، حساب کاربری، سفارش، اعتبار BlueGate، Referral، Admin، Telegram Mini App و Telegram Bot روی یک API و یک دیتابیس MySQL/MariaDB.
 
 > **v2.2.0 Security:** احراز هویت وب، دسترسی‌های Admin، callbackهای پرداخت، عملیات مالی همزمان، Telegram Stars/Webhook و مسیرهای Legacy سخت‌سازی شده‌اند. برای جزئیات `RELEASE-NOTES-v2.2.0.md` را ببین.

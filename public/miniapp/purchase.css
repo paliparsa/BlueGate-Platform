@@ -1,4 +1,4 @@
-/* BlueGate v2.9.1 — shared Website-inspired purchase experience for Mini App */
+/* BlueGate v2.9.2 — shared Website-inspired purchase experience for Mini App */
 html.purchase-confirm-open,body.purchase-confirm-open{overflow:hidden!important;overscroll-behavior:none!important}
 .purchase-confirm-overlay{position:fixed;inset:0;z-index:2147482500;display:grid;place-items:center;padding:max(12px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:rgba(2,6,15,.82);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);opacity:0;transition:opacity .18s ease;direction:rtl}
 .purchase-confirm-overlay.open{opacity:1}
@@ -20,5 +20,5 @@ html.purchase-confirm-open,body.purchase-confirm-open{overflow:hidden!important;
 @media(max-width:380px){.purchase-plan-grid{grid-template-columns:1fr}.mini-purchase-secondary-actions{grid-template-columns:1fr}.purchase-confirm-card{padding-inline:12px}.purchase-confirm-price{padding:12px}.purchase-confirm-price strong{font-size:19px}}
 @media(prefers-reduced-motion:reduce){.purchase-confirm-overlay,.purchase-confirm-card{transition:none!important}}
 
-/* v2.9.1 coupon apply control */
+/* v2.9.2 coupon apply control */
 .purchase-coupon-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.purchase-coupon-row button{min-height:46px;padding:0 15px;border-radius:13px;border:1px solid color-mix(in srgb,var(--accent,#45c8ff) 38%,transparent);background:color-mix(in srgb,var(--accent,#45c8ff) 13%,transparent);color:var(--accent,#45c8ff);font:inherit;font-size:14px;font-weight:900;white-space:nowrap}.purchase-coupon-row button:disabled{opacity:.65}.purchase-coupon-feedback{font-size:12.5px;line-height:1.65;color:#7f91a4}.purchase-coupon-feedback.success{color:#6ee7a0}.purchase-coupon-feedback.error{color:#fb7185}@media(max-width:390px){.purchase-coupon-row{grid-template-columns:1fr}.purchase-coupon-row button{width:100%}}
