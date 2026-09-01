@@ -82,3 +82,28 @@
   .bottom-nav button{font-size:12px!important}
   .credit-launch b{font-size:12px!important}.credit-launch small{font-size:11px!important}
 }
+
+
+/* v3.0.0 product card redesign */
+#shopSections .catalog-section{margin:18px 0 20px!important}
+#shopSections .catalog-section .section-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin-bottom:12px!important;padding-inline:2px!important}
+#shopSections .catalog-section .section-title h2{font-size:18px!important;font-weight:900!important;letter-spacing:-.015em!important}
+#shopSections .section-view-all{padding:0!important;border:none!important;background:transparent!important;color:#8fcfff!important;font-size:13.5px!important;font-weight:800!important;box-shadow:none!important}
+#shopSections .product-grid-wrap{gap:12px!important;padding-bottom:8px!important;scroll-snap-type:x proximity!important}
+#shopSections .product-tile.catalog-tile{min-width:140px!important;width:140px!important;border-radius:18px!important;overflow:hidden!important;background:linear-gradient(180deg,rgba(13,23,38,.98),rgba(8,15,28,.98))!important;border:1px solid rgba(134,178,220,.14)!important;box-shadow:0 10px 28px rgba(0,0,0,.22)!important;scroll-snap-align:start!important}
+#shopSections .catalog-tile .tile-visual{position:relative!important;display:grid!important;place-items:center!important;padding:12px!important;aspect-ratio:1/1!important;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015))!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
+#shopSections .catalog-tile .tile-visual img{width:100%!important;height:100%!important;object-fit:contain!important;padding:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#shopSections .catalog-tile .tile-placeholder{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02))!important;border-radius:16px!important;font-size:44px!important}
+#shopSections .catalog-tile .tile-caption{padding:10px 10px 12px!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:6px!important;background:transparent!important}
+#shopSections .catalog-tile .tile-name{font-size:14.5px!important;line-height:1.5!important;min-height:auto!important;margin:0!important;font-weight:850!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+#shopSections .catalog-tile .product-card-discount-note{display:block!important;font-size:12px!important;line-height:1.5!important;color:#8ecaff!important;min-height:18px!important}
+#shopSections .catalog-tile .product-price-stack{display:flex!important;align-items:baseline!important;gap:4px!important;flex-wrap:wrap!important;margin-top:auto!important}
+#shopSections .catalog-tile .product-price-stack strong{font-size:16px!important;font-weight:900!important;color:#fff!important;direction:ltr!important}
+#shopSections .catalog-tile .product-price-stack span{font-size:12px!important;color:var(--muted)!important;font-weight:700!important}
+#shopSections .catalog-tile .product-price-stack em{font-style:normal!important;font-size:12px!important;color:var(--muted)!important}
+#shopSections .catalog-tile .wishlist-fab{top:8px!important;left:8px!important;width:30px!important;height:30px!important;border-radius:11px!important;font-size:13px!important}
+#shopSections .catalog-tile .discount-badge{right:8px!important;top:8px!important;left:auto!important;max-width:calc(100% - 52px)!important;padding:4px 8px!important;border-radius:999px!important;font-size:11px!important;line-height:1.35!important}
+#shopSections .catalog-grid-view .product-grid-wrap{flex-wrap:wrap!important;overflow:visible!important}
+#shopSections .catalog-grid-view .product-tile.catalog-tile{min-width:calc(50% - 6px)!important;width:calc(50% - 6px)!important}
+@media (min-width:720px){#shopSections .product-tile.catalog-tile{min-width:154px!important;width:154px!important}}
+@media (max-width:420px){#shopSections .product-tile.catalog-tile{min-width:136px!important;width:136px!important}}

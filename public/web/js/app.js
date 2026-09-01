@@ -91,6 +91,23 @@ function renderGenericCategoryNav(){
     renderGenericCategoryNav();renderGenericProductGrid();
   }));
 }
+function genericLowestPrice(product){
+  const variants=(product?.variants||[]).filter(v=>Number(v.is_active)!==0);
+  const prices=variants.map(v=>Number(v.price||0)).filter(n=>n>0);
+  const direct=Number(product?.price||0);
+  return prices.length?Math.min(...prices):(direct>0?direct:0);
+}
+function genericDiscountInfo(product){
+  const variants=(product?.variants||[]).filter(v=>Number(v.is_active)!==0&&Number(v.discount_percent||0)>0);
+  if(variants.length){const best=[...variants].sort((a,b)=>Number(b.discount_percent||0)-Number(a.discount_percent||0))[0];return {percent:Number(best.discount_percent||0),title:String(best.title||'پلن منتخب')};}
+  const d=Number(product?.discount_percent||0);
+  return d>0?{percent:d,title:''}:null;
+}
+function genericPriceLine(product){
+  const base=genericLowestPrice(product);
+  return base>0?`از ${fmt(base)} تومان`:(product?.price_label||'مشاهده پلن‌ها');
+}
+
 function renderGenericProductGrid(){
   const grid=$('genericProductsGrid'),empty=$('genericProductsEmpty');if(!grid)return;
   const source=state.genericProducts||[];
@@ -99,12 +116,15 @@ function renderGenericProductGrid(){
   products.forEach((p,index)=>{
     const variants=(p.variants||[]).filter(v=>Number(v.is_active)!==0);
     const emoji=p.category_emoji||p.config?.icon||'🛍️';
-    const card=document.createElement('article');card.className='generic-product-card'+(Number(p.is_featured)?' featured':'');
+    const card=document.createElement('article');card.className='generic-product-card generic-product-card--catalog'+(Number(p.is_featured)?' featured':'');
     card.style.setProperty('--generic-accent',index%4===1?'145,112,255':index%4===2?'73,215,165':index%4===3?'255,176,77':'59,159,255');
-    const prices=variants.map(v=>Number(v.price||0)).filter(n=>n>0),base=prices.length?Math.min(...prices):Number(p.price||0);
-    const planUi=variants.length?`<div class="generic-direct-note plan-preview"><b>${variants.length} پلن قابل انتخاب</b><span>انتخاب نهایی پلن داخل فاکتور تایید سفارش انجام می‌شود.</span></div>`:`<div class="generic-direct-note">${esc(p.delivery_type_fa||'بعد از ثبت سفارش، وضعیت تحویل را از حساب BlueGate پیگیری می‌کنی.')}</div>`;
-    card.innerHTML=`${Number(p.is_featured)?'<span class="generic-featured">✦ پیشنهاد ویژه</span>':''}<div class="generic-product-head"><div class="generic-product-icon">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}">`:esc(emoji)}</div><div><span>${esc(p.category_title||'BlueGate Service')}</span><h3>${esc(p.name)}</h3></div></div><p>${esc(p.short_description||p.full_description||'سرویس دیجیتال با قیمت شفاف، ثبت سفارش سریع و پیگیری از حساب BlueGate.')}</p>${planUi}<div class="generic-product-foot"><div class="generic-product-price"><small>${variants.length?'شروع قیمت از':'قیمت نهایی'}</small><strong class="generic-current-price">${fmt(base)}</strong><span>تومان</span></div><button class="btn primary generic-buy" type="button"><span>${variants.length?'انتخاب پلن و خرید':'تایید سفارش'}</span><b>←</b></button></div>`;
-    card.querySelector('.generic-buy').addEventListener('click',()=>BGCheckout.open({scope:'generic',product:p.name,description:p.full_description||p.short_description||'',image:p.image_url||'',icon:emoji,badge:p.category_title||'BlueGate Service',delivery:p.delivery_type_fa||'تحویل از حساب BlueGate',toman:Number(p.price||base||0),rates:state.rates,productId:p.id,variantId:variants[0]?.id||null,variants:variants.map(v=>({id:v.id,title:v.title,price:Number(v.price||0),duration_days:Number(v.duration_days||0),description:v.description||'',old_price:Number(v.old_price||0),discount_percent:Number(v.discount_percent||0),product_id:Number(v.product_id||p.id)}))}));
+    const discount=genericDiscountInfo(p);
+    const discountChip=discount?`<span class="generic-catalog-badge">${discount.title?`${discount.percent}٪ · ${esc(discount.title)}`:`${discount.percent}٪ تخفیف`}</span>`:'';
+    const subtitle=esc(p.category_title||'BlueGate Service');
+    card.innerHTML=`${discountChip}<div class="generic-card-media">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}">`:`<span>${esc(emoji)}</span>`}</div><div class="generic-card-copy"><small class="generic-card-kicker">${subtitle}</small><h3 class="generic-card-name">${esc(p.name)}</h3><div class="generic-card-price">${genericPriceLine(p)}</div><button class="btn primary generic-buy" type="button"><span>${variants.length?'مشاهده و انتخاب پلن':'مشاهده و خرید'}</span><b>←</b></button></div>`;
+    const openProduct=()=>BGCheckout.open({scope:'generic',product:p.name,description:p.full_description||p.short_description||'',image:p.image_url||'',icon:emoji,badge:p.category_title||'BlueGate Service',delivery:p.delivery_type_fa||'تحویل از حساب BlueGate',toman:Number(p.price||genericLowestPrice(p)||0),rates:state.rates,productId:p.id,variantId:variants[0]?.id||null,variants:variants.map(v=>({id:v.id,title:v.title,price:Number(v.price||0),duration_days:Number(v.duration_days||0),description:v.description||'',old_price:Number(v.old_price||0),discount_percent:Number(v.discount_percent||0),product_id:Number(v.product_id||p.id)}))});
+    card.addEventListener('click',openProduct);
+    card.querySelector('.generic-buy').addEventListener('click',(ev)=>{ev.stopPropagation();openProduct()});
     grid.appendChild(card);
   });
 }

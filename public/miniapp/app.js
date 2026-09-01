@@ -484,7 +484,7 @@ function updateOnbSlide(i,total){document.querySelectorAll('[data-onb-slide]').f
 function finishOnboarding(){localStorage.setItem('blue_ref_onboarded','1');$('onboarding')?.classList.remove('open')}
 /* Recently viewed (U12) */
 function pushRecent(pid){let r=JSON.parse(localStorage.getItem('blue_ref_recent')||'[]');r=r.filter(id=>Number(id)!==Number(pid));r.unshift(Number(pid));r=r.slice(0,8);localStorage.setItem('blue_ref_recent',JSON.stringify(r))}
-function recentProductsHtml(){const ids=JSON.parse(localStorage.getItem('blue_ref_recent')||'[]');if(!ids.length)return '';const prods=ids.map(id=>(state.shop_products||[]).find(p=>Number(p.id)===Number(id))).filter(Boolean);if(!prods.length)return '';return `<section class="section-row"><div class="section-title"><h2>👁 اخیراً دیده‌شده</h2></div><div class="h-scroll product-grid-wrap">${prods.map(productCard).join('')}</div></section>`}
+function recentProductsHtml(){const ids=JSON.parse(localStorage.getItem('blue_ref_recent')||'[]');if(!ids.length)return '';const prods=ids.map(id=>(state.shop_products||[]).find(p=>Number(p.id)===Number(id))).filter(Boolean);if(!prods.length)return '';return sectionHtml('👁 اخیراً دیده‌شده',prods,'all',false)}
 /* QR code (U13) — real QR via api.qrserver.com */
 function qrCodeImg(text,size=200){const url='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(text)+'&margin=8&qzone=2';return `<img src="${esc(url)}" alt="QR" width="${size}" height="${size}" style="display:block;width:100%;height:100%;border-radius:8px">`}
 function openQrSheet(){const u=state.user;if(!u)return;const link=u.referral_link||'';if(!link){showStatus('لینک دعوت در دسترس نیست','error');return}const qs=$('qrSheet');if(!qs)return;qs.innerHTML=`<div class="qr-sheet-inner"><div class="qr-sheet-handle" data-close-qr></div><h3>📱 کد QR لینک دعوت</h3><p class="muted">دوستت این کد را با دوربین گوشی اسکن کنه تا مستقیم وارد بات بشه.</p><div class="qr-box">${qrCodeImg(link,200)}</div><div class="qr-link-box"><code>${esc(link)}</code></div><div class="actions"><button class="secondary" id="qrCopyBtn">📋 کپی لینک</button><button class="primary" id="qrCloseBtn">بستن</button></div></div>`;qs.classList.add('open');qs.querySelectorAll('[data-close-qr]').forEach(el=>el.addEventListener('click',closeQrSheet));$('qrCopyBtn')?.addEventListener('click',()=>{navigator.clipboard?.writeText(link);showStatus('لینک کپی شد')});$('qrCloseBtn')?.addEventListener('click',closeQrSheet)}
@@ -601,6 +601,24 @@ function priceLabel(p){
   }
   return esc(p.price_label || fmt(p.price));
 }
+function productMinPriceNumber(p){
+  const variantPrices=(p?.variants||[]).map(v=>Number(v.price||0)).filter(n=>n>0);
+  if(variantPrices.length) return Math.min(...variantPrices);
+  const direct=Number(p?.price||0);
+  return direct>0?direct:0;
+}
+function productCardPriceLine(p){
+  const min=productMinPriceNumber(p);
+  if(min>0) return `<strong>${fmt(min)}</strong><span>از</span><em>تومان</em>`;
+  const raw=String(p?.price_label||'مشاهده پلن‌ها').trim();
+  return `<strong>${esc(raw)}</strong>`;
+}
+function productCardDiscountNoteText(p){
+  const d=productDiscountInfo(p);
+  if(!d) return '';
+  return d.kind==='variant' && d.title ? `${nf(d.percent)}٪ تخفیف روی ${esc(d.title)}` : `${nf(d.percent)}٪ تخفیف`;
+}
+
 function priceCurrencyOptions(selected='IRT'){selected=String(selected||'IRT').toUpperCase();return `<option value="IRT" ${selected!=='USD'?'selected':''}>تومان</option><option value="USD" ${selected==='USD'?'selected':''}>دلار / USDT</option>`}
 function priceAdminFields(prefix,item={}){const c=String(item.price_currency||'IRT').toUpperCase();const usd=item.price_usd||'';const toman=item.price||'';return `<div class="price-editor full"><div class="price-editor-head"><span>💸</span><div><b>نوع قیمت‌گذاری</b><small>تومان ثابت یا دلار با تبدیل خودکار به تومان</small></div></div><div class="price-editor-grid"><label><span>واحد قیمت</span><select id="${prefix}_currency">${priceCurrencyOptions(c)}</select></label><label><span>قیمت تومان</span><input id="${prefix}_price" value="${esc(toman)}" inputmode="numeric" placeholder="مثلاً 2199000"></label><label><span>قیمت دلار</span><input id="${prefix}_price_usd" value="${esc(usd)}" inputmode="decimal" placeholder="مثلاً 19.99"></label><p class="muted full">اگر دلار انتخاب شود، کاربر فقط قیمت تومانی لحظه‌ای را می‌بیند؛ مبلغ دلاری فقط هنگام پرداخت رمزارز/ارزی نمایش داده می‌شود.</p></div></div>`}
 function priceAdminSummary(obj={}){const m=obj.price_meta||{};if((obj.price_currency||m.currency)==='USD'){return `قیمت دلاری: ${nf(obj.price_usd||m.usd||0)}$ → ${fmt(obj.price||m.toman||0)} ${m.rate_source?`· نرخ ${esc(m.rate_source)}`:''}`}return `قیمت تومانی: ${fmt(obj.price||0)}`}
@@ -1243,59 +1261,9 @@ function specialDiscountsBannerHtml(){
     return hasVarDiscount || Number(p.discount_percent || 0) > 0;
   });
   if (!specialProducts.length) return '';
-
-  return `<section class="glowing-flash-sale-section">
-    <div class="flash-sale-header">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span class="glowing-fire-icon">⚡</span>
-        <h3 class="flash-sale-title">تخفیف‌های ویژه</h3>
-      </div>
-    </div>
-    <div class="glowing-flash-products-row">
-      ${specialProducts.slice(0, 8).map(p => {
-        let realPrice = Number(p.price);
-        let crossedPrice = 0;
-        let discLabel = '';
-        let targetVTitle = '';
-
-        const discountedVariants = (p.variants || []).filter(v => Number(v.discount_percent) > 0);
-        if (discountedVariants.length > 0) {
-          const bestV = discountedVariants.sort((a, b) => Number(b.discount_percent) - Number(a.discount_percent))[0];
-          realPrice = Number(bestV.price);
-          crossedPrice = Number(bestV.old_price) || (bestV.discount_percent > 0 ? Math.round(realPrice / (1 - Number(bestV.discount_percent) / 100)) : 0);
-          if (crossedPrice <= realPrice) crossedPrice = 0;
-          targetVTitle = bestV.title || '';
-          discLabel = `<span class="disc-val">${bestV.discount_percent}%-</span> <span class="disc-fire">🔥</span>`;
-        } else if (Number(p.discount_percent || 0) > 0) {
-          const d = Number(p.discount_percent);
-          crossedPrice = (p.old_price && Number(p.old_price) > realPrice) ? Number(p.old_price) : Math.round(realPrice / (1 - d / 100));
-          discLabel = `<span class="disc-val">${d}%-</span> <span class="disc-fire">🔥</span>`;
-        }
-
-        const w = getWishlist();
-        const wishBtn = `<button class="wishlist-fab ${w.includes(Number(p.id))?'active':''}" data-wishlist-pid="${p.id}" aria-label="نشان‌کردن">${w.includes(Number(p.id))?'❤️':'🤍'}</button>`;
-        const discBadge = discLabel ? `<span class="discount-badge" style="z-index:3;">${discLabel}</span>` : '';
-
-        return `<div class="glowing-flash-card" data-product-preview="${p.id}">
-          <div class="tile-img" style="position:relative; margin-bottom:10px;">
-            ${cardImage(p,'🛍')}
-            ${discBadge}
-            ${wishBtn}
-          </div>
-          <div class="flash-card-title">${esc(p.name)}${targetVTitle ? `<small class="flash-card-vname">${esc(targetVTitle)}</small>` : ''}</div>
-          <div class="flash-card-bottom">
-            <div class="flash-card-price-col">
-              ${crossedPrice > 0 ? `<s class="flash-card-orig-price">${fmt(crossedPrice)}</s>` : ''}
-              <b class="flash-card-cur-price">${fmt(realPrice)}</b>
-            </div>
-            <button class="primary" data-product="${p.id}" style="padding:6px 12px; font-size:14px; border-radius:12px;">⚡ خرید</button>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-  </section>`;
+  return sectionHtml('⚡ تخفیف‌های ویژه', specialProducts, 'all', false);
 }
-function shopSectionsHtml(){const cats=state.shop_categories||[];const products=filteredProducts();const filtersActive=shopFilterInStock||shopFilterFeatured||shopFilterWishlist||shopSort!=='newest';let sections='';if(activeCategory==='all'&&!searchTerm&&!filtersActive){const spec=specialDiscountsBannerHtml();if(spec)sections+=spec;const recent=recentProductsHtml();if(recent)sections+=recent;const featured=(state.shop_products||[]).filter(p=>Number(p.is_featured)===1);if(featured.length)sections+=sectionHtml('⭐ محصولات ویژه',featured);for(const c of cats){const list=(state.shop_products||[]).filter(p=>Number(p.category_id)===Number(c.id));if(list.length)sections+=sectionHtml(`${esc(c.emoji||'🛒')} ${esc(c.title)}`,list)} }else sections=gridHtml(products);return sections||'<div class="empty-state rich-empty-state" style="padding:40px 20px;text-align:center"><div class="empty-icon" style="font-size:48px;margin-bottom:12px;opacity:0.8">🕵️‍♂️</div><h3>محصولی پیدا نشد!</h3><p class="muted" style="margin-bottom:20px;font-size:14px">با این فیلترها و جستجو چیزی پیدا نکردیم.</p><button class="secondary" data-clear-filters>حذف تمام فیلترها</button></div>'}
+function shopSectionsHtml(){const cats=state.shop_categories||[];const products=filteredProducts();const filtersActive=shopFilterInStock||shopFilterFeatured||shopFilterWishlist||shopSort!=='newest';let sections='';if(activeCategory==='all'&&!searchTerm&&!filtersActive){const spec=specialDiscountsBannerHtml();if(spec)sections+=spec;const recent=recentProductsHtml();if(recent)sections+=recent;const featured=(state.shop_products||[]).filter(p=>Number(p.is_featured)===1);if(featured.length)sections+=sectionHtml('⭐ محصولات ویژه',featured,'featured');for(const c of cats){const list=(state.shop_products||[]).filter(p=>Number(p.category_id)===Number(c.id));if(list.length)sections+=sectionHtml(`${esc(c.emoji||'🛒')} ${esc(c.title)}`,list,String(c.id))}}else sections=gridHtml(products);return sections||'<div class="empty-state rich-empty-state" style="padding:40px 20px;text-align:center"><div class="empty-icon" style="font-size:48px;margin-bottom:12px;opacity:0.8">🕵️‍♂️</div><h3>محصولی پیدا نشد!</h3><p class="muted" style="margin-bottom:20px;font-size:14px">با این فیلترها و جستجو چیزی پیدا نکردیم.</p><button class="secondary" data-clear-filters>حذف تمام فیلترها</button></div>'}
 function activeShopFilterSummary(){const out=[];if(shopSort==='price_low')out.push('ارزان‌ترین');else if(shopSort==='price_high')out.push('گران‌ترین');if(shopFilterInStock)out.push('فقط موجود');if(shopFilterWishlist)out.push('علاقه‌مندی‌ها');return out}
 function openShopFilters(){
   const body=`<div class="filter-sheet-group"><label>مرتب‌سازی</label><div class="filter-choice-grid"><button data-u-sort="newest" class="${shopSort==='newest'?'active':''}">جدیدترین</button><button data-u-sort="price_low" class="${shopSort==='price_low'?'active':''}">ارزان‌ترین</button><button data-u-sort="price_high" class="${shopSort==='price_high'?'active':''}">گران‌ترین</button></div></div><div class="filter-sheet-group"><label>نمایش</label><div class="filter-switch-row"><span>فقط محصولات موجود</span><button data-u-toggle="instock" class="${shopFilterInStock?'active':''}">${shopFilterInStock?'روشن':'خاموش'}</button></div><div class="filter-switch-row"><span>فقط علاقه‌مندی‌ها</span><button data-u-toggle="wishlist" class="${shopFilterWishlist?'active':''}">${shopFilterWishlist?'روشن':'خاموش'}</button></div></div>`;
@@ -1303,24 +1271,16 @@ function openShopFilters(){
 }
 function renderShop(){const cats=state.shop_categories||[];const filters=activeShopFilterSummary();$('shopPage').innerHTML=`<section class="shop-page-intro"><div><h2>فروشگاه</h2><p>سرویس موردنظرت رو سریع پیدا کن.</p></div></section><div class="shop-header-sticky"><div class="searchbar-modern"><span class="search-icon">⌕</span><input id="searchInput" autocomplete="off" inputmode="search" placeholder="جستجوی سرویس یا اشتراک..." value="${esc(searchTerm)}"><button class="secondary shop-filter-trigger" id="openShopFilters" aria-label="فیلتر">☷</button></div><div class="shop-active-filters">${filters.map((x,i)=>`<span class="${i||filters.length===1?'on':''}">${esc(x)}</span>`).join('')}</div><div class="category-strip modern-cats"><button class="cat-pill ${activeCategory==='all'?'active':''}" data-cat="all"><span>●</span><b>همه</b></button><button class="cat-pill ${activeCategory==='featured'?'active':''}" data-cat="featured"><span>★</span><b>ویژه</b></button>${cats.map(c=>`<button class="cat-pill ${Number(activeCategory)===Number(c.id)?'active':''}" data-cat="${c.id}">${c.image_url?`<img src="${esc(c.image_url)}">`:`<span>${esc(c.emoji||'◇')}</span>`}<b>${esc(c.title)}</b></button>`).join('')}</div></div><div id="shopSections">${shopSectionsHtml()}</div>`}
 function renderShopSections(){const box=$('shopSections'); if(box) box.innerHTML=shopSectionsHtml();}
-function sectionHtml(title,products){return `<details class="section-row section-collapsible" open><summary class="section-title"><h2>${title}</h2><span class="section-chevron">‹</span></summary><div class="h-scroll product-grid-wrap">${products.map(productCard).join('')}</div></details>`}
-function gridHtml(products){return products.length ? `<section class="section-row"><div class="h-scroll product-grid-wrap">${products.map(productCard).join('')}</div></section>` : ''}
+function sectionHtml(title,products,categoryId='all',allowViewAll=true){const viewBtn=allowViewAll?`<button type="button" class="section-view-all" data-cat="${esc(String(categoryId))}">View All</button>`:'';return `<section class="section-row catalog-section"><div class="section-title"><h2>${title}</h2>${viewBtn}</div><div class="h-scroll product-grid-wrap">${products.slice(0,12).map(productCard).join('')}</div></section>`}
+function gridHtml(products){return products.length ? `<section class="section-row catalog-section catalog-grid-view"><div class="h-scroll product-grid-wrap">${products.map(productCard).join('')}</div></section>` : ''}
 function productCard(p){
-  const discount=productDiscountInfo(p);
-  const hasDiscount=Boolean(discount);
+  const discountNote=productCardDiscountNoteText(p);
   const w=getWishlist();
   const wishBtn=`<button class="wishlist-fab ${w.includes(Number(p.id))?'active':''}" data-wishlist-pid="${p.id}" aria-label="نشان‌کردن">${w.includes(Number(p.id))?'❤️':'🤍'}</button>`;
   const badgeHtml=productDiscountBadgeHtml(p);
-  const discountNote=discount?.kind==='variant'&&discount.title?`<small class="product-plan-discount-note">${nf(discount.percent)}٪ تخفیف روی ${esc(discount.title)}</small>`:'';
-  if(productCardMode==='detailed'){
-    return `<article class="product-tile detailed ${hasDiscount?'discount-tile':''}" data-product-preview="${p.id}">`+
-      `<div class="tile-img">${cardImage(p,'🛍')}${badgeHtml}${wishBtn}</div>`+
-      `<div class="tile-body"><h3>${esc(p.name)}</h3>`+
-      (p.short_description?`<p class="tile-desc">${esc(p.short_description)}</p>`:'')+
-      discountNote+
-      `<div class="price-row-mini"><span class="price-pill">${priceLabel(p)}</span>${Number(p.inventory_available||0)>0?'<span class="soon">آنی</span>':''}</div></div></article>`;
-  }
-  return `<article class="product-tile compact-tile ${hasDiscount?'discount-tile':''}" data-product-preview="${p.id}"><div class="tile-img" style="position:relative">${cardImage(p,'🛍')}<div class="overlay-price"><span class="compact-price">${priceLabel(p)}</span></div>${badgeHtml}${wishBtn}</div><div class="tile-body"><h3>${esc(p.name)}</h3>${discountNote}</div></article>`;
+  return `<article class="product-tile catalog-tile ${discountNote?'discount-tile':''}" data-product-preview="${p.id}">`+
+    `<div class="tile-img tile-visual">${cardImage(p,'🛍')}${badgeHtml}${wishBtn}</div>`+
+    `<div class="tile-body tile-caption"><h3 class="tile-name">${esc(p.name)}</h3>${discountNote?`<small class="product-card-discount-note">${discountNote}</small>`:''}<div class="product-price-stack">${productCardPriceLine(p)}</div></div></article>`;
 }
 /* Legacy inline product purchase renderer removed in v2.8. Product Sheet owns selection and actions. */
 function openVariantDetails(pid,vid){ showProduct(pid,vid); }
