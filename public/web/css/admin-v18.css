@@ -73,4 +73,4 @@ body:not(.bg-admin-lock){touch-action:auto!important}
 @media(max-width:720px){.wallet-popup-grid{grid-template-columns:1fr}.wallet-popup-grid .full{grid-column:auto}.wallet-popup-actions{display:grid;grid-template-columns:1fr 1fr}.wallet-popup-actions button{min-width:0}}
 
 /* v3.0.8.3 scroll stability */
-#bgAdminRoot,.bg-admin-shell,.bg-admin-main,[data-bgadmin-pane]{overflow-anchor:none;}
+#bgAdminRoot,.bg-admin-shell,.bg-admin-main,[data-bgadmin-pane]{overflow-anchor:auto;}

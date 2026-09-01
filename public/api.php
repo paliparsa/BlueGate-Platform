@@ -961,6 +961,10 @@ if ($action === 'admin_backup_create') { require_admin($user); $b=blue_backup_cr
 if ($action === 'admin_backup_send_bot') { require_admin($user); $b=blue_backup_send_to_admin((int)$user['telegram_id']); api_out(admin_payload() + ['backup'=>$b, 'message'=>'Backup sent to your Telegram chat.']); }
 if ($action === 'admin_backup_delete') { require_admin($user); $fn=(string)($input['filename']??''); $ok=blue_backup_delete($fn); api_out(admin_payload() + ['deleted'=>$ok, 'message'=>$ok?'Backup deleted.':'Backup not found.']); }
 if ($action === 'admin_backup_restore_server') { require_admin($user); $fn=(string)($input['filename']??''); if (!empty($input['confirm']) && strtoupper((string)$input['confirm'])==='RESTORE') { $res=blue_backup_restore_from_file(blue_backup_file_path($fn), true); api_out(admin_payload() + ['restore'=>$res, 'message'=>'Backup restored.']); } api_out(['ok'=>false,'message'=>'برای restore باید confirm=RESTORE ارسال شود.'],400); }
+if ($action === 'admin_crypto_wallet_list') {
+    require_admin($user);
+    api_out(['ok'=>true,'wallets'=>array_values(array_map('crypto_wallet_admin_payload',crypto_wallets(false))),'crypto_wallets_text'=>crypto_wallets_lines()]);
+}
 if ($action === 'admin_crypto_wallet_save') {
     require_admin($user);
     if (!table_exists('crypto_wallets')) api_out(['ok'=>false,'message'=>'جدول Walletهای کریپتو در دیتابیس موجود نیست. Update/Migration را اجرا کنید.'],500);

@@ -182,6 +182,17 @@ const fmt = (n) => `${Number(n || 0).toLocaleString('fa-IR')} تومان`;
 const nf = (n) => Number(n || 0).toLocaleString('fa-IR');
 const esc = (s) => String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const textBlock = (s) => esc(s || '').replace(/\n/g,'<br>');
+function parsePipeLines(text, keys=[]){
+  return String(text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{
+    const parts=line.split('|').map(x=>x.trim());
+    const row={}; keys.forEach((k,i)=>row[k]=parts[i]??''); return row;
+  });
+}
+function normalizeAdminCryptoWallet(w={}){
+  const asset=String(w.asset||'USDT').trim().toUpperCase();
+  const network=String(w.network||'TRC20').trim().toUpperCase();
+  return {...w,id:Number(w.id||0),title:String(w.title||`${asset} ${network}`),asset,network,address:String(w.address||'').trim(),rate_symbol:String(w.rate_symbol||asset).trim().toUpperCase(),is_active:String(w.is_active??1),sort_order:String(w.sort_order??99),min_confirmations:String(w.min_confirmations??1)};
+}
 
 function parseServerDate(str) {
   if (!str) return null;
@@ -1794,11 +1805,12 @@ function parseSettingsBuilders(){
   const st=adminState.settings||{};
   adminUiCards=parsePipeLines(st.card_accounts_text||'', ['title','card','owner','sheba']);
   const dbWallets=Array.isArray(st.crypto_wallets)?st.crypto_wallets:[];
-  adminUiWallets=dbWallets.length?dbWallets.map(w=>({...w,id:Number(w.id||0),is_active:String(w.is_active??1),sort_order:String(w.sort_order??99),min_confirmations:String(w.min_confirmations??1)})):parsePipeLines(st.crypto_wallets_text||'', ['title','network','asset','address','rate_symbol','is_active','sort_order']);
+  // Canonical source is the crypto_wallets DB table. Legacy pipe text is fallback only.
+  adminUiWallets=(dbWallets.length?dbWallets:parsePipeLines(st.crypto_wallets_text||'', ['title','network','asset','address','rate_symbol','is_active','sort_order'])).map(normalizeAdminCryptoWallet);
   adminUiRates=parsePipeLines(st.crypto_manual_rates_text||'USDT|0\nTRX|0\nTON|0', ['asset','rate_toman']);
 }
 function cryptoWalletDbCardsHtml(){
-  const rows=Array.isArray(adminState?.settings?.crypto_wallets)?adminState.settings.crypto_wallets:[];
+  const rows=(Array.isArray(adminState?.settings?.crypto_wallets)?adminState.settings.crypto_wallets:[]).map(normalizeAdminCryptoWallet);
   if(!rows.length)return `<div class="crypto-wallet-empty-mini"><span>🪙</span><b>هنوز Wallet رمزارزی ثبت نشده</b><small>Wallet جدید را اضافه کن؛ بعد از ذخیره همین‌جا قابل مشاهده و ویرایش است.</small></div>`;
   return paymentListHtml(rows,'wallet');
 }
