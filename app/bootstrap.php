@@ -290,6 +290,7 @@ function migrate(): void {
     add_column_if_missing('orders', 'usd_rate_updated_at', 'DATETIME NULL AFTER usd_rate_source');
     add_column_if_missing('orders', 'delivery_url', 'TEXT NULL AFTER delivery_text');
     add_column_if_missing('orders', 'delivery_title', 'VARCHAR(120) NULL AFTER delivery_url');
+    add_column_if_missing('orders', 'referrer_reward_amount', 'BIGINT NOT NULL DEFAULT 0 AFTER delivery_title');
     add_column_if_missing('orders', 'expires_at', 'DATETIME NULL AFTER delivery_title');
     add_column_if_missing('orders', 'payment_expires_at', 'DATETIME NULL AFTER expires_at');
     add_column_if_missing('orders', 'renewal_of_order_id', 'BIGINT UNSIGNED NULL AFTER payment_expires_at');
@@ -3032,7 +3033,9 @@ function deliver_order(int $orderId, string $deliveryText): ?array {
     $notifyRef=null;
     try {
         // Serialize delivery so the same order cannot pay referral commission twice.
-        $lock=$pdo->prepare('SELECT id,status,referrer_id,referrer_reward_amount,user_id,final_amount FROM orders WHERE id=? FOR UPDATE');
+        // orders does not own referrer_id; it belongs to the customer row in users.
+        // Keep the order lock focused on columns that actually exist on every migrated install.
+        $lock=$pdo->prepare('SELECT id,status,referrer_reward_amount,user_id,final_amount FROM orders WHERE id=? FOR UPDATE');
         $lock->execute([$orderId]);
         $locked=$lock->fetch();
         if(!$locked){$pdo->commit();return null;}
@@ -3042,10 +3045,11 @@ function deliver_order(int $orderId, string $deliveryText): ?array {
         if(!$order)throw new RuntimeException('ORDER_NOT_FOUND');
         $formatted=delivery_template_for_order($order,$deliveryText);
         $reward=(int)($locked['referrer_reward_amount']??0);
+        $referrerId=(int)($order['referrer_id']??0); // joined from users by order_by_id()
 
-        if(!empty($locked['referrer_id'])&&$reward===0){
+        if($referrerId>0&&$reward===0){
             $rq=$pdo->prepare('SELECT * FROM users WHERE id=? FOR UPDATE');
-            $rq->execute([(int)$locked['referrer_id']]);
+            $rq->execute([$referrerId]);
             $ref=$rq->fetch();
             if($ref&&!user_is_blocked($ref)){
                 $base=(($order['commission_type']??'none')==='percent')
