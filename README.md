@@ -363,3 +363,9 @@ RELEASE-NOTES-v3.0.2.1.md
 ---
 
 BlueGate Platform is an application repository, not a reusable public framework. Keep production secrets out of source control, deploy updates through the migration path, and treat the database as persistent state rather than something to recreate on every release.
+
+---
+
+## v3.0.3.1 — Catalog identity repair
+
+This release hardens Catalog Studio edits against stale browser drafts. Group and plan IDs are now validated against their actual parent records before saving, and incompatible older Web/Mini App drafts are discarded automatically. This specifically fixes false “duplicate plan title” errors when editing existing catalog entries.

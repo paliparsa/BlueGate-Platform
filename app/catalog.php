@@ -492,6 +492,11 @@ function catalog_save_blueprint(array $d): array {
                 // Older/restored wizard drafts may have lost the catalog plan id. While editing an
                 // existing service, reconcile the plan by its unique (group + title) identity so an
                 // ordinary edit is not incorrectly rejected as a duplicate.
+                if(!$wasNew && !empty($pl['id'])){
+                    $pq=db()->prepare('SELECT id FROM service_plans WHERE id=? AND group_id=? AND is_archived=0 LIMIT 1');
+                    $pq->execute([(int)$pl['id'],$gid]);
+                    if(!$pq->fetchColumn())$pl['id']=0;
+                }
                 if(!$wasNew && empty($pl['id']) && trim((string)($pl['title']??''))!==''){
                     $rq=db()->prepare('SELECT id FROM service_plans WHERE group_id=? AND LOWER(title)=LOWER(?) AND is_archived=0 LIMIT 1');
                     $rq->execute([$gid,trim((string)$pl['title'])]);$rid=$rq->fetchColumn();if($rid)$pl['id']=(int)$rid;
@@ -503,9 +508,33 @@ function catalog_save_blueprint(array $d): array {
             foreach($groups as $gi=>$gr){
                 $isDefault=!empty($gr['is_default']);
                 if($isDefault && empty($gr['plans']))continue;
-                $gid=catalog_save_group($gr+['service_id'=>$serviceId,'sort_order'=>$gi]);$keptGroups[$gid]=true;if(empty($gr['id']))$madeGroups++;
+
+                // Drafts from older Catalog Studio builds may carry a stale non-zero group id.
+                // Never allow a blueprint to move/update a group that does not already belong to
+                // the service currently being edited. Reconcile it by its visible name instead.
+                if(!$wasNew && !empty($gr['id'])){
+                    $gq=db()->prepare('SELECT id FROM service_groups WHERE id=? AND service_id=? AND is_archived=0 LIMIT 1');
+                    $gq->execute([(int)$gr['id'],$serviceId]);
+                    if(!$gq->fetchColumn())$gr['id']=0;
+                }
+                if(!$wasNew && empty($gr['id']) && !$isDefault && trim((string)($gr['name']??''))!==''){
+                    $gq=db()->prepare('SELECT id FROM service_groups WHERE service_id=? AND LOWER(name)=LOWER(?) AND is_default=0 AND is_archived=0 LIMIT 1');
+                    $gq->execute([$serviceId,trim((string)$gr['name'])]);
+                    $existingGroupId=$gq->fetchColumn();if($existingGroupId)$gr['id']=(int)$existingGroupId;
+                }
+
+                $wasGroupNew=empty($gr['id']);
+                $gid=catalog_save_group($gr+['service_id'=>$serviceId,'sort_order'=>$gi]);$keptGroups[$gid]=true;if($wasGroupNew)$madeGroups++;
                 $plans=is_array($gr['plans']??null)?$gr['plans']:[];
                 foreach($plans as $pi=>$pl){
+                    // Treat the database as authoritative for plan identity. A stale draft may have
+                    // a non-zero id belonging to an archived/different group. Validate it first;
+                    // if it is not the plan in this group, resolve the existing plan by title.
+                    if(!$wasNew && !empty($pl['id'])){
+                        $pq=db()->prepare('SELECT id FROM service_plans WHERE id=? AND group_id=? AND is_archived=0 LIMIT 1');
+                        $pq->execute([(int)$pl['id'],$gid]);
+                        if(!$pq->fetchColumn())$pl['id']=0;
+                    }
                     if(!$wasNew && empty($pl['id']) && trim((string)($pl['title']??''))!==''){
                         $rq=db()->prepare('SELECT id FROM service_plans WHERE group_id=? AND LOWER(title)=LOWER(?) AND is_archived=0 LIMIT 1');
                         $rq->execute([$gid,trim((string)$pl['title'])]);$rid=$rq->fetchColumn();if($rid)$pl['id']=(int)$rid;
