@@ -369,3 +369,27 @@ BlueGate Platform is an application repository, not a reusable public framework.
 ## v3.0.3.1 — Catalog identity repair
 
 This release hardens Catalog Studio edits against stale browser drafts. Group and plan IDs are now validated against their actual parent records before saving, and incompatible older Web/Mini App drafts are discarded automatically. This specifically fixes false “duplicate plan title” errors when editing existing catalog entries.
+
+
+## Web routes (v3.0.4)
+
+The website uses real browser paths instead of hash-only member navigation. Useful routes include:
+
+```text
+/account
+/orders
+/wallet
+/referral
+/profile
+/admin
+/admin/orders
+/admin/catalog
+/admin/inventory
+/admin/users
+/admin/settings
+/admin/activity
+/admin/roles
+/admin/backups
+```
+
+Nginx installations created by BlueGate already use an `index.php` fallback. Apache uses the rules in `public/.htaccess`. Old hash links are migrated by the browser router.
