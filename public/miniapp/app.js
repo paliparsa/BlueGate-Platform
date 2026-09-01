@@ -300,7 +300,7 @@ function miniBootContext(){
     mode:isAdminMode?'admin':'user',
     telegram:Boolean(initData),
     platform:String(tg?.platform||'unknown'),
-    version:'2.9.2'
+    version:'3.0.5.1'
   };
 }
 function setMiniBootState(kind, message=''){
@@ -372,7 +372,14 @@ async function load({force=false}={}){
         applyTheme(state||{});
         $('adminApp')?.classList.add('hidden');
         $('userApp')?.classList.remove('hidden');
-        renderUser();
+        try { renderUser(); }
+        catch (renderErr) {
+          console.error('[BlueGate MiniApp render failed]', renderErr);
+          // Keep the Mini App usable even if an optional widget breaks.
+          currentTab='shop';
+          try { hidePages(); $('shopPage')?.classList.remove('hidden'); renderShop(); }
+          catch (shopErr) { throw renderErr; }
+        }
         initAuthHandlers();
         updateAuthUI(state);
         syncMiniAuthChrome();
@@ -1160,10 +1167,11 @@ function syncOrderPolling(){if(_orderPollTimer){clearInterval(_orderPollTimer);_
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncOrderPolling()});
 function renderUser(){
   saveAppLastState();hidePages();updateCartFab();
-  if(currentTab==='home'){ $('homePage').classList.remove('hidden'); renderHome(); }
-  else if(currentTab==='orders'){ $('ordersPage').classList.remove('hidden'); renderOrders(); }
-  else if(currentTab==='wallet'){ $('walletPage').classList.remove('hidden'); renderWallet(); }
-  else { currentTab='shop'; $('shopPage').classList.remove('hidden'); renderShop(); }
+  const showPage=(id)=>{const el=$(id);if(el)el.classList.remove('hidden');return Boolean(el)};
+  if(currentTab==='home'){ if(showPage('homePage')) renderHome(); else currentTab='shop'; }
+  else if(currentTab==='orders'){ if(showPage('ordersPage')) renderOrders(); else currentTab='shop'; }
+  else if(currentTab==='wallet'){ if(showPage('walletPage')) renderWallet(); else currentTab='shop'; }
+  if(currentTab==='shop'){ showPage('shopPage'); renderShop(); }
   updateMiniHeader();
 }
 function renderHome(){
@@ -2894,6 +2902,9 @@ function initAuthHandlers() {
 }
 
 
+
+window.addEventListener('error',e=>{try{console.error('[BlueGate MiniApp uncaught]',e?.error||e?.message||e)}catch(_){}});
+window.addEventListener('unhandledrejection',e=>{try{console.error('[BlueGate MiniApp rejection]',e?.reason||e)}catch(_){}});
 load().catch(()=>{});
 if (typeof attachPullToRefresh === 'function') attachPullToRefresh();
 if (typeof attachLongPress === 'function') attachLongPress();
