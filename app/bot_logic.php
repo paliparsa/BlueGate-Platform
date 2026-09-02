@@ -282,6 +282,37 @@ function send_or_edit(int $chat_id, $message_id, string $text, ?string $markup=n
     else send_msg($chat_id, $text, $markup);
 }
 
+function show_bot_credit_topup_home(int $chat_id,$message_id,array $user): void {
+    $c=credit_topup_config();
+    if(!$c['enabled']){send_or_edit($chat_id,$message_id,'افزایش اعتبار در حال حاضر غیرفعال است.',back_main_keyboard());return;}
+    $fresh=get_user_by_id((int)$user['id'])?:$user;
+    $txt="💳 <b>اعتبار BlueGate</b>\n\nموجودی فعلی: <b>".money((int)$fresh['balance'])."</b>\n\nمبلغ شارژ را انتخاب کن:";
+    $buttons=[];foreach($c['presets'] as $amount)$buttons[]=['text'=>'➕ '.money((int)$amount),'callback_data'=>'topup_amount_'.(int)$amount];
+    $rows=[];foreach(array_chunk($buttons,2) as $r)$rows[]=$r;
+    $rows[]=[['text'=>'✏️ مبلغ دلخواه','callback_data'=>'topup_custom']];
+    $rows[]=[['text'=>'🔙 منوی اعتبار','callback_data'=>'u_wallet']];
+    send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$rows]));
+}
+function show_bot_credit_topup_methods(int $chat_id,$message_id,array $t): void {
+    $c=credit_topup_config();$rows=[];
+    if(!empty($c['methods']['card']))$rows[]=[['text'=>'💳 کارت به کارت','callback_data'=>'topup_card_'.$t['id']]];
+    if(!empty($c['methods']['stars']))$rows[]=[['text'=>'⭐ Telegram Stars','callback_data'=>'topup_stars_'.$t['id']]];
+    if(!empty($c['methods']['crypto']))$rows[]=[['text'=>'🪙 رمزارز','callback_data'=>'topup_crypto_'.$t['id']]];
+    $rows[]=[['text'=>'❌ لغو درخواست','callback_data'=>'topup_cancel_'.$t['id']],['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']];
+    send_or_edit($chat_id,$message_id,"➕ <b>شارژ اعتبار #{$t['id']}</b>\n\nمبلغ: <b>".money((int)$t['amount'])."</b>\nروش پرداخت را انتخاب کن.",json_markup(['inline_keyboard'=>$rows]));
+}
+function show_bot_credit_topup_invoice(int $chat_id,$message_id,array $t): void {
+    $method=(string)($t['payment_method']??'');$details=json_decode((string)($t['payment_details']??''),true);if(!is_array($details))$details=[];
+    $txt="➕ <b>شارژ اعتبار #{$t['id']}</b>\n\nمبلغ: <b>".money((int)$t['amount'])."</b>\nوضعیت: <b>".h(credit_topup_status_fa((string)$t['status']))."</b>\nروش: <b>".h(payment_method_fa($method))."</b>\n";
+    $rows=[];
+    if($method==='card'){$txt.="\n💳 <b>اطلاعات کارت به کارت</b>\n".bot_card_accounts_text()."\n\nبعد از واریز، رسید را از دکمه زیر ارسال کن.";$rows[]=[['text'=>'📤 ارسال رسید','callback_data'=>'topup_receipt_'.$t['id']]];}
+    elseif($method==='stars'){$txt.="\n⭐ مبلغ Stars: <b>".(int)($t['stars_amount']??0)." XTR</b>\nفاکتور پرداخت Telegram جداگانه ارسال می‌شود.";}
+    elseif($method==='crypto'){$txt.="\n🪙 <b>پرداخت رمزارز</b>\n".'شبکه/ارز: <b>'.h((string)($details['network']??$t['crypto_network']??'')).' / '.h((string)($details['asset']??$t['crypto_asset']??''))."</b>\n".'مبلغ: <b>'.h((string)($details['expected_amount']??$t['crypto_amount']??'')).' '.h((string)($details['asset']??$t['crypto_asset']??''))."</b>\n".'آدرس: <code>'.h((string)($details['address']??''))."</code>\n";$rows[]=[['text'=>'🔗 ثبت TXID','callback_data'=>'topup_hash_'.$t['id']]];}
+    if(in_array((string)$t['status'],['pending_payment','rejected'],true))$rows[]=[['text'=>'🔄 تغییر/مشاهده روش','callback_data'=>'topup_view_'.$t['id']],['text'=>'❌ لغو','callback_data'=>'topup_cancel_'.$t['id']]];
+    $rows[]=[['text'=>'💳 اعتبار من','callback_data'=>'u_wallet'],['text'=>'🏠 منوی اصلی','callback_data'=>'main']];
+    send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$rows]));
+}
+
 function handle_user_callback(int $chat_id, $message_id, array $user, string $data): void {
     if ($data === 'u_ref') {
         $link = referral_link($user);
@@ -291,7 +322,61 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     }
     if ($data === 'u_wallet') {
         $txt = "💳 <b>اعتبار BlueGate</b>\n\nاعتبار قابل استفاده: <b>".money($user['balance'])."</b>\nکل پاداش‌های ثبت‌شده: <b>".money($user['total_earned'])."</b>\nشانس گردونه: <b>{$user['spin_balance']}</b>\n\nℹ️ اعتبار BlueGate برای خرید سرویس‌ها استفاده می‌شود و امکان برداشت نقدی ندارد.\n\n".vip_line($user);
-        send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>[[['text'=>'🛒 مشاهده سرویس‌ها', 'callback_data'=>'u_shop']], [['text'=>'🔙 بازگشت', 'callback_data'=>'main']]]])); return;
+        $rows=[];
+        if(credit_topup_config()['enabled']) $rows[]=[['text'=>'➕ افزایش اعتبار', 'callback_data'=>'u_topup']];
+        $rows[]=[['text'=>'🛒 مشاهده سرویس‌ها', 'callback_data'=>'u_shop'],['text'=>'🧾 سفارش‌های من','callback_data'=>'u_orders']];
+        $rows[]=[['text'=>'🔙 بازگشت', 'callback_data'=>'main']];
+        send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>$rows])); return;
+    }
+    if ($data === 'u_topup') { show_bot_credit_topup_home($chat_id,$message_id,$user); return; }
+    if (str_starts_with($data,'topup_amount_')) {
+        $amount=(int)substr($data,13);
+        try{$t=create_credit_topup((int)$user['id'],$amount);show_bot_credit_topup_methods($chat_id,$message_id,$t);}
+        catch(Throwable $e){send_or_edit($chat_id,$message_id,'مبلغ شارژ معتبر نیست یا شارژ اعتبار غیرفعال است.',back_main_keyboard());}
+        return;
+    }
+    if($data==='topup_custom'){
+        set_step($chat_id,'credit_topup_amount');
+        $c=credit_topup_config();
+        send_or_edit($chat_id,$message_id,"➕ <b>افزایش اعتبار</b>\n\nمبلغ دلخواه را به تومان بفرست.\nحداقل: <b>".money($c['min'])."</b>\nحداکثر: <b>".money($c['max'])."</b>",json_markup(['inline_keyboard'=>[[['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']]]]));return;
+    }
+    if(str_starts_with($data,'topup_card_')){
+        $id=(int)substr($data,11);
+        try{$t=set_credit_topup_method($id,(int)$user['id'],'card');show_bot_credit_topup_invoice($chat_id,$message_id,$t);}
+        catch(Throwable $e){send_or_edit($chat_id,$message_id,'کارت به کارت برای شارژ اعتبار در دسترس نیست.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']]]]));}return;
+    }
+    if(str_starts_with($data,'topup_stars_')){
+        $id=(int)substr($data,12);
+        try{$t=set_credit_topup_method($id,(int)$user['id'],'stars');$res=send_stars_invoice_for_topup($t);show_bot_credit_topup_invoice($chat_id,$message_id,credit_topup_by_id($id));if(empty($res['ok']))send_msg($chat_id,'ارسال فاکتور Stars ممکن نشد.');}
+        catch(Throwable $e){send_msg($chat_id,'پرداخت Stars برای شارژ اعتبار در دسترس نیست.',back_main_keyboard());}return;
+    }
+    if(str_starts_with($data,'topup_crypto_')){
+        $id=(int)substr($data,13);$wallets=array_values(array_filter(crypto_wallets(true),fn($w)=>crypto_wallet_supported((string)$w['asset'],(string)$w['network'])));
+        if(!$wallets){send_msg($chat_id,'فعلاً کیف پول رمزارز فعالی تعریف نشده است.',back_main_keyboard());return;}
+        $rows=[];foreach($wallets as $w)$rows[]=[['text'=>'🪙 '.($w['title']?:($w['asset'].' '.$w['network'])),'callback_data'=>'topup_cw_'.$id.'_'.$w['id']]];
+        $rows[]=[['text'=>'🔙 روش‌های پرداخت','callback_data'=>'topup_view_'.$id]];
+        send_or_edit($chat_id,$message_id,'🪙 <b>کیف پول رمزارز را انتخاب کن</b>',json_markup(['inline_keyboard'=>$rows]));return;
+    }
+    if(str_starts_with($data,'topup_cw_')){
+        $p=explode('_',substr($data,9));$id=(int)($p[0]??0);$wid=(int)($p[1]??0);
+        try{$t=set_credit_topup_method($id,(int)$user['id'],'crypto',['wallet_id'=>$wid]);show_bot_credit_topup_invoice($chat_id,$message_id,$t);}
+        catch(Throwable $e){send_msg($chat_id,'ساخت پرداخت رمزارز ممکن نشد.',back_main_keyboard());}return;
+    }
+    if(str_starts_with($data,'topup_view_')){
+        $id=(int)substr($data,11);$t=credit_topup_by_id($id);
+        if(!$t||(int)$t['user_id']!==(int)$user['id']){send_msg($chat_id,'درخواست شارژ پیدا نشد.',back_main_keyboard());return;}
+        if(empty($t['payment_method']))show_bot_credit_topup_methods($chat_id,$message_id,$t);else show_bot_credit_topup_invoice($chat_id,$message_id,$t);return;
+    }
+    if(str_starts_with($data,'topup_receipt_')){
+        $id=(int)substr($data,14);$t=credit_topup_by_id($id);
+        if(!$t||(int)$t['user_id']!==(int)$user['id']){send_msg($chat_id,'درخواست شارژ پیدا نشد.',back_main_keyboard());return;}
+        set_step($chat_id,'credit_topup_receipt',(string)$id);send_msg($chat_id,"📤 عکس رسید یا توضیح پرداخت شارژ <code>#{$id}</code> را ارسال کن.",json_markup(['inline_keyboard'=>[[['text'=>'🔙 مشاهده درخواست','callback_data'=>'topup_view_'.$id]]]]));return;
+    }
+    if(str_starts_with($data,'topup_hash_')){
+        $id=(int)substr($data,11);set_step($chat_id,'credit_topup_hash',(string)$id);send_msg($chat_id,"🔗 TXID / Hash پرداخت شارژ <code>#{$id}</code> را ارسال کن.",json_markup(['inline_keyboard'=>[[['text'=>'🔙 مشاهده درخواست','callback_data'=>'topup_view_'.$id]]]]));return;
+    }
+    if(str_starts_with($data,'topup_cancel_')){
+        $id=(int)substr($data,13);try{cancel_credit_topup($id,(int)$user['id']);send_or_edit($chat_id,$message_id,'درخواست شارژ لغو شد.',json_markup(['inline_keyboard'=>[[['text'=>'💳 اعتبار من','callback_data'=>'u_wallet']]]]));}catch(Throwable $e){send_msg($chat_id,'لغو درخواست ممکن نشد.',back_main_keyboard());}return;
     }
     if ($data === 'u_stats') {
         $today = today_referrals((int)$user['id']);
@@ -690,6 +775,19 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
         return;
     }
 
+    if ($step === 'credit_topup_receipt') {
+        $id=(int)$user['step_payload'];$note=trim((string)($message['caption']??$message['text']??''));$fileId=null;
+        if(!empty($message['photo'])&&is_array($message['photo'])){$last=end($message['photo']);$fileId=$last['file_id']??null;}
+        if($note===''&&!$fileId){send_msg($chat_id,'لطفاً متن یا عکس رسید را ارسال کن.',back_main_keyboard());return;}
+        try{$t=submit_credit_topup_receipt($id,(int)$user['id'],$note,$fileId);clear_step($chat_id);send_msg($chat_id,"✅ رسید شارژ <code>#{$id}</code> ثبت شد و برای بررسی ارسال شد.",main_menu_keyboard(is_full_admin($chat_id)));$msg="💳 <b>رسید شارژ اعتبار #{$id}</b>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>".money((int)$t['amount'])."</b>\n\n".h($note?:'عکس رسید ارسال شده است.');foreach(app_config('ADMIN_IDS',[]) as $aid){if($fileId)tg('sendPhoto',['chat_id'=>$aid,'photo'=>$fileId,'caption'=>$msg,'parse_mode'=>'HTML']);else send_msg($aid,$msg);}}
+        catch(Throwable $e){send_msg($chat_id,'ثبت رسید شارژ ممکن نشد.',back_main_keyboard());}return;
+    }
+    if ($step === 'credit_topup_hash') {
+        $id=(int)$user['step_payload'];$hash=trim((string)($message['text']??$message['caption']??''));
+        if($hash===''){send_msg($chat_id,'TXID / Hash را به صورت متن ارسال کن.',back_main_keyboard());return;}
+        try{$t=submit_credit_topup_crypto_hash($id,(int)$user['id'],$hash);clear_step($chat_id);send_msg($chat_id,"✅ TXID شارژ <code>#{$id}</code> ثبت شد و برای بررسی ارسال شد.",main_menu_keyboard(is_full_admin($chat_id)));notify_admins("🪙 <b>TXID شارژ اعتبار</b>\nTop-up: <code>#{$id}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>".money((int)$t['amount'])."</b>\nTXID: <code>".h($hash)."</code>");}
+        catch(Throwable $e){send_msg($chat_id,'TXID قابل ثبت نیست یا قبلاً استفاده شده است.',back_main_keyboard());}return;
+    }
     if ($step === 'order_crypto_hash') {
         $oid=(int)$user['step_payload'];
         $text=trim((string)($message['text'] ?? $message['caption'] ?? ''));
@@ -747,6 +845,12 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
 function handle_step_input(int $chat_id, array $user, string $text): void {
     $step = $user['step'];
     if ($text === '' && $step !== 'admin_broadcast') { send_msg($chat_id, 'لطفاً متن معتبر بفرست.', main_menu_keyboard(is_full_admin($chat_id))); return; }
+
+    if ($step === 'credit_topup_amount') {
+        $amount=(int)preg_replace('/\D+/u','',$text);
+        try{$t=create_credit_topup((int)$user['id'],$amount);clear_step($chat_id);show_bot_credit_topup_methods($chat_id,null,$t);}
+        catch(Throwable $e){$c=credit_topup_config();send_msg($chat_id,"مبلغ معتبر نیست. مبلغ باید بین <b>".money($c['min'])."</b> و <b>".money($c['max'])."</b> باشد.",json_markup(['inline_keyboard'=>[[['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']]]]));}return;
+    }
 
     if ($step === 'custom_ref_code') {
         $code = normalize_ref_code($text);

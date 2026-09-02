@@ -2175,6 +2175,10 @@ function miniapp_inline_keyboard(bool $admin=false): string {
         $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
     }
     $rows[] = [
+        ['text'=>'💳 اعتبار من', 'callback_data'=>'u_wallet'],
+        ['text'=>'➕ افزایش اعتبار', 'callback_data'=>'u_topup'],
+    ];
+    $rows[] = [
         ['text'=>'📦 سفارش‌های من', 'callback_data'=>'u_orders'],
         ['text'=>'💬 پشتیبانی', 'callback_data'=>'u_support'],
     ];
@@ -2194,11 +2198,13 @@ function order_user_keyboard(array $order): string {
     $rows = [];
     if ($status === 'pending_payment') {
         $payRows=[];
-        if (payment_enabled('wallet')) $payRows[]=['text'=>'💰 پرداخت از کیف پول', 'callback_data'=>'order_pay_wallet_'.$order['id']];
+        $buyer = get_user_by_id((int)($order['user_id'] ?? 0));
+        if (payment_enabled('wallet')) $payRows[]=['text'=>'💰 اعتبار: '.money((int)($buyer['balance'] ?? 0)), 'callback_data'=>'order_pay_wallet_'.$order['id']];
         if (payment_enabled('card')) $payRows[]=['text'=>'💳 کارت به کارت', 'callback_data'=>'order_pay_card_'.$order['id']];
         if ($payRows) $rows[]=$payRows;
         if (payment_enabled('stars')) $rows[] = [['text'=>'⭐ پرداخت با Telegram Stars', 'callback_data'=>'order_pay_stars_'.$order['id']]];
         if (payment_enabled('crypto')) $rows[] = [['text'=>'🪙 پرداخت رمزارز', 'callback_data'=>'order_pay_crypto_'.$order['id']]];
+        if (credit_topup_config()['enabled']) $rows[] = [['text'=>'➕ افزایش اعتبار BlueGate', 'callback_data'=>'u_topup']];
         if (($order['payment_method'] ?? '') === 'crypto') $rows[] = [['text'=>'🔄 بررسی پرداخت رمزارز', 'callback_data'=>'order_check_crypto_'.$order['id']]];
         $rows[] = [['text'=>'📤 ارسال رسید پرداخت', 'callback_data'=>'order_receipt_'.$order['id']]];
         $rows[] = [['text'=>'🎟 ثبت کد تخفیف', 'callback_data'=>'order_coupon_'.$order['id']], ['text'=>'❌ لغو سفارش', 'callback_data'=>'order_cancel_'.$order['id']]];
@@ -2383,6 +2389,18 @@ function show_user_orders(int $chat_id, $message_id, int $userId): void {
     $rows[] = [['text'=>'🛒 فروشگاه', 'callback_data'=>'u_shop'], ['text'=>'🔙 منوی اصلی', 'callback_data'=>'main']];
     send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>$rows]));
 }
+function bot_card_accounts_text(): string {
+    $cards=parse_card_accounts();
+    if(!$cards) return "⚠️ هنوز کارت بانکی فعالی توسط مدیریت تعریف نشده است.";
+    $out="";
+    foreach($cards as $c){
+        $out .= "\n💳 <b>".h((string)($c['title']??'کارت'))."</b>\n";
+        if(!empty($c['card'])) $out .= "شماره کارت: <code>".h((string)$c['card'])."</code>\n";
+        if(!empty($c['owner'])) $out .= "به نام: <b>".h((string)$c['owner'])."</b>\n";
+        if(!empty($c['sheba'])) $out .= "شبا: <code>".h((string)$c['sheba'])."</code>\n";
+    }
+    return trim($out);
+}
 function show_order_invoice(int $chat_id, $message_id, array $order): void {
     $name = order_catalog_display_name($order);
     $txt = "🧾 <b>فاکتور سفارش #{$order['id']}</b>\n\n".
@@ -2395,6 +2413,12 @@ function show_order_invoice(int $chat_id, $message_id, array $order): void {
     if (!empty($order['expires_at'])) $txt .= "انقضا/مدت: <code>".h($order['expires_at'])."</code>\n";
     if (!empty($order['customer_note'])) $txt .= "\n📝 یادداشت شما:\n".h($order['customer_note'])."\n";
     if (!empty($order['delivery_text']) && normalize_order_status($order['status']) === 'delivered') $txt .= "\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>\n";
+    if (($order['payment_method'] ?? '') === 'card') {
+        $txt .= "
+💳 <b>اطلاعات کارت به کارت</b>
+".bot_card_accounts_text()."
+";
+    }
     if (($order['payment_method'] ?? '') === 'crypto') { $cc = get_crypto_check_by_order((int)$order['id']); if ($cc) { $txt .= "
 🪙 <b>پرداخت رمزارز</b>
 ".'شبکه/ارز: <b>'.h($cc['network']).' / '.h($cc['asset'])."</b>
