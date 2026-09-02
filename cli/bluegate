@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+set -uo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+for f in common ui system config telegram backup health updater; do source "$HERE/lib/$f.sh"; done
+
+usage(){ cat <<'EOF'
+BlueGate CLI 2.0
+Usage: bluegate <command> [options]
+
+Core:       status, health, doctor, update, install, repair, configure
+Data:       backup, backups, restore, migrate, db
+Operations: logs, telegram, webhook, cron, maintenance, system-info
+Utilities:  version, help
+
+Global options: --yes  --json  --no-color
+EOF
+}
+
+status_cmd(){
+  header; echo "System Status"; echo
+  label "App directory" "$APP_DIR"; label "Version" "$(app_version)"; label "Domain" "${DOMAIN:-—}"; label "Repository" "$REPO_URL"
+  label "Config" "$([[ -f "$APP_DIR/config.php" ]] && echo ready || echo missing)"; label "nginx" "$(systemctl is-active nginx 2>/dev/null || true)"; label "MariaDB" "$(systemctl is-active mariadb 2>/dev/null || true)"
+  label "Maintenance" "$([[ -f "$(maintenance_file)" ]] && echo ON || echo off)"; label "Telegram token" "$(mask_secret "$BOT_TOKEN")"; echo
+  local tg; tg="$(telegram_health_text 2>/dev/null)" || true; label "Telegram" "${tg:-unavailable}"
+}
+
+system_info(){ header; echo "System Information"; echo; label "OS" "$(. /etc/os-release 2>/dev/null; echo ${PRETTY_NAME:-unknown})"; label "Kernel" "$(uname -r)"; label "CPU" "$(nproc) cores"; label "Memory" "$(free -h | awk '/Mem:/{print $2" total / "$3" used"}')"; label "Disk" "$(df -h "$APP_DIR" 2>/dev/null | awk 'NR==2{print $2" total / "$3" used / "$4" free"}')"; label "PHP" "$(php -r 'echo PHP_VERSION;' 2>/dev/null || echo missing)"; label "nginx" "$(nginx -v 2>&1 | sed 's#nginx version: ##')"; label "MariaDB" "$(mysql --version 2>/dev/null | head -1)"; }
+
+install_from_source(){
+  require_root; header; echo "Fresh Install / Reinstall"; echo
+  configure_wizard || return 1
+  install_packages || return 1
+  if [[ -n "$LOCAL_SOURCE_ROOT" && "$LOCAL_SOURCE_ROOT" != "$APP_DIR" ]]; then
+    mkdir -p "$APP_DIR"; rsync -a --delete --exclude='.git/' "$LOCAL_SOURCE_ROOT/" "$APP_DIR/"
+  elif [[ ! -d "$APP_DIR/.git" ]]; then
+    rm -rf "$APP_DIR"; git clone "$REPO_URL" "$APP_DIR"
+  else repo_sync; fi
+  generate_config || return 1; create_database || return 1; configure_permissions || return 1; configure_nginx || return 1
+  configure_ssl || return 1; configure_nginx || return 1; run_migrations || return 1; configure_cron || return 1
+  telegram_set_webhook || warn "Webhook setup failed"; telegram_sync_ui || warn "Telegram menu sync failed"; install_manager_command || return 1
+  maintenance_off; health_render || true
+  ok "Installation completed. Run: sudo bluegate"
+}
+
+repair_cmd(){ require_root; header; echo "Repair Installation"; echo; configure_permissions; run_migrations; configure_cron; configure_nginx; telegram_set_webhook || true; telegram_sync_ui || true; install_manager_command; maintenance_off; health_render; }
+
+logs_cmd(){
+  require_root; local kind="${1:-menu}" lines="${2:-80}" file=""
+  case "$kind" in app) file="$APP_DIR/storage/app.log";; bot) file="$APP_DIR/storage/bot.log";; update) file="$UPDATE_LOG";; cli) file="$CLI_LOG";; nginx) journalctl -u nginx -n "$lines" --no-pager; return;; php) journalctl -u "$(systemctl list-units --type=service --all | awk '/php.*fpm/{print $1;exit}')" -n "$lines" --no-pager; return;; cron) journalctl -u cron -n "$lines" --no-pager; return;; follow) tail -F "$UPDATE_LOG";; *) header; echo "Logs"; echo "1) Update  2) CLI  3) nginx  4) PHP-FPM  5) Cron"; read -rp "Choose: " c; case "$c" in 1) logs_cmd update 100;;2)logs_cmd cli 100;;3)logs_cmd nginx 100;;4)logs_cmd php 100;;5)logs_cmd cron 100;;esac; return;; esac
+  [[ -f "$file" ]] && tail -n "$lines" "$file" || warn "Log file not found: $file"
+}
+
+db_cmd(){
+  require_root; local a="${1:-status}"
+  case "$a" in status) header; label "Database" "$DB_NAME"; label "User" "$DB_USER"; if mysql_app -Nse 'SELECT 1' >/dev/null 2>&1; then ok "Connection OK"; label "Tables" "$(mysql_app -Nse 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()')"; label "Size" "$(mysql_app -Nse 'SELECT CONCAT(ROUND(SUM(data_length+index_length)/1024/1024,1)," MB") FROM information_schema.tables WHERE table_schema=DATABASE()')"; else fail "Connection failed"; return 2; fi;; migrate) run_migrations;; optimize) confirm "Optimize all BlueGate tables?" yes && mysql_app -Nse 'SELECT CONCAT("OPTIMIZE TABLE `",table_name,"`;") FROM information_schema.tables WHERE table_schema=DATABASE()' | mysql_app;; console) exec env MYSQL_PWD="$DB_PASS" mysql -u"$DB_USER" "$DB_NAME";; *) echo "Usage: bluegate db [status|migrate|optimize|console]";; esac
+}
+
+telegram_cmd(){ local a="${1:-status}"; case "$a" in status) header; telegram_health_text;; webhook-refresh) telegram_set_webhook;; sync-ui) telegram_sync_ui && ok "Bot commands/menu synced";; *) echo "Usage: bluegate telegram [status|webhook-refresh|sync-ui]";; esac; }
+maintenance_cmd(){ case "${1:-status}" in on) maintenance_on; ok "Maintenance enabled";; off) maintenance_off; ok "Maintenance disabled";; status) [[ -f "$(maintenance_file)" ]] && echo ON || echo OFF;; *) echo "Usage: bluegate maintenance [on|off|status]";; esac; }
+
+menu(){
+  require_root
+  while true; do
+    header
+    local ng db tg hc="ok"; ng="$(systemctl is-active nginx 2>/dev/null || echo inactive)"; db="$(systemctl is-active mariadb 2>/dev/null || echo inactive)"; tg="$(telegram_health_text 2>/dev/null || echo unavailable)"
+    printf "  "; status_dot "$([[ "$ng" == active ]] && echo ok || echo fail)"; echo " Web / nginx       $ng"
+    printf "  "; status_dot "$([[ "$db" == active ]] && echo ok || echo fail)"; echo " Database          $db"
+    printf "  "; status_dot "$([[ "$tg" != unavailable ]] && echo ok || echo warn)"; echo " Telegram          $tg"
+    echo; line
+    echo "  1) Update                 6) Database"
+    echo "  2) Health Check           7) Telegram / Webhook"
+    echo "  3) Doctor / Auto Repair   8) Repair Installation"
+    echo "  4) Logs                   9) System Info"
+    echo "  5) Backup / Restore      10) Configure"
+    echo " 11) Maintenance           12) Cron Repair"
+    echo "  0) Exit"; line
+    read -rp "Choose: " c || true
+    case "$c" in
+      1) update_pipeline; pause;; 2) health_render; pause;; 3) doctor; pause;; 4) logs_cmd; pause;;
+      5) header; echo "1) Create backup  2) List backups  3) Restore"; read -rp "Choose: " b; case "$b" in 1) backup_create;;2)backup_list;;3)backup_restore;;esac; pause;;
+      6) db_cmd status; pause;; 7) telegram_cmd status; echo; echo "1) Refresh webhook  2) Sync bot commands"; read -rp "Choose or Enter: " t; [[ "$t" == 1 ]] && telegram_set_webhook; [[ "$t" == 2 ]] && telegram_sync_ui; pause;;
+      8) repair_cmd; pause;; 9) system_info; pause;; 10) configure_wizard; pause;; 11) echo "1) ON  2) OFF  3) Status"; read -rp "Choose: " m; [[ "$m" == 1 ]] && maintenance_cmd on; [[ "$m" == 2 ]] && maintenance_cmd off; [[ "$m" == 3 ]] && maintenance_cmd status; pause;;
+      12) configure_cron; ok "Cron repaired"; pause;; 0) exit 0;; *) sleep 1;; esac
+  done
+}
+
+# Parse global switches anywhere.
+ORIGINAL_ARGS=("$@")
+ARGS=(); for a in "$@"; do case "$a" in --yes|-y) YES=1;; --json) JSON_OUTPUT=1;; --no-color) NO_COLOR=1;; --update) ARGS+=(update);; --health) ARGS+=(health);; --status) ARGS+=(status);; --webhook) ARGS+=(webhook);; --full|--install) ARGS+=(install);; *) ARGS+=("$a");; esac; done
+set -- "${ARGS[@]}"; cmd="${1:-menu}"; shift || true
+if [[ ${EUID:-$(id -u)} -ne 0 && "$cmd" != "help" && "$cmd" != "-h" && "$cmd" != "--help" && "$cmd" != "version" ]]; then
+  command -v sudo >/dev/null 2>&1 || { fail "Root privileges are required."; exit 2; }
+  exec sudo -E "$0" "${ORIGINAL_ARGS[@]}"
+fi
+case "$cmd" in
+  menu|dashboard) menu;; install) install_from_source;; configure) configure_wizard;; status) status_cmd;; health) health_render;; doctor) doctor;; repair) repair_cmd;; update) update_pipeline;;
+  backup) backup_create;; backups) backup_list;; restore|rollback) backup_restore "${1:-}";; migrate) run_migrations;; db) db_cmd "$@";; logs) logs_cmd "$@";;
+  telegram) telegram_cmd "$@";; webhook) telegram_set_webhook;; cron) configure_cron;; manager-install) install_manager_command && ok "Manager command installed";; maintenance) maintenance_cmd "$@";; system-info|sysinfo) system_info;;
+  version) echo "$(app_version)";; help|-h|--help) usage;; *) fail "Unknown command: $cmd"; usage; exit 2;;
+esac
