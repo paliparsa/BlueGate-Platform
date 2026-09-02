@@ -343,3 +343,9 @@ VERSION                 نسخه فعلی پروژه
 
 ## نرخ خودکار Telegram Stars
 ارزش Stars برای پرداخت و قیمت فروش Stars از نرخ زنده USDT/تومان با همان زنجیره Wallex → Ramzinex → Nobitex مشتق می‌شود. Base دلاری و درصد افزایش قابل تنظیم است و نرخ دستی فقط fallback است.
+
+
+## اصلاح کنتراست v3.0.8.12
+- یکسان‌سازی رنگ Select/Option نیتیو در Web و Mini App، مخصوصاً Chrome/Windows.
+- بهبود خوانایی placeholder، disabled، autofill و file picker.
+- اعمال Contrast Guard روی popup، modal، sheet و menuهای اصلی بدون حذف قابلیت‌ها.

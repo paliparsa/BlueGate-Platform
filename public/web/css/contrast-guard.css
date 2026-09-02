@@ -1,0 +1,124 @@
+/* BlueGate v3.0.8.12 — Global contrast guard
+   Loaded last on Web + Mini App so native controls and overlays stay readable
+   across Windows/Chrome, Telegram WebView and mobile browsers. */
+:root{
+  color-scheme:dark;
+  --bg-contrast-control:#0b1626;
+  --bg-contrast-control-2:#122238;
+  --bg-contrast-popup:#0c1728;
+  --fg-contrast-high:#eef6ff;
+  --fg-contrast-mid:#a8bad1;
+  --fg-contrast-low:#8197b1;
+  --border-contrast:rgba(126,190,245,.20);
+}
+html,body{color-scheme:dark}
+
+/* Native fields — most importantly Windows/Chrome select popups. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+textarea,select{
+  color-scheme:dark!important;
+  background-color:var(--bg-contrast-control)!important;
+  color:var(--fg-contrast-high)!important;
+  border-color:var(--border-contrast)!important;
+  caret-color:var(--fg-contrast-high);
+}
+select{
+  -webkit-text-fill-color:var(--fg-contrast-high)!important;
+}
+select option,
+select optgroup{
+  color-scheme:dark!important;
+  background:var(--bg-contrast-popup)!important;
+  color:var(--fg-contrast-high)!important;
+  -webkit-text-fill-color:var(--fg-contrast-high)!important;
+}
+select option:checked{
+  background:var(--bg-contrast-control-2)!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+select option:disabled,
+select optgroup:disabled{
+  background:#091321!important;
+  color:#71859d!important;
+  -webkit-text-fill-color:#71859d!important;
+}
+
+input::placeholder,textarea::placeholder{
+  color:var(--fg-contrast-low)!important;
+  opacity:1!important;
+  -webkit-text-fill-color:var(--fg-contrast-low)!important;
+}
+input:disabled,textarea:disabled,select:disabled,
+input[readonly],textarea[readonly]{
+  opacity:1!important;
+  background:#091321!important;
+  color:#8fa3bc!important;
+  -webkit-text-fill-color:#8fa3bc!important;
+}
+
+/* Chrome autofill used to paint a light rectangle over dark forms. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill{
+  -webkit-text-fill-color:var(--fg-contrast-high)!important;
+  box-shadow:0 0 0 1000px var(--bg-contrast-control) inset!important;
+  transition:background-color 99999s ease-out 0s;
+  caret-color:var(--fg-contrast-high)!important;
+}
+
+/* Native file controls: prevent bright OS button inside a dark sheet. */
+input[type="file"]{color:var(--fg-contrast-mid)!important}
+input[type="file"]::file-selector-button{
+  color:var(--fg-contrast-high)!important;
+  background:var(--bg-contrast-control-2)!important;
+  border:1px solid var(--border-contrast)!important;
+  border-radius:10px;
+  padding:8px 11px;
+  margin-inline-end:10px;
+  cursor:pointer;
+}
+input[type="file"]::-webkit-file-upload-button{
+  color:var(--fg-contrast-high)!important;
+  background:var(--bg-contrast-control-2)!important;
+  border:1px solid var(--border-contrast)!important;
+}
+
+/* Secondary text has to remain visibly secondary, not disappear. */
+.muted,.bg-admin-muted{
+  color:var(--fg-contrast-mid)!important;
+}
+label,legend{color:inherit}
+
+/* Common popup/sheet/menu surfaces. These selectors intentionally cover both apps. */
+.bg-admin-modal-card,.bg-admin-prompt-card,.profile-action-sheet,.credit-topup-sheet,
+.referral-action-sheet,.modal-card,.app-sheet-panel,.presentation-sheet,.preview-sheet-inner,
+.share-sheet-inner,.qr-sheet-inner,.cart-sheet-inner,.wallet-confirm-card,
+[role="dialog"],[role="menu"],[role="listbox"]{
+  color:var(--fg-contrast-high);
+}
+.bg-admin-more-menu button,.account-menu-row,.share-btn,.catalog-group-option,
+.filter-choice-grid button,.admin-more-link{
+  color:var(--fg-contrast-high)!important;
+}
+.bg-admin-more-menu small,.account-menu-row small,.share-btn small,
+.catalog-group-option small,.admin-more-link small{
+  color:var(--fg-contrast-mid)!important;
+}
+
+/* Focus should be visible without turning the field/background light. */
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{
+  outline:2px solid rgba(91,202,255,.78)!important;
+  outline-offset:2px;
+}
+
+/* High-contrast selected/active rows. */
+[aria-selected="true"],[aria-current="true"],option:checked{
+  color:#fff!important;
+}
+
+@media (forced-colors:active){
+  input,textarea,select,button{forced-color-adjust:auto}
+}
