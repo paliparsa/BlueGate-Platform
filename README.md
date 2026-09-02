@@ -1,439 +1,331 @@
-نسخه: **3.4.2**
+# BlueGate Platform
 
-# پلتفرم BlueGate
+BlueGate یک پلتفرم فروش و مدیریت سرویس‌های دیجیتال است که شامل فروشگاه وب، حساب کاربری، Telegram Mini App، ربات تلگرام، پنل مدیریت و سیستم مشترک کاتالوگ، سفارش، پرداخت و اعتبار است.
 
-**نسخه فعلی: v3.0.8.2 — Crypto Wallet UX & Tracking**
+## قابلیت‌های پروژه
 
-BlueGate Platform هسته اصلی فروش و مدیریت سرویس‌های BlueGate است. این پروژه شامل وب‌سایت فروشگاهی، حساب کاربری، پنل مدیریت، Telegram Mini App و ربات تلگرام است و همه این بخش‌ها از یک Backend، دیتابیس، کاتالوگ و سیستم سفارش مشترک استفاده می‌کنند.
+### فروشگاه و کاتالوگ
 
-این نسخه به‌صورت کامل برای نصب روی سرور طراحی شده و تغییرات محصولات، پلن‌ها، سفارش‌ها و کاربران بین وب و Mini App مشترک است.
+- ساخت Category، Service، Sub-service / Group و Plan
+- قیمت‌گذاری به تومان یا دلار
+- تخفیف، مدت سرویس، تصویر، Badge، Featured و ترتیب نمایش
+- فعال/غیرفعال کردن سرویس و پلن
+- Inventory و تحویل محصولات موجودی‌محور
+- نمایش محصولات در Web و Telegram Mini App از یک Catalog مشترک
 
----
+### سفارش و پرداخت
 
-## مدیریت و پیگیری رمزارز در v3.0.8.2
+- ثبت و پیگیری سفارش
+- وضعیت‌های مختلف سفارش و مدیریت تحویل
+- پرداخت با BlueGate Credit
+- کارت‌به‌کارت
+- Crypto
+- Telegram Stars
+- ثبت و بررسی رسید
+- ثبت TXID و بررسی تراکنش‌های پشتیبانی‌شده
+- تمدید سرویس‌های قبلی
 
-- Walletهای ثبت‌شده از جدول `crypto_wallets` مستقیماً در Web Admin و Mini App Admin نمایش داده می‌شوند.
-- در Mini App فرم کارت بانکی و فرم Wallet برای موبایل بازطراحی شده و پیام‌های اعتبارسنجی زیر فیلد نمایش داده می‌شوند.
-- انتخاب Asset و Network در Wallet Builder کارت‌محور است و فقط ترکیب‌هایی نمایش داده می‌شوند که بررسی خودکار تراکنش دارند.
-- ترکیب‌های فعلی: USDT-TRC20، USDT-ERC20، USDT-BEP20، TRX-TRON، TON، ETH-Ethereum، BNB-BSC و BTC-Bitcoin.
-- بررسی TXID سفارش‌ها توسط `cron_crypto.php --check-payments` انجام می‌شود. برای Ethereum و BSC می‌توان `ETH_RPC_URL` و `BSC_RPC_URL` را در config تنظیم کرد.
-- Walletهای قدیمی با شبکه پشتیبانی‌نشده در ادمین قابل مشاهده‌اند، اما به کاربران برای پرداخت جدید نمایش داده نمی‌شوند تا پرداختی بدون verifier خودکار ساخته نشود.
+### حساب کاربری
 
+- ورود و حساب کاربری
+- پروفایل و Avatar
+- امکان استفاده از عکس پروفایل Telegram یا عکس سفارشی
+- BlueGate Credit و افزایش اعتبار
+- تاریخچه سفارش‌ها و پرداخت‌ها
+- «سرویس‌های من»
+- Referral و معرفی دوستان
+- Notification Center
 
-## امکانات اصلی
+### Telegram Mini App
 
-- فروشگاه وب BlueGate
-- Telegram Mini App
-- حساب و پروفایل کاربری
-- سیستم ثبت و مدیریت سفارش‌ها
-- بخش «سرویس‌های من» و مدیریت سرویس‌های فعال
-- اکشن‌های اختصاصی سرویس VPN مانند باز کردن سرویس، کپی لینک Subscription و تمدید
-- کیف پول / BlueGate Credit
-- سیستم معرفی دوستان و Referral
-- پنل مدیریت تحت وب
-- پنل مدیریت داخل Mini App
-- Telegram Bot و Webhook
-- Catalog Studio
-- مدیریت پرداخت‌ها
-- پیش‌نمایش امن رسیدهای افزایش اعتبار برای ادمین وب و Mini App
+- فروشگاه کامل داخل Telegram
+- مشاهده و خرید محصولات
+- کیف پول و افزایش اعتبار
+- سفارش‌ها و سرویس‌های فعال
+- پروفایل و تنظیمات حساب
+- اعلان‌ها
+- پنل مدیریت مخصوص Mini App
+- Catalog Builder مرحله‌ای برای ساخت و ویرایش سرویس‌ها
+
+### Telegram Bot
+
+#### امکانات کاربر
+
+- خرید سریع دکمه‌ای
+- Category → Service → Group → Plan
+- مشاهده فاکتور و انتخاب روش پرداخت
+- مشاهده موجودی BlueGate Credit
+- افزایش اعتبار
+- کارت‌به‌کارت، Crypto و Telegram Stars
+- مشاهده سفارش‌ها
+- مشاهده سرویس‌های فعال
+- تمدید سریع سرویس
+- Deep Link مستقیم برای خرید محصول یا پلن
+
+#### امکانات ادمین
+
+- Admin Control Center دکمه‌ای
+- Broadcast Center
+- ارسال پیام Telegram به کاربران
+- ارسال اعلان داخل Mini App
+- ارسال همزمان پیام Telegram و اعلان Mini App
+- مشاهده سفارش‌های نیازمند رسیدگی
+- مدیریت درخواست‌های افزایش اعتبار
+- Customer 360
+- جستجوی مشتری
+- افزایش/کاهش سریع اعتبار مشتری
+- مشاهده سرویس‌های نزدیک انقضا
+- ارسال یادآوری تمدید
+- داشبورد سریع فروش و سفارش‌ها
+
+### پنل مدیریت Web
+
+- مدیریت Catalog
+- مدیریت کاربران
+- Customer 360
+- مدیریت سفارش‌ها
+- مدیریت پرداخت‌ها و رسیدها
+- مدیریت BlueGate Credit
+- مدیریت Walletهای Crypto
+- مدیریت نرخ ارز و Telegram Stars
+- مدیریت Inventory
+- اعلان‌های مدیریتی
 - کوپن و تخفیف
-- مدیریت موجودی و Inventory
-- اعلان‌های کاربری
-- Backup / Restore و ثبت فعالیت‌های مدیریتی
+- تنظیمات عمومی سیستم
 
 ---
 
-## قابلیت‌های جدید v3.0.7.2
+# استفاده از پروژه
 
-### Welcome / Onboarding
+## مدیریت کاتالوگ
 
-در وب و Telegram Mini App برای کاربران یک صفحه/پنجره خوش‌آمدگویی اضافه شده است که امکانات اصلی BlueGate را به‌صورت کوتاه معرفی می‌کند.
+از پنل Admin وارد بخش Catalog شوید.
 
-کاربر می‌تواند گزینه «دیگر نمایش نده» را فعال کند. وضعیت نمایش Welcome روی حساب کاربر ذخیره می‌شود تا تجربه کاربری بین Web و Mini App هماهنگ بماند. در سمت کلاینت نیز fallback محلی در نظر گرفته شده است.
-
-### اعلان‌های مدیریتی داخل برنامه
-
-ادمین اکنون می‌تواند از بخش مدیریت اعلان ارسال کند و پیام‌ها در Notification Center کاربران در Web و Mini App نمایش داده می‌شوند.
-
-قابلیت‌های سیستم اعلان شامل موارد زیر است:
-
-- ارسال اعلان مدیریتی برای کاربران
-- عنوان و متن اختصاصی
-- انواع مختلف اعلان مانند عادی، مهم، تخفیف، سرویس و امنیتی
-- وضعیت خوانده‌شده / خوانده‌نشده برای هر کاربر
-- Badge تعداد اعلان‌های خوانده‌نشده
-- پشتیبانی از Action برای هدایت کاربر به بخش‌های مختلف سیستم یا لینک معتبر
-- ثبت Campaign و تاریخچه ارسال‌های مدیریتی
-- حفظ اعلان‌های سیستمی قبلی مانند تغییر وضعیت سفارش
-
-Backend اعلان بین Website و Mini App مشترک است.
-
-### هشدار تکمیل امنیت حساب
-
-در بخش حساب کاربری، اگر کاربر ایمیل یا شماره تماس خود را کامل نکرده باشد یک هشدار زرد نمایش داده می‌شود.
-
-این هشدار برای افزایش امنیت حساب و امکان بازیابی بهتر دسترسی طراحی شده و تا زمان تکمیل اطلاعات باقی می‌ماند. متن هشدار بر اساس فیلد ناقص تغییر می‌کند و کاربر مستقیماً به بخش تکمیل اطلاعات حساب هدایت می‌شود.
-
----
-
-## ساختار کاتالوگ
-
-ساختار اصلی Catalog Studio به شکل زیر است:
+ساختار کاتالوگ:
 
 ```text
 Category
 └── Service
     └── Group / Sub-service
-        └── Plan / Product
+        └── Plan
 ```
 
-Catalog Studio محل اصلی مدیریت روزمره محصولات است. جداول Legacy مربوط به Product و Variant برای سازگاری با Checkout قدیمی همچنان حفظ شده‌اند، اما نباید به‌عنوان یک کاتالوگ جداگانه به‌صورت دستی مدیریت شوند.
+برای ساخت محصول جدید:
 
-### موارد قابل مدیریت برای Service
+1. Category موردنظر را انتخاب یا ایجاد کنید.
+2. روی «افزودن سرویس» بزنید.
+3. اطلاعات اصلی سرویس را وارد کنید.
+4. در صورت نیاز Group / Sub-service اضافه کنید.
+5. Planهای سرویس را تعریف کنید.
+6. قیمت، مدت، نوع تحویل و سایر تنظیمات را ثبت کنید.
+7. سرویس را ذخیره و فعال کنید.
 
-- عنوان
-- Slug
-- توضیحات
-- تصویر
-- Theme
-- Badge
-- Featured
-- فعال / غیرفعال
-- ترتیب نمایش
+همین Catalog در Web، Mini App و Telegram Bot استفاده می‌شود.
 
-### موارد قابل مدیریت برای Group / Sub-service
+## مدیریت سفارش‌ها
 
-- عنوان
-- Slug
-- توضیحات
-- تصویر
-- فعال / غیرفعال
-- ترتیب نمایش
+از بخش Orders در Web Admin یا Mini App Admin می‌توانید:
 
-### موارد قابل مدیریت برای Plan / Product
+- سفارش را مشاهده کنید.
+- پروفایل مشتری را باز کنید.
+- رسید را بررسی کنید.
+- پرداخت را تأیید یا رد کنید.
+- وضعیت سفارش را تغییر دهید.
+- لینک سرویس یا متن تحویل را ثبت کنید.
+- سفارش را آرشیو یا حذف کنید.
 
-- عنوان
-- توضیحات
-- تصویر
-- فعال / غیرفعال
-- ترتیب نمایش
-- مدت سرویس
-- تخفیف
-- نوع تحویل
-- نوع و مقدار کمیسیون
-- واحد قیمت
-- قیمت تومان
-- قیمت دلار
+## مدیریت اعتبار کاربران
 
-مدیریت کاتالوگ از Web Admin و Mini App Admin در دسترس است.
+از بخش Wallet / Credit:
+
+- موجودی کاربر را مشاهده کنید.
+- درخواست‌های افزایش اعتبار را بررسی کنید.
+- رسید را مشاهده کنید.
+- درخواست را تأیید یا رد کنید.
+- از Customer 360 اعتبار کاربر را مدیریت کنید.
+
+## مدیریت Telegram Bot
+
+کاربر از منوی Bot می‌تواند «خرید سریع»، «اعتبار من»، «سفارش‌های من» و «سرویس‌های من» را استفاده کند.
+
+ادمین از دکمه Admin Control Center وارد ابزارهای مدیریتی Bot می‌شود.
+
+## ارسال همگانی و اعلان
+
+از Admin Control Center وارد Broadcast Center شوید.
+
+می‌توانید انتخاب کنید:
+
+- فقط Telegram
+- فقط Mini App Notification
+- هر دو همزمان
+
+سپس گروه کاربران را انتخاب، پیام را وارد، Preview را مشاهده و ارسال را تأیید کنید.
 
 ---
 
-## قیمت‌گذاری دلاری
+# نصب روی VPS
 
-پلن‌ها می‌توانند مستقیماً با قیمت تومان یا USD تعریف شوند.
+## نیازمندی‌ها
 
-اگر قیمت USD انتخاب شود، BlueGate با استفاده از سیستم نرخ USDT/Toman مقدار قابل پرداخت به تومان را محاسبه می‌کند و اطلاعات نرخ تبدیل را نیز نگه می‌دارد.
+پیشنهاد می‌شود از Ubuntu یا Debian استفاده شود.
 
-فیلدهای مرتبط شامل موارد زیر هستند:
-
-```text
-price
-price_currency
-price_usd
-price_rate_toman
-price_rate_source
-price_rate_updated_at
-```
-
-به این ترتیب ادمین می‌تواند قیمت اصلی محصول را دلاری نگه دارد و Checkout همچنان مبلغ نهایی تومان را دریافت کند.
-
----
-
-## تصاویر کاتالوگ
-
-تصویر Service، Group و Plan را می‌توان از طریق URL یا Upload مستقیم از پنل مدیریت ثبت کرد.
-
-فرمت‌های پشتیبانی‌شده:
+پروژه به موارد زیر نیاز دارد:
 
 ```text
-JPG
-JPEG
-PNG
-WEBP
+Nginx
+PHP 8.2+
+PHP-FPM
+PHP CLI
+PDO MySQL
+cURL
+mbstring
+MySQL یا MariaDB
+Git
+Cron
+HTTPS
 ```
 
-حداکثر حجم فایل: **6 MB**
+## نصب جدید از GitHub
 
-فایل‌های Upload شده در مسیر زیر ذخیره می‌شوند:
-
-```text
-public/uploads/catalog/YYYYMM/
-```
-
-وب‌سرور باید اجازه نوشتن در مسیر `public/uploads/catalog/` را داشته باشد.
-
----
-
-## مسیرهای اصلی
-
-برای نمونه اگر پروژه روی `https://example.com` نصب شده باشد:
-
-```text
-/                 فروشگاه
-/account          حساب کاربری
-/orders           سفارش‌ها
-/wallet           کیف پول BlueGate Credit
-/referral         معرفی دوستان
-/profile          پروفایل
-/admin            پنل مدیریت وب
-/miniapp/         Telegram Mini App
-/api.php          API اصلی برنامه
-/bot.php          Telegram Bot Webhook
-/portal/          مسیر سازگاری / Redirect
-```
-
----
-
-## نیازمندی‌های سرور
-
-پیشنهاد پایه:
-
-- Ubuntu یا Debian
-- Nginx
-- PHP-FPM
-- PHP CLI
-- MySQL یا MariaDB
-- دامنه یا Subdomain با HTTPS
-- حداقل 1GB RAM؛ پیشنهاد 2GB یا بیشتر
-
-پکیج‌های متداول PHP مورد استفاده پروژه:
-
-```text
-php-fpm
-php-cli
-php-mysql
-php-curl
-php-mbstring
-php-xml
-```
-
-اسکریپت نصب می‌تواند وابستگی‌های متداول را روی یک سرور تمیز نصب و تنظیم کند.
-
----
-
-## نصب تازه
-
-فایل‌های پروژه را روی سرور Upload یا Clone کنید و سپس Installer را با دسترسی مناسب اجرا کنید:
+ابتدا Repository را روی VPS دریافت کنید:
 
 ```bash
-chmod +x install.sh
-sudo ./install.sh
+cd /var/www
+git clone https://github.com/USERNAME/REPOSITORY.git bluegate-platform
+cd bluegate-platform
 ```
 
-Installer اطلاعات لازم مانند تنظیمات دیتابیس، آدرس عمومی سایت و تنظیمات برنامه را دریافت می‌کند.
-
-نمونه فایل تنظیمات:
-
-```text
-config.example.php
-```
-
-فایل تنظیمات Production که شامل Password، API Key یا Bot Token است را داخل Repository عمومی قرار ندهید.
-
----
-
-## آپدیت نسخه موجود
-
-قبل از آپدیت Production:
-
-1. از دیتابیس Backup بگیرید.
-2. یک کپی از Config فعلی نگه دارید.
-3. سپس Update Script را اجرا کنید.
+سپس Installer را اجرا کنید:
 
 ```bash
-chmod +x update.sh
-sudo ./update.sh
+sudo bash install.sh
 ```
 
-سیستم Migration تغییرات مورد نیاز دیتابیس را اعمال می‌کند. در v3.0.7.2 این تغییرات شامل فیلدهای مورد نیاز Welcome، Actionهای Notification و Campaignهای اعلان نیز می‌شود.
-
-روی نصب موجود، `schema.sql` را به‌صورت دستی جایگزین دیتابیس Production نکنید.
-
----
-
-## Telegram Mini App
-
-Mini App برای احراز هویت تلگرامی از `initData` استفاده می‌کند و با همان API و دیتابیس Website کار می‌کند.
-
-برای راه‌اندازی Production:
-
-1. BlueGate را روی HTTPS نصب کنید.
-2. Bot Token را در Config تنظیم کنید.
-3. آدرس Telegram Mini App را روی `/miniapp/` قرار دهید.
-4. در صورت استفاده از Bot Webhook، آدرس `bot.php` را به‌عنوان Webhook تنظیم کنید.
-
-اگر Mini App صفحه خالی نمایش داد، ابتدا Console مرورگر، Network Requests و پاسخ API بررسی شود؛ خطای Authentication، Cache قدیمی Frontend یا خطای API می‌تواند باعث Boot ناقص Mini App شود.
-
----
-
-## دسترسی پوشه تصاویر
-
-اگر Upload تصویر با Permission Error مواجه شد، مسیر Upload را ایجاد و دسترسی آن را بررسی کنید.
-
-نمونه برای Ubuntu/Debian:
+یا:
 
 ```bash
-sudo mkdir -p public/uploads/catalog
-sudo chown -R www-data:www-data public/uploads
-sudo find public/uploads -type d -exec chmod 755 {} \;
-sudo find public/uploads -type f -exec chmod 644 {} \;
+sudo chmod +x cli/bluegate
+sudo ./cli/bluegate install
 ```
 
-از `chmod 777` برای پوشه‌های پروژه استفاده نکنید.
+Installer تنظیمات لازم شامل Domain، Database، Telegram Bot، Nginx، Cron و Permissionها را انجام می‌دهد.
 
----
+پس از نصب Health Check را اجرا کنید:
 
-## فایل‌های مهم پروژه
-
-```text
-app/bootstrap.php       هسته اصلی برنامه و Migrationها
-app/catalog.php         منطق Catalog Studio
-public/api.php          API مشترک Web و Mini App
-public/web/             رابط وب کاربر و مدیریت
-public/miniapp/         Telegram Mini App
-public/bot.php          ورودی Telegram Bot
-app/bot_logic.php       منطق Bot
-schema.sql              Schema نصب تازه
-install.sh              نصب پروژه
-update.sh               آپدیت پروژه
-config.example.php      نمونه تنظیمات
-VERSION                 نسخه فعلی پروژه
+```bash
+sudo ./cli/bluegate health
 ```
 
----
+## آپدیت پروژه از GitHub
 
-## نسخه
+هر زمان نسخه جدید را روی GitHub قرار دادید:
 
-```text
-3.0.7.5
+```bash
+cd /var/www/bluegate-platform
+git pull origin main
+sudo ./cli/bluegate update
 ```
 
+بعد از آپدیت:
 
-## بهبود رابط کاربری نسخه 3.0.7.5
+```bash
+sudo ./cli/bluegate health
+```
 
-- اصلاح کامل نمایش درصد تخفیف پلن‌ها در پنجره خرید Mini App و جلوگیری از هم‌پوشانی با قیمت.
-- بازطراحی نوار عملیات پایین صفحه جزئیات سفارش در Mini App؛ یادداشت سفارش به‌عنوان اکشن اصلی و منوی بیشتر به‌صورت کنترل جمع‌وجور نمایش داده می‌شود.
+`update` قبل از اعمال تغییرات Backup می‌سازد و سپس Migration، Permissionها، Cron، Telegram و Health Check را اجرا می‌کند.
 
+## Dashboard ترمینال
 
-## تغییرات نسخه 3.0.7.5
-- رفع قفل ماندن اسکرول پنل مدیریت وب بعد از بستن ویرایش کاتالوگ.
-- انتقال اعلان‌های لحظه‌ای وب به بالای وسط صفحه با لایه‌ای بالاتر از تمام مودال‌ها.
-- یکپارچه‌سازی مدیریت Sheet/Modal در Mini App؛ در هر لحظه فقط یک لایه اصلی باز می‌ماند.
-- بستن خودکار لایه قبلی هنگام باز شدن صفحه/Sheet جدید و اصلاح رفتار Escape و Telegram Back Button.
-- پاکسازی کلاس‌های scroll-lock باقی‌مانده بعد از بستن لایه‌ها.
+برای باز کردن داشبورد CLI:
 
-## تغییرات نسخه 3.0.8
+```bash
+sudo ./cli/bluegate
+```
 
-- یکسان‌سازی منطق ساخت و ویرایش سرویس کاتالوگ در وب و Mini App با Blueprint مشترک و مسیر ۵ مرحله‌ای.
-- بهینه‌سازی Wizard کاتالوگ Mini App برای صفحه موبایل، Stepper قابل انتخاب، کارت‌های ساختار و فرم‌های لمسی.
-- بازطراحی «ساخت سریع» در وب و Mini App با انتخاب‌های بصری برای پلن مستقیم، VPN، اکانت و کد/گیفت و نگه‌داشتن حالت Advanced برای سازگاری.
-- اضافه شدن Wallet Manager کارت‌محور در Web Admin؛ Walletهای ثبت‌شده قابل مشاهده، افزودن، ویرایش و حذف هستند.
-- بهبود Wallet Manager در Mini App و جلوگیری از ثبت Wallet تکراری با Asset/Network/Address یکسان.
-- داده Wallet همچنان با فرمت قبلی ذخیره می‌شود تا Backend و نسخه‌های قبلی سازگار بمانند.
+اگر command سراسری نصب شده باشد:
 
+```bash
+sudo bluegate
+```
 
-## نرخ خودکار Telegram Stars
-ارزش Stars برای پرداخت و قیمت فروش Stars از نرخ زنده USDT/تومان با همان زنجیره Wallex → Ramzinex → Nobitex مشتق می‌شود. Base دلاری و درصد افزایش قابل تنظیم است و نرخ دستی فقط fallback است.
+## کامندهای اصلی مدیریت سرور
 
+```bash
+sudo ./cli/bluegate status
+```
 
-## اصلاح کنتراست v3.0.8.12
-- یکسان‌سازی رنگ Select/Option نیتیو در Web و Mini App، مخصوصاً Chrome/Windows.
-- بهبود خوانایی placeholder، disabled، autofill و file picker.
-- اعمال Contrast Guard روی popup، modal، sheet و menuهای اصلی بدون حذف قابلیت‌ها.
+نمایش وضعیت سریع سیستم.
 
+```bash
+sudo ./cli/bluegate health
+```
 
-## نسخه 3.0.8.15
-- Order Control Center جدید برای پنل وب
-- فعال‌سازی Customer 360 مشترک در وب و Mini App
-- Quick Create کارت‌محور برای پلن‌ها در وب و Mini App
+بررسی کامل PHP، Database، Web، Telegram، Cron، TLS و Permissionها.
 
+```bash
+sudo ./cli/bluegate update
+```
 
-## تغییرات 3.0.9
-- حذف کامل رابط ساخت سریع از Web و Mini App؛ ساخت سرویس فقط از Catalog Builder اصلی انجام می‌شود.
-- سیستم لایه‌های Mini App به Parent/Child Stack ارتقا یافت؛ Share/QR/Preview روی والد باز می‌شوند و والد را نمی‌بندند.
-- Telegram Back بالاترین لایه فعال را مرحله‌به‌مرحله می‌بندد.
+آپدیت امن پروژه.
 
+```bash
+sudo ./cli/bluegate backup
+```
 
-## خرید سریع Telegram Bot
+ساخت Backup.
 
-- دکمه «⚡ خرید سریع» روی صفحه اصلی Bot مستقیماً Catalog اصلی را باز می‌کند.
-- دسته، محصول، پلن، قیمت و موجودی از دیتابیس اصلی خوانده می‌شوند و چیزی داخل Bot hard-code نشده است.
-- روش‌های پرداخت فعلی Wallet، کارت، Crypto و Telegram Stars همان Flow سفارش اصلی را استفاده می‌کنند.
-- «🌐 سرویس‌های من» و تمدید سریع سرویس از داخل Bot اضافه شده است.
-- Deep Linkهای `?start=buy_p_PRODUCT_ID` و `?start=buy_v_PRODUCT_ID_VARIANT_ID` پشتیبانی می‌شوند.
-- دستورات `/shop`، `/buy` و `/services` نیز فعال هستند.
+```bash
+sudo ./cli/bluegate backups
+```
 
+نمایش Backupهای موجود.
 
-## v3.4.2 – Bot Payment & Credit Center
-- نمایش واقعی کارت‌های فعال ادمین پس از انتخاب کارت‌به‌کارت در فاکتور Bot.
-- نمایش موجودی اعتبار روی دکمه پرداخت کیف پول.
-- Credit Center داخل Bot با نمایش موجودی و افزایش اعتبار.
-- شارژ اعتبار با مبالغ آماده یا مبلغ دلخواه و پرداخت Card / Stars / Crypto.
-- ارسال رسید کارت و TXID شارژ از داخل Bot.
+```bash
+sudo ./cli/bluegate restore <backup>
+```
 
+بازیابی Backup.
 
-## v3.4.2 — Telegram Admin Control Center
+```bash
+sudo ./cli/bluegate migrate
+```
 
-- پنل ادمین Bot به Inline Keyboard کامل تبدیل شد؛ ابزارهای روزمره دیگر وابسته به Reply Keyboard یا ورودی‌های چندخطی نیستند.
-- Broadcast Center دکمه‌ای با انتخاب کانال Telegram / Mini App / هر دو، انتخاب مخاطب، Preview و تایید نهایی.
-- مرکز اعلان Mini App با همان Notification Center موجود.
-- سفارش‌های منتظر، درخواست‌های شارژ اعتبار، Customer 360 و سرویس‌های نزدیک انقضا از کنترل سنتر در دسترس‌اند.
-- Customer 360 شامل مشاهده سفارش‌های اخیر، پیام مستقیم و تغییر سریع اعتبار با دکمه است.
-- Expiring Services شامل فیلتر ۱/۳/۷ روز و ارسال یادآوری تمدید تکی یا گروهی است.
-- Quick Dashboard آمار روزمره را بدون باز کردن Web Admin نشان می‌دهد.
+اجرای Migrationهای دیتابیس.
 
+```bash
+sudo ./cli/bluegate doctor
+```
 
-## اصلاح v3.4.2
-- مسیر callbackهای `topup_*` به handler کاربر وصل شد؛ دکمه‌های مبلغ، کارت، Stars، Crypto، رسید و لغو شارژ اعتبار دوباره کار می‌کنند.
-- Control Center ادمین در برابر دیتابیس‌های قدیمی fail-safe شد؛ نبودن ستون‌های اختیاری آماری دیگر کل پنل را از کار نمی‌اندازد.
-- برای خطاهای runtime Bot یک exception boundary اضافه شد تا دکمه ظاهراً «بی‌واکنش» نماند و خطا در log ثبت شود.
+بررسی مشکلات رایج نصب و سرور.
 
+```bash
+sudo ./cli/bluegate repair
+```
 
-## BlueGate CLI & Installer 2.0 — v3.4.2
+Repair تنظیمات، Permissionها، Cron، Nginx و Migrationها.
 
-مدیریت سرور از نسخه 3.4.2 از طریق `sudo bluegate` انجام می‌شود. اسکریپت‌های `install.sh`، `update.sh` و `health.sh` برای سازگاری باقی مانده‌اند و به CLI جدید وصل هستند. CLI شامل داشبورد تعاملی، آپدیت امن با Backup و Maintenance Mode، Health Check و Doctor، Backup/Restore، مدیریت دیتابیس، Telegram/Webhook، Cron، Logs، Repair و خروجی JSON برای Health است.
+```bash
+sudo ./cli/bluegate logs
+```
 
-### فرمان‌های اصلی CLI
+مشاهده Log Center.
 
-- `sudo bluegate` — باز کردن داشبورد تعاملی ترمینال.
-- `sudo bluegate update` — آپدیت امن از Release محلی یا Git با Backup، Maintenance و Health نهایی.
-- `sudo bluegate health` — بررسی سلامت سیستم، DB، وب، Telegram، Cron و امنیت.
-- `sudo bluegate health --json` — همان Health به فرمت JSON برای مانیتورینگ.
-- `sudo bluegate doctor` — تشخیص مشکل و پیشنهاد/اجرای Repair امن.
-- `sudo bluegate repair` — بازسازی Permission، Migration، Cron، nginx و Telegram webhook.
-- `sudo bluegate backup` — ساخت Backup فایل‌ها + دیتابیس.
-- `sudo bluegate backups` — لیست Backupها.
-- `sudo bluegate restore <backup>` — بازیابی Backup با Safety Backup قبل از Restore.
-- `sudo bluegate rollback <backup>` — alias برای Restore نسخه قبلی.
-- `sudo bluegate db status|migrate|optimize|console` — ابزارهای دیتابیس.
-- `sudo bluegate telegram status|webhook-refresh|sync-ui` — وضعیت و تعمیر Telegram Bot.
-- `sudo bluegate logs` — مرکز مشاهده لاگ‌ها.
-- `sudo bluegate maintenance on|off|status` — کنترل Maintenance Mode.
-- `sudo bluegate cron` — نصب/تعمیر Cronهای BlueGate.
-- `sudo bluegate configure` — Wizard تنظیم Domain، Bot، DB و سایر تنظیمات.
-- `sudo bluegate system-info` — اطلاعات سیستم و سرویس‌ها.
+```bash
+sudo ./cli/bluegate telegram status
+```
 
+مشاهده وضعیت Telegram Bot و Webhook.
 
-## Patch 3.4.2
+```bash
+sudo ./cli/bluegate telegram webhook-refresh
+```
 
-- رفع خطای `id: unbound variable` هنگام Backup در Update pipeline.
-- امن‌سازی declarationهای Bash برای اجرای CLI با `set -u`.
-- رفع خطای بالقوه indirect expansion در Configuration Wizard.
+ثبت مجدد Webhook تلگرام.
 
+```bash
+sudo ./cli/bluegate maintenance on
+sudo ./cli/bluegate maintenance off
+```
 
-## v3.4.2 — Bot Schema & Health Fix
-- Queryهای Admin Bot با schema واقعی `orders` هماهنگ شدند؛ آرشیو از `archived_at` و نوع تحویل از Product/Service Plan خوانده می‌شود.
-- ستون‌های `orders.is_archived` و `orders.delivery_type` نباید دستی ساخته شوند.
-- false-positive تشخیص PHP extensions در Health CLI رفع شد.
-- خطای قدیمی Telegram Webhook فقط وقتی اخیر باشد یا pending update وجود داشته باشد نمایش داده می‌شود.
+فعال یا غیرفعال کردن Maintenance Mode.
