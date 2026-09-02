@@ -11,3 +11,69 @@
 @media(max-width:600px){.bg-admin-modal{padding:6px;align-items:end}.bg-admin-modal-card{width:100%!important;height:auto!important;max-height:92dvh!important;border-radius:25px 25px 0 0!important}.bg-admin-modal-card.wide{height:96dvh!important;max-height:96dvh!important}.bg-admin-modal-card>header:before{content:"";position:absolute;top:6px;left:50%;translate:-50% 0;width:42px;height:4px;border-radius:999px;background:rgba(255,255,255,.14)}.bg-admin-modal-card>header{padding-top:20px}.bg-admin-prompt{padding:6px;align-items:end}.bg-admin-prompt-card{width:100%;border-radius:25px 25px 0 0;padding:18px 15px calc(16px + env(safe-area-inset-bottom))}.bg-admin-more-menu{grid-template-columns:1fr}.bg-admin-header{gap:10px}.bg-admin-header-actions{width:100%;justify-content:space-between}.bg-admin-mobile-tabs{margin-inline:-4px;border-radius:14px}.bg-admin-prompt-actions{grid-template-columns:1fr 1fr}}
 @media(max-width:390px){.bg-admin-mobile-tabs button small{font-size:10.5px!important}.bg-admin-mobile-tabs{gap:4px;padding:5px}.bg-admin-prompt-actions{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.bg-admin-modal,.bg-admin-modal-card,.bg-admin-prompt-card{animation:none!important}}
+
+
+/* BlueGate 3.0.8.9 — adaptive Web/Admin layout across intermediate aspect ratios */
+html,body{max-width:100%}
+body.member-route-active #stickyCheckout{display:none!important}
+.member-app.admin-route{padding-top:22px}
+.member-app.admin-route .member-shell{display:block!important;width:100%;max-width:min(1540px,calc(100% - 28px));margin-inline:auto}
+.member-app.admin-route .member-sidebar,.member-app.admin-route .member-topbar{display:none!important}
+.member-app.admin-route .member-main,.member-app.admin-route .member-content,#memberContent:has(.bg-admin-shell){width:100%;max-width:none!important;min-width:0!important}
+.member-app.admin-route .bg-admin-shell{width:100%;max-width:100%;box-sizing:border-box}
+.bg-admin-shell,.bg-admin-shell *{box-sizing:border-box}
+.bg-admin-main,#bgAdminPane,.catalog-control-hero,.catalog-studio-grid,.catalog-studio-card,.bg-admin-card{min-width:0;max-width:100%}
+.catalog-control-hero>div:first-child,.catalog-studio-title,.bg-card-head>div,.bg-admin-header>div:first-child{min-width:0}
+.catalog-control-hero h2,.catalog-control-hero p,.catalog-studio-title h3,.catalog-studio-title p{overflow-wrap:anywhere}
+.catalog-hero-actions{flex-wrap:wrap;min-width:0!important}
+.catalog-hero-actions button{white-space:normal}
+.catalog-studio-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))!important}
+.catalog-category-chips{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
+.catalog-stats-clean{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
+.wallet-manager-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr))!important}
+.bg-admin-stats{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))!important}
+.bg-admin-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* Narrow desktop / landscape tablet: don't squeeze a second sidebar into the page. */
+@media(max-width:1120px){
+ .member-app.admin-route{padding-top:14px}
+ .member-app.admin-route .member-shell{max-width:calc(100% - 20px)}
+ .bg-admin-shell{display:block!important}
+ .bg-admin-nav{display:none!important}
+ .bg-admin-mobile-tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));position:sticky;top:76px;z-index:30;margin:0 0 14px;padding:7px;gap:6px;overflow:visible;border:1px solid rgba(118,205,255,.1);border-radius:15px;background:rgba(7,12,25,.94);backdrop-filter:blur(14px)}
+ .bg-admin-mobile-tabs button{min-width:0;width:100%;height:52px;padding:4px;display:grid;place-items:center;gap:1px;border:0;border-radius:11px;background:transparent;color:#a9b8ca}
+ .bg-admin-mobile-tabs button span{font-size:17px}.bg-admin-mobile-tabs button small{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+ .bg-admin-mobile-tabs button.active{background:linear-gradient(135deg,rgba(43,210,255,.14),rgba(34,99,255,.09));color:#75e8ff}
+ .bg-admin-grid.two{grid-template-columns:1fr}
+ .catalog-control-hero{display:grid!important;grid-template-columns:1fr;gap:16px!important;padding:22px!important}
+ .catalog-hero-actions{justify-content:flex-start!important;width:100%}
+ .catalog-hero-actions button{flex:1 1 180px;min-width:0}
+ .catalog-plan-main{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+ .member-app.admin-route{padding:10px 0 calc(92px + env(safe-area-inset-bottom))}
+ .member-app.admin-route .member-shell{max-width:calc(100% - 12px)}
+ .bg-admin-header{display:grid!important;gap:10px!important;padding:6px 2px 14px!important}
+ .bg-admin-header h2{font-size:24px!important}.bg-admin-header p{font-size:13.5px!important;line-height:1.7}
+ .bg-admin-header-actions{width:100%;display:flex!important;flex-wrap:wrap}.bg-admin-header-actions>*{flex:1 1 140px}
+ .bg-admin-mobile-tabs{top:64px;margin-inline:0!important;border-radius:14px!important}
+ .bg-admin-card{padding:15px!important;border-radius:17px!important}
+ .bg-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+ .catalog-control-hero{padding:18px!important;border-radius:18px!important}
+ .catalog-control-hero h2{font-size:22px!important}.catalog-control-hero p{font-size:13.5px!important}
+ .catalog-hero-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}.catalog-hero-actions button{width:100%;min-width:0!important}
+ .catalog-studio-grid,.catalog-category-chips{grid-template-columns:1fr!important}
+ .catalog-stats-clean{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .catalog-studio-card>header{grid-template-columns:auto minmax(0,1fr)!important}.catalog-studio-state{grid-column:1/-1!important;justify-content:flex-start!important}
+ .catalog-studio-card>footer{display:grid!important;grid-template-columns:1fr!important}.catalog-studio-card>footer button{width:100%}
+ .catalog-plan-main,.catalog-form-grid,.wallet-popup-grid{grid-template-columns:1fr!important}
+ .bg-admin-row{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important}.bg-row-actions{grid-column:1/-1!important;width:100%!important;max-width:none!important;display:grid!important;grid-template-columns:1fr 1fr!important}
+}
+@media(max-width:460px){
+ .member-app.admin-route .member-shell{max-width:calc(100% - 8px)}
+ .bg-admin-mobile-tabs{grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:5px}.bg-admin-mobile-tabs button small{font-size:9.5px!important}
+ .bg-admin-stats,.catalog-stats-clean{grid-template-columns:1fr 1fr!important}
+ .catalog-hero-actions{grid-template-columns:1fr!important}
+ .bg-row-actions{grid-template-columns:1fr!important}
+ .catalog-plan-main{grid-template-columns:1fr!important}
+}
