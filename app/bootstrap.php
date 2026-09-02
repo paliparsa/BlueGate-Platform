@@ -2171,6 +2171,9 @@ function miniapp_inline_keyboard(bool $admin=false): string {
     if (!$admin && setting_bool('bot_quick_shop_enabled', true)) {
         $rows[] = [['text'=>'⚡ خرید سریع', 'callback_data'=>'u_shop'], ['text'=>'🌐 سرویس‌های من', 'callback_data'=>'u_services']];
     }
+    if ($admin) {
+        $rows[] = [['text'=>'🛠 کنترل سنتر ادمین', 'callback_data'=>'adm_home']];
+    }
     if ($mini) {
         $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
     }
@@ -2588,15 +2591,106 @@ function show_sales_report(int $chat_id, $message_id=null): void {
     send_or_edit($chat_id, $message_id, $txt, admin_shop_keyboard());
 }
 function admin_keyboard(): string {
-    $rows = [
-        [['text'=>'🛒 مدیریت فروشگاه'], ['text'=>'📈 آمار کل']],
-        [['text'=>'💳 تغییر اعتبار']],
-        [['text'=>'🎁 پاداش خرید'], ['text'=>'⚙️ تنظیمات پاداش‌ها']],
-        [['text'=>'💾 بکاپ'], ['text'=>'🎨 تنظیم رنگ‌ها']],
-        [['text'=>'📢 پیام همگانی']],
-        [['text'=>'🏆 لیدربورد ادمین'], ['text'=>'🏠 صفحه اول']],
+    $pendingOrders=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('receipt_submitted','reviewing','payment_confirmed','preparing') AND COALESCE(is_archived,0)=0")->fetchColumn();
+    $pendingTopups=table_exists('credit_topups')?(int)db()->query("SELECT COUNT(*) FROM credit_topups WHERE status IN ('receipt_submitted','reviewing')")->fetchColumn():0;
+    $expiring=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status='delivered' AND expires_at IS NOT NULL AND expires_at>=NOW() AND expires_at<DATE_ADD(NOW(),INTERVAL 7 DAY)")->fetchColumn();
+    $rows=[
+        [['text'=>'📣 Broadcast Center','callback_data'=>'adm_bc'],['text'=>'🔔 اعلان Mini App','callback_data'=>'adm_ntf']],
+        [['text'=>'📦 سفارش‌های منتظر · '.$pendingOrders,'callback_data'=>'adm_ops_orders'],['text'=>'💳 شارژها · '.$pendingTopups,'callback_data'=>'adm_ops_topups']],
+        [['text'=>'👤 مشتری / Customer 360','callback_data'=>'adm_cust'],['text'=>'⏳ انقضا ۷ روز · '.$expiring,'callback_data'=>'adm_exp']],
+        [['text'=>'📊 داشبورد سریع','callback_data'=>'adm_ops_dash'],['text'=>'🛒 مدیریت فروشگاه','callback_data'=>'adm_shop']],
+        [['text'=>'⚙️ ابزارهای بیشتر','callback_data'=>'adm_more'],['text'=>'🏠 منوی کاربر','callback_data'=>'main']],
     ];
-    return keyboard_markup($rows);
+    return json_markup(['inline_keyboard'=>$rows]);
+}
+
+function admin_more_keyboard(): string {
+    return json_markup(['inline_keyboard'=>[
+        [['text'=>'📈 آمار کل','callback_data'=>'adm_stats'],['text'=>'💳 تغییر اعتبار','callback_data'=>'adm_balance']],
+        [['text'=>'🎁 پاداش خرید','callback_data'=>'adm_purchase'],['text'=>'⚙️ تنظیمات پاداش','callback_data'=>'adm_settings']],
+        [['text'=>'💾 بکاپ','callback_data'=>'adm_backup'],['text'=>'🎨 رنگ‌ها','callback_data'=>'adm_theme']],
+        [['text'=>'🏆 لیدربورد','callback_data'=>'adm_leaderboard']],
+        [['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']],
+    ]]);
+}
+function admin_audience_user_ids(string $audience): array {
+    $where="u.deleted_at IS NULL AND u.is_banned=0 AND u.telegram_id IS NOT NULL";
+    if($audience==='customers') $where.=" AND EXISTS(SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered')";
+    elseif($audience==='vpn') $where.=" AND EXISTS(SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered' AND (LOWER(COALESCE(o.delivery_type,''))='vpn' OR LOWER(COALESCE(o.delivery_url,'')) LIKE '%/sub/%'))";
+    elseif($audience==='recent') $where.=" AND u.updated_at>=DATE_SUB(NOW(),INTERVAL 30 DAY)";
+    return db()->query("SELECT DISTINCT u.id FROM users u WHERE {$where} ORDER BY u.id")->fetchAll(PDO::FETCH_COLUMN)?:[];
+}
+function admin_audience_label(string $audience): string {return ['all'=>'همه کاربران','customers'=>'مشتری‌ها','vpn'=>'مشتری‌های VPN','recent'=>'فعال‌های ۳۰ روز اخیر'][$audience]??'همه کاربران';}
+function admin_broadcast_home(int $chat_id,$message_id,string $forcedChannel=''): void {
+    $channel=$forcedChannel?:'both';
+    $channelLabel=['telegram'=>'Telegram','mini'=>'Mini App','both'=>'Telegram + Mini App'][$channel]??'هر دو';
+    $rows=[];
+    if(!$forcedChannel)$rows[]=[['text'=>'✈️ فقط Telegram','callback_data'=>'adm_bc_ch_telegram'],['text'=>'🔔 فقط Mini App','callback_data'=>'adm_bc_ch_mini']];
+    if(!$forcedChannel)$rows[]=[['text'=>'⚡ هر دو همزمان','callback_data'=>'adm_bc_ch_both']];
+    foreach([['all','👥 همه'],['customers','🛍 مشتری‌ها'],['vpn','🔐 VPN'],['recent','🟢 فعال اخیر']] as $a){
+        $count=count(admin_audience_user_ids($a[0]));
+        $rows[]=[['text'=>$a[1].' · '.$count,'callback_data'=>'adm_bc_a_'.$channel.'_'.$a[0]]];
+    }
+    $rows[]=[['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']];
+    send_or_edit($chat_id,$message_id,"📣 <b>Broadcast Center</b>\n\nکانال: <b>{$channelLabel}</b>\nمخاطب رو با دکمه انتخاب کن.",json_markup(['inline_keyboard'=>$rows]));
+}
+function admin_broadcast_preview_keyboard(): string {return json_markup(['inline_keyboard'=>[[['text'=>'✅ ارسال نهایی','callback_data'=>'adm_bc_send'],['text'=>'✏️ تغییر پیام','callback_data'=>'adm_bc_edit']],[['text'=>'❌ لغو','callback_data'=>'adm_home']]]]);}
+function admin_send_telegram_broadcast(array $ids,string $text): array {
+    $sent=0;$failed=0;
+    if(!$ids)return ['sent'=>0,'failed'=>0];
+    $ph=implode(',',array_fill(0,count($ids),'?'));
+    $q=db()->prepare("SELECT telegram_id FROM users WHERE id IN ({$ph}) AND telegram_id IS NOT NULL");$q->execute(array_map('intval',$ids));
+    foreach($q->fetchAll(PDO::FETCH_COLUMN)?:[] as $tid){try{$r=tg('sendMessage',['chat_id'=>(int)$tid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true]);if(is_array($r)&&array_key_exists('ok',$r)&&!$r['ok'])$failed++;else$sent++;}catch(Throwable $e){$failed++;}usleep(35000);}return compact('sent','failed');
+}
+function admin_create_mini_campaign_for_ids(int $adminTid,array $ids,string $body,string $audience): int {
+    if(!table_exists('notification_campaigns')||!table_exists('user_notifications'))return 0;
+    $title='اعلان BlueGate';$pdo=db();$pdo->beginTransaction();try{
+        $q=$pdo->prepare('INSERT INTO notification_campaigns (admin_telegram_id,type,title,body,action_type,action_value,audience,recipient_count) VALUES (?,"important",?,?,"store",NULL,?,?)');
+        $q->execute([$adminTid,$title,mb_substr($body,0,1000),mb_substr($audience,0,32),count($ids)]);$cid=(int)$pdo->lastInsertId();
+        $ins=$pdo->prepare('INSERT INTO user_notifications (user_id,type,title,body,action_type,campaign_id) VALUES (?,"important",?,?,"store",?)');
+        foreach($ids as $uid)$ins->execute([(int)$uid,$title,mb_substr($body,0,1000),$cid]);$pdo->commit();return $cid;
+    }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+}
+function admin_quick_dashboard(int $chat_id,$message_id): void {
+    $users=(int)db()->query('SELECT COUNT(*) FROM users WHERE deleted_at IS NULL')->fetchColumn();
+    $new=(int)db()->query('SELECT COUNT(*) FROM users WHERE DATE(created_at)=CURDATE()')->fetchColumn();
+    $orders=(int)db()->query('SELECT COUNT(*) FROM orders WHERE DATE(created_at)=CURDATE()')->fetchColumn();
+    $sales=(int)db()->query("SELECT COALESCE(SUM(final_amount),0) FROM orders WHERE DATE(created_at)=CURDATE() AND status IN ('payment_confirmed','preparing','delivered')")->fetchColumn();
+    $pending=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('receipt_submitted','reviewing','payment_confirmed','preparing') AND COALESCE(is_archived,0)=0")->fetchColumn();
+    $topups=table_exists('credit_topups')?(int)db()->query("SELECT COUNT(*) FROM credit_topups WHERE status IN ('receipt_submitted','reviewing')")->fetchColumn():0;
+    $txt="📊 <b>داشبورد سریع</b>\n\n💰 فروش امروز: <b>".money($sales)."</b>\n🧾 سفارش امروز: <b>{$orders}</b>\n📦 نیازمند رسیدگی: <b>{$pending}</b>\n💳 شارژ منتظر: <b>{$topups}</b>\n👥 کاربران: <b>{$users}</b>\n🆕 امروز: <b>{$new}</b>";
+    send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>[[['text'=>'🔄 بروزرسانی','callback_data'=>'adm_ops_dash']],[['text'=>'📦 سفارش‌ها','callback_data'=>'adm_ops_orders'],['text'=>'💳 شارژها','callback_data'=>'adm_ops_topups']],[['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']]]]));
+}
+function admin_pending_orders_center(int $chat_id,$message_id): void {
+    $orders=admin_orders(['receipt_submitted','reviewing','payment_confirmed','preparing'],15,'',false);$kb=[];$txt="📦 <b>سفارش‌های نیازمند رسیدگی</b>\n\n";
+    foreach($orders as $o){$txt.=order_status_emoji((string)$o['status']).' <code>#'.$o['id'].'</code> · '.h(order_catalog_display_name($o)).' · <b>'.money((int)$o['final_amount'])."</b>\n";$kb[]=[['text'=>'مدیریت #'.$o['id'].' · '.order_status_fa((string)$o['status']),'callback_data'=>'ord_view_'.(int)$o['id']]];}
+    if(!$orders)$txt.='همه‌چیز مرتب است ✅';$kb[]=[['text'=>'🔄 بروزرسانی','callback_data'=>'adm_ops_orders'],['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']];send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$kb]));
+}
+function admin_topup_center(int $chat_id,$message_id): void {
+    if(!table_exists('credit_topups')){send_or_edit($chat_id,$message_id,'سیستم شارژ اعتبار فعال نیست.',admin_keyboard());return;}
+    $rows=db()->query("SELECT t.*,u.telegram_id,u.username,u.first_name FROM credit_topups t JOIN users u ON u.id=t.user_id WHERE t.status IN ('receipt_submitted','reviewing') ORDER BY t.id DESC LIMIT 12")->fetchAll()?:[];$kb=[];
+    $txt="💳 <b>شارژهای نیازمند بررسی</b>\n\n";
+    foreach($rows as $t){$name=$t['username']?'@'.$t['username']:($t['first_name']?:$t['telegram_id']);$txt.="#{$t['id']} · ".h($name)." · <b>".money((int)$t['amount'])."</b>\n";$kb[]=[['text'=>'بررسی #'.$t['id'].' · '.money((int)$t['amount']),'callback_data'=>'adm_tu_'.(int)$t['id']]];}
+    if(!$rows)$txt.='درخواست منتظری وجود ندارد ✅';$kb[]=[['text'=>'🔄 بروزرسانی','callback_data'=>'adm_ops_topups'],['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']];send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$kb]));
+}
+function admin_topup_view(int $chat_id,$message_id,int $id): void {
+    $t=credit_topup_by_id($id);if(!$t){send_or_edit($chat_id,$message_id,'درخواست پیدا نشد.',admin_keyboard());return;}$u=get_user_by_id((int)$t['user_id']);$d=json_decode((string)($t['payment_details']??''),true);if(!is_array($d))$d=[];
+    $txt="💳 <b>شارژ #{$id}</b>\n\n👤 ".h(display_name($u?:[]))."\n🆔 <code>".h((string)($u['telegram_id']??''))."</code>\n💰 مبلغ: <b>".money((int)$t['amount'])."</b>\nروش: <b>".h(payment_method_fa((string)($t['payment_method']??'')))."</b>\nوضعیت: <b>".h(credit_topup_status_fa((string)$t['status']))."</b>";
+    if(!empty($d['note']))$txt.="\n\n📝 ".h((string)$d['note']);if(!empty($t['tx_hash']))$txt.="\n🔗 <code>".h((string)$t['tx_hash'])."</code>";
+    $kb=[[['text'=>'✅ تایید و شارژ','callback_data'=>'adm_tu_ok_'.$id],['text'=>'❌ رد','callback_data'=>'adm_tu_no_'.$id]]];if(!empty($t['receipt_file_id']))$kb[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'adm_tu_rcpt_'.$id]];$kb[]=[['text'=>'👤 مشتری','callback_data'=>'adm_cust_id_'.(int)$t['user_id']]];$kb[]=[['text'=>'🔙 لیست شارژها','callback_data'=>'adm_ops_topups']];send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$kb]));
+}
+function admin_customer_search_results(int $chat_id,string $query): void {
+    $qv='%'.trim($query).'%';$q=db()->prepare('SELECT id,telegram_id,username,first_name,last_name,balance FROM users WHERE deleted_at IS NULL AND (CAST(telegram_id AS CHAR)=? OR username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?) ORDER BY id DESC LIMIT 10');$q->execute([trim($query),$qv,$qv,$qv,$qv]);$rows=$q->fetchAll()?:[];$kb=[];$txt="👤 <b>نتایج مشتری</b>\n\n";
+    foreach($rows as $u){$name=display_name($u);$txt.='• '.h($name).' · <code>'.h((string)$u['telegram_id'])."</code>\n";$kb[]=[['text'=>'👤 '.mb_substr($name,0,24).' · '.money((int)$u['balance']),'callback_data'=>'adm_cust_id_'.(int)$u['id']]];}
+    if(!$rows)$txt.='کاربری پیدا نشد.';$kb[]=[['text'=>'🔎 جستجوی دوباره','callback_data'=>'adm_cust'],['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']];send_msg($chat_id,$txt,json_markup(['inline_keyboard'=>$kb]));
+}
+function admin_customer_360_bot(int $chat_id,$message_id,int $uid): void {
+    $u=get_user_by_id($uid);if(!$u){send_or_edit($chat_id,$message_id,'کاربر پیدا نشد.',admin_keyboard());return;}$c=customer_stats($uid);$orders=user_orders($uid,5,true);$txt="👤 <b>Customer 360</b>\n\n<b>".h(display_name($u))."</b>\n🆔 <code>".h((string)$u['telegram_id'])."</code>".(!empty($u['username'])?"\n@".h($u['username']):'')."\n💰 اعتبار: <b>".money((int)$u['balance'])."</b>\n🧾 خرید موفق: <b>".(int)($c['orders_count']??0)."</b>\n💵 مجموع خرید: <b>".money((int)($c['total_spent']??0))."</b>\n\n<b>سفارش‌های اخیر</b>\n";foreach($orders as $o)$txt.='• #'.$o['id'].' · '.h(order_catalog_display_name($o)).' · '.h(order_status_fa((string)$o['status']))."\n";if(!$orders)$txt.='—';
+    $kb=[[['text'=>'➕ 50K','callback_data'=>'adm_cadj_'.$uid.'_50000'],['text'=>'➕ 100K','callback_data'=>'adm_cadj_'.$uid.'_100000']],[['text'=>'➖ 50K','callback_data'=>'adm_cadj_'.$uid.'_-50000'],['text'=>'➖ 100K','callback_data'=>'adm_cadj_'.$uid.'_-100000']],[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_corders_'.$uid],['text'=>'✉️ پیام مستقیم','callback_data'=>'adm_cmsg_'.$uid]],[['text'=>'🔎 مشتری دیگر','callback_data'=>'adm_cust'],['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']]];send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$kb]));
+}
+function admin_expiring_center(int $chat_id,$message_id,int $days=7): void {
+    $days=max(1,min(30,$days));$q=db()->prepare("SELECT o.*,u.telegram_id,u.username,u.first_name FROM orders o JOIN users u ON u.id=o.user_id WHERE o.status='delivered' AND o.expires_at IS NOT NULL AND o.expires_at>=NOW() AND o.expires_at<DATE_ADD(NOW(),INTERVAL ? DAY) ORDER BY o.expires_at ASC LIMIT 20");$q->execute([$days]);$rows=$q->fetchAll()?:[];$kb=[[['text'=>'امروز','callback_data'=>'adm_exp_1'],['text'=>'۳ روز','callback_data'=>'adm_exp_3'],['text'=>'۷ روز','callback_data'=>'adm_exp_7']]];$txt="⏳ <b>سرویس‌های نزدیک انقضا · {$days} روز</b>\n\n";foreach($rows as $o){$n=$o['username']?'@'.$o['username']:($o['first_name']?:$o['telegram_id']);$txt.='• '.h($n).' · '.h(order_catalog_display_name($o)).' · <code>'.h(substr((string)$o['expires_at'],0,10))."</code>\n";$kb[]=[['text'=>'🔔 یادآوری #'.$o['id'],'callback_data'=>'adm_expr_'.(int)$o['id']],['text'=>'👤','callback_data'=>'adm_cust_id_'.(int)$o['user_id']]];}
+    if(!$rows)$txt.='موردی نیست ✅';if($rows)$kb[]=[['text'=>'📣 یادآوری همه این لیست','callback_data'=>'adm_expall_'.$days]];$kb[]=[['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']];send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$kb]));
 }
 function force_join_keyboard(): string {
     $channel = ltrim((string)app_config('FORCE_JOIN_CHANNEL', ''), '@');
