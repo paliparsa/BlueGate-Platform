@@ -49,6 +49,16 @@ function send_home_message(int $chat_id, array $user, bool $withKeyboard=true): 
     // create a persistent WebApp reply keyboard above the Telegram keyboard.
     send_msg($chat_id, main_text($user), miniapp_inline_keyboard(is_full_admin($chat_id)));
 }
+function route_bot_start_payload(int $chat_id, $message_id, array $user, string $payload): bool {
+    $payload=trim($payload);
+    if($payload==='')return false;
+    clear_step($chat_id);
+    if(preg_match('/^buy_p_(\d+)$/',$payload,$m)){show_shop_product($chat_id,$message_id,(int)$m[1]);return true;}
+    if(preg_match('/^buy_v_(\d+)_(\d+)$/',$payload,$m)){show_quick_plan_confirm($chat_id,$message_id,(int)$m[1],(int)$m[2]);return true;}
+    if($payload==='shop'){show_shop_home($chat_id,$message_id);return true;}
+    if($payload==='services'){show_bot_services($chat_id,$message_id,(int)$user['id']);return true;}
+    return false;
+}
 function save_user_contact_from_message(int $chat_id, array $message): bool {
     if (empty($message['contact']) || !is_array($message['contact'])) return false;
     $contact = $message['contact'];
@@ -94,16 +104,20 @@ function handle_message(array $message): void {
     $text = trim((string)($message['text'] ?? ''));
 
     $ref = null;
+    $startPayload = '';
     if (str_starts_with($text, '/start')) {
         $parts = explode(' ', $text, 2);
-        $payload = $parts[1] ?? '';
-        if (str_starts_with($payload, 'ref_')) $ref = substr($payload, 4);
-        elseif ($payload !== '') $ref = $payload;
+        $startPayload = trim((string)($parts[1] ?? ''));
+        if (str_starts_with($startPayload, 'ref_')) $ref = substr($startPayload, 4);
     }
 
     $user = create_or_update_user($from, $ref);
     if($user) $user=sync_telegram_avatar($user,false);
     if(user_is_blocked($user)){ send_msg($chat_id,'⛔️ دسترسی این حساب مسدود شده است.'); return; }
+    if ($startPayload !== '' && !str_starts_with($startPayload, 'ref_')) {
+        set_step($chat_id, 'bot_start_payload', $startPayload);
+        $user=get_user_by_tid($chat_id) ?: $user;
+    }
     if(is_full_admin($chat_id)&&in_array((string)($user['step']??''),['admin_add_product','admin_add_variant','admin_add_category','admin_edit_product','admin_edit_variant','admin_edit_category'],true)){clear_step($chat_id);send_msg($chat_id,'ℹ️ مدیریت مستقیم Products/Variants قدیمی غیرفعال شده است. برای ساخت و ویرایش محصول از Catalog Studio در پنل وب استفاده کن.',admin_keyboard());return;}
 
     if (is_full_admin($chat_id) && in_array(strtolower($text), ['/backup','backup','/adminbackup'], true)) {
@@ -155,11 +169,16 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
     }
     try_reward_referrer(get_user_by_tid($chat_id));
     $user = get_user_by_tid($chat_id);
+    if (!str_starts_with($text, '/start') && ($user['step'] ?? '') === 'bot_start_payload') {
+        $pending=(string)($user['step_payload']??'');
+        if($pending!=='' && route_bot_start_payload($chat_id,null,$user,$pending))return;
+    }
 
     if (str_starts_with($text, '/start')) {
         clear_step($chat_id);
         $user = get_user_by_tid($chat_id);
         maybe_notify_new_start($user);
+        if ($startPayload !== '' && !str_starts_with($startPayload, 'ref_') && route_bot_start_payload($chat_id,null,$user,$startPayload)) return;
         send_home_message($chat_id, $user);
         return;
     }
@@ -167,6 +186,12 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
         clear_step($chat_id);
         handle_user_callback($chat_id, null, $user, 'u_orders');
         return;
+    }
+    if (preg_match('~^/(?:shop|buy)(?:@\w+)?$~i', $text)) {
+        clear_step($chat_id); show_shop_home($chat_id, null); return;
+    }
+    if (preg_match('~^/services(?:@\w+)?$~i', $text)) {
+        clear_step($chat_id); show_bot_services($chat_id, null, (int)$user['id']); return;
     }
     if (preg_match('~^/support(?:@\w+)?$~i', $text)) {
         clear_step($chat_id);
@@ -225,6 +250,8 @@ function handle_callback(array $cb): void {
         try_reward_referrer(get_user_by_tid($chat_id));
         $user = get_user_by_tid($chat_id);
         maybe_notify_new_start($user);
+        $pending=(($user['step']??'')==='bot_start_payload')?(string)($user['step_payload']??''):'';
+        if($pending!=='' && route_bot_start_payload($chat_id,$message_id,$user,$pending))return;
         send_msg($chat_id, "✅ عضویت تأیید شد. خوش اومدی!", main_menu_keyboard(is_full_admin($chat_id)));
         send_home_message($chat_id, $user, false);
         return;
@@ -238,7 +265,7 @@ function handle_callback(array $cb): void {
     $user = get_user_by_tid($chat_id);
 
     if ($data === 'main') { clear_step($chat_id); send_or_edit($chat_id, $message_id, main_text($user), miniapp_inline_keyboard(is_full_admin($chat_id))); return; }
-    if (str_starts_with($data, 'u_') || str_starts_with($data, 'shop_') || str_starts_with($data, 'order_')) { handle_user_callback($chat_id, $message_id, $user, $data); return; }
+    if (str_starts_with($data, 'u_') || str_starts_with($data, 'shop_') || str_starts_with($data, 'order_') || str_starts_with($data, 'svc_')) { handle_user_callback($chat_id, $message_id, $user, $data); return; }
     if (str_starts_with($data, 'adm_') || str_starts_with($data, 'set_') || str_starts_with($data, 'theme_') || str_starts_with($data, 'wd_') || str_starts_with($data, 'prod_') || str_starts_with($data, 'cat_') || str_starts_with($data, 'coupon_') || str_starts_with($data, 'ord_') || str_starts_with($data, 'prodwiz_') || str_starts_with($data, 'catwiz_') || str_starts_with($data, 'varwiz_') || str_starts_with($data, 'invwiz_') || str_starts_with($data, 'inv_') || str_starts_with($data, 'variant_') || str_starts_with($data, 'edit_') || str_starts_with($data, 'hard_') || str_starts_with($data, 'toggle_')) {
         if (!is_full_admin($chat_id)) { send_msg($chat_id, 'دسترسی ادمین ندارید.'); return; }
         handle_admin_callback($chat_id, $message_id, $user, $data); return;
@@ -324,6 +351,17 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
         send_or_edit($chat_id, $message_id, $txt, back_main_keyboard()); return;
     }
     if ($data === 'u_shop') { show_shop_home($chat_id, $message_id); return; }
+    if ($data === 'u_services') { show_bot_services($chat_id, $message_id, (int)$user['id']); return; }
+    if (str_starts_with($data, 'svc_view_')) { show_bot_service($chat_id,$message_id,(int)$user['id'],(int)substr($data,9)); return; }
+    if (str_starts_with($data, 'svc_renew_')) {
+        $oldId=(int)substr($data,10);
+        try{$order=create_renewal_order_from_order((int)$user['id'],$oldId);show_order_invoice($chat_id,$message_id,$order);notify_admins("🔄 <b>تمدید سریع از Bot</b>
+سفارش جدید: <code>#{$order['id']}</code>
+تمدید سفارش: <code>#{$oldId}</code>
+کاربر: <code>{$chat_id}</code>");}
+        catch(Throwable $e){send_or_edit($chat_id,$message_id,'این سرویس در حال حاضر قابل تمدید نیست.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 سرویس‌های من','callback_data'=>'u_services']]]]));}
+        return;
+    }
     if ($data === 'u_orders') { show_user_orders($chat_id, $message_id, (int)$user['id']); return; }
     if ($data === 'shop_featured') { show_shop_category($chat_id, $message_id, 0, true); return; }
     if (str_starts_with($data, 'shop_cat_')) { show_shop_category($chat_id, $message_id, (int)substr($data, 9)); return; }

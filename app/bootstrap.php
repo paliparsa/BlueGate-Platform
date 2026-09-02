@@ -238,6 +238,8 @@ function migrate(): void {
     seed_setting('delivery_template_code', "🎟 کد/لایسنس شما آماده شد\n\n{delivery}");
     seed_setting('delivery_template_manual', "📦 سفارش شما آماده شد\n\n{delivery}");
     seed_setting('storefront_brand_subtitle', 'Digital Services');
+    seed_setting('bot_quick_shop_enabled', '1');
+    seed_setting('bot_quick_shop_show_prices', '1');
     seed_setting('storefront_hero_title', 'سرویس‌های دیجیتال، ساده و سریع');
     seed_setting('storefront_hero_text', 'VPN، تلگرام استارز و تلگرام پرمیوم با قیمت شفاف و سفارش مستقیم.');
     seed_setting('storefront_announcement_enabled', '1');
@@ -2166,8 +2168,11 @@ function miniapp_url(bool $admin=false): string {
 function miniapp_inline_keyboard(bool $admin=false): string {
     $mini = miniapp_url($admin);
     $rows = [];
+    if (!$admin && setting_bool('bot_quick_shop_enabled', true)) {
+        $rows[] = [['text'=>'⚡ خرید سریع', 'callback_data'=>'u_shop'], ['text'=>'🌐 سرویس‌های من', 'callback_data'=>'u_services']];
+    }
     if ($mini) {
-        $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن BlueGate', 'web_app'=>['url'=>$mini]]];
+        $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
     }
     $rows[] = [
         ['text'=>'📦 سفارش‌های من', 'callback_data'=>'u_orders'],
@@ -2175,6 +2180,7 @@ function miniapp_inline_keyboard(bool $admin=false): string {
     ];
     return json_markup(['inline_keyboard'=>$rows]);
 }
+
 function contact_request_keyboard(): string {
     return keyboard_markup([[['text'=>'📱 ارسال شماره موبایل', 'request_contact'=>true]]], true, true);
 }
@@ -2236,19 +2242,80 @@ function admin_order_keyboard(int $orderId): string {
         [['text'=>'🧾 سفارش‌ها', 'callback_data'=>'adm_orders'], ['text'=>'🛒 فروشگاه ادمین', 'callback_data'=>'adm_shop']],
     ]]);
 }
+function bot_quick_buy_link(int $productId, ?int $variantId=null): string {
+    $bot=trim((string)app_config('BOT_USERNAME',''));
+    if($bot==='') return '';
+    $payload=$variantId ? ('buy_v_'.$productId.'_'.$variantId) : ('buy_p_'.$productId);
+    return 'https://t.me/'.ltrim($bot,'@').'?start='.$payload;
+}
+function show_bot_services(int $chat_id, $message_id, int $userId): void {
+    $services=user_active_services($userId,12);
+    $rows=[];
+    $txt="🌐 <b>سرویس‌های من</b>\n\n";
+    if(!$services){
+        $txt.="هنوز سرویس فعالی نداری. از خرید سریع می‌تونی اولین سرویس رو تهیه کنی.";
+    } else {
+        foreach($services as $o){
+            $name=(string)($o['display_name']??$o['product_name']??'سرویس');
+            $expiry=!empty($o['expires_at']) ? (' · تا '.substr((string)$o['expires_at'],0,10)) : '';
+            $txt.='• <b>'.h($name).'</b>'.$expiry."\n";
+            $rows[]=[['text'=>'⚙️ '.mb_substr($name,0,30), 'callback_data'=>'svc_view_'.(int)$o['id']]];
+        }
+    }
+    $rows[]=[['text'=>'⚡ خرید سریع','callback_data'=>'u_shop'],['text'=>'🧾 سفارش‌ها','callback_data'=>'u_orders']];
+    $rows[]=[['text'=>'🔙 منوی اصلی','callback_data'=>'main']];
+    send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$rows]));
+}
+function show_bot_service(int $chat_id, $message_id, int $userId, int $orderId): void {
+    $o=order_by_id($orderId);
+    if(!$o || (int)$o['user_id']!==$userId || normalize_order_status((string)$o['status'])!=='delivered'){
+        send_or_edit($chat_id,$message_id,'این سرویس در دسترس نیست.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 سرویس‌های من','callback_data'=>'u_services']]]]));return;
+    }
+    $name=order_catalog_display_name($o);
+    $txt="🌐 <b>".h($name)."</b>\n\n";
+    if(!empty($o['expires_at']))$txt.='فعال تا: <code>'.h(substr((string)$o['expires_at'],0,19))."</code>\n";
+    if(!empty($o['delivery_url']))$txt.="\n🔗 <b>لینک سرویس</b>\n<code>".h((string)$o['delivery_url'])."</code>\n";
+    elseif(!empty($o['delivery_text']))$txt.="\n📦 <b>اطلاعات تحویل</b>\n<code>".h((string)$o['delivery_text'])."</code>\n";
+    $rows=[];
+    $url=trim((string)($o['delivery_url']??''));
+    if($url!=='' && preg_match('~^https?://~i',$url))$rows[]=[['text'=>'↗️ باز کردن سرویس','url'=>$url]];
+    $rows[]=[['text'=>'🔄 تمدید همین سرویس','callback_data'=>'svc_renew_'.$orderId]];
+    $rows[]=[['text'=>'🔙 سرویس‌های من','callback_data'=>'u_services'],['text'=>'🧾 سفارش','callback_data'=>'order_view_'.$orderId]];
+    send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$rows]));
+}
+function show_quick_plan_confirm(int $chat_id, $message_id, int $productId, int $variantId): void {
+    $p=shop_product($productId);$v=product_variant($variantId);
+    if(!$p||!$v||(int)$v['product_id']!==$productId||(int)($p['is_active']??0)!==1||(int)($v['is_active']??0)!==1){
+        send_or_edit($chat_id,$message_id,'این پلن در حال حاضر قابل خرید نیست.',shop_back_keyboard());return;
+    }
+    $txt="⚡ <b>خرید سریع</b>\n\nمحصول: <b>".h((string)$p['name'])."</b>\nپلن: <b>".h((string)$v['title'])."</b>\nقیمت فعلی: <b>".money(variant_current_price_toman($v))."</b>\n\nبرای ساخت سفارش تایید کن.";
+    $kb=json_markup(['inline_keyboard'=>[
+        [['text'=>'✅ ساخت سفارش','callback_data'=>'shop_buyv_'.$productId.'_'.$variantId]],
+        [['text'=>'🧩 انتخاب پلن دیگر','callback_data'=>'shop_prod_'.$productId],['text'=>'🔙 فروشگاه','callback_data'=>'u_shop']]
+    ]]);
+    send_or_edit($chat_id,$message_id,$txt,$kb);
+}
+
 function show_shop_home(int $chat_id, $message_id=null): void {
+    if(!setting_bool('bot_quick_shop_enabled', true)){
+        send_or_edit($chat_id,$message_id,'خرید سریع بات فعلاً غیرفعال است.',main_menu_keyboard(is_full_admin($chat_id)));return;
+    }
     $cats = (function_exists('catalog_enabled') && catalog_enabled()) ? catalog_store_categories(true) : shop_categories(true);
-    $rows = [];
+    $buttons=[];
     foreach ($cats as $c) {
         $callbackId = isset($c['legacy_category_id']) ? (int)$c['legacy_category_id'] : (int)$c['id'];
         if ($callbackId <= 0) continue;
-        $rows[] = [['text'=>trim(($c['emoji'] ?: '🛒').' '.$c['title']), 'callback_data'=>'shop_cat_'.$callbackId]];
+        $buttons[]=['text'=>trim(($c['emoji'] ?: '🛒').' '.$c['title']), 'callback_data'=>'shop_cat_'.$callbackId];
     }
-    $rows[] = [['text'=>'⭐ محصولات ویژه', 'callback_data'=>'shop_featured'], ['text'=>'📦 همه محصولات', 'callback_data'=>'shop_cat_0']];
-    $rows[] = [['text'=>'🧾 سفارش‌های من', 'callback_data'=>'u_orders'], ['text'=>'🔙 منوی اصلی', 'callback_data'=>'main']];
-    $txt = "🛒 <b>فروشگاه</b>\n\nمحصول را انتخاب کن؛ اگر محصول پلن داشته باشد، قبل از سفارش پلن را انتخاب می‌کنی. وضعیت سفارش هم مرحله‌به‌مرحله نمایش داده می‌شود.";
+    $rows=[];
+    foreach(array_chunk($buttons,2) as $pair)$rows[]=$pair;
+    $rows[] = [['text'=>'⭐ ویژه', 'callback_data'=>'shop_featured'], ['text'=>'📦 همه', 'callback_data'=>'shop_cat_0']];
+    $rows[] = [['text'=>'🌐 سرویس‌های من', 'callback_data'=>'u_services'], ['text'=>'🧾 سفارش‌های من', 'callback_data'=>'u_orders']];
+    $rows[] = [['text'=>'🔙 منوی اصلی', 'callback_data'=>'main']];
+    $txt = "⚡ <b>خرید سریع BlueGate</b>\n\nدسته رو انتخاب کن؛ قیمت و موجودی مستقیم از کاتالوگ اصلی BlueGate خونده می‌شه و قبل از ثبت سفارش دوباره بررسی می‌شه.";
     send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>$rows]));
 }
+
 function show_shop_category(int $chat_id, $message_id, int $categoryId=0, bool $featured=false): void {
     $products = function_exists('storefront_shop_products') ? storefront_shop_products() : shop_products(null, true);
     if ($categoryId) $products = array_values(array_filter($products, fn($p)=>(int)($p['category_id'] ?? 0) === $categoryId));
@@ -2516,7 +2583,7 @@ function force_join_keyboard(): string {
 }
 function main_text(array $user): string {
     $brand = h(setting('brand_name', app_config('BRAND_NAME', 'BlueGate')));
-    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای استفاده از فروشگاه، سفارش‌ها و اعتبار BlueGate، مینی اپلیکیشن اختصاصی را باز کنید.\nاز دکمه‌های زیر می‌تونی BlueGate رو باز کنی، سفارش‌هات رو ببینی یا با پشتیبانی در ارتباط باشی 👇\n\n" . vip_line($user);
+    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای خرید دم‌دستی، <b>⚡ خرید سریع</b> رو بزن و بدون باز کردن Mini App محصول و پلن رو انتخاب کن. برای امکانات کامل‌تر هم Mini App در دسترسه.\n\n" . vip_line($user);
 }
 function validate_theme_color(string $color): ?string {
     $color = trim($color);

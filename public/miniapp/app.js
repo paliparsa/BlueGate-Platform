@@ -1477,6 +1477,7 @@ function openShareSheet(pid){prepareMiniLayer('shareSheet');
   const bot = state?.bot_username||'';
   const tgLink = bot ? `https://t.me/${encodeURIComponent(bot)}?startapp=product_${encodeURIComponent(pid)}` : null;
   const webLink = location.origin + location.pathname + '?product=' + encodeURIComponent(pid);
+  const quickBuyLink = bot ? `https://t.me/${encodeURIComponent(bot)}?start=buy_p_${encodeURIComponent(pid)}` : null;
   _shareUrl = tgLink || webLink;
   let ss=$('shareSheet');
   if(!ss){
@@ -1487,7 +1488,7 @@ function openShareSheet(pid){prepareMiniLayer('shareSheet');
   }
   if(typeof haptic === 'function') haptic('light');
 
-  const pPriceText = p.price ? `${fmt(p.price)} تومان` : '';
+  const pPriceText = p.price ? `${fmt(p.price)}` : '';
   const shareText = `🛍 ${p.name}\n💰 قیمت: ${pPriceText}\n\nبرای مشاهده و خرید محصول در ربات روی لینک زیر بزنید:`;
   const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(_shareUrl)}&text=${encodeURIComponent(shareText)}`;
 
@@ -1511,6 +1512,7 @@ function openShareSheet(pid){prepareMiniLayer('shareSheet');
         <span class="share-btn-icon">🔗</span>
         <div><b>کپی لینک محصول</b><small>${esc(_shareUrl.slice(0,40))}…</small></div>
       </button>
+      ${quickBuyLink ? `<button class="share-btn" id="btnQuickBuyBot"><span class="share-btn-icon">⚡</span><div><b>لینک خرید سریع Bot</b><small>باز شدن مستقیم همین محصول در ربات</small></div></button>` : ''}
       ${navigator.share ? `
       <button class="share-btn share-native" id="btnShareNative">
         <span class="share-btn-icon">⬆️</span>
@@ -1526,6 +1528,8 @@ function openShareSheet(pid){prepareMiniLayer('shareSheet');
   ss.querySelector('#closeShareHandle')?.addEventListener('click', close);
   ss.querySelector('#closeShareX')?.addEventListener('click', close);
   ss.addEventListener('click', (e) => { if (e.target === ss) close(); });
+
+  ss.querySelector('#btnQuickBuyBot')?.addEventListener('click', () => { if(quickBuyLink){ navigator.clipboard?.writeText(quickBuyLink); showStatus('لینک خرید سریع Bot کپی شد'); } });
 
   ss.querySelector('#btnShareTg')?.addEventListener('click', () => {
     if (window.Telegram?.WebApp?.openTelegramLink) {
