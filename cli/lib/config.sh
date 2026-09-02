@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-ask_value(){ local var="$1" prompt="$2" default="${3:-}" secret="${4:-no}" current="${!var:-}" value; [[ -z "$current" && -n "$default" ]] && current="$default"; if [[ "$secret" == yes ]]; then if [[ -n "$current" ]]; then read -rsp "$prompt [saved, Enter=keep]: " value || true; echo; [[ -n "$value" ]] && printf -v "$var" '%s' "$value"; else read -rsp "$prompt: " value || true; echo; printf -v "$var" '%s' "$value"; fi; else read -rp "$prompt${current:+ [$current]}: " value || true; printf -v "$var" '%s' "${value:-$current}"; fi; }
-ask_optional(){ local var="$1" prompt="$2" current="${!var:-}" value; read -rp "$prompt${current:+ [$current]} (Enter=keep, -=disable): " value || true; [[ "$value" == - ]] && value="" || value="${value:-$current}"; printf -v "$var" '%s' "$value"; }
+ask_value(){ local var prompt default secret current value; var="$1"; prompt="$2"; default="${3:-}"; secret="${4:-no}"; current="${!var:-}"; [[ -z "$current" && -n "$default" ]] && current="$default"; if [[ "$secret" == yes ]]; then if [[ -n "$current" ]]; then read -rsp "$prompt [saved, Enter=keep]: " value || true; echo; [[ -n "$value" ]] && printf -v "$var" '%s' "$value"; else read -rsp "$prompt: " value || true; echo; printf -v "$var" '%s' "$value"; fi; else read -rp "$prompt${current:+ [$current]}: " value || true; printf -v "$var" '%s' "${value:-$current}"; fi; }
+ask_optional(){ local var prompt current value; var="$1"; prompt="$2"; current="${!var:-}"; read -rp "$prompt${current:+ [$current]} (Enter=keep, -=disable): " value || true; [[ "$value" == - ]] && value="" || value="${value:-$current}"; printf -v "$var" '%s' "$value"; }
 
 configure_wizard(){
   require_root; try_extract_php_config; header

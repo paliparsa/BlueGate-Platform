@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 backup_create(){
   require_root; [[ -d "$APP_DIR" ]] || { fail "App not installed"; return 1; }
-  local id="$(slug_now)-v$(app_version)" dir="$BACKUP_ROOT/backup-$id"
+  local id dir
+  id="$(slug_now)-v$(app_version)"
+  dir="$BACKUP_ROOT/backup-$id"
   mkdir -p "$dir"
   info "Creating backup: $dir" >&2
   if [[ -n "$DB_PASS" ]] && command -v mysqldump >/dev/null 2>&1; then

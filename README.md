@@ -1,4 +1,4 @@
-نسخه: **3.4.0**
+نسخه: **3.4.1**
 
 # پلتفرم BlueGate
 
@@ -375,7 +375,7 @@ VERSION                 نسخه فعلی پروژه
 - دستورات `/shop`، `/buy` و `/services` نیز فعال هستند.
 
 
-## v3.4.0 – Bot Payment & Credit Center
+## v3.4.1 – Bot Payment & Credit Center
 - نمایش واقعی کارت‌های فعال ادمین پس از انتخاب کارت‌به‌کارت در فاکتور Bot.
 - نمایش موجودی اعتبار روی دکمه پرداخت کیف پول.
 - Credit Center داخل Bot با نمایش موجودی و افزایش اعتبار.
@@ -383,7 +383,7 @@ VERSION                 نسخه فعلی پروژه
 - ارسال رسید کارت و TXID شارژ از داخل Bot.
 
 
-## v3.4.0 — Telegram Admin Control Center
+## v3.4.1 — Telegram Admin Control Center
 
 - پنل ادمین Bot به Inline Keyboard کامل تبدیل شد؛ ابزارهای روزمره دیگر وابسته به Reply Keyboard یا ورودی‌های چندخطی نیستند.
 - Broadcast Center دکمه‌ای با انتخاب کانال Telegram / Mini App / هر دو، انتخاب مخاطب، Preview و تایید نهایی.
@@ -394,15 +394,15 @@ VERSION                 نسخه فعلی پروژه
 - Quick Dashboard آمار روزمره را بدون باز کردن Web Admin نشان می‌دهد.
 
 
-## اصلاح v3.4.0
+## اصلاح v3.4.1
 - مسیر callbackهای `topup_*` به handler کاربر وصل شد؛ دکمه‌های مبلغ، کارت، Stars، Crypto، رسید و لغو شارژ اعتبار دوباره کار می‌کنند.
 - Control Center ادمین در برابر دیتابیس‌های قدیمی fail-safe شد؛ نبودن ستون‌های اختیاری آماری دیگر کل پنل را از کار نمی‌اندازد.
 - برای خطاهای runtime Bot یک exception boundary اضافه شد تا دکمه ظاهراً «بی‌واکنش» نماند و خطا در log ثبت شود.
 
 
-## BlueGate CLI & Installer 2.0 — v3.4.0
+## BlueGate CLI & Installer 2.0 — v3.4.1
 
-مدیریت سرور از نسخه 3.4.0 از طریق `sudo bluegate` انجام می‌شود. اسکریپت‌های `install.sh`، `update.sh` و `health.sh` برای سازگاری باقی مانده‌اند و به CLI جدید وصل هستند. CLI شامل داشبورد تعاملی، آپدیت امن با Backup و Maintenance Mode، Health Check و Doctor، Backup/Restore، مدیریت دیتابیس، Telegram/Webhook، Cron، Logs، Repair و خروجی JSON برای Health است.
+مدیریت سرور از نسخه 3.4.1 از طریق `sudo bluegate` انجام می‌شود. اسکریپت‌های `install.sh`، `update.sh` و `health.sh` برای سازگاری باقی مانده‌اند و به CLI جدید وصل هستند. CLI شامل داشبورد تعاملی، آپدیت امن با Backup و Maintenance Mode، Health Check و Doctor، Backup/Restore، مدیریت دیتابیس، Telegram/Webhook، Cron، Logs، Repair و خروجی JSON برای Health است.
 
 ### فرمان‌های اصلی CLI
 
@@ -423,3 +423,10 @@ VERSION                 نسخه فعلی پروژه
 - `sudo bluegate cron` — نصب/تعمیر Cronهای BlueGate.
 - `sudo bluegate configure` — Wizard تنظیم Domain، Bot، DB و سایر تنظیمات.
 - `sudo bluegate system-info` — اطلاعات سیستم و سرویس‌ها.
+
+
+## Patch 3.4.1
+
+- رفع خطای `id: unbound variable` هنگام Backup در Update pipeline.
+- امن‌سازی declarationهای Bash برای اجرای CLI با `set -u`.
+- رفع خطای بالقوه indirect expansion در Configuration Wizard.
