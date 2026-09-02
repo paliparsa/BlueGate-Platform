@@ -155,6 +155,9 @@ function migrate(): void {
     add_column_if_missing('users', 'phone_number', 'VARCHAR(64) NULL AFTER theme_color');
     add_column_if_missing('users', 'phone_verified_at', 'DATETIME NULL AFTER phone_number');
     add_column_if_missing('users', 'welcome_version_seen', 'INT NOT NULL DEFAULT 0 AFTER phone_verified_at');
+    add_column_if_missing('users', 'avatar_url', 'VARCHAR(1024) NULL AFTER welcome_version_seen');
+    add_column_if_missing('users', 'avatar_source', "VARCHAR(24) NULL AFTER avatar_url");
+    add_column_if_missing('users', 'avatar_synced_at', 'DATETIME NULL AFTER avatar_source');
     add_column_if_missing('users', 'is_banned', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER phone_verified_at');
     add_column_if_missing('users', 'deleted_at', 'DATETIME NULL AFTER is_banned');
     add_column_if_missing('users', 'start_notified', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER deleted_at');
@@ -3594,6 +3597,48 @@ function telegram_file_to_public_url(string $fileId, string $folder='shop'): ?st
     if ($bin === false || strlen($bin) < 10) return null;
     file_put_contents($dest, $bin);
     return public_url_for_path($relative);
+}
+function user_avatar_public_url(array $user): ?string {
+    $url=trim((string)($user['avatar_url']??''));
+    return $url!==''?$url:null;
+}
+function sync_telegram_avatar(array $user,bool $force=false): array {
+    $uid=(int)($user['id']??0);$tid=(int)($user['telegram_id']??0);
+    if($uid<=0||$tid<=0)return $user;
+    if(($user['avatar_source']??'')==='custom')return $user;
+    $last=!empty($user['avatar_synced_at'])?strtotime((string)$user['avatar_synced_at']):0;
+    if(!$force&&$last&&$last>time()-86400)return $user;
+    try{
+        $res=tg('getUserProfilePhotos',['user_id'=>$tid,'limit'=>1]);
+        $url=null;
+        if(!empty($res['ok'])&&!empty($res['result']['photos'][0])&&is_array($res['result']['photos'][0])){
+            $sizes=$res['result']['photos'][0];$best=end($sizes);
+            if(!empty($best['file_id']))$url=telegram_file_to_public_url((string)$best['file_id'],'avatars');
+        }
+        db()->prepare('UPDATE users SET avatar_url=?,avatar_source=?,avatar_synced_at=NOW() WHERE id=? AND COALESCE(avatar_source,\'\')<>\'custom\'')->execute([$url,$url?'telegram':null,$uid]);
+    }catch(Throwable $e){
+        try{db()->prepare('UPDATE users SET avatar_synced_at=NOW() WHERE id=? AND COALESCE(avatar_source,\'\')<>\'custom\'')->execute([$uid]);}catch(Throwable $ignore){}
+        error_log('[BlueGate avatar sync] '.$e->getMessage());
+    }
+    return get_user_by_id($uid)?:$user;
+}
+function save_custom_user_avatar(int $userId,string $dataUrl): array {
+    if(!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,(.+)$#is',$dataUrl,$m))throw new RuntimeException('AVATAR_FORMAT_INVALID');
+    $bin=base64_decode($m[2],true);if($bin===false||strlen($bin)<64)throw new RuntimeException('AVATAR_INVALID');
+    if(strlen($bin)>4*1024*1024)throw new RuntimeException('AVATAR_TOO_LARGE');
+    $info=@getimagesizefromstring($bin);if(!$info||!in_array((int)$info[2],[IMAGETYPE_JPEG,IMAGETYPE_PNG,IMAGETYPE_WEBP],true))throw new RuntimeException('AVATAR_FORMAT_INVALID');
+    if((int)$info[0]<64||(int)$info[1]<64||(int)$info[0]>5000||(int)$info[1]>5000)throw new RuntimeException('AVATAR_DIMENSIONS_INVALID');
+    $ext=[IMAGETYPE_JPEG=>'jpg',IMAGETYPE_PNG=>'png',IMAGETYPE_WEBP=>'webp'][(int)$info[2]];
+    $dir=__DIR__.'/../public/uploads/avatars/custom';if(!is_dir($dir))@mkdir($dir,0775,true);
+    $name='user-'.$userId.'-'.bin2hex(random_bytes(6)).'.'.$ext;$dest=$dir.'/'.$name;
+    if(file_put_contents($dest,$bin)===false)throw new RuntimeException('AVATAR_SAVE_FAILED');
+    $relative='uploads/avatars/custom/'.$name;$url=public_url_for_path($relative);
+    db()->prepare('UPDATE users SET avatar_url=?,avatar_source=\'custom\',avatar_synced_at=NOW() WHERE id=?')->execute([$url,$userId]);
+    return get_user_by_id($userId)?:[];
+}
+function reset_user_avatar_to_telegram(int $userId): array {
+    db()->prepare('UPDATE users SET avatar_url=NULL,avatar_source=NULL,avatar_synced_at=NULL WHERE id=?')->execute([$userId]);
+    $u=get_user_by_id($userId);return $u?sync_telegram_avatar($u,true):[];
 }
 function image_url_from_message(array $message, string $folder='shop'): ?string {
     $text = trim((string)($message['text'] ?? $message['caption'] ?? ''));

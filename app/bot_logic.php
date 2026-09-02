@@ -102,6 +102,7 @@ function handle_message(array $message): void {
     }
 
     $user = create_or_update_user($from, $ref);
+    if($user) $user=sync_telegram_avatar($user,false);
     if(user_is_blocked($user)){ send_msg($chat_id,'⛔️ دسترسی این حساب مسدود شده است.'); return; }
     if(is_full_admin($chat_id)&&in_array((string)($user['step']??''),['admin_add_product','admin_add_variant','admin_add_category','admin_edit_product','admin_edit_variant','admin_edit_category'],true)){clear_step($chat_id);send_msg($chat_id,'ℹ️ مدیریت مستقیم Products/Variants قدیمی غیرفعال شده است. برای ساخت و ویرایش محصول از Catalog Studio در پنل وب استفاده کن.',admin_keyboard());return;}
 
@@ -213,6 +214,7 @@ function handle_callback(array $cb): void {
     if (!$chat_id || !$from) return;
     answer_cb($id);
     $user=create_or_update_user($from,null);
+    if($user) $user=sync_telegram_avatar($user,false);
     if(user_is_blocked($user)){answer_cb($callback['id']??'', 'این حساب مسدود است.');send_msg($chat_id,'⛔️ دسترسی این حساب مسدود شده است.');return;}
 
     if ($data === 'check_join') {

@@ -259,7 +259,7 @@ function user_payload(array $user): array {
     $vip = vip_info((int)$user['referrals_count']); $today = today_referrals((int)$user['id']); $customer = customer_stats((int)$user['id']);
     $telegramId=(int)($user['telegram_id']??0);$telegramConnected=$telegramId>0&&$telegramId<9000000000;
     $hasPassword=!empty($user['password_hash']);$completionChecks=[trim((string)($user['first_name']??''))!=='',trim((string)($user['web_username']??$user['username']??''))!=='',!empty($user['email_verified_at']),$telegramConnected];$profileCompletion=(int)round((count(array_filter($completionChecks))/count($completionChecks))*100);$securityScore=count(array_filter([$hasPassword,!empty($user['email_verified_at']),$telegramConnected]));$securityLevel=$securityScore>=3?'great':($securityScore>=2?'good':'attention');
-    return ['id'=>(int)$user['id'], 'telegram_id'=>$telegramId, 'telegram_connected'=>$telegramConnected, 'username'=>$user['username'], 'web_username'=>$user['web_username']??null, 'first_name'=>$user['first_name'], 'last_name'=>$user['last_name'] ?? null, 'email'=>$user['email'] ?? null, 'email_verified_at'=>$user['email_verified_at']??null, 'phone_number'=>$user['phone_number'] ?? null, 'phone_verified_at'=>$user['phone_verified_at'] ?? null, 'welcome_version_seen'=>(int)($user['welcome_version_seen']??0), 'ref_code'=>$user['ref_code'], 'referral_link'=>referral_link($user), 'balance'=>(int)$user['balance'], 'total_earned'=>(int)$user['total_earned'], 'referrals_count'=>(int)$user['referrals_count'], 'today_referrals'=>$today, 'spin_balance'=>(int)$user['spin_balance'], 'vip'=>$vip, 'customer'=>$customer, 'theme_color'=>$user['theme_color'] ?? null, 'member_since'=>$user['created_at']??null, 'has_password'=>$hasPassword, 'profile_completion'=>$profileCompletion, 'security_level'=>$securityLevel];
+    return ['id'=>(int)$user['id'], 'telegram_id'=>$telegramId, 'telegram_connected'=>$telegramConnected, 'username'=>$user['username'], 'web_username'=>$user['web_username']??null, 'first_name'=>$user['first_name'], 'last_name'=>$user['last_name'] ?? null, 'email'=>$user['email'] ?? null, 'email_verified_at'=>$user['email_verified_at']??null, 'phone_number'=>$user['phone_number'] ?? null, 'phone_verified_at'=>$user['phone_verified_at'] ?? null, 'welcome_version_seen'=>(int)($user['welcome_version_seen']??0), 'ref_code'=>$user['ref_code'], 'referral_link'=>referral_link($user), 'balance'=>(int)$user['balance'], 'total_earned'=>(int)$user['total_earned'], 'referrals_count'=>(int)$user['referrals_count'], 'today_referrals'=>$today, 'spin_balance'=>(int)$user['spin_balance'], 'vip'=>$vip, 'customer'=>$customer, 'theme_color'=>$user['theme_color'] ?? null, 'avatar_url'=>$user['avatar_url'] ?? null, 'avatar_source'=>$user['avatar_source'] ?? null, 'avatar_synced_at'=>$user['avatar_synced_at'] ?? null, 'member_since'=>$user['created_at']??null, 'has_password'=>$hasPassword, 'profile_completion'=>$profileCompletion, 'security_level'=>$securityLevel];
 }
 function safe_mini_optional(callable $fn, $fallback) {
     try { return $fn(); }
@@ -639,6 +639,17 @@ if ($action === 'update_my_profile') {
     if(array_key_exists('email',$input)){ $submitted=strtolower(trim((string)$input['email']));$current=strtolower(trim((string)($user['email']??'')));if($submitted!==$current)api_out(['ok'=>false,'error'=>'EMAIL_CHANGE_REQUIRES_OTP','message'=>'برای تغییر یا حذف ایمیل باید از فرایند تایید دو مرحله‌ای استفاده کنید.'],409); }
     db()->prepare('UPDATE users SET first_name=?,last_name=?,phone_number=? WHERE id=?')->execute([$first,$last?:null,$phone?:null,(int)$user['id']]);
     $fresh=get_user_by_id((int)$user['id']);api_out(dashboard_payload($fresh)+['message'=>'اطلاعات حساب ذخیره شد.']);
+}
+if ($action === 'update_my_avatar') {
+    api_rate_limit('avatar_upload',(string)$user['id'],10,3600,600);
+    try{$fresh=save_custom_user_avatar((int)$user['id'],(string)($input['image_b64']??''));api_out(dashboard_payload($fresh)+['message'=>'عکس پروفایل ذخیره شد.']);}
+    catch(Throwable $e){$c=api_exception_code($e,'AVATAR_UPLOAD_FAILED');$msg=$c==='AVATAR_TOO_LARGE'?'حجم عکس باید کمتر از ۴ مگابایت باشد.':($c==='AVATAR_DIMENSIONS_INVALID'?'ابعاد عکس معتبر نیست.':'فقط JPG، PNG یا WEBP معتبر است.');api_out(['ok'=>false,'error'=>$c,'message'=>$msg],400);}
+}
+if ($action === 'sync_my_telegram_avatar') {
+    $fresh=sync_telegram_avatar(get_user_by_id((int)$user['id'])?:$user,true);api_out(dashboard_payload($fresh)+['message'=>'عکس تلگرام بروزرسانی شد.']);
+}
+if ($action === 'reset_my_avatar') {
+    $fresh=reset_user_avatar_to_telegram((int)$user['id']);api_out(dashboard_payload($fresh)+['message'=>'عکس پروفایل از تلگرام تنظیم شد.']);
 }
 if ($action === 'change_my_password') {
     $fresh=get_user_by_id((int)$user['id']);$current=(string)($input['current_password']??'');$next=(string)($input['new_password']??'');
