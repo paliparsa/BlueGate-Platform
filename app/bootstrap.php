@@ -2597,7 +2597,7 @@ function admin_keyboard(): string {
     $pendingOrders=0;$pendingTopups=0;$expiring=0;
     try {
         if (table_exists('orders')) {
-            $archiveSql=column_exists('orders','is_archived') ? ' AND COALESCE(is_archived,0)=0' : '';
+            $archiveSql=column_exists('orders','is_archived') ? ' AND COALESCE(is_archived,0)=0' : (column_exists('orders','archived_at') ? ' AND archived_at IS NULL' : '');
             $pendingOrders=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('receipt_submitted','reviewing','payment_confirmed','preparing')".$archiveSql)->fetchColumn();
             if (column_exists('orders','expires_at')) {
                 $expiring=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status='delivered' AND expires_at IS NOT NULL AND expires_at>=NOW() AND expires_at<DATE_ADD(NOW(),INTERVAL 7 DAY)")->fetchColumn();
@@ -2629,7 +2629,7 @@ function admin_more_keyboard(): string {
 function admin_audience_user_ids(string $audience): array {
     $where="u.deleted_at IS NULL AND u.is_banned=0 AND u.telegram_id IS NOT NULL";
     if($audience==='customers') $where.=" AND EXISTS(SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered')";
-    elseif($audience==='vpn') $where.=" AND EXISTS(SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered' AND (LOWER(COALESCE(o.delivery_type,''))='vpn' OR LOWER(COALESCE(o.delivery_url,'')) LIKE '%/sub/%'))";
+    elseif($audience==='vpn') $where.=" AND EXISTS(SELECT 1 FROM orders o LEFT JOIN products p ON p.id=o.product_id LEFT JOIN service_plans sp ON sp.id=o.catalog_plan_id WHERE o.user_id=u.id AND o.status='delivered' AND (LOWER(COALESCE(sp.delivery_type,p.delivery_type,''))='vpn' OR LOWER(COALESCE(o.delivery_url,'')) LIKE '%/sub/%'))";
     elseif($audience==='recent') $where.=" AND u.updated_at>=DATE_SUB(NOW(),INTERVAL 30 DAY)";
     return db()->query("SELECT DISTINCT u.id FROM users u WHERE {$where} ORDER BY u.id")->fetchAll(PDO::FETCH_COLUMN)?:[];
 }
@@ -2669,7 +2669,8 @@ function admin_quick_dashboard(int $chat_id,$message_id): void {
     $new=(int)db()->query('SELECT COUNT(*) FROM users WHERE DATE(created_at)=CURDATE()')->fetchColumn();
     $orders=(int)db()->query('SELECT COUNT(*) FROM orders WHERE DATE(created_at)=CURDATE()')->fetchColumn();
     $sales=(int)db()->query("SELECT COALESCE(SUM(final_amount),0) FROM orders WHERE DATE(created_at)=CURDATE() AND status IN ('payment_confirmed','preparing','delivered')")->fetchColumn();
-    $pending=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('receipt_submitted','reviewing','payment_confirmed','preparing') AND COALESCE(is_archived,0)=0")->fetchColumn();
+    $archiveFilter=column_exists('orders','is_archived') ? ' AND COALESCE(is_archived,0)=0' : (column_exists('orders','archived_at') ? ' AND archived_at IS NULL' : '');
+    $pending=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('receipt_submitted','reviewing','payment_confirmed','preparing')".$archiveFilter)->fetchColumn();
     $topups=table_exists('credit_topups')?(int)db()->query("SELECT COUNT(*) FROM credit_topups WHERE status IN ('receipt_submitted','reviewing')")->fetchColumn():0;
     $txt="📊 <b>داشبورد سریع</b>\n\n💰 فروش امروز: <b>".money($sales)."</b>\n🧾 سفارش امروز: <b>{$orders}</b>\n📦 نیازمند رسیدگی: <b>{$pending}</b>\n💳 شارژ منتظر: <b>{$topups}</b>\n👥 کاربران: <b>{$users}</b>\n🆕 امروز: <b>{$new}</b>";
     send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>[[['text'=>'🔄 بروزرسانی','callback_data'=>'adm_ops_dash']],[['text'=>'📦 سفارش‌ها','callback_data'=>'adm_ops_orders'],['text'=>'💳 شارژها','callback_data'=>'adm_ops_topups']],[['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']]]]));
@@ -3527,7 +3528,7 @@ function create_notification_campaign(int $adminTid,string $type,string $title,s
     try{
         $sql='SELECT DISTINCT u.id FROM users u WHERE u.deleted_at IS NULL AND u.is_banned=0';
         if($audience==='service')$sql.=" AND EXISTS (SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered')";
-        if($audience==='vpn')$sql.=" AND EXISTS (SELECT 1 FROM orders o WHERE o.user_id=u.id AND o.status='delivered' AND (LOWER(COALESCE(o.delivery_type,''))='vpn' OR LOWER(COALESCE(o.delivery_url,'')) LIKE '%/sub/%'))";
+        if($audience==='vpn')$sql.=" AND EXISTS (SELECT 1 FROM orders o LEFT JOIN products p ON p.id=o.product_id LEFT JOIN service_plans sp ON sp.id=o.catalog_plan_id WHERE o.user_id=u.id AND o.status='delivered' AND (LOWER(COALESCE(sp.delivery_type,p.delivery_type,''))='vpn' OR LOWER(COALESCE(o.delivery_url,'')) LIKE '%/sub/%'))";
         $ids=$pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN)?:[];
         $q=$pdo->prepare('INSERT INTO notification_campaigns (admin_telegram_id,type,title,body,action_type,action_value,audience,recipient_count) VALUES (?,?,?,?,?,?,?,?)');
         $q->execute([$adminTid,$type,mb_substr($title,0,255),mb_substr($body,0,1000),$actionType?:null,$actionValue?mb_substr($actionValue,0,255):null,$audience,count($ids)]);

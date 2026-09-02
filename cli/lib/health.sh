@@ -11,7 +11,7 @@ health_collect(){
   diskp="$(df -P "$APP_DIR" 2>/dev/null | awk 'NR==2{gsub(/%/,"",$5);print $5}')"; diskp="${diskp:-100}"
   [[ "$diskp" -lt 90 ]] && hc_add ok "Disk" "${diskp}% used" || [[ "$diskp" -lt 96 ]] && hc_add warn "Disk" "${diskp}% used" || hc_add fail "Disk" "${diskp}% used"
   phpv="$(php -r 'echo PHP_VERSION;' 2>/dev/null || true)"; [[ -n "$phpv" ]] && hc_add ok "PHP" "$phpv" || hc_add fail "PHP" "not found"
-  for ext in pdo_mysql curl mbstring json; do php -m 2>/dev/null | grep -qi "^${ext}$" || missing+="$ext "; done
+  for ext in pdo_mysql curl mbstring json; do php -r 'exit(extension_loaded($argv[1]) ? 0 : 1);' "$ext" >/dev/null 2>&1 || missing+="$ext "; done
   [[ -z "$missing" ]] && hc_add ok "PHP extensions" "required extensions loaded" || hc_add fail "PHP extensions" "missing: $missing"
   hc_service nginx && hc_add ok "nginx" "active" || hc_add fail "nginx" "inactive"
   hc_service mariadb && hc_add ok "MariaDB" "active" || hc_add fail "MariaDB" "inactive"

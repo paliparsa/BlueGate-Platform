@@ -15,11 +15,22 @@ telegram_sync_ui(){
 telegram_health_text(){
   [[ -n "$BOT_TOKEN" ]] || { echo "not configured"; return 1; }
   local me wh; me="$(tg_api getMe 2>/dev/null)" || { echo "API unreachable"; return 1; }; wh="$(tg_api getWebhookInfo 2>/dev/null)" || true
-  local user url pending err
-  user="$(echo "$me" | sed -n 's/.*"username":"\([^"]*\)".*/\1/p')"
-  url="$(echo "$wh" | sed -n 's/.*"url":"\([^"]*\)".*/\1/p')"
-  pending="$(echo "$wh" | sed -n 's/.*"pending_update_count":\([0-9]*\).*/\1/p')"; pending="${pending:-0}"
-  err="$(echo "$wh" | sed -n 's/.*"last_error_message":"\([^"]*\)".*/\1/p')"
-  echo "@${user:-unknown} | pending=${pending} | webhook=${url:-none}${err:+ | error=$err}"
+  local user url pending err err_date now age suffix=""
+  if command -v jq >/dev/null 2>&1; then
+    user="$(printf '%s' "$me" | jq -r '.result.username // empty' 2>/dev/null)"
+    url="$(printf '%s' "$wh" | jq -r '.result.url // empty' 2>/dev/null)"
+    pending="$(printf '%s' "$wh" | jq -r '.result.pending_update_count // 0' 2>/dev/null)"
+    err="$(printf '%s' "$wh" | jq -r '.result.last_error_message // empty' 2>/dev/null)"
+    err_date="$(printf '%s' "$wh" | jq -r '.result.last_error_date // 0' 2>/dev/null)"
+  else
+    user="$(echo "$me" | sed -n 's/.*"username":"\([^"]*\)".*/\1/p')"
+    url="$(echo "$wh" | sed -n 's/.*"url":"\([^"]*\)".*/\1/p')"
+    pending="$(echo "$wh" | sed -n 's/.*"pending_update_count":\([0-9]*\).*/\1/p')"; pending="${pending:-0}"
+    err="$(echo "$wh" | sed -n 's/.*"last_error_message":"\([^"]*\)".*/\1/p')"
+    err_date="$(echo "$wh" | sed -n 's/.*"last_error_date":\([0-9]*\).*/\1/p')"; err_date="${err_date:-0}"
+  fi
+  now="$(date +%s)"; age=$(( now - ${err_date:-0} ))
+  if [[ -n "$err" && ( "${pending:-0}" -gt 0 || "$age" -lt 900 ) ]]; then suffix=" | error=$err"; fi
+  echo "@${user:-unknown} | pending=${pending:-0} | webhook=${url:-none}${suffix}"
   [[ -n "$url" ]]
 }
