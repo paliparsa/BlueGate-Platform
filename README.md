@@ -349,3 +349,9 @@ VERSION                 نسخه فعلی پروژه
 - یکسان‌سازی رنگ Select/Option نیتیو در Web و Mini App، مخصوصاً Chrome/Windows.
 - بهبود خوانایی placeholder، disabled، autofill و file picker.
 - اعمال Contrast Guard روی popup، modal، sheet و menuهای اصلی بدون حذف قابلیت‌ها.
+
+
+## نسخه 3.0.8.15
+- Order Control Center جدید برای پنل وب
+- فعال‌سازی Customer 360 مشترک در وب و Mini App
+- Quick Create کارت‌محور برای پلن‌ها در وب و Mini App

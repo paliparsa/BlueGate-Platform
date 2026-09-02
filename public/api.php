@@ -505,7 +505,7 @@ if (!$user) {
     api_out(['ok'=>false, 'error'=>'AUTH_REQUIRED', 'message'=>'برای انجام این عملیات باید وارد حساب کاربری خود شوید.'], 401);
 }
 $GLOBALS['BG_CURRENT_USER']=$user;
-function admin_action_perm(string $a): string {if(in_array($a,['admin_summary'],true))return 'dashboard';if(in_array($a,['admin_notification_broadcast'],true))return 'full';if(str_starts_with($a,'admin_catalog_')||in_array($a,['admin_add_inventory','admin_update_inventory','admin_delete_inventory','admin_hard_delete_inventory','admin_add_coupon','admin_update_coupon','admin_toggle_coupon','admin_delete_coupon'],true))return 'products';if(in_array($a,['admin_add_balance','admin_credit_topup_approve','admin_credit_topup_reject'],true))return 'finance';if(in_array($a,['admin_search_orders','admin_archive_order','admin_delete_order','admin_cleanup_orders','admin_order_status','admin_deliver_order','admin_set_service_delivery','admin_order_note'],true))return 'orders';return 'full';}
+function admin_action_perm(string $a): string {if(in_array($a,['admin_summary'],true))return 'dashboard';if(in_array($a,['admin_notification_broadcast'],true))return 'full';if(str_starts_with($a,'admin_catalog_')||in_array($a,['admin_add_inventory','admin_update_inventory','admin_delete_inventory','admin_hard_delete_inventory','admin_add_coupon','admin_update_coupon','admin_toggle_coupon','admin_delete_coupon'],true))return 'products';if(in_array($a,['admin_add_balance','admin_credit_topup_approve','admin_credit_topup_reject'],true))return 'finance';if(in_array($a,['admin_search_orders','admin_archive_order','admin_delete_order','admin_cleanup_orders','admin_order_status','admin_deliver_order','admin_set_service_delivery','admin_order_note','admin_customer_view'],true))return 'orders';return 'full';}
 if(str_starts_with($action,'admin_'))require_admin_perm($user,admin_action_perm($action));
 
 if ($action === 'logout') {
@@ -1226,6 +1226,14 @@ if ($action === 'admin_set_service_delivery') {
     api_out(admin_payload());
 }
 if ($action === 'admin_order_note') { require_admin($user); $oid=(int)($input['order_id']??0); $note=trim((string)($input['note']??'')); $order=order_by_id($oid); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); db()->prepare('UPDATE orders SET admin_note=? WHERE id=?')->execute([$note, $oid]); add_order_event($oid, 'note', 'یادداشت داخلی ثبت/ویرایش شد', $note, false); api_out(admin_payload()); }
+
+if ($action === 'admin_customer_view') {
+    require_admin($user);
+    $uid=(int)($input['user_id']??0);
+    if($uid<=0) api_out(['ok'=>false,'error'=>'INVALID_USER_ID','message'=>'شناسه کاربر معتبر نیست.'],400);
+    try { api_out(['ok'=>true] + admin_customer_view($uid)); }
+    catch(Throwable $e){ api_out(['ok'=>false,'error'=>'USER_NOT_FOUND','message'=>'کاربر پیدا نشد.'],404); }
+}
 
 if ($action === 'admin_add_balance') { require_admin($user); $tid=(int)($input['telegram_id']??0); $amount=(int)($input['amount']??0); if($tid<=0 || $amount===0) api_out(['ok'=>false,'message'=>'مبلغ و آیدی نامعتبر'],400); $u=get_user_by_tid($tid); if(!$u) api_out(['ok'=>false,'message'=>'کاربر پیدا نشد'],404); add_balance((int)$u['id'], $amount, 'admin_adjust', 'تغییر اعتبار توسط ادمین', null); api_out(admin_payload()); }
 if ($action === 'admin_ban_user') { require_admin($user); $tid=(int)($input['telegram_id']??0); if($tid<=0) api_out(['ok'=>false,'message'=>'آیدی نامعتبر'],400); db()->prepare('UPDATE users SET is_banned=1,auth_token=NULL,auth_token_hash=NULL,auth_token_expires_at=NULL WHERE telegram_id=?')->execute([$tid]); api_out(admin_payload()); }
