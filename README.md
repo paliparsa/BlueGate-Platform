@@ -1,4 +1,4 @@
-نسخه: **3.0.8.16**
+نسخه: **3.0.9**
 
 # پلتفرم BlueGate
 
@@ -357,3 +357,9 @@ VERSION                 نسخه فعلی پروژه
 - Order Control Center جدید برای پنل وب
 - فعال‌سازی Customer 360 مشترک در وب و Mini App
 - Quick Create کارت‌محور برای پلن‌ها در وب و Mini App
+
+
+## تغییرات 3.0.9
+- حذف کامل رابط ساخت سریع از Web و Mini App؛ ساخت سرویس فقط از Catalog Builder اصلی انجام می‌شود.
+- سیستم لایه‌های Mini App به Parent/Child Stack ارتقا یافت؛ Share/QR/Preview روی والد باز می‌شوند و والد را نمی‌بندند.
+- Telegram Back بالاترین لایه فعال را مرحله‌به‌مرحله می‌بندد.

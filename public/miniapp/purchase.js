@@ -66,6 +66,6 @@ async function submit(){
   finally{busy=false}
 }
 function open(data){if(busy)return null;try{window.BlueGateUI?.beforeOpen?.('miniPurchaseOverlay')}catch(_){}current=normalize(data||{});if(!current.productId)return null;close(false);overlay=document.createElement('div');overlay.id='miniPurchaseOverlay';overlay.className='purchase-confirm-overlay mini-purchase-overlay';document.body.appendChild(overlay);document.documentElement.classList.add('purchase-confirm-open');document.body.classList.add('purchase-confirm-open');overlay.addEventListener('click',e=>{if(e.target===overlay)close()});render();requestAnimationFrame(()=>overlay.classList.add('open'));return overlay}
-function close(reset=true){if(overlay){overlay.classList.remove('open');const old=overlay;overlay=null;setTimeout(()=>old.remove(),160)}document.documentElement.classList.remove('purchase-confirm-open');document.body.classList.remove('purchase-confirm-open');if(reset)current=null}
+function close(reset=true){if(overlay){overlay.classList.remove('open');const old=overlay;overlay=null;setTimeout(()=>old.remove(),160)}document.documentElement.classList.remove('purchase-confirm-open');document.body.classList.remove('purchase-confirm-open');try{document.dispatchEvent(new CustomEvent('bluegate:layer-closed',{detail:{id:'miniPurchaseOverlay'}}))}catch(_){}if(reset)current=null}
 window.BlueGatePurchase={open,close};
 })();

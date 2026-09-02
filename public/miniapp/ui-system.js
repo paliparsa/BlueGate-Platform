@@ -15,6 +15,7 @@
     if(typeof cleanup === 'function') { try{ cleanup(); }catch(_){} }
     cleanup = null;
     setTimeout(() => { if(!host.classList.contains('open')) host.innerHTML=''; }, 220);
+    try{document.dispatchEvent(new CustomEvent('bluegate:layer-closed',{detail:{id:'appSheet'}}))}catch(_){}
   }
 
   function openSheet(opts={}){

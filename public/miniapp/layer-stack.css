@@ -1,0 +1,13 @@
+/* BlueGate v3.0.9 — deterministic parent/child layer hierarchy */
+#appSheet.app-sheet{z-index:240000!important}
+#miniPurchaseOverlay.mini-purchase-overlay{z-index:260000!important}
+#miniCreditTopupSheet,.cart-sheet,.cust-drawer,#authModal{z-index:270000!important}
+#shareSheet.share-sheet{z-index:500000!important}
+#previewSheet.preview-sheet{z-index:520000!important}
+#qrSheet.qr-sheet{z-index:540000!important}
+#palettePopup.palette-popup,#cmdPalette.cmd-palette{z-index:560000!important}
+#lightbox.lightbox{z-index:580000!important}
+.app-confirm-layer{z-index:700000!important}
+#status.toast{z-index:900000!important}
+/* A child overlay dims its parent without destroying it. */
+#shareSheet.open,#previewSheet.open,#qrSheet.open{isolation:isolate}

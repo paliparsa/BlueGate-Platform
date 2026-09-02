@@ -2,13 +2,13 @@
 header('Cache-Control: no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
-$assets = ['app.js','style.css','ui-system.js','unified.css','purchase.js','purchase.css','web-parity.css','mobile-v292.css','contrast-guard.css'];
+$assets = ['app.js','style.css','ui-system.js','unified.css','purchase.js','purchase.css','web-parity.css','mobile-v292.css','contrast-guard.css','layer-stack.css'];
 $mtimes = [];
 foreach ($assets as $asset) {
     $path = __DIR__ . '/' . $asset;
     $mtimes[] = file_exists($path) ? filemtime($path) : time();
 }
-$version = 'v30816-shop-color-' . max($mtimes);
+$version = 'v309-layer-stack-' . max($mtimes);
 
 $html = file_get_contents(__DIR__ . '/index.html');
 foreach ($assets as $asset) {
