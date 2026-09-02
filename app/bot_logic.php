@@ -265,7 +265,10 @@ function handle_callback(array $cb): void {
     $user = get_user_by_tid($chat_id);
 
     if ($data === 'main') { clear_step($chat_id); send_or_edit($chat_id, $message_id, main_text($user), miniapp_inline_keyboard(is_full_admin($chat_id))); return; }
-    if (str_starts_with($data, 'u_') || str_starts_with($data, 'shop_') || str_starts_with($data, 'order_') || str_starts_with($data, 'svc_')) { handle_user_callback($chat_id, $message_id, $user, $data); return; }
+    // User-side callbacks. Keep every payment/top-up namespace routed here too.
+    // v3.3.0 accidentally omitted topup_* so preset/method buttons were acknowledged by Telegram
+    // but never reached the actual credit-topup handlers.
+    if (str_starts_with($data, 'u_') || str_starts_with($data, 'shop_') || str_starts_with($data, 'order_') || str_starts_with($data, 'svc_') || str_starts_with($data, 'topup_')) { handle_user_callback($chat_id, $message_id, $user, $data); return; }
     if (str_starts_with($data, 'adm_') || str_starts_with($data, 'set_') || str_starts_with($data, 'theme_') || str_starts_with($data, 'wd_') || str_starts_with($data, 'prod_') || str_starts_with($data, 'cat_') || str_starts_with($data, 'coupon_') || str_starts_with($data, 'ord_') || str_starts_with($data, 'prodwiz_') || str_starts_with($data, 'catwiz_') || str_starts_with($data, 'varwiz_') || str_starts_with($data, 'invwiz_') || str_starts_with($data, 'inv_') || str_starts_with($data, 'variant_') || str_starts_with($data, 'edit_') || str_starts_with($data, 'hard_') || str_starts_with($data, 'toggle_')) {
         if (!is_full_admin($chat_id)) { send_msg($chat_id, 'دسترسی ادمین ندارید.'); return; }
         handle_admin_callback($chat_id, $message_id, $user, $data); return;

@@ -2591,9 +2591,22 @@ function show_sales_report(int $chat_id, $message_id=null): void {
     send_or_edit($chat_id, $message_id, $txt, admin_shop_keyboard());
 }
 function admin_keyboard(): string {
-    $pendingOrders=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('receipt_submitted','reviewing','payment_confirmed','preparing') AND COALESCE(is_archived,0)=0")->fetchColumn();
-    $pendingTopups=table_exists('credit_topups')?(int)db()->query("SELECT COUNT(*) FROM credit_topups WHERE status IN ('receipt_submitted','reviewing')")->fetchColumn():0;
-    $expiring=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status='delivered' AND expires_at IS NOT NULL AND expires_at>=NOW() AND expires_at<DATE_ADD(NOW(),INTERVAL 7 DAY)")->fetchColumn();
+    // The control center must always open, even while an older production DB is
+    // still waiting for one of the newer optional order columns to be migrated.
+    // Badge queries are convenience-only; never let them break navigation.
+    $pendingOrders=0;$pendingTopups=0;$expiring=0;
+    try {
+        if (table_exists('orders')) {
+            $archiveSql=column_exists('orders','is_archived') ? ' AND COALESCE(is_archived,0)=0' : '';
+            $pendingOrders=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status IN ('receipt_submitted','reviewing','payment_confirmed','preparing')".$archiveSql)->fetchColumn();
+            if (column_exists('orders','expires_at')) {
+                $expiring=(int)db()->query("SELECT COUNT(*) FROM orders WHERE status='delivered' AND expires_at IS NOT NULL AND expires_at>=NOW() AND expires_at<DATE_ADD(NOW(),INTERVAL 7 DAY)")->fetchColumn();
+            }
+        }
+    } catch (Throwable $e) { error_log('[BlueGate Bot admin_keyboard/orders] '.$e->getMessage()); }
+    try {
+        if(table_exists('credit_topups')) $pendingTopups=(int)db()->query("SELECT COUNT(*) FROM credit_topups WHERE status IN ('receipt_submitted','reviewing')")->fetchColumn();
+    } catch (Throwable $e) { error_log('[BlueGate Bot admin_keyboard/topups] '.$e->getMessage()); }
     $rows=[
         [['text'=>'📣 Broadcast Center','callback_data'=>'adm_bc'],['text'=>'🔔 اعلان Mini App','callback_data'=>'adm_ntf']],
         [['text'=>'📦 سفارش‌های منتظر · '.$pendingOrders,'callback_data'=>'adm_ops_orders'],['text'=>'💳 شارژها · '.$pendingTopups,'callback_data'=>'adm_ops_topups']],

@@ -15,5 +15,15 @@ if (!hash_equals($expected, $secret)) {
 $raw = file_get_contents('php://input');
 $update = json_decode($raw ?: '{}', true) ?: [];
 require_once __DIR__ . '/../app/bot_logic.php';
-handle_update($update);
+try {
+    handle_update($update);
+} catch (Throwable $e) {
+    error_log('[BlueGate Bot webhook] '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
+    $cb=$update['callback_query'] ?? null;
+    if (is_array($cb)) {
+        try { if (!empty($cb['id'])) answer_cb((string)$cb['id'], 'خطای موقت؛ دوباره تلاش کن.'); } catch (Throwable $ignore) {}
+        $cid=(int)($cb['message']['chat']['id'] ?? $cb['from']['id'] ?? 0);
+        if ($cid) { try { send_msg($cid,'⚠️ اجرای این دکمه با خطا روبه‌رو شد. دوباره امتحان کن؛ اگر ادامه داشت لاگ Bot را بررسی کن.'); } catch (Throwable $ignore) {} }
+    }
+}
 echo 'OK';
