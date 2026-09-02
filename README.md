@@ -1,3 +1,5 @@
+نسخه: **3.0.8.16**
+
 # پلتفرم BlueGate
 
 **نسخه فعلی: v3.0.8.2 — Crypto Wallet UX & Tracking**
