@@ -7,7 +7,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for f in common ui system config telegram domain backup health updater; do source "$HERE/lib/$f.sh"; done
 
 usage(){ cat <<'EOF'
-BlueGate CLI 2.1
+BlueGate CLI 2.2
 Usage: bluegate <command> [options]
 
 Core:       status, health, doctor, update, install, repair, configure
@@ -65,26 +65,50 @@ menu(){
   require_root
   while true; do
     header
-    local ng db tg hc="ok"; ng="$(systemctl is-active nginx 2>/dev/null || echo inactive)"; db="$(systemctl is-active mariadb 2>/dev/null || echo inactive)"; tg="$(telegram_health_text 2>/dev/null || echo unavailable)"
-    printf "  "; status_dot "$([[ "$ng" == active ]] && echo ok || echo fail)"; echo " Web / nginx       $ng"
-    printf "  "; status_dot "$([[ "$db" == active ]] && echo ok || echo fail)"; echo " Database          $db"
-    printf "  "; status_dot "$([[ "$tg" != unavailable ]] && echo ok || echo warn)"; echo " Telegram          $tg"
-    echo; line
-    echo "  1) Update                 6) Database"
-    echo "  2) Health Check           7) Telegram / Webhook"
-    echo "  3) Doctor / Auto Repair   8) Repair Installation"
-    echo "  4) Logs                   9) System Info"
-    echo "  5) Backup / Restore      10) Configure"
-    echo " 11) Maintenance           12) Cron Repair"
-    echo " 13) Domain / SSL Manager"
-    echo "  0) Exit"; line
+    local ng db tg
+    ng="$(systemctl is-active nginx 2>/dev/null || echo inactive)"
+    db="$(systemctl is-active mariadb 2>/dev/null || echo inactive)"
+    tg="$(telegram_health_text 2>/dev/null || echo unavailable)"
+
+    section "SERVICE STATUS"
+    printf "  "; status_dot "$([[ "$ng" == active ]] && echo ok || echo fail)"; printf "  %-18s %s\n" "Web / nginx" "$ng"
+    printf "  "; status_dot "$([[ "$db" == active ]] && echo ok || echo fail)"; printf "  %-18s %s\n" "Database" "$db"
+    printf "  "; status_dot "$([[ "$tg" != unavailable ]] && echo ok || echo warn)"; printf "  %-18s %s\n" "Telegram" "$tg"
+
+    section "MANAGEMENT"
+    menu_item 1  "Update"                 "Safe application update"
+    menu_item 2  "Health Check"           "Full service diagnostics"
+    menu_item 3  "Doctor / Auto Repair"   "Repair common issues"
+    menu_item 4  "Logs"                   "Application and system logs"
+    menu_item 5  "Backup / Restore"       "Database and files"
+    menu_item 6  "Database"               "Connection and schema"
+    menu_item 7  "Telegram / Webhook"     "Bot integration"
+    menu_item 8  "Repair Installation"    "Permissions + services"
+    menu_item 9  "System Info"            "Server runtime details"
+    menu_item 10 "Configure"              "Core BlueGate settings"
+    menu_item 11 "Maintenance"            "Enable / disable mode"
+    menu_item 12 "Cron Repair"            "Scheduled jobs"
+    menu_item 13 "Domain / SSL Manager"   "Domain, HTTPS, webhook"
+    menu_item 0  "Exit"
+    echo; ui_rule
     read -rp "Choose: " c || true
     case "$c" in
-      1) update_pipeline; pause;; 2) health_render; pause;; 3) doctor; pause;; 4) logs_cmd; pause;;
-      5) header; echo "1) Create backup  2) List backups  3) Restore"; read -rp "Choose: " b; case "$b" in 1) backup_create;;2)backup_list;;3)backup_restore;;esac; pause;;
-      6) db_cmd status; pause;; 7) telegram_cmd status; echo; echo "1) Refresh webhook  2) Sync bot commands"; read -rp "Choose or Enter: " t; [[ "$t" == 1 ]] && telegram_set_webhook; [[ "$t" == 2 ]] && telegram_sync_ui; pause;;
-      8) repair_cmd; pause;; 9) system_info; pause;; 10) configure_wizard; pause;; 11) echo "1) ON  2) OFF  3) Status"; read -rp "Choose: " m; [[ "$m" == 1 ]] && maintenance_cmd on; [[ "$m" == 2 ]] && maintenance_cmd off; [[ "$m" == 3 ]] && maintenance_cmd status; pause;;
-      12) configure_cron; ok "Cron repaired"; pause;; 13) domain_menu;; 0) exit 0;; *) sleep 1;; esac
+      1) update_pipeline; pause;;
+      2) health_render; pause;;
+      3) doctor; pause;;
+      4) logs_cmd; pause;;
+      5) header; section "BACKUP / RESTORE"; menu_item 1 "Create backup"; menu_item 2 "List backups"; menu_item 3 "Restore"; read -rp "Choose: " b; case "$b" in 1) backup_create;;2)backup_list;;3)backup_restore;;esac; pause;;
+      6) db_cmd status; pause;;
+      7) telegram_cmd status; echo; menu_item 1 "Refresh webhook"; menu_item 2 "Sync bot commands"; read -rp "Choose or Enter: " t; [[ "$t" == 1 ]] && telegram_set_webhook; [[ "$t" == 2 ]] && telegram_sync_ui; pause;;
+      8) repair_cmd; pause;;
+      9) system_info; pause;;
+      10) configure_wizard; pause;;
+      11) header; section "MAINTENANCE"; menu_item 1 "Enable"; menu_item 2 "Disable"; menu_item 3 "Status"; read -rp "Choose: " m; [[ "$m" == 1 ]] && maintenance_cmd on; [[ "$m" == 2 ]] && maintenance_cmd off; [[ "$m" == 3 ]] && maintenance_cmd status; pause;;
+      12) configure_cron; ok "Cron repaired"; pause;;
+      13) domain_menu;;
+      0) exit 0;;
+      *) warn "Unknown option: $c"; sleep 1;;
+    esac
   done
 }
 

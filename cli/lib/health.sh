@@ -27,6 +27,8 @@ health_collect(){
     local url code; if [[ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]]; then url="https://${DOMAIN}/api.php?action=storefront"; code="$(curl -ksS -o /tmp/bg-health.$$ -w '%{http_code}' --max-time 12 --resolve "${DOMAIN}:443:127.0.0.1" "$url" 2>/dev/null || echo 000)"; else url="http://127.0.0.1/api.php?action=storefront"; code="$(curl -sS -o /tmp/bg-health.$$ -w '%{http_code}' --max-time 12 -H "Host: ${DOMAIN}" "$url" 2>/dev/null || echo 000)"; fi
     if [[ "$code" == 200 ]] && grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' /tmp/bg-health.$$ 2>/dev/null; then hc_add ok "Store API" "HTTP 200"; else hc_add fail "Store API" "HTTP $code"; fi; rm -f /tmp/bg-health.$$
     [[ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]] && hc_add ok "TLS" "certificate present" || hc_add warn "TLS" "certificate missing"
+    local acme_conf="/etc/nginx/sites-available/${NGINX_SITE}"
+    if [[ -f "$acme_conf" ]] && grep -Fq 'location ^~ /.well-known/acme-challenge/' "$acme_conf"; then hc_add ok "ACME route" "nginx exception installed"; else hc_add fail "ACME route" "missing; SSL renewal can fail"; fi
   else hc_add warn "Domain" "not configured"; fi
   if [[ -n "$BOT_TOKEN" ]]; then local tg; tg="$(telegram_health_text 2>/dev/null)"; [[ $? -eq 0 ]] && hc_add ok "Telegram" "$tg" || hc_add warn "Telegram" "$tg"; else hc_add warn "Telegram" "not configured"; fi
   [[ -f "$CRON_FILE" ]] && hc_add ok "Cron config" "installed" || hc_add warn "Cron config" "missing"

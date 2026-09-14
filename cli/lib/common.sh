@@ -3,7 +3,7 @@
 set -uo pipefail
 
 PROJECT_NAME="BlueGate Platform"
-CLI_VERSION="2.1.0"
+CLI_VERSION="2.2.0"
 APP_NAME="bluegate-platform"
 DEFAULT_REPO_URL="https://github.com/paliparsa/BlueGate-Platform.git"
 DEFAULT_APP_DIR="/var/www/${APP_NAME}"

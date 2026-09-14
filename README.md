@@ -329,3 +329,52 @@ sudo ./cli/bluegate maintenance off
 ```
 
 فعال یا غیرفعال کردن Maintenance Mode.
+
+
+## Domain / SSL Manager (v3.4.3)
+
+نسخه 3.4.3 یک Domain Manager امن به CLI اضافه می‌کند. برای مشاهده وضعیت دامنه، SSL و Webhook:
+
+```bash
+sudo bluegate domain status
+```
+
+برای تغییر دامنه و انجام خودکار DNS preflight، دریافت SSL، تنظیم Nginx، بروزرسانی URLهای BlueGate و ثبت مجدد Telegram Webhook:
+
+```bash
+sudo bluegate domain change new.example.com
+```
+
+اگر نام دامنه را وارد نکنید، CLI آن را به‌صورت تعاملی می‌پرسد:
+
+```bash
+sudo bluegate domain change
+```
+
+برای Repair/Renew گواهی دامنه فعلی:
+
+```bash
+sudo bluegate ssl repair
+```
+
+همچنین گزینه `Domain / SSL Manager` به منوی اصلی `sudo bluegate` اضافه شده است.
+
+مهاجرت دامنه transactional است: قبل از تغییر، ENV، `config.php`، تنظیم Nginx و Webhook قبلی Backup می‌شوند. دامنه قبلی در زمان ACME challenge آنلاین می‌ماند و اگر SSL، Nginx، API یا Webhook دامنه جدید تأیید نشود، تنظیمات قبلی خودکار Restore می‌شوند.
+
+### Terminal compatibility
+
+CLI حالا UTF-8 را تشخیص می‌دهد. در ترمینال‌هایی که Unicode درست نمایش داده نمی‌شود، آیکون‌ها و خطوط به حالت ASCII تبدیل می‌شوند تا `?` و مربع‌های خراب نمایش داده نشوند. برای اجبار حالت ASCII:
+
+```bash
+sudo bluegate --ascii
+```
+
+Telegram Webhook نیز در صورت وجود `TELEGRAM_WEBHOOK_SECRET` از `secret_token` رسمی Telegram و هدر `X-Telegram-Bot-Api-Secret-Token` استفاده می‌کند.
+
+## v3.4.4 - Terminal & SSL hardening
+- Rebuilt terminal UI using terminal-safe ASCII symbols and aligned sections/menus.
+- Fixed Let's Encrypt HTTP-01 validation being blocked by the generic nginx dot-file deny rule.
+- Added a dedicated `/var/www/letsencrypt` ACME webroot and explicit nginx exception in HTTP and HTTPS configs.
+- SSL issuance now performs a public ACME reachability test before calling Certbot.
+- Domain migration uses the same isolated ACME path, keeps the old domain online until activation, and rolls back on failure.
+- Health Check now detects a missing ACME nginx route before renewal breaks.
