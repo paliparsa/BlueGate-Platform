@@ -319,7 +319,7 @@ domain_url_scan(){
 
 domain_change(){
   require_root; try_extract_php_config
-  local new="${1:-}" mode="${2:-}" old="$DOMAIN" tx nginx_conf old_webhook="" i=1 total=16 changed=0 before=0 normalized=0 media files missing runtime_refs same_domain=0 residue_domain
+  local new="${1:-}" mode="${2:-}" legacy_arg="${3:-}" old="$DOMAIN" legacy_domain="" tx nginx_conf old_webhook="" i=1 total=16 changed=0 before=0 normalized=0 media files missing runtime_refs same_domain=0 residue_domain
   [[ -n "$old" ]] || { fail "Current domain is not configured."; return 1; }
 
   # --force with no domain means: re-run the complete migration/repair flow on
@@ -333,18 +333,34 @@ domain_change(){
 
   if [[ "$new" == "$old" ]]; then
     same_domain=1
-    residue_domain=""
     if [[ "$mode" != "--force" && "$mode" != "--repair" ]]; then
       warn "Domain is already $old"
       confirm "Re-run the full repair migration on the current domain?" no || return 0
     fi
-  else
-    residue_domain="$old"
   fi
+
+  # The configured current domain is not necessarily the domain still embedded
+  # in old product/media/database records. Always ask for the historical/source
+  # domain so a manual or partially-completed migration can be repaired safely.
+  # A third CLI argument may prefill it for scripted use.
+  if [[ -n "$legacy_arg" ]]; then
+    legacy_domain="$legacy_arg"
+  else
+    echo
+    info "Enter the PREVIOUS domain that may still exist in images, products, JSON or database records."
+    info "Example: old.example.com   (type '-' if there is no previous domain to scan)"
+    read -rp "Previous / legacy domain: " legacy_domain
+  fi
+  legacy_domain="${legacy_domain#http://}"; legacy_domain="${legacy_domain#https://}"; legacy_domain="${legacy_domain%%/*}"
+  if [[ "$legacy_domain" == "-" || "$legacy_domain" == "none" || "$legacy_domain" == "NONE" ]]; then legacy_domain=""; fi
+  if [[ -n "$legacy_domain" ]]; then
+    validate_domain "$legacy_domain" || { fail "Invalid previous domain: $legacy_domain"; return 1; }
+  fi
+  if [[ -n "$legacy_domain" && "$legacy_domain" != "$new" ]]; then residue_domain="$legacy_domain"; else residue_domain=""; fi
 
   header
   if (( same_domain )); then section "CURRENT DOMAIN REPAIR MIGRATION"; else section "FULL DOMAIN MIGRATION"; fi
-  label "Current domain" "$old"; label "Target domain" "$new"
+  label "Configured domain" "$old"; label "Target domain" "$new"; label "Previous / legacy domain" "${legacy_domain:-none}"
   echo
   info "This migrates SSL, nginx, application config, Telegram webhook, database URLs and uploaded-media references."
   info "Internal uploads are normalized to /uploads/... so future domain changes do not break them."
@@ -356,12 +372,14 @@ domain_change(){
   rm -f /tmp/bg-domain-preflight.$$
 
   step $i $total "Scan domain/media references"; ((i+=1))
-  before="$(domain_db_scan "$old" 2>/tmp/bg-domain-before.$$)"; step_ok
-  if (( same_domain )); then
-    label "Current-domain DB references" "${before:-0}"
-    info "Only internal upload URLs will be normalized; legitimate current-domain URLs stay unchanged."
+  if [[ -n "$legacy_domain" ]]; then before="$(domain_db_scan "$legacy_domain" 2>/tmp/bg-domain-before.$$)"; else before=0; : > /tmp/bg-domain-before.$$; fi; step_ok
+  label "Legacy-domain DB references" "${before:-0}"
+  if [[ -z "$legacy_domain" ]]; then
+    info "No previous domain selected; only current-domain internal upload URLs will be normalized."
+  elif [[ "$legacy_domain" == "$new" ]]; then
+    info "Previous domain equals target; only internal upload URLs will be normalized."
   else
-    label "Old-domain DB references" "${before:-0}"
+    info "References to $legacy_domain will be migrated to $new; internal uploads become /uploads/..."
   fi
   [[ -s /tmp/bg-domain-before.$$ ]] && sed -n '1,20p' /tmp/bg-domain-before.$$ | sed 's/^/  /'
   rm -f /tmp/bg-domain-before.$$
@@ -415,16 +433,16 @@ domain_change(){
   DOMAIN="$new"; if save_env && domain_patch_php_config "$new" && domain_patch_public_metadata "$new"; then step_ok; else step_fail; DOMAIN="$old"; _domain_rollback; return 1; fi
 
   step $i $total "Migrate database URLs and media references"; ((i+=1))
-  if (( same_domain )); then
-    changed=0
+  if [[ -n "$legacy_domain" && "$legacy_domain" != "$new" ]]; then
+    changed="$(domain_db_migrate_urls "$legacy_domain" "$new")"
   else
-    changed="$(domain_db_migrate_urls "$old" "$new")"
+    changed=0
   fi
   normalized="$(domain_db_normalize_current_uploads "$new")"
   if [[ "$changed" =~ ^[0-9]+$ && "$normalized" =~ ^[0-9]+$ ]]; then step_ok; label "Rows changed" "$changed"; label "Current-domain uploads normalized" "$normalized"; else step_fail; _domain_rollback; return 1; fi
 
   step $i $total "Verify uploaded files on disk"; ((i+=1))
-  media="$(domain_db_media_integrity "$old" "$new" 2>/tmp/bg-media-missing.$$)"; files="${media%%$'\t'*}"; missing="${media##*$'\t'}"
+  media="$(domain_db_media_integrity "${legacy_domain:-$new}" "$new" 2>/tmp/bg-media-missing.$$)"; files="${media%%$'\t'*}"; missing="${media##*$'\t'}"
   [[ "$files" =~ ^[0-9]+$ ]] || files=0; [[ "$missing" =~ ^[0-9]+$ ]] || missing=0
   if (( missing > 0 )); then step_ok; warn "$missing missing upload file(s) were already referenced in the database."; sed -n '1,10p' /tmp/bg-media-missing.$$ | sed 's/^/  /'; else step_ok; ok "Media integrity OK ($files referenced upload file(s))"; fi
   rm -f /tmp/bg-media-missing.$$
@@ -447,26 +465,37 @@ domain_change(){
   domain_verify "$new" "$residue_domain" && step_ok || { step_fail; _domain_rollback; return 1; }
 
   step $i $total "Scan migration residue and finalize"; ((i+=1))
-  if (( same_domain )); then
-    # The current domain is expected to exist in config/metadata. Treating it as
-    # residue would create a false failure. Verify instead that absolute internal
-    # upload URLs were normalized out of the database.
-    local absolute_uploads
-    absolute_uploads="$(domain_db_scan "https://${new}/uploads/" 2>/tmp/bg-current-upload-residue.$$)"
-    if [[ "${absolute_uploads:-0}" != "0" ]]; then
-      step_ok; warn "${absolute_uploads} current-domain /uploads reference(s) remain (possibly escaped/custom JSON)."
-      sed -n '1,20p' /tmp/bg-current-upload-residue.$$ | sed 's/^/  /'
-    else
-      step_ok; ok "No absolute current-domain upload URLs remain in database"
-    fi
-    rm -f /tmp/bg-current-upload-residue.$$
+  local absolute_uploads legacy_left=0
+  absolute_uploads="$(domain_db_scan "https://${new}/uploads/" 2>/tmp/bg-current-upload-residue.$$)"
+  if [[ -n "$legacy_domain" && "$legacy_domain" != "$new" ]]; then
+    legacy_left="$(domain_db_scan "$legacy_domain" 2>/tmp/bg-legacy-residue.$$)"
+    runtime_refs="$(domain_scan_runtime_files "$legacy_domain")"
   else
-    runtime_refs="$(domain_scan_runtime_files "$old")"
-    if [[ -n "$runtime_refs" ]]; then
-      step_ok; warn "Old domain remains in non-database runtime files. Review these references:"
-      printf '%s\n' "$runtime_refs" | sed 's/^/  /'
-    else step_ok; ok "No old-domain references remain in runtime files"; fi
+    : > /tmp/bg-legacy-residue.$$
+    runtime_refs=""
   fi
+  step_ok
+  if [[ "${absolute_uploads:-0}" != "0" ]]; then
+    warn "${absolute_uploads} absolute current-domain /uploads reference(s) remain (possibly escaped/custom JSON)."
+    sed -n '1,20p' /tmp/bg-current-upload-residue.$$ | sed 's/^/  /'
+  else
+    ok "No absolute current-domain upload URLs remain in database"
+  fi
+  if [[ -n "$legacy_domain" && "$legacy_domain" != "$new" ]]; then
+    if [[ "${legacy_left:-0}" != "0" ]]; then
+      warn "${legacy_left} database reference(s) to previous domain still remain."
+      sed -n '1,20p' /tmp/bg-legacy-residue.$$ | sed 's/^/  /'
+    else
+      ok "No previous-domain references remain in database"
+    fi
+    if [[ -n "$runtime_refs" ]]; then
+      warn "Previous domain remains in runtime files. Review these references:"
+      printf '%s\n' "$runtime_refs" | sed 's/^/  /'
+    else
+      ok "No previous-domain references remain in runtime files"
+    fi
+  fi
+  rm -f /tmp/bg-current-upload-residue.$$ /tmp/bg-legacy-residue.$$
 
   if (( same_domain )); then
     echo; ok "Current domain repair migration completed successfully"
@@ -475,7 +504,7 @@ domain_change(){
     echo; ok "Full domain migration completed successfully"
     label "Domain" "$old $UI_ARROW $new"
   fi
-  label "Database URL rows changed" "$changed"
+  label "Previous-domain rows changed" "$changed"
   label "Rollback backup" "$tx"
   echo
   info "Local uploaded media now uses /uploads/... references and is no longer tied to the domain."
