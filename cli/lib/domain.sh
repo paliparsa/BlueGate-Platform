@@ -438,10 +438,15 @@ domain_change(){
   step $i $total "Sync Telegram commands and Mini App entry"; ((i+=1))
   if [[ -n "$BOT_TOKEN" ]]; then telegram_sync_ui >/dev/null 2>&1 && step_ok || { step_fail; warn "Telegram UI sync failed; migration continues because webhook is valid."; }; else step_ok; fi
 
+  # Verification must run with the application online. Keeping maintenance
+  # enabled here makes nginx return 503 for /, /miniapp/ and API endpoints,
+  # causing a false migration failure even when SSL/nginx are healthy.
+  step $i $total "Disable maintenance before live verification"; ((i+=1)); maintenance_off; step_ok
+
   step $i $total "Verify website, Mini App, Store API and webhook"; ((i+=1))
   domain_verify "$new" "$residue_domain" && step_ok || { step_fail; _domain_rollback; return 1; }
 
-  step $i $total "Scan migration residue"; ((i+=1))
+  step $i $total "Scan migration residue and finalize"; ((i+=1))
   if (( same_domain )); then
     # The current domain is expected to exist in config/metadata. Treating it as
     # residue would create a false failure. Verify instead that absolute internal
@@ -462,8 +467,6 @@ domain_change(){
       printf '%s\n' "$runtime_refs" | sed 's/^/  /'
     else step_ok; ok "No old-domain references remain in runtime files"; fi
   fi
-
-  step $i $total "Disable maintenance and finalize"; ((i+=1)); maintenance_off; step_ok
 
   if (( same_domain )); then
     echo; ok "Current domain repair migration completed successfully"
