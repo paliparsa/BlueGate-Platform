@@ -175,8 +175,15 @@ domain_db_normalize_current_uploads(){
   while IFS=$'\t' read -r t c; do
     [[ -n "$t" && -n "$c" ]] || continue
     ti="$(_domain_sql_ident "$t")"; ci="$(_domain_sql_ident "$c")"
-    sql="UPDATE ${ti} SET ${ci}=REPLACE(REPLACE(${ci},'https://${d}/uploads/','/uploads/'),'http://${d}/uploads/','/uploads/')
-      WHERE ${ci} IS NOT NULL AND (INSTR(${ci},'https://${d}/uploads/')>0 OR INSTR(${ci},'http://${d}/uploads/')>0);
+    sql="UPDATE ${ti} SET ${ci}=REPLACE(REPLACE(REPLACE(REPLACE(${ci},
+      'https://${d}/uploads/','/uploads/'),
+      'http://${d}/uploads/','/uploads/'),
+      'https:\\/\\/${d}\\/uploads\\/','\\/uploads\\/'),
+      'http:\\/\\/${d}\\/uploads\\/','\\/uploads\\/')
+      WHERE ${ci} IS NOT NULL AND (
+        INSTR(${ci},'https://${d}/uploads/')>0 OR INSTR(${ci},'http://${d}/uploads/')>0 OR
+        INSTR(${ci},'https:\\/\\/${d}\\/uploads\\/')>0 OR INSTR(${ci},'http:\\/\\/${d}\\/uploads\\/')>0
+      );
       SELECT ROW_COUNT();"
     n="$(mysql_app -N -B -e "$sql" 2>/dev/null | tail -n1 || echo 0)"
     [[ "$n" =~ ^[0-9]+$ ]] || n=0
@@ -312,13 +319,32 @@ domain_url_scan(){
 
 domain_change(){
   require_root; try_extract_php_config
-  local new="${1:-}" old="$DOMAIN" tx nginx_conf old_webhook="" i=1 total=16 changed=0 before=0 normalized=0 media files missing runtime_refs
+  local new="${1:-}" mode="${2:-}" old="$DOMAIN" tx nginx_conf old_webhook="" i=1 total=16 changed=0 before=0 normalized=0 media files missing runtime_refs same_domain=0 residue_domain
   [[ -n "$old" ]] || { fail "Current domain is not configured."; return 1; }
+
+  # --force with no domain means: re-run the complete migration/repair flow on
+  # the currently configured domain. This is useful after a partial/manual
+  # migration where DB media URLs, nginx, SSL or Telegram still need repair.
+  if [[ "$new" == "--force" || "$new" == "--repair" ]]; then
+    mode="--force"; new="$old"
+  fi
   [[ -n "$new" ]] || read -rp "New domain (without https): " new
   new="${new#http://}"; new="${new#https://}"; new="${new%%/*}"
-  [[ "$new" != "$old" ]] || { info "Domain is already $old"; return 0; }
-  header; section "FULL DOMAIN MIGRATION"
-  label "Current domain" "$old"; label "New domain" "$new"
+
+  if [[ "$new" == "$old" ]]; then
+    same_domain=1
+    residue_domain=""
+    if [[ "$mode" != "--force" && "$mode" != "--repair" ]]; then
+      warn "Domain is already $old"
+      confirm "Re-run the full repair migration on the current domain?" no || return 0
+    fi
+  else
+    residue_domain="$old"
+  fi
+
+  header
+  if (( same_domain )); then section "CURRENT DOMAIN REPAIR MIGRATION"; else section "FULL DOMAIN MIGRATION"; fi
+  label "Current domain" "$old"; label "Target domain" "$new"
   echo
   info "This migrates SSL, nginx, application config, Telegram webhook, database URLs and uploaded-media references."
   info "Internal uploads are normalized to /uploads/... so future domain changes do not break them."
@@ -329,9 +355,14 @@ domain_change(){
   if domain_preflight "$new" >/tmp/bg-domain-preflight.$$ 2>&1; then step_ok; cat /tmp/bg-domain-preflight.$$; else step_fail; cat /tmp/bg-domain-preflight.$$; rm -f /tmp/bg-domain-preflight.$$; return 1; fi
   rm -f /tmp/bg-domain-preflight.$$
 
-  step $i $total "Scan old-domain references"; ((i+=1))
+  step $i $total "Scan domain/media references"; ((i+=1))
   before="$(domain_db_scan "$old" 2>/tmp/bg-domain-before.$$)"; step_ok
-  label "Database references found" "${before:-0}"
+  if (( same_domain )); then
+    label "Current-domain DB references" "${before:-0}"
+    info "Only internal upload URLs will be normalized; legitimate current-domain URLs stay unchanged."
+  else
+    label "Old-domain DB references" "${before:-0}"
+  fi
   [[ -s /tmp/bg-domain-before.$$ ]] && sed -n '1,20p' /tmp/bg-domain-before.$$ | sed 's/^/  /'
   rm -f /tmp/bg-domain-before.$$
 
@@ -362,8 +393,15 @@ domain_change(){
     label "Rollback backup" "$tx"
   }
 
-  step $i $total "Prepare isolated ACME challenge"; ((i+=1))
-  domain_prepare_challenge_nginx "$new" >/dev/null 2>&1 && step_ok || { step_fail; _domain_rollback; return 1; }
+  step $i $total "Prepare ACME challenge route"; ((i+=1))
+  if (( same_domain )); then
+    # Never append a second server{} for the same host. Regenerate the normal
+    # site config, which already contains the ACME exception before dot-file deny.
+    DOMAIN="$new"
+    configure_nginx >/dev/null 2>&1 && step_ok || { step_fail; DOMAIN="$old"; _domain_rollback; return 1; }
+  else
+    domain_prepare_challenge_nginx "$new" >/dev/null 2>&1 && step_ok || { step_fail; _domain_rollback; return 1; }
+  fi
 
   step $i $total "Verify public ACME reachability"; ((i+=1))
   _domain_acme_probe "$new" >/tmp/bg-acme.$$ 2>&1 && { step_ok; cat /tmp/bg-acme.$$; } || { step_fail; cat /tmp/bg-acme.$$; rm -f /tmp/bg-acme.$$; _domain_rollback; return 1; }; rm -f /tmp/bg-acme.$$
@@ -377,7 +415,11 @@ domain_change(){
   DOMAIN="$new"; if save_env && domain_patch_php_config "$new" && domain_patch_public_metadata "$new"; then step_ok; else step_fail; DOMAIN="$old"; _domain_rollback; return 1; fi
 
   step $i $total "Migrate database URLs and media references"; ((i+=1))
-  changed="$(domain_db_migrate_urls "$old" "$new")"
+  if (( same_domain )); then
+    changed=0
+  else
+    changed="$(domain_db_migrate_urls "$old" "$new")"
+  fi
   normalized="$(domain_db_normalize_current_uploads "$new")"
   if [[ "$changed" =~ ^[0-9]+$ && "$normalized" =~ ^[0-9]+$ ]]; then step_ok; label "Rows changed" "$changed"; label "Current-domain uploads normalized" "$normalized"; else step_fail; _domain_rollback; return 1; fi
 
@@ -397,19 +439,39 @@ domain_change(){
   if [[ -n "$BOT_TOKEN" ]]; then telegram_sync_ui >/dev/null 2>&1 && step_ok || { step_fail; warn "Telegram UI sync failed; migration continues because webhook is valid."; }; else step_ok; fi
 
   step $i $total "Verify website, Mini App, Store API and webhook"; ((i+=1))
-  domain_verify "$new" "$old" && step_ok || { step_fail; _domain_rollback; return 1; }
+  domain_verify "$new" "$residue_domain" && step_ok || { step_fail; _domain_rollback; return 1; }
 
-  step $i $total "Scan for old-domain residue"; ((i+=1))
-  runtime_refs="$(domain_scan_runtime_files "$old")"
-  if [[ -n "$runtime_refs" ]]; then
-    step_ok; warn "Old domain remains in non-database runtime files. Review these references:"
-    printf '%s\n' "$runtime_refs" | sed 's/^/  /'
-  else step_ok; ok "No old-domain references remain in runtime files"; fi
+  step $i $total "Scan migration residue"; ((i+=1))
+  if (( same_domain )); then
+    # The current domain is expected to exist in config/metadata. Treating it as
+    # residue would create a false failure. Verify instead that absolute internal
+    # upload URLs were normalized out of the database.
+    local absolute_uploads
+    absolute_uploads="$(domain_db_scan "https://${new}/uploads/" 2>/tmp/bg-current-upload-residue.$$)"
+    if [[ "${absolute_uploads:-0}" != "0" ]]; then
+      step_ok; warn "${absolute_uploads} current-domain /uploads reference(s) remain (possibly escaped/custom JSON)."
+      sed -n '1,20p' /tmp/bg-current-upload-residue.$$ | sed 's/^/  /'
+    else
+      step_ok; ok "No absolute current-domain upload URLs remain in database"
+    fi
+    rm -f /tmp/bg-current-upload-residue.$$
+  else
+    runtime_refs="$(domain_scan_runtime_files "$old")"
+    if [[ -n "$runtime_refs" ]]; then
+      step_ok; warn "Old domain remains in non-database runtime files. Review these references:"
+      printf '%s\n' "$runtime_refs" | sed 's/^/  /'
+    else step_ok; ok "No old-domain references remain in runtime files"; fi
+  fi
 
   step $i $total "Disable maintenance and finalize"; ((i+=1)); maintenance_off; step_ok
 
-  echo; ok "Full domain migration completed successfully"
-  label "Domain" "$old $UI_ARROW $new"
+  if (( same_domain )); then
+    echo; ok "Current domain repair migration completed successfully"
+    label "Domain" "$new"
+  else
+    echo; ok "Full domain migration completed successfully"
+    label "Domain" "$old $UI_ARROW $new"
+  fi
   label "Database URL rows changed" "$changed"
   label "Rollback backup" "$tx"
   echo
@@ -429,19 +491,21 @@ domain_ssl_repair(){
 domain_menu(){
   while true; do
     header; section "DOMAIN / SSL MANAGER"
-    menu_item 1 "Full Domain Migration" "SSL + nginx + DB URLs + uploads + Telegram + verification"
-    menu_item 2 "Domain Status" "DNS, HTTPS, certificate, webhook"
-    menu_item 3 "Scan Domain References" "Find DB/media/runtime references before migrating"
-    menu_item 4 "Repair / Renew SSL" "ACME test + Let's Encrypt"
-    menu_item 5 "Refresh Telegram Webhook" "Telegram setWebhook"
+    menu_item 1 "Full Domain Migration" "Change domain + SSL + nginx + DB/media + Telegram + verification"
+    menu_item 2 "Re-run Current Domain Migration" "Repair everything on the already-configured domain"
+    menu_item 3 "Domain Status" "DNS, HTTPS, certificate, webhook"
+    menu_item 4 "Scan Domain References" "Find DB/media/runtime references before migrating"
+    menu_item 5 "Repair / Renew SSL" "ACME test + Let's Encrypt"
+    menu_item 6 "Refresh Telegram Webhook" "Telegram setWebhook"
     menu_item 0 "Back"
     echo; ui_rule; read -rp "Choose: " c || true
     case "$c" in
       1) domain_change; pause;;
-      2) domain_status; pause;;
-      3) domain_url_scan; pause;;
-      4) domain_ssl_repair; pause;;
-      5) telegram_set_webhook; pause;;
+      2) domain_change --force; pause;;
+      3) domain_status; pause;;
+      4) domain_url_scan; pause;;
+      5) domain_ssl_repair; pause;;
+      6) telegram_set_webhook; pause;;
       0) return 0;;
       *) warn "Unknown option"; sleep 1;;
     esac

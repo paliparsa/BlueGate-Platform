@@ -416,3 +416,14 @@ New Telegram product/category/avatar uploads are stored in the database as root-
 ```
 
 instead of a domain-bound absolute URL. Existing local upload URLs are normalized automatically during a full domain migration. External image URLs remain absolute and are not converted unless they point to the currently configured BlueGate domain.
+
+### Re-run migration on the current domain
+
+If the domain was already changed manually or by an earlier release, you can re-run the complete repair flow without changing the hostname:
+
+```bash
+sudo bluegate domain migrate --force
+```
+
+This rechecks ACME/SSL, regenerates nginx, patches application URLs, normalizes absolute internal upload URLs to `/uploads/...`, refreshes the Telegram webhook/UI, and verifies the website, Mini App and Store API. The current domain is not treated as an "old-domain residue" during this repair mode.
+
