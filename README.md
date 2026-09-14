@@ -378,3 +378,41 @@ Telegram Webhook نیز در صورت وجود `TELEGRAM_WEBHOOK_SECRET` از `s
 - SSL issuance now performs a public ACME reachability test before calling Certbot.
 - Domain migration uses the same isolated ACME path, keeps the old domain online until activation, and rolls back on failure.
 - Health Check now detects a missing ACME nginx route before renewal breaks.
+
+## v3.5.0 - Full Domain Migration
+
+`sudo bluegate` now includes **Full Domain Migration** under `Domain Migration / SSL`.
+
+It performs one transactional migration for:
+
+- DNS and ACME preflight
+- Let's Encrypt certificate issuance
+- Nginx domain activation
+- `PUBLIC_BASE_URL` and `MINIAPP_URL`
+- Telegram webhook and bot UI refresh
+- dynamic database scan across all text columns
+- conversion of local uploaded media from absolute URLs to `/uploads/...`
+- replacement of remaining old-domain references with the new HTTPS domain
+- `robots.txt` sitemap URL
+- website, Mini App and Store API verification
+- database/media residue scan
+- database + config + Nginx + webhook rollback on failure
+
+Commands:
+
+```bash
+sudo bluegate domain migrate new.example.com
+sudo bluegate domain scan old.example.com
+sudo bluegate domain status
+sudo bluegate ssl repair
+```
+
+### Domain-independent uploads
+
+New Telegram product/category/avatar uploads are stored in the database as root-relative references such as:
+
+```text
+/uploads/products/20260914/example.jpg
+```
+
+instead of a domain-bound absolute URL. Existing local upload URLs are normalized automatically during a full domain migration. External image URLs remain absolute and are not converted unless they point to the currently configured BlueGate domain.

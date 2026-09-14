@@ -3781,6 +3781,18 @@ function set_step_payload(int $telegram_id, string $step, array $payload): void 
 function shop_cancel_keyboard(): string { return json_markup(['inline_keyboard'=>[[['text'=>'❌ لغو و بازگشت', 'callback_data'=>'adm_shop']]]]); }
 function public_base_url(): string { return rtrim((string)app_config('PUBLIC_BASE_URL',''), '/'); }
 function public_url_for_path(string $relative): string { return public_base_url() . '/' . ltrim($relative, '/'); }
+function internal_media_reference(string $relative): string { return '/' . ltrim($relative, '/'); }
+function normalize_internal_media_reference(?string $url): ?string {
+    $url=trim((string)$url); if($url==='')return null;
+    $base=public_base_url();
+    if($base!=='' && str_starts_with($url,$base.'/uploads/')) return '/uploads/'.substr($url,strlen($base.'/uploads/'));
+    if(preg_match('#^https?://[^/]+(/uploads/.*)$#i',$url,$m)) {
+        $host=(string)parse_url($url,PHP_URL_HOST);$configured=(string)parse_url($base,PHP_URL_HOST);
+        if($configured!=='' && strcasecmp($host,$configured)===0)return $m[1];
+    }
+    if(str_starts_with($url,'uploads/'))return '/'.$url;
+    return $url;
+}
 function telegram_file_to_public_url(string $fileId, string $folder='shop'): ?string {
     $info = tg('getFile', ['file_id'=>$fileId]);
     if (empty($info['ok']) || empty($info['result']['file_path'])) return null;
@@ -3795,7 +3807,7 @@ function telegram_file_to_public_url(string $fileId, string $folder='shop'): ?st
     $bin = @file_get_contents($url);
     if ($bin === false || strlen($bin) < 10) return null;
     file_put_contents($dest, $bin);
-    return public_url_for_path($relative);
+    return internal_media_reference($relative);
 }
 function user_avatar_public_url(array $user): ?string {
     $url=trim((string)($user['avatar_url']??''));
@@ -3831,7 +3843,7 @@ function save_custom_user_avatar(int $userId,string $dataUrl): array {
     $dir=__DIR__.'/../public/uploads/avatars/custom';if(!is_dir($dir))@mkdir($dir,0775,true);
     $name='user-'.$userId.'-'.bin2hex(random_bytes(6)).'.'.$ext;$dest=$dir.'/'.$name;
     if(file_put_contents($dest,$bin)===false)throw new RuntimeException('AVATAR_SAVE_FAILED');
-    $relative='uploads/avatars/custom/'.$name;$url=public_url_for_path($relative);
+    $relative='uploads/avatars/custom/'.$name;$url=internal_media_reference($relative);
     db()->prepare('UPDATE users SET avatar_url=?,avatar_source=\'custom\',avatar_synced_at=NOW() WHERE id=?')->execute([$url,$userId]);
     return get_user_by_id($userId)?:[];
 }
@@ -3841,7 +3853,7 @@ function reset_user_avatar_to_telegram(int $userId): array {
 }
 function image_url_from_message(array $message, string $folder='shop'): ?string {
     $text = trim((string)($message['text'] ?? $message['caption'] ?? ''));
-    if ($text !== '' && preg_match('/^https?:\/\//i', $text)) return $text;
+    if ($text !== '' && preg_match('/^https?:\/\//i', $text)) return normalize_internal_media_reference($text);
     if (!empty($message['photo']) && is_array($message['photo'])) { $last = end($message['photo']); if (!empty($last['file_id'])) return telegram_file_to_public_url((string)$last['file_id'], $folder); }
     if (!empty($message['document']['file_id']) && str_starts_with((string)($message['document']['mime_type'] ?? ''), 'image/')) return telegram_file_to_public_url((string)$message['document']['file_id'], $folder);
     return null;
@@ -3869,8 +3881,8 @@ function soft_delete_product(int $productId): void { db()->prepare('UPDATE produ
 function soft_delete_category(int $categoryId): void { db()->prepare('UPDATE product_categories SET is_active=0 WHERE id=?')->execute([$categoryId]); }
 function delete_available_inventory(int $inventoryId): bool { $q=db()->prepare('DELETE FROM inventory_items WHERE id=? AND status="available"'); $q->execute([$inventoryId]); return $q->rowCount() > 0; }
 function soft_delete_variant(int $variantId): void { db()->prepare('UPDATE product_variants SET is_active=0 WHERE id=?')->execute([$variantId]); }
-function set_product_image(int $productId, ?string $url): void { db()->prepare('UPDATE products SET image_url=? WHERE id=?')->execute([$url, $productId]); }
-function set_category_image(int $categoryId, ?string $url): void { db()->prepare('UPDATE product_categories SET image_url=? WHERE id=?')->execute([$url, $categoryId]); }
+function set_product_image(int $productId, ?string $url): void { $url=normalize_internal_media_reference($url); db()->prepare('UPDATE products SET image_url=? WHERE id=?')->execute([$url, $productId]); }
+function set_category_image(int $categoryId, ?string $url): void { $url=normalize_internal_media_reference($url); db()->prepare('UPDATE product_categories SET image_url=? WHERE id=?')->execute([$url, $categoryId]); }
 function create_product_from_wizard(array $p): int {
     $commission = $p['commission_type'] ?? 'none'; if (!in_array($commission, ['none','fixed','percent'], true)) $commission='none';
     $pp = price_admin_payload_from_input($p);
@@ -3927,12 +3939,14 @@ function update_product_field(int $id, string $field, $value): bool {
     if (in_array($field,['flash_sale_start','flash_sale_end'],true)) $value = (trim((string)$value)==='' || $value===null) ? null : date('Y-m-d H:i:s', strtotime((string)$value));
     if ($field==='category_id') $value = ((int)$value > 0) ? (int)$value : null;
     if ($field==='delivery_type') $value=normalize_delivery_type((string)$value);
+    if (in_array($field,['image_url','image_srcset'],true)) $value=normalize_internal_media_reference($value);
     if ($field==='commission_type' && !in_array($value,['none','fixed','percent'],true)) $value='none';
     $q=db()->prepare("UPDATE products SET {$field}=? WHERE id=?"); $q->execute([$value,$id]); return true;
 }
 function update_category_field(int $id, string $field, $value): bool {
     $allowed=['title','emoji','image_url','sort_order','is_active']; if(!in_array($field,$allowed,true)) return false;
     if (in_array($field,['sort_order','is_active'],true)) $value=(int)parse_amount($value);
+    if ($field==='image_url') $value=normalize_internal_media_reference($value);
     $q=db()->prepare("UPDATE product_categories SET {$field}=? WHERE id=?"); $q->execute([$value,$id]); return true;
 }
 function update_variant_field(int $id, string $field, $value): bool {
