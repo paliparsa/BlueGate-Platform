@@ -428,13 +428,13 @@ sudo bluegate domain migrate --force
 This rechecks ACME/SSL, regenerates nginx, patches application URLs, normalizes absolute internal upload URLs to `/uploads/...`, refreshes the Telegram webhook/UI, and verifies the website, Mini App and Store API. The current domain is not treated as an "old-domain residue" during this repair mode.
 
 
-### v3.5.3 maintenance verification fix
+### v3.5.4 maintenance verification fix
 - Full/current-domain migration now disables maintenance mode **before** live HTTP verification.
 - Prevents false `HTTP 503` rollback at the website/Mini App/Store API verification step.
 - Rollback still re-enables maintenance while restoring DB/config/nginx, then disables it when restoration finishes.
 
 
-## v3.5.3 - Manual previous-domain prompt
+## v3.5.4 - Manual previous-domain prompt
 
 Full Domain Migration now always asks for the previous/legacy domain that may still be embedded in database records, product images, JSON fields, avatars, and runtime files. This is separate from the currently configured domain, so a partially completed/manual domain change can be repaired. Enter `-` when there is no previous domain to scan.
 
@@ -448,3 +448,9 @@ Scripted optional third migration argument:
 ```bash
 sudo bluegate domain migrate bot.example.com --force old.example.com
 ```
+
+
+## v3.5.4 webhook verification fix
+- Telegram webhook verification now retries and self-repairs.
+- A transient `getWebhookInfo` mismatch no longer rolls back a successful database/media/domain migration.
+- If Telegram still cannot be confirmed after forced re-registration, migration stays applied and reports expected vs reported webhook URL.

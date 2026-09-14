@@ -291,8 +291,16 @@ domain_verify(){
   rm -f /tmp/bg-media-missing.$$
 
   if [[ -n "$BOT_TOKEN" ]]; then
-    wh="$(tg_api getWebhookInfo 2>/dev/null | (command -v jq >/dev/null 2>&1 && jq -r '.result.url // empty' || cat) 2>/dev/null || true)"
-    [[ "$wh" == "https://${d}/bot.php?secret=${WEBHOOK_SECRET}" ]] || { fail "Telegram webhook did not switch to the new domain"; return 1; }
+    if ! telegram_verify_webhook; then
+      warn "Telegram webhook could not be confirmed after automatic repair attempts."
+      label "Expected webhook" "${WEBHOOK_VERIFY_EXPECTED:-https://${d}/bot.php?secret=${WEBHOOK_SECRET}}"
+      label "Reported webhook" "${WEBHOOK_VERIFY_ACTUAL:-unavailable}"
+      # Website/database migration is already healthy at this point. A transient
+      # Telegram API verification problem must not revert valid URL/media fixes.
+      warn "Migration will remain applied; run 'sudo bluegate webhook' to retry Telegram only."
+    else
+      ok "Telegram webhook verified"
+    fi
   fi
 }
 

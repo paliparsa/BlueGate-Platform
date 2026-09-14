@@ -6,6 +6,57 @@ telegram_set_webhook(){
   echo "$res" | grep -q '"ok":true' || { echo "$res"; return 1; }
   ok "Telegram webhook refreshed"
 }
+
+telegram_expected_webhook_url(){
+  printf 'https://%s/bot.php?secret=%s' "$DOMAIN" "$WEBHOOK_SECRET"
+}
+
+telegram_get_webhook_url(){
+  local res url
+  res="$(tg_api getWebhookInfo 2>/dev/null)" || return 1
+  if command -v jq >/dev/null 2>&1; then
+    url="$(printf '%s' "$res" | jq -r 'if .ok == true then (.result.url // "") else "" end' 2>/dev/null)" || return 1
+  else
+    printf '%s' "$res" | grep -q '"ok":true' || return 1
+    url="$(printf '%s' "$res" | sed -n 's/.*"url":"\([^"]*\)".*/\1/p')"
+  fi
+  printf '%s' "$url"
+}
+
+telegram_verify_webhook(){
+  [[ -n "$BOT_TOKEN" && -n "$DOMAIN" && -n "$WEBHOOK_SECRET" ]] || return 0
+  local expected actual="" attempt
+  expected="$(telegram_expected_webhook_url)"
+
+  # Telegram normally reflects setWebhook immediately, but transient API/network
+  # failures must not roll back an otherwise successful domain/database migration.
+  for attempt in 1 2 3; do
+    actual="$(telegram_get_webhook_url 2>/dev/null || true)"
+    [[ "$actual" == "$expected" ]] && return 0
+    sleep 1
+  done
+
+  warn "Telegram webhook verification mismatch; attempting automatic repair."
+  telegram_set_webhook >/dev/null 2>&1 || true
+
+  for attempt in 1 2 3 4 5; do
+    actual="$(telegram_get_webhook_url 2>/dev/null || true)"
+    [[ "$actual" == "$expected" ]] && return 0
+    sleep 1
+  done
+
+  # One forced re-registration, preserving pending updates.
+  tg_api deleteWebhook --data-urlencode 'drop_pending_updates=false' >/dev/null 2>&1 || true
+  telegram_set_webhook >/dev/null 2>&1 || true
+  sleep 1
+  actual="$(telegram_get_webhook_url 2>/dev/null || true)"
+  [[ "$actual" == "$expected" ]] && return 0
+
+  WEBHOOK_VERIFY_EXPECTED="$expected"
+  WEBHOOK_VERIFY_ACTUAL="$actual"
+  return 1
+}
+
 telegram_sync_ui(){
   local a b
   a="$(tg_api setChatMenuButton --data-urlencode 'menu_button={"type":"commands"}')" || return 1
