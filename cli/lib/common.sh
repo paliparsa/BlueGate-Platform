@@ -3,7 +3,7 @@
 set -uo pipefail
 
 PROJECT_NAME="BlueGate Platform"
-CLI_VERSION="2.0.1"
+CLI_VERSION="2.1.0"
 APP_NAME="bluegate-platform"
 DEFAULT_REPO_URL="https://github.com/paliparsa/BlueGate-Platform.git"
 DEFAULT_APP_DIR="/var/www/${APP_NAME}"
@@ -73,7 +73,7 @@ source_version(){ [[ -f "$SOURCE_ROOT/VERSION" ]] && tr -d '\r\n ' < "$SOURCE_RO
 now(){ date '+%Y-%m-%d %H:%M:%S'; }
 slug_now(){ date '+%Y%m%d-%H%M%S'; }
 rand_hex(){ openssl rand -hex "${1:-16}" 2>/dev/null || date +%s%N | sha256sum | cut -c1-$(( ${1:-16} * 2 )); }
-mask_secret(){ local v="${1:-}"; [[ -z "$v" ]] && { echo "—"; return; }; [[ ${#v} -lt 9 ]] && { echo "••••"; return; }; echo "${v:0:4}…${v: -4}"; }
+mask_secret(){ local v="${1:-}"; [[ -z "$v" ]] && { echo "-"; return; }; [[ ${#v} -lt 9 ]] && { echo "****"; return; }; echo "${v:0:4}...${v: -4}"; }
 validate_db_identifier(){ [[ "$1" =~ ^[A-Za-z0-9_]+$ ]]; }
 validate_domain(){ [[ "$1" =~ ^[A-Za-z0-9.-]+$ ]] && [[ "$1" == *.* ]] && [[ "$1" != .* ]] && [[ "$1" != *. ]]; }
 php_escape(){ printf "%s" "$1" | sed "s/\\\\/\\\\\\\\/g; s/'/\\\\'/g"; }

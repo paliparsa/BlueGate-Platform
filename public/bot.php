@@ -12,6 +12,14 @@ if (!hash_equals($expected, $secret)) {
     http_response_code(403);
     exit('Forbidden');
 }
+$headerExpected = trim((string)app_config('TELEGRAM_WEBHOOK_SECRET', ''));
+if ($headerExpected !== '') {
+    $headerActual = trim((string)($_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? ''));
+    if ($headerActual === '' || !hash_equals($headerExpected, $headerActual)) {
+        http_response_code(403);
+        exit('Forbidden');
+    }
+}
 $raw = file_get_contents('php://input');
 $update = json_decode($raw ?: '{}', true) ?: [];
 require_once __DIR__ . '/../app/bot_logic.php';

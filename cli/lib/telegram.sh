@@ -2,7 +2,7 @@
 tg_api(){ local method="$1"; shift; [[ -n "$BOT_TOKEN" ]] || return 2; curl -fsS --max-time 15 "https://api.telegram.org/bot${BOT_TOKEN}/${method}" "$@"; }
 telegram_set_webhook(){
   [[ -n "$BOT_TOKEN" && -n "$DOMAIN" && -n "$WEBHOOK_SECRET" ]] || { fail "Telegram/domain config incomplete"; return 1; }
-  local res; res="$(tg_api setWebhook --data-urlencode "url=https://${DOMAIN}/bot.php?secret=${WEBHOOK_SECRET}" --data-urlencode 'allowed_updates=["message","callback_query","pre_checkout_query"]')" || return 1
+  local res args=(--data-urlencode "url=https://${DOMAIN}/bot.php?secret=${WEBHOOK_SECRET}" --data-urlencode 'allowed_updates=["message","callback_query","pre_checkout_query"]'); [[ -n "$TELEGRAM_WEBHOOK_SECRET" ]] && args+=(--data-urlencode "secret_token=${TELEGRAM_WEBHOOK_SECRET}"); res="$(tg_api setWebhook "${args[@]}")" || return 1
   echo "$res" | grep -q '"ok":true' || { echo "$res"; return 1; }
   ok "Telegram webhook refreshed"
 }

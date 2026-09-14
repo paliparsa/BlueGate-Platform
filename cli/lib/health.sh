@@ -53,7 +53,7 @@ health_render(){
 doctor(){
   health_collect; header; echo "BlueGate Doctor"; echo
   local issues=0 l st name detail
-  for l in "${HC_LINES[@]}"; do IFS='|' read -r st name detail <<<"$l"; [[ "$st" == ok ]] && continue; ((issues+=1)); warn "$name — $detail"; done
+  for l in "${HC_LINES[@]}"; do IFS='|' read -r st name detail <<<"$l"; [[ "$st" == ok ]] && continue; ((issues+=1)); warn "$name - $detail"; done
   [[ $issues -eq 0 ]] && { ok "No actionable problems found."; return 0; }
   echo
   confirm "Run safe automatic repairs (permissions, cron, nginx, migrations, webhook)?" no || return 1

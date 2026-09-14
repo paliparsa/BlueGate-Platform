@@ -1,24 +1,27 @@
 #!/usr/bin/env bash
 set -uo pipefail
+# Pre-parse display switches before ui.sh is sourced.
+for _bg_arg in "$@"; do case "$_bg_arg" in --ascii) export ASCII_UI=1;; --no-color) export NO_COLOR=1;; esac; done
+unset _bg_arg
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for f in common ui system config telegram backup health updater; do source "$HERE/lib/$f.sh"; done
+for f in common ui system config telegram domain backup health updater; do source "$HERE/lib/$f.sh"; done
 
 usage(){ cat <<'EOF'
-BlueGate CLI 2.0
+BlueGate CLI 2.1
 Usage: bluegate <command> [options]
 
 Core:       status, health, doctor, update, install, repair, configure
 Data:       backup, backups, restore, migrate, db
-Operations: logs, telegram, webhook, cron, maintenance, system-info
+Operations: logs, telegram, webhook, domain, ssl, cron, maintenance, system-info
 Utilities:  version, help
 
-Global options: --yes  --json  --no-color
+Global options: --yes  --json  --no-color  --ascii
 EOF
 }
 
 status_cmd(){
   header; echo "System Status"; echo
-  label "App directory" "$APP_DIR"; label "Version" "$(app_version)"; label "Domain" "${DOMAIN:-—}"; label "Repository" "$REPO_URL"
+  label "App directory" "$APP_DIR"; label "Version" "$(app_version)"; label "Domain" "${DOMAIN:--}"; label "Repository" "$REPO_URL"
   label "Config" "$([[ -f "$APP_DIR/config.php" ]] && echo ready || echo missing)"; label "nginx" "$(systemctl is-active nginx 2>/dev/null || true)"; label "MariaDB" "$(systemctl is-active mariadb 2>/dev/null || true)"
   label "Maintenance" "$([[ -f "$(maintenance_file)" ]] && echo ON || echo off)"; label "Telegram token" "$(mask_secret "$BOT_TOKEN")"; echo
   local tg; tg="$(telegram_health_text 2>/dev/null)" || true; label "Telegram" "${tg:-unavailable}"
@@ -73,6 +76,7 @@ menu(){
     echo "  4) Logs                   9) System Info"
     echo "  5) Backup / Restore      10) Configure"
     echo " 11) Maintenance           12) Cron Repair"
+    echo " 13) Domain / SSL Manager"
     echo "  0) Exit"; line
     read -rp "Choose: " c || true
     case "$c" in
@@ -80,13 +84,13 @@ menu(){
       5) header; echo "1) Create backup  2) List backups  3) Restore"; read -rp "Choose: " b; case "$b" in 1) backup_create;;2)backup_list;;3)backup_restore;;esac; pause;;
       6) db_cmd status; pause;; 7) telegram_cmd status; echo; echo "1) Refresh webhook  2) Sync bot commands"; read -rp "Choose or Enter: " t; [[ "$t" == 1 ]] && telegram_set_webhook; [[ "$t" == 2 ]] && telegram_sync_ui; pause;;
       8) repair_cmd; pause;; 9) system_info; pause;; 10) configure_wizard; pause;; 11) echo "1) ON  2) OFF  3) Status"; read -rp "Choose: " m; [[ "$m" == 1 ]] && maintenance_cmd on; [[ "$m" == 2 ]] && maintenance_cmd off; [[ "$m" == 3 ]] && maintenance_cmd status; pause;;
-      12) configure_cron; ok "Cron repaired"; pause;; 0) exit 0;; *) sleep 1;; esac
+      12) configure_cron; ok "Cron repaired"; pause;; 13) domain_menu;; 0) exit 0;; *) sleep 1;; esac
   done
 }
 
 # Parse global switches anywhere.
 ORIGINAL_ARGS=("$@")
-ARGS=(); for a in "$@"; do case "$a" in --yes|-y) YES=1;; --json) JSON_OUTPUT=1;; --no-color) NO_COLOR=1;; --update) ARGS+=(update);; --health) ARGS+=(health);; --status) ARGS+=(status);; --webhook) ARGS+=(webhook);; --full|--install) ARGS+=(install);; *) ARGS+=("$a");; esac; done
+ARGS=(); for a in "$@"; do case "$a" in --yes|-y) YES=1;; --json) JSON_OUTPUT=1;; --no-color) NO_COLOR=1;; --ascii) ASCII_UI=1;; --update) ARGS+=(update);; --health) ARGS+=(health);; --status) ARGS+=(status);; --webhook) ARGS+=(webhook);; --full|--install) ARGS+=(install);; *) ARGS+=("$a");; esac; done
 set -- "${ARGS[@]}"; cmd="${1:-menu}"; shift || true
 if [[ ${EUID:-$(id -u)} -ne 0 && "$cmd" != "help" && "$cmd" != "-h" && "$cmd" != "--help" && "$cmd" != "version" ]]; then
   command -v sudo >/dev/null 2>&1 || { fail "Root privileges are required."; exit 2; }
@@ -95,6 +99,6 @@ fi
 case "$cmd" in
   menu|dashboard) menu;; install) install_from_source;; configure) configure_wizard;; status) status_cmd;; health) health_render;; doctor) doctor;; repair) repair_cmd;; update) update_pipeline;;
   backup) backup_create;; backups) backup_list;; restore|rollback) backup_restore "${1:-}";; migrate) run_migrations;; db) db_cmd "$@";; logs) logs_cmd "$@";;
-  telegram) telegram_cmd "$@";; webhook) telegram_set_webhook;; cron) configure_cron;; manager-install) install_manager_command && ok "Manager command installed";; maintenance) maintenance_cmd "$@";; system-info|sysinfo) system_info;;
+  telegram) telegram_cmd "$@";; webhook) telegram_set_webhook;; domain) case "${1:-status}" in status) domain_status;; change) domain_change "${2:-}";; menu) domain_menu;; *) echo "Usage: bluegate domain [status|change [new-domain]|menu]";; esac;; ssl) case "${1:-repair}" in repair|renew) domain_ssl_repair;; *) echo "Usage: bluegate ssl [repair|renew]";; esac;; cron) configure_cron;; manager-install) install_manager_command && ok "Manager command installed";; maintenance) maintenance_cmd "$@";; system-info|sysinfo) system_info;;
   version) echo "$(app_version)";; help|-h|--help) usage;; *) fail "Unknown command: $cmd"; usage; exit 2;;
 esac

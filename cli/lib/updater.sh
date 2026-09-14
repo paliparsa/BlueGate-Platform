@@ -31,6 +31,6 @@ update_pipeline(){
   step $i $total "Telegram sync"; ((i+=1)); telegram_sync_ui >/dev/null 2>&1 && telegram_set_webhook >/dev/null 2>&1 && step_ok || { step_fail; warn "Telegram sync failed; application update remains installed."; }
   step $i $total "Final health"; maintenance_off; trap - EXIT; if health_collect && [[ $HC_FAIL -eq 0 ]]; then step_ok; else step_fail; fi
   local new="$(app_version)" dur=$(( $(date +%s)-started ))
-  echo; line; ok "BlueGate update completed"; label "Version" "$old → $new"; label "Backup" "$backup"; label "Health" "$HC_OK pass / $HC_WARN warn / $HC_FAIL fail"; label "Duration" "${dur}s"
+  echo; line; ok "BlueGate update completed"; label "Version" "$old ${UI_ARROW:-"->"} $new"; label "Backup" "$backup"; label "Health" "$HC_OK pass / $HC_WARN warn / $HC_FAIL fail"; label "Duration" "${dur}s"
   [[ $HC_FAIL -gt 0 ]] && { warn "Run: bluegate doctor"; return 2; }; return 0
 }

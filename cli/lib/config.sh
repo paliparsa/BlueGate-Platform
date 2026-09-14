@@ -4,7 +4,7 @@ ask_optional(){ local var prompt current value; var="$1"; prompt="$2"; current="
 
 configure_wizard(){
   require_root; try_extract_php_config; header
-  echo "Configuration wizard — secrets are never passed as CLI arguments."; echo
+  echo "Configuration wizard - secrets are never passed as CLI arguments."; echo
   [[ -z "$DB_PASS" ]] && DB_PASS="$(rand_hex 16)"
   [[ -z "$WEBHOOK_SECRET" ]] && WEBHOOK_SECRET="$(rand_hex 20)"
   [[ -z "$TELEGRAM_WEBHOOK_SECRET" ]] && TELEGRAM_WEBHOOK_SECRET="$(rand_hex 20)"
