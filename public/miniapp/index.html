@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>BlueGate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Vazirmatn:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Vazirmatn:wght@300;400;500;700;800;900&display=swap" rel="stylesheet"></noscript>
+  <script defer src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Cache Buster Version: v30622-order-delivery-cleanup-fix -->
+  <link rel="stylesheet" href="style.css?v=0.10.9">
+  <link rel="stylesheet" href="unified.css?v=v105-persian-infra">
+  <link rel="stylesheet" href="purchase.css?v=v105-persian-infra">
+  <link rel="stylesheet" href="web-parity.css?v=v105-persian-infra">
+  <link rel="stylesheet" href="mobile-v292.css?v=v105-persian-infra">
+  <link rel="stylesheet" href="contrast-guard.css?v=v105-persian-infra">
+  <link rel="stylesheet" href="layer-stack.css?v=v105-persian-infra">
+</head>
+<body>
+  <div id="status" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <main id="userApp" class="app-shell" role="main">
+    <header class="topbar glass">
+      <div class="brand-box">
+        <small id="helloText">سلام 👋</small>
+        <h1 id="brandTitle">فروشگاه</h1>
+      </div>
+
+      <nav class="topbar-desktop-nav">
+        <button data-tab="shop" class="active"><span class="nav-icon">⌂</span> فروشگاه</button>
+        <button data-tab="orders"><span class="nav-icon">▤</span> سفارش‌ها</button>
+        <button data-tab="wallet"><span class="nav-icon">◫</span> اعتبار</button>
+        <button data-tab="home"><span class="nav-icon">○</span> حساب</button>
+      </nav>
+
+      <div class="topbar-actions">
+        <button class="icon-btn mini-notification-btn hidden" id="miniNotificationsBtn" aria-label="اعلان‌ها">🔔<span id="miniNotificationBadge" class="mini-notification-badge hidden">0</span></button>
+        <button class="auth-top-btn hidden" id="openAuthModalBtn" title="ورود / ثبت نام">ورود / ثبت‌نام</button>
+      </div>
+    </header>
+
+    <section id="homePage" class="page"></section>
+    <section id="shopPage" class="page hidden"></section>
+    <section id="ordersPage" class="page hidden"></section>
+    <section id="walletPage" class="page hidden"></section>
+
+    <nav class="bottom-nav glass" role="navigation" aria-label="ناوبری پایین">
+      <button data-tab="shop" class="active"><span class="nav-icon">⌂</span>فروشگاه</button>
+      <button data-tab="orders"><span class="nav-icon">▤</span>سفارش‌ها</button>
+      <button data-tab="wallet"><span class="nav-icon">◫</span>اعتبار</button>
+      <button data-tab="home"><span class="nav-icon">○</span>حساب</button>
+    </nav>
+  </main>
+
+  <main id="adminApp" class="app-shell hidden admin-shell">
+    <header class="topbar glass">
+      <div>
+        <small>پنل مدیریت Mini App</small>
+        <h1>BlueGate Admin</h1>
+      </div>
+      <button class="icon-btn" id="openCmdPalette" title="جستجوی دستور (⌘K)" aria-label="جستجوی دستور">⌘</button>
+      <button class="icon-btn" id="reloadAdmin" aria-label="رفرش پنل">↻</button>
+    </header>
+    <section id="adminStats" class="stats-grid"></section>
+    <nav class="admin-tabs glass">
+      <button data-admin-tab="dashboard" class="active"><span>▦</span> داشبورد</button>
+      <button data-admin-tab="catalog"><span>◇</span> کاتالوگ</button>
+      <button data-admin-tab="orders"><span>▤</span> سفارش‌ها</button>
+      <button data-admin-tab="more"><span>•••</span> بیشتر</button>
+    </nav>
+    <section id="adminContent" class="admin-content"></section>
+  </main>
+
+  <div id="lightbox" class="lightbox"></div>
+  <div id="cartSheet" class="cart-sheet"></div>
+  <button id="cartFab" class="cart-fab hidden"><span>🛒</span><span class="cart-fab-badge">0</span></button>
+  <div id="custDrawer" class="cust-drawer"></div>
+  <div id="previewSheet" class="preview-sheet"></div>
+  <div id="qrSheet" class="qr-sheet"></div>
+  <div id="shareSheet" class="share-sheet"></div>
+  <div id="onboarding" class="onboarding"></div>
+  <div id="palettePopup" class="palette-popup"></div>
+  <div id="cmdPalette" class="cmd-palette" hidden aria-hidden="true"><div class="cmd-inner"><input id="cmdInput" type="text" placeholder="جستجوی دستور یا تب..." autocomplete="off"><div id="cmdList" class="cmd-list"></div></div></div>
+
+
+  <div id="appSheet" class="app-sheet" aria-hidden="true"></div>
+
+  <dialog id="authModal" class="dialog-card auth-modal bottom-sheet">
+    <div class="auth-modal-content">
+      <div class="auth-header">
+        <h3 id="authTitle">ورود / ثبت‌نام</h3>
+        <button type="button" class="close-btn" id="closeAuthModal" aria-label="بستن">✕</button>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-tab="login">ورود</button>
+        <button type="button" class="auth-tab" data-auth-tab="register">ثبت‌نام</button>
+        <button type="button" class="auth-tab" data-auth-tab="telegram">تلگرام ⚡</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <div class="field">
+          <label for="loginUsername">ایمیل یا نام کاربری</label>
+          <input type="text" id="loginUsername" placeholder="مثلاً: user@example.com یا john_doe" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="loginPassword">رمز عبور</label>
+          <input type="password" id="loginPassword" placeholder="******" required autocomplete="current-password" />
+        </div>
+        <div id="loginError" class="auth-error hidden"></div>
+        <button type="submit" class="primary block-btn">ورود به حساب</button>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden">
+        <div class="field">
+          <label for="regUsername">نام کاربری (انگلیسی)</label>
+          <input type="text" id="regUsername" placeholder="مثلاً: john_doe" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="regEmail">ایمیل (جهت ورود و بازیابی)</label>
+          <input type="email" id="regEmail" placeholder="مثلاً: user@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="regFirstName">نام شما</label>
+          <input type="text" id="regFirstName" placeholder="مثلاً: علی" />
+        </div>
+        <div class="field">
+          <label for="regPassword">رمز عبور (حداقل ۶ کاراکتر)</label>
+          <input type="password" id="regPassword" placeholder="******" required autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label for="regRefCode">کد معرف (اختیاری)</label>
+          <input type="text" id="regRefCode" placeholder="کد معرف" />
+        </div>
+        <div id="regError" class="auth-error hidden"></div>
+        <button type="submit" class="primary block-btn">ایجاد حساب کاربری</button>
+      </form>
+
+      <div id="telegramTab" class="auth-form hidden text-center">
+        <p class="muted" style="margin-bottom: 12px; font-size: 14.5px;">ورود سریع بدون نیاز به رمز عبور با اکانت تلگرام:</p>
+        <div id="tgWidgetContainer"></div>
+      </div>
+
+      <form id="otpVerificationForm" class="auth-form hidden text-center">
+        <div style="margin-bottom: 12px;">
+          <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #fff;">کد تایید ایمیل 📩</h4>
+          <p style="font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5;">
+            کد ۶ رقمی به ایمیل <strong id="otpEmailTarget" style="color: #fff;"></strong> ارسال شد.<br>
+            <span style="color: #f59e0b; font-size: 13.5px; display: inline-block; margin-top: 4px;">⚠️ (لطفاً پوشه اسپم / Spam ایمیل خود را نیز بررسی کنید)</span>
+          </p>
+        </div>
+        <div class="field">
+          <input type="text" id="otpCodeInput" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]*" style="letter-spacing: 10px; font-size: 24px; font-weight: 900; text-align: center; width: 100%; box-sizing: border-box;" required />
+        </div>
+        <div id="otpError" class="auth-error hidden"></div>
+        <button type="submit" class="primary block-btn">تایید و ورود به حساب</button>
+        <button type="button" id="resendOtpBtn" class="secondary block-btn" style="margin-top: 6px; font-size: 14px;">ارسال مجدد کد تایید</button>
+      </form>
+    </div>
+  </dialog>
+
+  <div id="ptrIndicator" class="ptr-indicator">
+    <svg class="ptr-svg" viewBox="0 0 40 40">
+      <path class="ptr-path" d="M20 4 a16 16 0 1 1 0 32 a16 16 0 1 1 0 -32" />
+    </svg>
+  </div>
+  <script defer src="ui-system.js?v=v105-persian-infra"></script>
+  <script defer src="purchase.js?v=v105-persian-infra"></script>
+  <script defer src="app.js?v=0.10.9"></script>
+  <!-- <script src="builder.js?v=v105-persian-infra"></script> -->
+</body>
+</html>

@@ -1,0 +1,55 @@
+Options -Indexes
+<FilesMatch "^(config|schema|.*\.sql)$">
+  Require all denied
+</FilesMatch>
+
+# Enable Gzip Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json image/svg+xml
+</IfModule>
+
+# Browser caching: documents revalidate, fingerprinted/static assets stay hot.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/css "access plus 30 days"
+  ExpiresByType application/javascript "access plus 30 days"
+  ExpiresByType text/javascript "access plus 30 days"
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+  <FilesMatch "\.(css|js|png|jpe?g|gif|webp|svg|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=2592000, immutable"
+  </FilesMatch>
+  <Files "sw.js">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+  </Files>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Rewrite rules: sitemap + Web History API routes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+  # Existing files/directories and API/PHP endpoints must keep their normal behavior.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Refresh/deep-link support for the Web app.
+  RewriteRule ^(account|orders|wallet|referral|profile)/?$ index.php [L,QSA]
+  RewriteRule ^admin(?:/(overview|orders|catalog|inventory|customers|users|coupons|settings|activity|roles|backups))?/?$ index.php [L,QSA]
+</IfModule>
+
