@@ -48,3 +48,7 @@ step_ok(){ printf "%b%s%b\n" "$C_GREEN" "$UI_OK" "$C_RESET"; }
 step_fail(){ printf "%b%s%b\n" "$C_RED" "$UI_FAIL" "$C_RESET"; }
 pause(){ echo; read -rp "Press Enter to return... " _ || true; }
 status_dot(){ local state="$1"; case "$state" in ok) printf "%b%s%b" "$C_GREEN" "$UI_OK" "$C_RESET";; warn) printf "%b%s%b" "$C_YELLOW" "$UI_WARN" "$C_RESET";; *) printf "%b%s%b" "$C_RED" "$UI_FAIL" "$C_RESET";; esac; }
+
+ui_badge(){ local state="$1" text="$2"; case "$state" in ok) printf "%b[ %s ]%b" "$C_GREEN$C_BOLD" "$text" "$C_RESET";; warn) printf "%b[ %s ]%b" "$C_YELLOW$C_BOLD" "$text" "$C_RESET";; fail) printf "%b[ %s ]%b" "$C_RED$C_BOLD" "$text" "$C_RESET";; *) printf "%b[ %s ]%b" "$C_GRAY$C_BOLD" "$text" "$C_RESET";; esac; }
+wizard_step(){ local no="$1" title="$2" detail="${3:-}"; printf "\n%bStep %s%b  %b%s%b\n" "$C_BLUE$C_BOLD" "$no" "$C_RESET" "$C_BOLD" "$title" "$C_RESET"; [[ -n "$detail" ]] && printf "  %b%s%b\n" "$C_GRAY" "$detail" "$C_RESET"; }
+summary_row(){ local label="$1" value="$2" state="${3:-}"; printf "  %-22s " "$label"; [[ -n "$state" ]] && { ui_badge "$state" "$state"; printf "  "; }; printf "%s\n" "$value"; }

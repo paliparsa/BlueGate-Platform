@@ -26,23 +26,32 @@ configure_wizard(){
       CRON_KEY="$(rand_hex 24)"
     fi
   fi
+  wizard_step "1/5" "Domain & brand" "Public address and the name shown to customers."
   ask_value DOMAIN "Domain (without https)"
+  ask_value BRAND_NAME "Brand name" "BlueGate"
+  ask_value THEME_COLOR "Theme color" "#1d9bf0"
+
+  wizard_step "2/5" "Telegram" "Bot access, administrators and support contact."
   ask_value BOT_TOKEN "Telegram bot token" "" yes
   ask_value BOT_USERNAME "Bot username without @"
   ask_value ADMIN_IDS "Admin Telegram IDs, comma separated"
   ask_value SUPPORT_USERNAME "Support username" "BlueGateSupport"
-  ask_value REPO_URL "Git repository" "$DEFAULT_REPO_URL"
-  ask_value APP_DIR "Install directory" "$DEFAULT_APP_DIR"
+  ask_optional FORCE_JOIN_CHANNEL "Force-join channel"
+
+  wizard_step "3/5" "Database" "A strong password is generated automatically when empty."
   ask_value DB_NAME "Database name" "bluegate_platform"
   ask_value DB_USER "Database user" "bluegate_user"
   ask_value DB_PASS "Database password" "" yes
-  ask_value BRAND_NAME "Brand name" "BlueGate"
-  ask_value THEME_COLOR "Theme color" "#1d9bf0"
-  ask_optional FORCE_JOIN_CHANNEL "Force-join channel"
-  ask_optional RESEND_API_KEY "Resend API key"
-  ask_optional RESEND_FROM_EMAIL "Resend sender"
+
+  wizard_step "4/5" "Deployment" "Usually the defaults are correct."
+  ask_value REPO_URL "Git repository" "$DEFAULT_REPO_URL"
+  ask_value APP_DIR "Install directory" "$DEFAULT_APP_DIR"
   ask_value ENABLE_SSL "Enable SSL? yes/no" "yes"
   [[ "${ENABLE_SSL,,}" =~ ^(yes|y)$ ]] && ask_optional SSL_EMAIL "Let's Encrypt email"
+
+  wizard_step "5/5" "Optional services & retention" "Press Enter to keep the recommended defaults."
+  ask_optional RESEND_API_KEY "Resend API key"
+  ask_optional RESEND_FROM_EMAIL "Resend sender"
   ask_value BACKUP_KEEP "Release backups to keep" "5"
   ask_value DB_BACKUP_DAYS "DB backup retention days" "14"
   validate_domain "$DOMAIN" || { fail "Invalid domain"; return 1; }
