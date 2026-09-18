@@ -173,7 +173,7 @@ configure_cron(){
 # BlueGate Platform scheduled jobs
 * * * * * www-data sh -c 'php ${APP_DIR}/public/cron_crypto.php --check-payments >/dev/null 2>&1 && date +\\%s > ${APP_DIR}/storage/cache/cron-payments.last'
 * * * * * www-data sh -c 'php ${APP_DIR}/public/cron_provisioning.php >/dev/null 2>&1 && date +\\%s > ${APP_DIR}/storage/cache/cron-provisioning.last'
-*/5 * * * * www-data sh -c 'php ${APP_DIR}/public/cron_monitoring.php >/dev/null 2>&1 && date +\%s > ${APP_DIR}/storage/cache/cron-monitoring.last'
+* * * * * www-data sh -c 'php ${APP_DIR}/public/cron_monitoring.php >/dev/null 2>&1 && date +\%s > ${APP_DIR}/storage/cache/cron-monitoring.last'
 */10 * * * * www-data sh -c 'php ${APP_DIR}/public/cron_crypto.php --refresh-rates >/dev/null 2>&1 && date +\\%s > ${APP_DIR}/storage/cache/cron-rates.last'
 EOF_CRON
   chmod 644 "$CRON_FILE"

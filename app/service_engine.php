@@ -298,6 +298,35 @@ function bluegate_service_subscription_payload(string $token): array {
     foreach($instances as $i){if(!in_array((string)$i['status'],['active','degraded','suspended'],true))continue;$meta=bluegate_json_array($i['metadata_json']??null);foreach(($meta['links']??[]) as $ln)if(is_string($ln)&&trim($ln)!=='')$links[]=trim($ln);if(!empty($i['subscription_url']))$urls[]=(string)$i['subscription_url'];}
     return ['service'=>$s,'urls'=>array_values(array_unique($urls)),'links'=>array_values(array_unique($links))];
 }
+function bluegate_service_addon_settings(): array {
+    return [
+        'traffic_price_per_gb'=>max(0,setting_int('service_addon_traffic_price_per_gb',0)),
+        'day_price'=>max(0,setting_int('service_addon_day_price',0)),
+        'min_gb'=>max(1,setting_int('service_addon_min_gb',1)),
+        'max_gb'=>max(1,setting_int('service_addon_max_gb',500)),
+        'min_days'=>max(1,setting_int('service_addon_min_days',1)),
+        'max_days'=>max(1,setting_int('service_addon_max_days',365)),
+    ];
+}
+function bluegate_save_service_addon_settings(array $in): array {
+    $cfg=[
+        'traffic_price_per_gb'=>max(0,(int)($in['traffic_price_per_gb']??$in['extra_traffic_price_per_gb']??0)),
+        'day_price'=>max(0,(int)($in['day_price']??$in['extra_day_price']??0)),
+        'min_gb'=>max(1,(int)($in['min_gb']??$in['addon_min_gb']??1)),
+        'max_gb'=>max(1,(int)($in['max_gb']??$in['addon_max_gb']??500)),
+        'min_days'=>max(1,(int)($in['min_days']??$in['addon_min_days']??1)),
+        'max_days'=>max(1,(int)($in['max_days']??$in['addon_max_days']??365)),
+    ];
+    if($cfg['max_gb']<$cfg['min_gb'])$cfg['max_gb']=$cfg['min_gb'];
+    if($cfg['max_days']<$cfg['min_days'])$cfg['max_days']=$cfg['min_days'];
+    set_setting('service_addon_traffic_price_per_gb',(string)$cfg['traffic_price_per_gb']);
+    set_setting('service_addon_day_price',(string)$cfg['day_price']);
+    set_setting('service_addon_min_gb',(string)$cfg['min_gb']);
+    set_setting('service_addon_max_gb',(string)$cfg['max_gb']);
+    set_setting('service_addon_min_days',(string)$cfg['min_days']);
+    set_setting('service_addon_max_days',(string)$cfg['max_days']);
+    return $cfg;
+}
 function bluegate_service_public(array $s,bool $withEvents=false): array {
     $instances=bluegate_service_instances((int)$s['id']);foreach($instances as &$ix){
         $ix['targets']=bluegate_instance_targets((int)$ix['id']);$ix['inbound_ids']=bluegate_instance_inbound_ids($ix);
@@ -309,7 +338,7 @@ function bluegate_service_public(array $s,bool $withEvents=false): array {
         }
     }unset($ix);$urls=[];foreach($instances as $i){$u=trim((string)($i['subscription_url']??''));if($u!==''&&!preg_match('#^(vless|vmess|trojan|ss|wireguard|wg|hysteria2?|hy2|tuic)://#i',$u))$urls[]=$u;}$urls=array_values(array_unique($urls));$nativeSingleUrl=count($urls)===1;$aggregateUrl=count($urls)>1?bluegate_service_aggregate_url($s):null;$primaryUrl=$nativeSingleUrl?($urls[0]??null):($aggregateUrl?:($urls[0]??null));
     $limit=(int)($s['traffic_limit_bytes']??0);$used=(int)($s['traffic_used_bytes']??0);$remaining=$limit>0?max(0,$limit-$used):null;
-    $out=['id'=>(int)$s['id'],'order_id'=>$s['order_id']!==null?(int)$s['order_id']:null,'service_plan_id'=>$s['service_plan_id']!==null?(int)$s['service_plan_id']:null,'display_name'=>$s['display_name']?:trim(($s['service_name']??'').' '.($s['group_name']??'').' '.($s['plan_title']??'')),'status'=>(string)$s['status'],'traffic_limit_bytes'=>$limit,'traffic_used_bytes'=>$used,'remaining_bytes'=>$remaining,'started_at'=>$s['started_at'],'expires_at'=>$s['expires_at'],'last_sync_at'=>$s['last_sync_at'],'subscription_url'=>$primaryUrl,'subscription_urls'=>$urls,'subscription_mode'=>$nativeSingleUrl?'native':(count($urls)>1?'bluegate_aggregate':'none'),'qr_text'=>$primaryUrl,'service_card_url'=>((function_exists('public_base_url')?rtrim((string)public_base_url(),'/'):'').'/service_card.php?token='.rawurlencode((string)($s['subscription_token']??''))),'instances'=>array_map(fn($i)=>['id'=>(int)$i['id'],'provider_id'=>(int)$i['provider_id'],'provider_name'=>$i['provider_name'],'driver'=>$i['driver'],'external_username'=>$i['external_username'],'remote_target_id'=>$i['remote_target_id'],'inbound_ids'=>$i['inbound_ids']??[],'targets'=>array_map(fn($x)=>['id'=>(int)$x['id'],'remote_target_id'=>$x['remote_target_id'],'remote_target_name'=>$x['remote_target_name'],'status'=>$x['status']],$i['targets']??[]),'status'=>$i['status'],'subscription_url'=>$i['subscription_url'],'traffic_limit_bytes'=>(int)($i['traffic_limit_bytes']??0),'traffic_used_bytes'=>(int)($i['traffic_used_bytes']??0),'expires_at'=>$i['expires_at'],'last_sync_at'=>$i['last_sync_at']],$instances),'renewable'=>true,'addons'=>['traffic_price_per_gb'=>(int)($s['extra_traffic_price_per_gb']??0),'day_price'=>(int)($s['extra_day_price']??0),'min_gb'=>(int)($s['addon_min_gb']??1),'max_gb'=>(int)($s['addon_max_gb']??500),'min_days'=>(int)($s['addon_min_days']??1),'max_days'=>(int)($s['addon_max_days']??365)]];
+    $out=['id'=>(int)$s['id'],'order_id'=>$s['order_id']!==null?(int)$s['order_id']:null,'service_plan_id'=>$s['service_plan_id']!==null?(int)$s['service_plan_id']:null,'display_name'=>$s['display_name']?:trim(($s['service_name']??'').' '.($s['group_name']??'').' '.($s['plan_title']??'')),'status'=>(string)$s['status'],'traffic_limit_bytes'=>$limit,'traffic_used_bytes'=>$used,'remaining_bytes'=>$remaining,'started_at'=>$s['started_at'],'expires_at'=>$s['expires_at'],'last_sync_at'=>$s['last_sync_at'],'subscription_url'=>$primaryUrl,'subscription_urls'=>$urls,'subscription_mode'=>$nativeSingleUrl?'native':(count($urls)>1?'bluegate_aggregate':'none'),'qr_text'=>$primaryUrl,'service_card_url'=>((function_exists('public_base_url')?rtrim((string)public_base_url(),'/'):'').'/service_card.php?token='.rawurlencode((string)($s['subscription_token']??''))),'instances'=>array_map(fn($i)=>['id'=>(int)$i['id'],'provider_id'=>(int)$i['provider_id'],'provider_name'=>$i['provider_name'],'driver'=>$i['driver'],'external_username'=>$i['external_username'],'remote_target_id'=>$i['remote_target_id'],'inbound_ids'=>$i['inbound_ids']??[],'targets'=>array_map(fn($x)=>['id'=>(int)$x['id'],'remote_target_id'=>$x['remote_target_id'],'remote_target_name'=>$x['remote_target_name'],'status'=>$x['status']],$i['targets']??[]),'status'=>$i['status'],'subscription_url'=>$i['subscription_url'],'traffic_limit_bytes'=>(int)($i['traffic_limit_bytes']??0),'traffic_used_bytes'=>(int)($i['traffic_used_bytes']??0),'expires_at'=>$i['expires_at'],'last_sync_at'=>$i['last_sync_at']],$instances),'renewable'=>true,'addons'=>bluegate_service_addon_settings()];
     if($withEvents){$q=db()->prepare('SELECT event_type,title,details_json,created_at FROM service_events WHERE user_service_id=? ORDER BY id DESC LIMIT 30');$q->execute([(int)$s['id']]);$out['events']=$q->fetchAll()?:[];if(table_exists('service_usage_snapshots')){$q=db()->prepare('SELECT traffic_used_bytes,traffic_limit_bytes,remaining_bytes,expires_at,status,created_at FROM service_usage_snapshots WHERE user_service_id=? ORDER BY id DESC LIMIT 48');$q->execute([(int)$s['id']]);$out['usage_history']=$q->fetchAll()?:[];}}
     return $out;
 }
@@ -341,7 +370,7 @@ function bluegate_sync_service(int $serviceId,bool $recordSnapshot=true): array 
 }
 function bluegate_service_action_order(int $userId,int $serviceId,string $action,int $quantity=0): array {
     $s=bluegate_service_record($serviceId,$userId);if(!$s)throw new RuntimeException('SERVICE_NOT_FOUND');if(!in_array($action,['add_traffic','add_days'],true))throw new RuntimeException('INVALID_SERVICE_ACTION');$baseOrder=$s['order_id']?order_by_id((int)$s['order_id']):null;if(!$baseOrder)throw new RuntimeException('SERVICE_ORDER_NOT_FOUND');
-    $min=$action==='add_traffic'?(int)($s['addon_min_gb']??1):(int)($s['addon_min_days']??1);$max=$action==='add_traffic'?(int)($s['addon_max_gb']??500):(int)($s['addon_max_days']??365);$price=$action==='add_traffic'?(int)($s['extra_traffic_price_per_gb']??0):(int)($s['extra_day_price']??0);if($price<=0)throw new RuntimeException('SERVICE_ADDON_DISABLED');$quantity=max($min,min($max,$quantity));if($quantity<=0)throw new RuntimeException('INVALID_QUANTITY');
+    $addon=bluegate_service_addon_settings();$min=$action==='add_traffic'?(int)$addon['min_gb']:(int)$addon['min_days'];$max=$action==='add_traffic'?(int)$addon['max_gb']:(int)$addon['max_days'];$price=$action==='add_traffic'?(int)$addon['traffic_price_per_gb']:(int)$addon['day_price'];if($price<=0)throw new RuntimeException('SERVICE_ADDON_DISABLED');$quantity=max($min,min($max,$quantity));if($quantity<=0)throw new RuntimeException('INVALID_QUANTITY');
     $o=create_storefront_order($userId,(int)$baseOrder['product_id'],!empty($baseOrder['variant_id'])?(int)$baseOrder['variant_id']:null,null);$amount=$price*$quantity;$payload=$action==='add_traffic'?['gb'=>$quantity,'bytes'=>$quantity*1073741824]:['days'=>$quantity];db()->prepare('UPDATE orders SET amount=?,discount_amount=0,wallet_amount=0,final_amount=?,is_renewal=1,renewal_of_order_id=?,user_service_id=?,service_action=?,service_action_json=? WHERE id=?')->execute([$amount,$amount,(int)$baseOrder['id'],$serviceId,$action,json_encode($payload,JSON_UNESCAPED_SLASHES),(int)$o['id']]);add_order_event((int)$o['id'],'pending_payment',$action==='add_traffic'?'خرید حجم اضافه':'خرید زمان اضافه',($action==='add_traffic'?$quantity.' GB':$quantity.' روز').' برای سرویس #'.$serviceId,true);return order_by_id((int)$o['id']);
 }
 function bluegate_queue_service_action(int $orderId,bool $runNow=true): array {
@@ -430,7 +459,7 @@ function bluegate_provider_incident_update(array $provider,array $health,int $de
 }
 function bluegate_run_provider_monitor(): array {
     $cfg=bluegate_monitoring_settings();if(empty($cfg['provider_health_enabled']))return ['disabled'=>true,'scanned'=>0,'success'=>0,'warnings'=>0,'errors'=>0];$rid=bluegate_monitor_begin('providers');$s=['scanned'=>0,'success'=>0,'warnings'=>0,'errors'=>0,'incidents_changed'=>0];$details=[];
-    foreach(bluegate_providers(true) as $p){$driverMeta=BlueGateProviderRegistry::supportedDrivers()[(string)$p['driver']]??[];if(empty($driverMeta['live']))continue;$s['scanned']++;try{$h=bluegate_test_provider((int)$p['id']);$i=bluegate_provider_incident_update($p,$h,(int)$cfg['provider_degraded_latency_ms']);if(!empty($i['changed']))$s['incidents_changed']++;if(!empty($h['ok'])&&(int)($h['latency_ms']??0)<=(int)$cfg['provider_degraded_latency_ms'])$s['success']++;else $s['warnings']++;$details[]=['provider_id'=>(int)$p['id'],'health'=>$h,'incident'=>$i];}catch(Throwable $e){$s['errors']++;$h=['ok'=>false,'status'=>'offline','message'=>$e->getMessage(),'latency_ms'=>null];$i=bluegate_provider_incident_update($p,$h,(int)$cfg['provider_degraded_latency_ms']);if(!empty($i['changed']))$s['incidents_changed']++;$details[]=['provider_id'=>(int)$p['id'],'error'=>$e->getMessage(),'incident'=>$i];}}
+    foreach(bluegate_providers(true) as $p){$driverMeta=BlueGateProviderRegistry::supportedDrivers()[(string)$p['driver']]??[];if(empty($driverMeta['live']))continue;$s['scanned']++;try{$h=bluegate_test_provider((int)$p['id']);if(empty($h['ok'])){usleep(250000);$h=bluegate_test_provider((int)$p['id']);$h['retried']=true;}$i=bluegate_provider_incident_update($p,$h,(int)$cfg['provider_degraded_latency_ms']);if(!empty($i['changed']))$s['incidents_changed']++;if(!empty($h['ok'])&&(int)($h['latency_ms']??0)<=(int)$cfg['provider_degraded_latency_ms'])$s['success']++;else $s['warnings']++;$details[]=['provider_id'=>(int)$p['id'],'health'=>$h,'incident'=>$i];}catch(Throwable $e){$s['errors']++;$h=['ok'=>false,'status'=>'offline','message'=>$e->getMessage(),'latency_ms'=>null];$i=bluegate_provider_incident_update($p,$h,(int)$cfg['provider_degraded_latency_ms']);if(!empty($i['changed']))$s['incidents_changed']++;$details[]=['provider_id'=>(int)$p['id'],'error'=>$e->getMessage(),'incident'=>$i];}}
     bluegate_monitor_finish($rid,$s,['providers'=>$details]);return $s+['run_id'=>$rid];
 }
 function bluegate_run_monitoring(int $serviceLimit=0): array {return ['providers'=>bluegate_run_provider_monitor(),'services'=>bluegate_run_service_monitor($serviceLimit)];}
