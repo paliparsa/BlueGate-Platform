@@ -131,14 +131,13 @@
   }
 
   function enhance(root=document){markHoverables(root);animateNew(root);prepCounters(root);prepProgress(root);energyBorders(root);setupMagnetic();setupTilt()}
+  function enhanceDynamic(root=document){markHoverables(root);prepProgress(root);energyBorders(root);setupMagnetic();setupTilt()}
 
   function boot(){
     document.documentElement.classList.add('bg-motion-ready');logoIntro();skeletonBootstrap();enhance();observeSuccess();modalObserver();
     document.addEventListener('click',copyMorph,true);document.addEventListener('click',connectionVisual,true);
-    let queued=false;const mo=new MutationObserver(ms=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;const roots=ms.flatMap(m=>Array.from(m.addedNodes)).filter(n=>n instanceof HTMLElement).slice(0,8);roots.forEach(r=>enhance(r));enhance();})});
+    let queued=false;const mo=new MutationObserver(ms=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;const roots=ms.flatMap(m=>Array.from(m.addedNodes)).filter(n=>n instanceof HTMLElement).slice(0,10);roots.forEach(r=>enhanceDynamic(r));})});
     mo.observe(document.body,{subtree:true,childList:true});
-    const countMo=new MutationObserver(ms=>{for(const m of ms){const p=m.target instanceof Text?m.target.parentElement:m.target;if(p?.matches?.('#quickCreditValue,#usdtRate,#trxRate,#tonRate,#starsReceive,#starsMinimum,#starsToman,#starsUsdt,#starsTrx,#starsTon,#premiumSelectedPrice,#vpnSelectionPrice,.bg-stat-grid b,.bg-profile-grid b,.selection-price strong,.hero-price strong')){delete p.dataset.bgCountSeen;p.dataset.bgCountSeen='1';animateCounter(p)}}});
-    countMo.observe(document.body,{subtree:true,childList:true,characterData:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

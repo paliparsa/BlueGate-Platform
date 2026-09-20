@@ -123,3 +123,13 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid color-mix(i
 @media(prefers-reduced-motion:reduce){.product-tile.catalog-tile,.parity-order-side .chev{transition:none!important}}
 
 @media(max-width:340px){.parity-order-main{grid-template-columns:36px minmax(0,1fr)!important;align-items:start!important}.parity-order-main .order-icon{width:36px!important;height:36px!important}.parity-order-side{grid-column:2;justify-self:start;max-width:100%;margin-top:2px}.parity-order-side .status-badge{max-width:none}.parity-order-side .chev{display:none}.orders-manage-btn-bottom{width:44px!important;height:36px!important}}
+
+/* v5.0 gesture isolation: horizontal rails must never arm document pull-to-refresh. */
+.category-strip,.h-scroll,.product-grid-wrap,.admin-tabs,.order-filters,[data-horizontal-scroll]{
+  overscroll-behavior-x:contain;
+  overscroll-behavior-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+@media (max-width:767px){
+  .category-strip,.h-scroll,.product-grid-wrap,.admin-tabs,.order-filters,[data-horizontal-scroll]{touch-action:pan-x pan-y!important}
+}

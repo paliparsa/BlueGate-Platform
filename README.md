@@ -1,4 +1,4 @@
-# BlueGate Platform v4.9.0
+# BlueGate Platform v5.0.0
 
 BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت محصولات دیجیتال و سرویس‌های VPN است و شامل فروشگاه وب، Telegram Mini App، ربات تلگرام، کیف پول، پرداخت، پنل ادمین، Service Engine، Provisioning خودکار، مانیتورینگ و اتصال مستقیم به پنل‌های VPN می‌شود.
 
