@@ -2287,23 +2287,27 @@ function miniapp_url(bool $admin=false): string {
 function miniapp_inline_keyboard(bool $admin=false): string {
     $mini = miniapp_url($admin);
     $rows = [];
-    if (!$admin && setting_bool('bot_quick_shop_enabled', true)) {
-        $rows[] = [['text'=>'⚡ خرید سریع', 'callback_data'=>'u_shop'], ['text'=>'🌐 سرویس‌های من', 'callback_data'=>'u_services']];
-    }
     if ($admin) {
         $rows[] = [['text'=>'🛠 کنترل سنتر ادمین', 'callback_data'=>'adm_home']];
     }
     if ($mini) {
         $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
     }
+    // Customer shopping and order browsing live exclusively in the Mini App.
+    // Keep only lightweight bot utilities here so legacy quick-shop/order buttons cannot reappear.
     $rows[] = [
         ['text'=>'💳 اعتبار من', 'callback_data'=>'u_wallet'],
         ['text'=>'➕ افزایش اعتبار', 'callback_data'=>'u_topup'],
     ];
-    $rows[] = [
-        ['text'=>'📦 سفارش‌های من', 'callback_data'=>'u_orders'],
-        ['text'=>'💬 پشتیبانی', 'callback_data'=>'u_support'],
-    ];
+    $rows[] = [['text'=>'💬 پشتیبانی', 'callback_data'=>'u_support']];
+    return json_markup(['inline_keyboard'=>$rows]);
+}
+
+function miniapp_only_notice_keyboard(bool $admin=false): string {
+    $mini = miniapp_url($admin);
+    $rows = [];
+    if ($mini) $rows[] = [['text'=>'🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
+    $rows[] = [['text'=>'🔙 منوی اصلی', 'callback_data'=>'main']];
     return json_markup(['inline_keyboard'=>$rows]);
 }
 
@@ -2340,7 +2344,7 @@ function order_user_keyboard(array $order): string {
     if (is_cleanup_order_status($status)) {
         $rows[] = [['text'=>'🗑 حذف از لیست من', 'callback_data'=>'order_hide_'.$order['id']]];
     }
-    $rows[] = [['text'=>'🧾 سفارش‌های من', 'callback_data'=>'u_orders'], ['text'=>'🛒 فروشگاه', 'callback_data'=>'u_shop']];
+    if ($mini=miniapp_url(false)) $rows[] = [['text'=>'🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
     $rows[] = [['text'=>'🔙 منوی اصلی', 'callback_data'=>'main']];
     return json_markup(['inline_keyboard'=>$rows]);
 }
@@ -2400,7 +2404,7 @@ function show_bot_services(int $chat_id, $message_id, int $userId): void {
             $rows[]=[['text'=>'⚙️ '.mb_substr($name,0,30), 'callback_data'=>'svc_view_'.(int)$o['id']]];
         }
     }
-    $rows[]=[['text'=>'⚡ خرید سریع','callback_data'=>'u_shop'],['text'=>'🧾 سفارش‌ها','callback_data'=>'u_orders']];
+    if ($mini=miniapp_url(false)) $rows[]=[['text'=>'🚀 باز کردن Mini App','web_app'=>['url'=>$mini]]];
     $rows[]=[['text'=>'🔙 منوی اصلی','callback_data'=>'main']];
     send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$rows]));
 }
@@ -2418,7 +2422,7 @@ function show_bot_service(int $chat_id, $message_id, int $userId, int $orderId):
     $url=trim((string)($o['delivery_url']??''));
     if($url!=='' && preg_match('~^https?://~i',$url))$rows[]=[['text'=>'↗️ باز کردن سرویس','url'=>$url]];
     $rows[]=[['text'=>'🔄 تمدید همین سرویس','callback_data'=>'svc_renew_'.$orderId]];
-    $rows[]=[['text'=>'🔙 سرویس‌های من','callback_data'=>'u_services'],['text'=>'🧾 سفارش','callback_data'=>'order_view_'.$orderId]];
+    $row=[['text'=>'🔙 سرویس‌های من','callback_data'=>'u_services']]; if($mini=miniapp_url(false)) $row[]=['text'=>'🚀 Mini App','web_app'=>['url'=>$mini]]; $rows[]=$row;
     send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$rows]));
 }
 function show_quick_plan_confirm(int $chat_id, $message_id, int $productId, int $variantId): void {
@@ -2887,7 +2891,7 @@ function force_join_keyboard(): string {
 }
 function main_text(array $user): string {
     $brand = h(setting('brand_name', app_config('BRAND_NAME', 'BlueGate')));
-    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای خرید دم‌دستی، <b>⚡ خرید سریع</b> رو بزن و بدون باز کردن Mini App محصول و پلن رو انتخاب کن. برای امکانات کامل‌تر هم Mini App در دسترسه.\n\n" . vip_line($user);
+    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای اینکه خرید، سفارش‌ها، VPNها، پرداخت‌ها و وضعیت تحویل همیشه یکجا و با اطلاعات به‌روز در دسترست باشه، بخش خرید و سفارش داخل خود ربات غیرفعال شده.\n\nبرای انجام کارها روی دکمه <b>🚀 باز کردن Mini App</b> بزن؛ فروشگاه، سفارش‌های من، VPNهای من، کیف پول و پیگیری پرداخت‌ها همگی اونجا در دسترس‌اند.\n\nربات فقط برای اعلان‌ها، پشتیبانی و چند ابزار سبک حساب استفاده میشه.\n\n" . vip_line($user);
 }
 function validate_theme_color(string $color): ?string {
     $color = trim($color);

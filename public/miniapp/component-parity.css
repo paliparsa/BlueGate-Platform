@@ -35,17 +35,21 @@
 .parity-service-card .mini-renew-inline{margin:8px 8px 8px 0;border-radius:11px;min-width:64px}
 
 /* Orders: same information hierarchy as Web accordion cards */
-.order-row.parity-order-card{padding:0!important;overflow:hidden;cursor:pointer}
-.parity-order-main{display:grid!important;grid-template-columns:44px minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;width:100%!important;margin:0!important;padding:13px 13px 11px!important}
+.order-row.parity-order-card{display:block!important;width:100%!important;min-width:0!important;padding:0!important;overflow:hidden;cursor:pointer;transform:none!important;contain:layout paint!important}
+.parity-order-main{display:grid!important;grid-template-columns:44px minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;margin:0!important;padding:13px 13px 11px!important}
 .parity-order-main .order-icon{width:44px;height:44px;border-radius:13px;border:1px solid rgba(119,201,255,.13);background:rgba(58,159,255,.055);overflow:hidden;display:grid;place-items:center}
 .parity-order-main .order-icon img{width:100%;height:100%;object-fit:cover}
 .parity-order-copy{min-width:0;display:grid;gap:4px}
 .parity-order-copy h3{margin:0;font-size:14px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.parity-order-copy p{margin:0!important;display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px!important;color:var(--muted);font-size:11px;line-height:1.6}
-.parity-order-side{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.parity-order-copy p{margin:0!important;display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px!important;min-width:0;color:var(--muted);font-size:11px;line-height:1.6}.parity-order-copy p>*{max-width:100%}.parity-order-copy s,.parity-order-copy span{white-space:nowrap}
+.parity-order-side{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 0 auto;min-width:0;white-space:nowrap}
 .parity-order-side .chev{font-size:20px!important;color:var(--muted)!important;transition:transform .18s ease}
 .order-row.parity-order-card:active .chev{transform:translateX(-2px)}
-.parity-order-card .order-row-stepper{width:100%;padding:0 13px 12px;border-top:1px solid rgba(255,255,255,.045)}
+.parity-order-card .order-row-stepper{display:block!important;clear:both!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:10px 13px 12px!important;border-top:1px solid rgba(255,255,255,.045)}
+.parity-order-card .order-row-stepper .order-stepper{width:100%!important;min-width:0!important;box-sizing:border-box!important}
+.orders-manage-footer{display:flex;justify-content:center;align-items:center;padding:8px 0 2px;margin-top:4px}
+.orders-manage-btn-bottom{display:grid!important;place-items:center!important;width:46px!important;height:38px!important;min-width:46px!important;padding:0!important;border:0!important;border-radius:12px!important;background:transparent!important;color:var(--muted)!important;font-size:22px!important;line-height:1!important;box-shadow:none!important}
+.orders-manage-btn-bottom:active{background:rgba(255,255,255,.045)!important;color:var(--text)!important;transform:scale(.96)!important}
 
 /* Wallet / transaction parity */
 .mini-credit-tx-list>div{display:grid!important;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -97,6 +101,9 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid color-mix(i
 
 @media(max-width:430px){
   .parity-order-main{grid-template-columns:40px minmax(0,1fr) auto!important;padding:11px!important}
+  .parity-order-side{max-width:112px;gap:4px}
+  .parity-order-side .status-badge{max-width:86px;overflow:hidden;text-overflow:ellipsis}
+  .parity-order-copy p{gap:3px 5px!important}
   .parity-order-main .order-icon{width:40px;height:40px}
   .parity-order-copy h3{font-size:13px}
   .parity-order-copy p{font-size:10px}
@@ -114,3 +121,5 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid color-mix(i
   .account-center-mini-hero,.mini-credit-hero-v27,.shop-page-intro,.orders-header{padding-inline:13px!important}
 }
 @media(prefers-reduced-motion:reduce){.product-tile.catalog-tile,.parity-order-side .chev{transition:none!important}}
+
+@media(max-width:340px){.parity-order-main{grid-template-columns:36px minmax(0,1fr)!important;align-items:start!important}.parity-order-main .order-icon{width:36px!important;height:36px!important}.parity-order-side{grid-column:2;justify-self:start;max-width:100%;margin-top:2px}.parity-order-side .status-badge{max-width:none}.parity-order-side .chev{display:none}.orders-manage-btn-bottom{width:44px!important;height:36px!important}}

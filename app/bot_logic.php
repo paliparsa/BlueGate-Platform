@@ -53,9 +53,10 @@ function route_bot_start_payload(int $chat_id, $message_id, array $user, string 
     $payload=trim($payload);
     if($payload==='')return false;
     clear_step($chat_id);
-    if(preg_match('/^buy_p_(\d+)$/',$payload,$m)){show_shop_product($chat_id,$message_id,(int)$m[1]);return true;}
-    if(preg_match('/^buy_v_(\d+)_(\d+)$/',$payload,$m)){show_quick_plan_confirm($chat_id,$message_id,(int)$m[1],(int)$m[2]);return true;}
-    if($payload==='shop'){show_shop_home($chat_id,$message_id);return true;}
+    if(preg_match('/^buy_p_(\d+)$/',$payload,$m) || preg_match('/^buy_v_(\d+)_(\d+)$/',$payload,$m) || $payload==='shop'){
+        send_or_edit($chat_id,$message_id,'🛍 خرید و مدیریت سفارش‌ها فقط داخل Mini App انجام می‌شود. برای ادامه Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        return true;
+    }
     if($payload==='services'){show_bot_services($chat_id,$message_id,(int)$user['id']);return true;}
     return false;
 }
@@ -166,13 +167,10 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
         send_home_message($chat_id, $user);
         return;
     }
-    if (preg_match('~^/orders(?:@\w+)?$~i', $text)) {
+    if (preg_match('~^/(?:orders|shop|buy)(?:@\w+)?$~i', $text)) {
         clear_step($chat_id);
-        handle_user_callback($chat_id, null, $user, 'u_orders');
+        send_msg($chat_id, '🛍 خرید و «سفارش‌های من» در ربات غیرفعال است. برای خرید، پرداخت و پیگیری سفارش‌ها Mini App را باز کن.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return;
-    }
-    if (preg_match('~^/(?:shop|buy)(?:@\w+)?$~i', $text)) {
-        clear_step($chat_id); show_shop_home($chat_id, null); return;
     }
     if (preg_match('~^/services(?:@\w+)?$~i', $text)) {
         clear_step($chat_id); show_bot_services($chat_id, null, (int)$user['id']); return;
@@ -196,8 +194,12 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
 
 
 function handle_keyboard_text(int $chat_id, array $user, string $text): bool {
+    if (in_array($text, ['🛒 فروشگاه','⚡ خرید سریع','🧾 سفارش‌های من','📦 سفارش‌های من','🧾 سفارش‌ها'], true)) {
+        send_msg($chat_id, '🛍 خرید و «سفارش‌های من» فقط داخل Mini App در دسترس است.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        return true;
+    }
     $map = [
-        '🏠 صفحه اول'=>'main', '🛒 فروشگاه'=>'u_shop', '🧾 سفارش‌های من'=>'u_orders', '👤 پروفایل و اعتبار'=>'u_wallet',
+        '🏠 صفحه اول'=>'main', '👤 پروفایل و اعتبار'=>'u_wallet',
         '👥 دعوت و درآمد'=>'u_ref', '🏆 لیدربورد'=>'u_leaderboard', '🎯 مأموریت‌ها'=>'u_missions', '🎡 گردونه شانس'=>'u_spin',
         '📞 پشتیبانی'=>'u_support',
     ];
@@ -301,6 +303,10 @@ function show_bot_credit_topup_invoice(int $chat_id,$message_id,array $t): void 
 }
 
 function handle_user_callback(int $chat_id, $message_id, array $user, string $data): void {
+    if ($data === 'u_shop' || $data === 'u_orders' || str_starts_with($data,'shop_') || str_starts_with($data,'order_')) {
+        send_or_edit($chat_id,$message_id,'🛍 خرید و مدیریت سفارش‌ها از داخل ربات غیرفعال شده. برای خرید، پرداخت و مشاهده سفارش‌ها Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        return;
+    }
     if ($data === 'u_ref') {
         $link = referral_link($user);
         $spinEvery = setting_int('spin_referrals_per_chance', 5);
@@ -311,7 +317,6 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
         $txt = "💳 <b>اعتبار BlueGate</b>\n\nاعتبار قابل استفاده: <b>".money($user['balance'])."</b>\nکل پاداش‌های ثبت‌شده: <b>".money($user['total_earned'])."</b>\nشانس گردونه: <b>{$user['spin_balance']}</b>\n\nℹ️ اعتبار BlueGate برای خرید سرویس‌ها استفاده می‌شود و امکان برداشت نقدی ندارد.\n\n".vip_line($user);
         $rows=[];
         if(credit_topup_config()['enabled']) $rows[]=[['text'=>'➕ افزایش اعتبار', 'callback_data'=>'u_topup']];
-        $rows[]=[['text'=>'🛒 مشاهده سرویس‌ها', 'callback_data'=>'u_shop'],['text'=>'🧾 سفارش‌های من','callback_data'=>'u_orders']];
         $rows[]=[['text'=>'🔙 بازگشت', 'callback_data'=>'main']];
         send_or_edit($chat_id, $message_id, $txt, json_markup(['inline_keyboard'=>$rows])); return;
     }
