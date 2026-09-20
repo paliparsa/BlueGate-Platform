@@ -218,7 +218,46 @@ function bluegate_route_order(array $order,array $plan,?array $mapIds=null): arr
 }
 function bluegate_record_route_decision(array $order,array $plan,int $serviceId,int $jobId,array $decision): int {if(!table_exists('routing_decisions'))return 0;$q=db()->prepare('INSERT INTO routing_decisions (order_id,user_service_id,job_id,service_plan_id,strategy,decision_json) VALUES (?,?,?,?,?,?)');$q->execute([(int)$order['id'],$serviceId,$jobId,(int)$plan['id'],(string)$decision['strategy'],json_encode($decision,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)]);return(int)db()->lastInsertId();}
 function bluegate_record_route_attempt(int $decisionId,int $jobId,array $m,string $outcome,?string $error=null,int $latency=0): void {if(!table_exists('routing_attempts'))return;db()->prepare('INSERT INTO routing_attempts (routing_decision_id,job_id,map_id,provider_id,remote_target_id,outcome,error_message,latency_ms) VALUES (?,?,?,?,?,?,?,?)')->execute([$decisionId?:null,$jobId,(int)$m['id'],(int)$m['provider_id'],(string)$m['remote_target_id'],$outcome,$error?mb_substr($error,0,1000):null,$latency?:null]);}
-function bluegate_order_auto_plan(array $order): ?array { $pid=(int)($order['catalog_plan_id']??0);if($pid<=0)return null;$q=db()->prepare('SELECT sp.*,sg.name group_name,s.name service_name FROM service_plans sp JOIN service_groups sg ON sg.id=sp.group_id JOIN services s ON s.id=sg.service_id WHERE sp.id=? LIMIT 1');$q->execute([$pid]);$p=$q->fetch();if(!$p)return null;$maps=array_values(array_filter(bluegate_plan_provider_maps($pid),fn($m)=>!empty($m['is_active'])&&!empty($m['provider_active'])));if(!$maps)return null;$p['maps']=$maps;return $p; }
+function bluegate_order_capabilities(array $order): array {
+    static $schemaReady=null,$mapCache=[],$serviceByOrderCache=[],$serviceByIdCache=[];
+    $pid=(int)($order['catalog_plan_id']??0);
+    $delivery=strtolower(trim((string)($order['delivery_type']??'')));
+    $isVpn=$delivery==='vpn';
+    $hasMapping=false;$activeMaps=0;$hasManagedService=false;$serviceId=(int)($order['user_service_id']??0);
+    if($schemaReady===null)$schemaReady=['maps'=>table_exists('service_plan_provider_map')&&table_exists('service_providers'),'services'=>table_exists('user_services')];
+    if($isVpn&&$pid>0&&!empty($schemaReady['maps'])){
+        if(!array_key_exists($pid,$mapCache)){
+            try{$mapCache[$pid]=array_values(array_filter(bluegate_plan_provider_maps($pid),fn($m)=>!empty($m['is_active'])&&!empty($m['provider_active'])));}
+            catch(Throwable $e){error_log('[BlueGate capabilities mapping] '.$e->getMessage());$mapCache[$pid]=[];}
+        }
+        $activeMaps=count($mapCache[$pid]);$hasMapping=$activeMaps>0;
+    }
+    if(!empty($schemaReady['services'])){
+        try{
+            if($serviceId>0){if(!array_key_exists($serviceId,$serviceByIdCache)){$q=db()->prepare('SELECT id FROM user_services WHERE id=? LIMIT 1');$q->execute([$serviceId]);$serviceByIdCache[$serviceId]=(int)($q->fetchColumn()?:0);}$hasManagedService=$serviceByIdCache[$serviceId]>0;}
+            elseif(!empty($order['id'])){$oid=(int)$order['id'];if(!array_key_exists($oid,$serviceByOrderCache)){$q=db()->prepare('SELECT id FROM user_services WHERE order_id=? ORDER BY id DESC LIMIT 1');$q->execute([$oid]);$serviceByOrderCache[$oid]=(int)($q->fetchColumn()?:0);}$sid=$serviceByOrderCache[$oid];if($sid>0){$serviceId=$sid;$hasManagedService=true;}}
+        }catch(Throwable $e){error_log('[BlueGate capabilities service] '.$e->getMessage());}
+    }
+    $serviceAction=!empty($order['service_action'])&&in_array((string)$order['service_action'],['renew','add_traffic','add_days'],true);
+    $managedVpn=$isVpn&&($hasMapping||$hasManagedService);
+    return [
+        'is_vpn'=>$isVpn,
+        'has_provider_mapping'=>$hasMapping,
+        'active_provider_mappings'=>$activeMaps,
+        'has_managed_service'=>$hasManagedService,
+        'managed_service_id'=>$serviceId?:null,
+        'is_managed_vpn'=>$managedVpn,
+        'can_provision'=>$isVpn&&$hasMapping&&!$serviceAction,
+        'delivery_mode'=>$managedVpn?'managed_vpn':'standard',
+    ];
+}
+function bluegate_order_auto_plan(array $order): ?array {
+    $pid=(int)($order['catalog_plan_id']??0);if($pid<=0)return null;
+    if(strtolower(trim((string)($order['delivery_type']??'')))!=='vpn')return null;
+    $q=db()->prepare('SELECT sp.*,sg.name group_name,s.name service_name FROM service_plans sp JOIN service_groups sg ON sg.id=sp.group_id JOIN services s ON s.id=sg.service_id WHERE sp.id=? AND sp.is_active=1 AND sp.is_archived=0 LIMIT 1');$q->execute([$pid]);$p=$q->fetch();if(!$p)return null;
+    if(strtolower(trim((string)($p['delivery_type']??'')))!=='vpn')return null;
+    $maps=array_values(array_filter(bluegate_plan_provider_maps($pid),fn($m)=>!empty($m['is_active'])&&!empty($m['provider_active'])));if(!$maps)return null;$p['maps']=$maps;return $p;
+}
 function bluegate_client_suffix(int $len=5): string { $alphabet='abcdefghjkmnpqrstuvwxyz23456789';$out='';for($i=0;$i<$len;$i++)$out.=$alphabet[random_int(0,strlen($alphabet)-1)];return$out; }
 function bluegate_service_username(array $order,array $cfg=[],int $serviceId=0): string {
     if($serviceId>0){$q=db()->prepare('SELECT metadata_json FROM user_services WHERE id=?');$q->execute([$serviceId]);$meta=bluegate_json_array($q->fetchColumn()?:null);$saved=trim((string)($meta['client_username']??''));if($saved!=='')return$saved;}
@@ -236,7 +275,7 @@ function bluegate_finalize_initial_provisioning(int $orderId,int $serviceId): ?a
     $q=db()->prepare('SELECT COUNT(*) FROM provisioning_jobs WHERE user_service_id=? AND job_type="create" AND status<>"completed"');$q->execute([$serviceId]);if((int)$q->fetchColumn()>0)return null;
     $s=bluegate_service_record($serviceId);if(!$s)return null;$pub=bluegate_service_public($s);$url=trim((string)($pub['subscription_url']??''));if($url==='')return null;
     $title='لینک Subscription';$note='سرویس VPN شما با موفقیت ساخته شد. لینک Subscription از بخش «سرویس‌های من» قابل باز کردن و کپی است.';
-    $order=set_order_service_delivery($orderId,$url,$title,$note,true);if($order){add_order_event($orderId,'delivered','ساخت و ارسال خودکار سرویس','Client روی پنل ساخته شد و لینک Subscription برای مشتری فعال شد.',true);}
+    $order=set_order_service_delivery($orderId,$url,$title,$note,true);if($order){add_order_event($orderId,'delivered','ساخت و ارسال خودکار سرویس','Client روی پنل ساخته شد و لینک Subscription برای مشتری فعال شد.',true);notify_admin_order($orderId,'سرویس ساخته و تحویل شد','Auto Provisioning','✅ Client ساخته شد و لینک Subscription فعال شد.');}
     return$order;
 }
 function bluegate_queue_order_provisioning(int $orderId,bool $runNow=true): array {
@@ -256,11 +295,21 @@ function bluegate_create_on_route(array $j,array $req,array $order,array $plan,a
 function bluegate_run_provisioning_job(int $jobId): array {
     $claim=bluegate_claim_job($jobId);$j=$claim['job'];if(!empty($claim['completed']))return bluegate_json_array($j['result_json']);$req=bluegate_json_array($j['request_json']??null);$order=order_by_id((int)($req['order_id']??0));if(!$order)throw new RuntimeException('ORDER_NOT_FOUND');$planId=(int)($req['service_plan_id']??0);$q=db()->prepare('SELECT sp.*,sg.name group_name,s.name service_name FROM service_plans sp JOIN service_groups sg ON sg.id=sp.group_id JOIN services s ON s.id=sg.service_id WHERE sp.id=?');$q->execute([$planId]);$plan=$q->fetch();if(!$plan)throw new RuntimeException('SERVICE_PLAN_NOT_FOUND');
     $maps=[];$decisionId=0;try{if(!empty($req['map_id'])){$all=bluegate_plan_provider_maps($planId);$maps=array_values(array_filter($all,fn($x)=>(int)$x['id']===(int)$req['map_id']));if(!$maps)throw new RuntimeException('PLAN_PROVIDER_MAP_NOT_FOUND');$decision=['strategy'=>'fixed','candidate_count'=>1,'candidates'=>[['map_id'=>(int)$maps[0]['id'],'provider_id'=>(int)$maps[0]['provider_id']]]];}else{$route=bluegate_route_order($order,$plan,$req['candidate_map_ids']??null);$maps=$route['ordered'];$decision=$route['decision'];}$decisionId=bluegate_record_route_decision($order,$plan,(int)$j['user_service_id'],$jobId,$decision);$errors=[];foreach($maps as $m){try{return bluegate_create_on_route($j,$req,$order,$plan,$m,$decisionId);}catch(Throwable $e){if(str_starts_with($e->getMessage(),'ROUTE_AMBIGUOUS_RETRY_REQUIRED:'))throw$e;$errors[]=['map_id'=>(int)$m['id'],'provider_id'=>(int)$m['provider_id'],'error'=>$e->getMessage()];continue;}throw new RuntimeException('ALL_ROUTES_FAILED:'.json_encode($errors,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));}
-    }catch(Throwable $e){$attempt=(int)$j['attempt_count'];$max=(int)$j['max_attempts'];$final=$attempt>=$max;$delay=max(1,(int)min(900,30*(2**max(0,$attempt-1))));db()->prepare('UPDATE provisioning_jobs SET status=?,available_at=DATE_ADD(NOW(),INTERVAL '.$delay.' SECOND),last_error_code=?,last_error_message=?,locked_at=NULL,locked_by=NULL WHERE id=?')->execute([$final?'failed':'retry',substr(preg_replace('/:.*/','',$e->getMessage()),0,128),mb_substr($e->getMessage(),0,1000),$jobId]);if($final){db()->prepare('UPDATE user_services SET status="provisioning_failed" WHERE id=?')->execute([(int)$j['user_service_id']]);add_order_event((int)$order['id'],'preparing','ساخت خودکار سرویس نیاز به بررسی دارد','تمام مسیرهای Routing ناموفق بودند؛ سفارش تحویل‌نشده باقی ماند.',false);}throw$e;}
+    }catch(Throwable $e){$attempt=(int)$j['attempt_count'];$max=(int)$j['max_attempts'];$final=$attempt>=$max;$delay=max(1,(int)min(900,30*(2**max(0,$attempt-1))));db()->prepare('UPDATE provisioning_jobs SET status=?,available_at=DATE_ADD(NOW(),INTERVAL '.$delay.' SECOND),last_error_code=?,last_error_message=?,locked_at=NULL,locked_by=NULL WHERE id=?')->execute([$final?'failed':'retry',substr(preg_replace('/:.*/','',$e->getMessage()),0,128),mb_substr($e->getMessage(),0,1000),$jobId]);if($final){db()->prepare('UPDATE user_services SET status="provisioning_failed" WHERE id=?')->execute([(int)$j['user_service_id']]);add_order_event((int)$order['id'],'preparing','ساخت خودکار سرویس نیاز به بررسی دارد','تمام مسیرهای Routing ناموفق بودند؛ سفارش تحویل‌نشده باقی ماند.',false);notify_admin_order((int)$order['id'],'Provisioning ناموفق شد','Auto Provisioning','❌ تلاش '.(int)$attempt.'/'.(int)$max."\n<code>".h(mb_substr($e->getMessage(),0,500)).'</code>');}else{notify_admin_order((int)$order['id'],'Provisioning در Retry','Auto Provisioning','⏳ تلاش '.(int)$attempt.'/'.(int)$max.' · Retry حدود '.(int)$delay.' ثانیه دیگر<br><code>'.h(mb_substr($e->getMessage(),0,350)).'</code>');}throw$e;}
 }
 function bluegate_run_job(int $id): array {$q=db()->prepare('SELECT job_type FROM provisioning_jobs WHERE id=?');$q->execute([$id]);$t=(string)($q->fetchColumn()?:'create');return in_array($t,['renew','add_traffic','add_days'],true)?bluegate_run_service_action_job($id):bluegate_run_provisioning_job($id);}
 function bluegate_run_due_provisioning_jobs(int $limit=20): array {$limit=max(1,min(100,$limit));$rows=db()->query("SELECT id FROM provisioning_jobs WHERE status IN ('queued','retry') AND available_at<=NOW() ORDER BY available_at,id LIMIT ".$limit)->fetchAll(PDO::FETCH_COLUMN)?:[];$ok=0;$failed=0;foreach($rows as$id){try{bluegate_run_job((int)$id);$ok++;}catch(Throwable $e){$failed++;}}return ['processed'=>count($rows),'completed'=>$ok,'failed'=>$failed];}
-function bluegate_after_order_paid(int $orderId): void {try{if(function_exists('bluegate_after_order_paid_phase4')&&bluegate_after_order_paid_phase4($orderId))return;bluegate_queue_order_provisioning($orderId,true);}catch(Throwable $e){error_log('[BlueGate paid-order hook #'.$orderId.'] '.$e->getMessage());}}
+function bluegate_after_order_paid(int $orderId): void {
+    try{
+        if(function_exists('bluegate_after_order_paid_phase4')&&bluegate_after_order_paid_phase4($orderId))return;
+        $order=order_by_id($orderId);if(!$order)return;
+        $caps=bluegate_order_capabilities($order);
+        // Manual/account/code/file products must never enter the VPN provisioning pipeline.
+        if(empty($caps['can_provision']))return;
+        $r=bluegate_queue_order_provisioning($orderId,true);
+        if(!empty($r['eligible']))notify_admin_order($orderId,'Provisioning شروع شد','Auto Provisioning','⚡ Jobهای ساخت سرویس در صف قرار گرفتند.');
+    }catch(Throwable $e){error_log('[BlueGate paid-order hook #'.$orderId.'] '.$e->getMessage());notify_admin_order($orderId,'خطا در شروع Provisioning','Auto Provisioning','❌ <code>'.h(mb_substr($e->getMessage(),0,500)).'</code>');}
+}
 function bluegate_provisioning_jobs(int $limit=50): array {$limit=max(1,min(200,$limit));return db()->query('SELECT j.*,p.name provider_name,us.order_id,us.display_name FROM provisioning_jobs j LEFT JOIN service_providers p ON p.id=j.provider_id LEFT JOIN user_services us ON us.id=j.user_service_id ORDER BY j.id DESC LIMIT '.$limit)->fetchAll()?:[];}
 function bluegate_retry_provisioning_job(int $id,bool $runNow=true): array {db()->prepare('UPDATE provisioning_jobs SET status="queued",attempt_count=0,available_at=NOW(),last_error_code=NULL,last_error_message=NULL,locked_at=NULL,locked_by=NULL WHERE id=? AND status<>"completed"')->execute([$id]);return $runNow?bluegate_run_job($id):['queued'=>true];}
 function bluegate_admin_provision_order_now(int $orderId): array {

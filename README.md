@@ -1,8 +1,19 @@
-# BlueGate Platform v4.2.0
+# BlueGate Platform v4.4.0
 
 BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت محصولات دیجیتال و سرویس‌های VPN است و شامل فروشگاه وب، Telegram Mini App، ربات تلگرام، کیف پول، پرداخت، پنل ادمین، Service Engine، Provisioning خودکار، مانیتورینگ و اتصال مستقیم به پنل‌های VPN می‌شود.
 
 ## امکانات
+
+- تشخیص قطعی سرویس VPN Managed بر اساس نوع تحویل + Provider Mapping فعال؛ بدون حدس از نام محصول.
+- نمایش صفحه Subscription فقط برای سفارش‌های Managed VPN و حفظ صفحه تحویل کلاسیک برای محصولات دستی/اکانت/کد/فایل.
+- نمایش دکمه ساخت از پنل فقط برای سفارش‌های واقعاً Provisionable.
+- تأیید پرداخت یکپارچه بین Bot، Web و Mini App با یک مسیر Backend واحد.
+
+
+- اعلان‌های ادمین یکپارچه و قابل‌اعتماد برای ثبت‌نام، سفارش، رسید، شارژ اعتبار، Crypto/Stars/SwapWallet و Provisioning
+- دکمه‌های عملیاتی مستقیم روی اعلان سفارش و رسید: بررسی، تایید پرداخت، رد، مشاهده رسید، تایم‌لاین و مدیریت سرویس
+- ارسال رسید عکس با fallback خودکار به پیام متنی در صورت خطای Telegram و پشتیبانی از ادمین‌های تعریف‌شده در `ADMIN_IDS` و `admin_roles`
+- جلوگیری از اعلان تکراری ثبت‌نام و نمایش اطلاعات کامل‌تر مشتری، پرداخت و منبع سفارش
 
 ### فروشگاه و کاربران
 
@@ -135,7 +146,13 @@ BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت مح
 - Usage History و Event Timeline
 - Service Card گرافیکی
 
-### امکانات پیشرفته
+### امکانات
+
+- تشخیص قطعی سرویس VPN Managed بر اساس نوع تحویل + Provider Mapping فعال؛ بدون حدس از نام محصول.
+- نمایش صفحه Subscription فقط برای سفارش‌های Managed VPN و حفظ صفحه تحویل کلاسیک برای محصولات دستی/اکانت/کد/فایل.
+- نمایش دکمه ساخت از پنل فقط برای سفارش‌های واقعاً Provisionable.
+- تأیید پرداخت یکپارچه بین Bot، Web و Mini App با یک مسیر Backend واحد.
+ پیشرفته
 
 - Free Trial واقعی روی Provider
 - محدودیت و Cooldown برای Trial
@@ -243,8 +260,8 @@ getent ahostsv4 bot.example.com
 
 ```bash
 cd /root
-unzip BlueGate-Platform-v4.2.0.zip -d BlueGate-Platform-v4.2.0
-cd BlueGate-Platform-v4.2.0
+unzip BlueGate-Platform-v4.4.0.zip -d BlueGate-Platform-v4.4.0
+cd BlueGate-Platform-v4.4.0
 ```
 
 اگر نام ZIP یا پوشه متفاوت است، نام واقعی فایل خودتان را جایگزین کنید.

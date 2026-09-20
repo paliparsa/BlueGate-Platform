@@ -545,7 +545,7 @@ function openAdminActionSheet(type,id){
     ${primaryActions.length?`<div class="oac-primary-grid">${primaryActions.slice(0,3).join('')}</div>`:''}
     <section class="oac-section"><header><span>👤</span><div><b>کاربر</b><small>پروفایل و ارتباط</small></div></header><div class="oac-action-grid">${o.user_id?`<button data-customer360="${o.user_id}"><span>◎</span><b>پروفایل کاربر</b></button>`:''}${o.username?`<button data-chat-user="${esc(o.username)}"><span>✉</span><b>ارسال پیام</b></button>`:''}<button data-admin-order-note="${o.id}"><span>✎</span><b>یادداشت داخلی</b></button></div></section>
     <section class="oac-section"><header><span>◫</span><div><b>وضعیت سفارش</b><small>مرحله پردازش را انتخاب کن</small></div></header><div class="oac-status-grid"><button class="${status==='reviewing'?'active':''}" data-admin-status="${o.id}:reviewing"><span>1</span><b>در بررسی</b></button><button class="${status==='payment_confirmed'?'active':''}" data-admin-status="${o.id}:payment_confirmed"><span>2</span><b>تأیید پرداخت</b></button><button class="${status==='preparing'?'active':''}" data-admin-status="${o.id}:preparing"><span>3</span><b>آماده‌سازی</b></button></div></section>
-    <section class="oac-section"><header><span>⚡</span><div><b>تحویل سرویس</b><small>ساخت خودکار از پنل یا تحویل دستی</small></div></header><div class="oac-action-grid">${o.catalog_plan_id&&!o.service_action&&!['rejected','canceled','refunded'].includes(status)?`<button class="success" data-admin-provision="${o.id}"><span>⚡</span><b>ساخت و ارسال از پنل</b></button>`:''}<button data-admin-service="${o.id}"><span>🔗</span><b>ثبت دستی لینک ساب</b></button><button data-admin-deliver="${o.id}"><span>▤</span><b>تحویل متنی</b></button>${o.receipt_file_id?`<button data-view-receipt="${o.id}"><span>🧾</span><b>دیدن رسید</b></button>`:''}</div></section>
+    <section class="oac-section"><header><span>⚡</span><div><b>تحویل سرویس</b><small>ساخت خودکار از پنل یا تحویل دستی</small></div></header><div class="oac-action-grid">${o.provisioning_eligible&&!['rejected','canceled','refunded'].includes(status)?`<button class="success" data-admin-provision="${o.id}"><span>⚡</span><b>ساخت و ارسال از پنل</b></button>`:''}${o.is_managed_vpn?`<button data-admin-service="${o.id}"><span>🔗</span><b>ثبت دستی لینک ساب</b></button>`:''}<button data-admin-deliver="${o.id}"><span>▤</span><b>تحویل متنی</b></button>${o.receipt_file_id?`<button data-view-receipt="${o.id}"><span>🧾</span><b>دیدن رسید</b></button>`:''}</div></section>
     <details class="oac-danger"><summary><span>⚠</span><div><b>عملیات بیشتر</b><small>رد، آرشیو و حذف</small></div><i>⌄</i></summary><div><button class="danger" data-admin-status="${o.id}:rejected">رد سفارش</button><button class="danger soft" data-admin-archive-order="${o.id}">آرشیو سفارش</button>${cleanupStatuses.includes(o.status)?`<button class="danger hard" data-admin-delete-order="${o.id}">حذف کامل</button>`:''}</div></details>
   </div>`;
   BlueGateUI.openSheet({type:'action',eyebrow:`ORDER CONTROL · #${nf(o.id)}`,title:o.display_name||'سفارش',subtitle:statusLabel,body});
@@ -1297,10 +1297,8 @@ function serviceHubItems(){
 }
 function isVpnService(o){
   if(!o)return false;
-  const dt=String(o.delivery_type||'').toLowerCase();
-  const name=String(o.display_name||o.product_name||o.service_name_snapshot||'').toLowerCase();
-  const url=String(o.service_url||o.delivery_url||'');
-  return dt==='vpn'||/vpn|blueping|standard|pro boost|\bpro\b/i.test(name)||/\/sub\//i.test(url);
+  // Backend capabilities are authoritative. Never infer VPN from product names such as Pro/Standard.
+  return o.is_managed_vpn===true||Number(o.is_managed_vpn)===1||o.delivery_mode==='managed_vpn';
 }
 function bytesFa(v){const n=Number(v||0);if(!n)return '0 GB';return (n/1073741824).toLocaleString('fa-IR',{maximumFractionDigits:1})+' GB'}
 function serviceForOrder(o){

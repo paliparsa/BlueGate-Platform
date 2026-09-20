@@ -1083,7 +1083,7 @@ function submit_crypto_hash(int $orderId, int $userId, string $txHash): array {
     try { db()->prepare('UPDATE crypto_payment_checks SET tx_hash=?, status="pending", fail_reason=NULL WHERE order_id=?')->execute([$txHash,$orderId]); }
     catch(Throwable $e){ throw new RuntimeException('TX_HASH_ALREADY_USED'); }
     add_order_event($orderId, 'pending_payment', 'هش پرداخت رمزارز ثبت شد', $txHash, true);
-    notify_admins("🪙 هش پرداخت رمزارز ثبت شد\nسفارش: <code>#{$orderId}</code>\nTXID: <code>".h($txHash)."</code>");
+    notify_admin_order($orderId,'TXID پرداخت رمزارز ثبت شد','Web / Mini App','🔗 TXID: <code>'.h($txHash).'</code>');
     // Verification is intentionally deferred to cron so user/bot requests stay fast.
     return order_by_id($orderId);
 }
@@ -1104,7 +1104,7 @@ function crypto_verify_order(int $orderId): ?array {
         db()->prepare('UPDATE crypto_payment_checks SET confirmed_at=NOW() WHERE id=?')->execute([(int)$check['id']]);
         $paid=mark_order_paid((int)$check['order_id']);
         add_order_event((int)$check['order_id'], 'payment_confirmed', 'پرداخت رمزارز تایید شد', strtoupper($check['asset']).' / TXID: '.$check['tx_hash'], true);
-        if($paid){ send_msg((int)$paid['telegram_id'], "✅ پرداخت رمزارز سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($paid['telegram_id']))); notify_admins("✅ پرداخت رمزارز تایید شد\nسفارش: <code>#{$paid['id']}</code>\nکاربر: <code>{$paid['telegram_id']}</code>\nTXID: <code>".h($check['tx_hash'])."</code>"); }
+        if($paid){ send_user_message_by_id((int)$paid['user_id'], "✅ پرداخت رمزارز سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(false)); notify_admin_order((int)$paid['id'],'پرداخت رمزارز تایید شد','Crypto','🔗 TXID: <code>'.h($check['tx_hash']).'</code>'); }
     }
     return get_crypto_check_by_order($orderId);
 }
@@ -1586,8 +1586,8 @@ function swapwallet_refresh_invoice(int $orderId): ?array {
                 db()->prepare('UPDATE swapwallet_invoices SET status="PAID", paid_at=NOW() WHERE id=?')->execute([(int)$inv['id']]);
                 $paid=mark_order_paid($orderId);
                 if($paid){
-                    send_msg((int)$paid['telegram_id'], "✅ پرداخت سواپ‌ولت سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($paid['telegram_id'])));
-                    notify_admins("✅ پرداخت SwapWallet تایید شد\nسفارش: <code>#{$paid['id']}</code>\nکاربر: <code>{$paid['telegram_id']}</code>\nInvoice: <code>".h($inv['invoice_id'])."</code>");
+                    send_user_message_by_id((int)$paid['user_id'], "✅ پرداخت سواپ‌ولت سفارش <code>#{$paid['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(false));
+                    notify_admin_order((int)$paid['id'],'پرداخت SwapWallet تایید شد','SwapWallet','🧾 Invoice: <code>'.h($inv['invoice_id']).'</code>');
                 }
             }
             return get_swapwallet_invoice_by_order($orderId);
@@ -1597,7 +1597,7 @@ function swapwallet_refresh_invoice(int $orderId): ?array {
     db()->prepare('UPDATE swapwallet_invoices SET check_count=check_count+1,last_checked_at=NOW(),fail_reason=?,raw_response=? WHERE id=?')->execute([$msg,json_encode(['attempts'=>$errors],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),(int)$inv['id']]);
     if (setting_bool('swapwallet_notify_fail', true)) {
         $key='swapwallet_last_fail_alert_'.$orderId; $last=(int)setting($key, 0);
-        if (time()-$last > 1800) { notify_admins("⚠️ بررسی پرداخت SwapWallet ناموفق بود\nسفارش: <code>#{$orderId}</code>\nخطا: <code>".h($msg)."</code>"); set_setting($key, (string)time()); }
+        if (time()-$last > 1800) { notify_admin_order($orderId,'خطا در بررسی SwapWallet','SwapWallet','❌ <code>'.h($msg).'</code>'); set_setting($key, (string)time()); }
     }
     return get_swapwallet_invoice_by_order($orderId);
 }
@@ -2155,57 +2155,72 @@ function is_joined_channel(int $telegram_id): bool {
     $status = $res['result']['status'] ?? 'left';
     return !in_array($status, ['left', 'kicked'], true);
 }
-function notify_admins(string $text): void {
-    $ids=array_map('intval',app_config('ADMIN_IDS',[]));
-    if(table_exists('admin_roles')){try{$dbAdmins=db()->query("SELECT telegram_id FROM admin_roles WHERE role<>'none' AND telegram_id>0 AND telegram_id<9000000000")->fetchAll(PDO::FETCH_COLUMN);foreach($dbAdmins as $aid){$aid=(int)$aid;if($aid>0&&!in_array($aid,$ids,true))$ids[]=$aid;}}catch(Throwable $e){error_log('[Notify Admin lookup] '.$e->getMessage());}}
-    foreach ($ids as $aid) {
-        if ($aid > 0) {
-            try {
-                send_msg($aid, $text);
-            } catch (Throwable $e) {
-                error_log('[Notify Admin Error] ' . $e->getMessage());
-            }
-        }
+function admin_recipient_ids(): array {
+    $ids=[];
+    foreach((array)app_config('ADMIN_IDS',[]) as $aid){$aid=(int)$aid;if($aid>0&&$aid<9000000000)$ids[$aid]=$aid;}
+    if(table_exists('admin_roles')){
+        try{$rows=db()->query("SELECT telegram_id FROM admin_roles WHERE role<>'none' AND telegram_id>0 AND telegram_id<9000000000")->fetchAll(PDO::FETCH_COLUMN)?:[];foreach($rows as $aid){$aid=(int)$aid;if($aid>0)$ids[$aid]=$aid;}}
+        catch(Throwable $e){error_log('[Admin notify recipients] '.$e->getMessage());}
     }
+    return array_values($ids);
 }
-function notify_new_user_signup(array $user, string $sourceStr = '🌐 وب‌سایت'): void {
-    
-    $uid = (int)($user['id'] ?? 0);
-    $uname = !empty($user['username']) ? '@' . h($user['username']) : (!empty($user['web_username']) ? h($user['web_username']) : 'ثبت نشده');
-    $name = trim(h(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')));
-    if ($name === '') $name = 'مشتری بدون نام';
-    
-    $email = !empty($user['email']) ? h($user['email']) : 'ثبت نشده';
-    $tgId = !empty($user['telegram_id']) && (int)$user['telegram_id'] < 9000000000 ? "<code>{$user['telegram_id']}</code>" : 'کاربر وب‌سایت';
-    
-    $refStr = 'بدون معرف';
-    if (!empty($user['referrer_id'])) {
-        $refUser = get_user_by_id((int)$user['referrer_id']);
-        if ($refUser) {
-            $refName = $refUser['username'] ? '@'.$refUser['username'] : ($refUser['first_name'] ?? 'معرف');
-            $refStr = '#' . $refUser['id'] . ' (' . h($refName) . ')';
-        }
-    }
-    
-    $reward = money(setting_int('start_reward', 2000));
-    $date = date('Y-m-d H:i');
-    
-    $msg = "🆕 <b>ثبت‌نام کاربر جدید از {$sourceStr}</b>\n\n"
-         . "🆔 <b>شناسه کاربر:</b> <code>#{$uid}</code>\n"
-         . "👤 <b>نام کاربری:</b> {$uname}\n"
-         . "📛 <b>نام مشتری:</b> {$name}\n"
-         . "📧 <b>ایمیل:</b> {$email}\n"
-         . "📲 <b>تلگرام آیدی:</b> {$tgId}\n"
-         . "🔗 <b>معرف:</b> {$refStr}\n"
-         . "📅 <b>تاریخ ثبت‌نام:</b> <code>{$date}</code>\n"
-         . "🎁 <b>هدیه اعتبار:</b> {$reward}";
-         
-    try {
-        notify_admins($msg);
-    } catch (Throwable $e) {
-        error_log('[Notify Signup Error] ' . $e->getMessage());
-    }
+function real_telegram_chat_id(array|int|null $userOrId): ?int {
+    if(is_array($userOrId))$tid=(int)($userOrId['telegram_id']??0);
+    elseif(is_int($userOrId)){$u=get_user_by_id($userOrId);$tid=(int)($u['telegram_id']??0);}else $tid=0;
+    return ($tid>0&&$tid<9000000000)?$tid:null;
 }
+function send_user_message_by_id(int $userId,string $text,?string $replyMarkup=null): bool {
+    $u=get_user_by_id($userId);if(!$u)return false;$tid=real_telegram_chat_id($u);if(!$tid)return false;
+    $data=['chat_id'=>$tid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;
+    $r=tg('sendMessage',$data);if(empty($r['ok'])){error_log('[User notify failed uid='.$userId.'] '.($r['description']??'unknown'));return false;}return true;
+}
+function admin_notify(string $text,?string $replyMarkup=null,mixed $photo=null): array {
+    $result=['sent'=>0,'failed'=>0,'fallback'=>0];
+    foreach(admin_recipient_ids() as $aid){
+        try{$res=null;
+            if($photo!==null&&$photo!==''){
+                $media=$photo;if(is_string($photo)&&is_file($photo)){$mime=function_exists('mime_content_type')?(mime_content_type($photo)?:'image/jpeg'):'image/jpeg';$media=new CURLFile($photo,$mime,basename($photo));}
+                $longCaption=mb_strlen(strip_tags($text))>900;
+                $data=['chat_id'=>$aid,'photo'=>$media,'caption'=>$longCaption?'🧾 رسید / فایل مربوط به اعلان ادمین':$text,'parse_mode'=>'HTML'];if(!$longCaption&&$replyMarkup!==null)$data['reply_markup']=$replyMarkup;$photoRes=tg('sendPhoto',$data);
+                if(!empty($photoRes['ok'])&&$longCaption){$data=['chat_id'=>$aid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;$res=tg('sendMessage',$data);}else{$res=$photoRes;}
+                if(empty($res['ok'])){$result['fallback']++;error_log('[Admin sendPhoto fallback '.$aid.'] '.($res['description']??'unknown'));$data=['chat_id'=>$aid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;$res=tg('sendMessage',$data);}
+            }else{$data=['chat_id'=>$aid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;$res=tg('sendMessage',$data);}
+            if(!empty($res['ok']))$result['sent']++;else{$result['failed']++;error_log('[Admin notify failed '.$aid.'] '.($res['description']??'unknown'));}
+        }catch(Throwable $e){$result['failed']++;error_log('[Admin notify exception '.$aid.'] '.$e->getMessage());}
+    }
+    return $result;
+}
+function notify_admins(string $text): void { admin_notify($text); }
+function resolve_receipt_photo_source(?string $ref): mixed {
+    $ref=trim((string)$ref);if($ref==='')return null;
+    $local=dirname(__DIR__).'/public/'.ltrim($ref,'/');
+    if(is_file($local)){$mime=function_exists('mime_content_type')?(mime_content_type($local)?:'image/jpeg'):'image/jpeg';return new CURLFile($local,$mime,basename($local));}
+    return $ref;
+}
+function notify_new_user_signup(array $user,string $sourceStr='🌐 وب‌سایت'): void {
+    $uid=(int)($user['id']??0);if($uid<=0)return;
+    try{$q=db()->prepare('UPDATE users SET start_notified=1 WHERE id=? AND COALESCE(start_notified,0)=0');$q->execute([$uid]);if($q->rowCount()!==1)return;}catch(Throwable $e){error_log('[Signup notify gate] '.$e->getMessage());return;}
+    if(!setting_bool('notify_new_user',true))return;
+    $uname=!empty($user['username'])?'@'.h($user['username']):(!empty($user['web_username'])?h($user['web_username']):'ثبت نشده');$name=trim((string)($user['first_name']??'').' '.(string)($user['last_name']??''));if($name==='')$name='مشتری بدون نام';
+    $email=!empty($user['email'])?h($user['email']):'ثبت نشده';$phone=!empty($user['phone_number'])?h($user['phone_number']):'ثبت نشده';$tid=real_telegram_chat_id($user);$tgId=$tid?'<code>'.$tid.'</code>':'متصل نیست (حساب وب)';
+    $refStr='بدون معرف';if(!empty($user['referrer_id'])){$r=get_user_by_id((int)$user['referrer_id']);if($r){$rn=!empty($r['username'])?'@'.$r['username']:($r['first_name']??'معرف');$refStr='#'.(int)$r['id'].' ('.h($rn).')';}}
+    $msg="🆕 <b>ثبت‌نام کاربر جدید</b>
+
+📍 منبع: <b>".h($sourceStr)."</b>
+🆔 User ID: <code>#{$uid}</code>
+📛 نام: <b>".h($name)."</b>
+👤 نام کاربری: {$uname}
+📧 ایمیل: {$email}
+📱 شماره: <code>{$phone}</code>
+✈️ Telegram ID: {$tgId}
+🎟 کد دعوت: <code>".h((string)($user['ref_code']??'—'))."</code>
+🔗 معرف: {$refStr}
+💰 موجودی: <b>".money((int)($user['balance']??0))."</b>
+🎁 پاداش معرف پس از احراز شرایط: <b>".money(setting_int('start_reward',2000))."</b>
+📅 زمان: <code>".h((string)($user['created_at']??date('Y-m-d H:i:s')))."</code>";
+    admin_notify($msg);
+}
+
 function try_reward_referrer(array $user): void {
     if(empty($user['referrer_id'])||(int)($user['ref_rewarded']??0)===1||user_is_blocked($user))return;
     if(!is_joined_channel((int)$user['telegram_id']))return;
@@ -2346,14 +2361,14 @@ function admin_shop_keyboard(): string {
     return json_markup(['inline_keyboard'=>$rows]);
 }
 function admin_order_keyboard(int $orderId): string {
-    $o=order_by_id($orderId);$status=$o?normalize_order_status((string)$o['status']):'';$isVpn=$o&&normalize_delivery_type((string)($o['delivery_type']??''))==='vpn';$rows=[];
+    $o=order_by_id($orderId);$status=$o?normalize_order_status((string)$o['status']):'';$caps=$o&&function_exists('bluegate_order_capabilities')?bluegate_order_capabilities($o):[];$managedVpn=!empty($caps['is_managed_vpn']);$canProvision=!empty($caps['can_provision']);$rows=[];
     if(in_array($status,['pending_payment','receipt_submitted','reviewing'],true))$rows[]=[['text'=>'👀 شروع بررسی','callback_data'=>'ord_review_'.$orderId],['text'=>'✅ تایید پرداخت','callback_data'=>'ord_paid_'.$orderId]];
     if(in_array($status,['payment_confirmed','preparing'],true)){
-        if($isVpn)$rows[]=[['text'=>'⚡ ساخت و ارسال از پنل','callback_data'=>'ord_provision_'.$orderId],['text'=>'📡 وضعیت سرویس','callback_data'=>'ord_service_status_'.$orderId]];
+        if($canProvision)$rows[]=[['text'=>'⚡ ساخت و ارسال از پنل','callback_data'=>'ord_provision_'.$orderId],['text'=>'📡 وضعیت سرویس','callback_data'=>'ord_service_status_'.$orderId]];
         else $rows[]=[['text'=>'📦 آماده‌سازی','callback_data'=>'ord_prepare_'.$orderId],['text'=>'⚡️ تحویل از انبار','callback_data'=>'ord_auto_deliver_'.$orderId]];
-        $rows[]=[['text'=>$isVpn?'🔗 ثبت دستی لینک ساب':'📩 تحویل دستی','callback_data'=>'ord_deliver_'.$orderId],['text'=>'📝 یادداشت داخلی','callback_data'=>'ord_note_'.$orderId]];
-    } elseif($status==='delivered'&&$isVpn){$rows[]=[['text'=>'📡 وضعیت سرویس','callback_data'=>'ord_service_status_'.$orderId],['text'=>'🔗 تغییر لینک دستی','callback_data'=>'ord_deliver_'.$orderId]];}
-    $rows[]=[['text'=>'🧾 تایم‌لاین','callback_data'=>'ord_timeline_'.$orderId],['text'=>'❌ رد سفارش','callback_data'=>'ord_reject_'.$orderId]];
+        $rows[]=[['text'=>$managedVpn?'🔗 ثبت دستی لینک ساب':'📩 تحویل دستی','callback_data'=>'ord_deliver_'.$orderId],['text'=>'📝 یادداشت داخلی','callback_data'=>'ord_note_'.$orderId]];
+    } elseif($status==='delivered'&&$managedVpn){$rows[]=[['text'=>'📡 وضعیت سرویس','callback_data'=>'ord_service_status_'.$orderId],['text'=>'🔗 تغییر لینک دستی','callback_data'=>'ord_deliver_'.$orderId]];}
+    if($o&&!empty($o['receipt_file_id']))$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'ord_receipt_'.$orderId]];$rows[]=[['text'=>'🧾 تایم‌لاین','callback_data'=>'ord_timeline_'.$orderId],['text'=>'❌ رد سفارش','callback_data'=>'ord_reject_'.$orderId]];
     $rows[]=[['text'=>'📦 آرشیو','callback_data'=>'ord_archive_'.$orderId],['text'=>'🗑 حذف کامل','callback_data'=>'ord_delete_'.$orderId]];
     $rows[]=[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_orders'],['text'=>'🛒 فروشگاه ادمین','callback_data'=>'adm_shop']];return json_markup(['inline_keyboard'=>$rows]);
 }
@@ -2551,18 +2566,61 @@ function show_order_invoice(int $chat_id, $message_id, array $order): void {
     if (in_array(normalize_order_status($order['status']), ['pending_payment','rejected'], true)) $txt .= "\n💳 <b>راهنمای پرداخت</b>\n".h(setting('payment_instructions', 'لطفاً پرداخت را انجام دهید و رسید را ارسال کنید.'));
     send_or_edit($chat_id, $message_id, $txt, order_user_keyboard($order));
 }
-function order_admin_card(array $order): string {
-    $name = order_catalog_display_name($order);
-    $cust = customer_stats((int)$order['user_id']);
-    $renew = !empty($order['is_renewal']) ? "🔄 <b>تمدید سفارش</b>".(!empty($order['renewal_of_order_id'])?" #".(int)$order['renewal_of_order_id']:"")."\n" : '';
-    return "🧾 <b>سفارش #{$order['id']}</b>\n".$renew.
-        "کاربر: @".h($order['username'] ?: 'بدون یوزرنیم')." | <code>{$order['telegram_id']}</code>\n".
-        "سطح مشتری: {$cust['tier']['emoji']} {$cust['tier']['fa']} | خرید موفق: <b>{$cust['orders_count']}</b> | ".money($cust['total_spent'])."\n".
-        "محصول: <b>".h($name)."</b>\n".
-        "مبلغ نهایی: <b>".money($order['final_amount'])."</b>\n".
-        "وضعیت: <b>".order_status_emoji($order['status']).' '.order_status_fa($order['status'])."</b>\n".
-        "نوع تحویل: <b>".delivery_type_fa($order['delivery_type'])."</b>";
+function order_admin_card(array $order,string $source=''): string {
+    $name=order_catalog_display_name($order);$cust=customer_stats((int)$order['user_id']);$u=get_user_by_id((int)$order['user_id'])?:[];$tid=real_telegram_chat_id($u);$account=$tid?'<code>'.$tid.'</code>':'وب‌سایت (Telegram متصل نیست)';
+    $uname=!empty($u['username'])?'@'.h($u['username']):(!empty($u['web_username'])?h($u['web_username']):'—');$full=trim((string)($u['first_name']??'').' '.(string)($u['last_name']??''));if($full==='')$full='—';$pay=payment_method_fa((string)($order['payment_method']??''));$source=$source!==''?$source:($tid?'Telegram / Mini App':'Website');
+    $renew=!empty($order['is_renewal'])?"🔄 تمدید از سفارش <code>#".(int)($order['renewal_of_order_id']??0)."</code>
+":'';
+    $txt="🧾 <b>سفارش #".(int)$order['id']."</b>
+".$renew."📍 منبع: <b>".h($source)."</b>
+👤 مشتری: <b>".h($full)."</b> · {$uname}
+🆔 User ID: <code>#".(int)$order['user_id']."</code> · Telegram: {$account}
+";
+    if(!empty($u['email']))$txt.="📧 ".h($u['email'])."
+";if(!empty($u['phone_number']))$txt.="📱 <code>".h($u['phone_number'])."</code>
+";
+    $txt.="🏅 سطح: {$cust['tier']['emoji']} {$cust['tier']['fa']} · خرید موفق: <b>".(int)$cust['orders_count']."</b> · کل خرید: <b>".money((int)$cust['total_spent'])."</b>
+
+📦 محصول/پلن: <b>".h($name)."</b>
+🚚 تحویل: <b>".h(delivery_type_fa((string)$order['delivery_type']))."</b>
+💵 مبلغ پایه: <b>".money((int)($order['amount']??0))."</b>
+";
+    if((int)($order['discount_amount']??0)>0)$txt.="🏷 تخفیف: <b>-".money((int)$order['discount_amount'])."</b>".(!empty($order['coupon_code'])?' · <code>'.h($order['coupon_code']).'</code>':'')."
+";if((int)($order['wallet_amount']??0)>0)$txt.="💙 از اعتبار: <b>".money((int)$order['wallet_amount'])."</b>
+";
+    $txt.="💳 قابل پرداخت: <b>".money((int)$order['final_amount'])."</b>
+🏦 روش پرداخت: <b>".h($pay)."</b>
+📌 وضعیت: <b>".order_status_emoji((string)$order['status']).' '.h(order_status_fa((string)$order['status']))."</b>
+🕒 ثبت: <code>".h((string)($order['created_at']??'—'))."</code>";if(!empty($order['customer_note']))$txt.="
+📝 یادداشت مشتری: ".h((string)$order['customer_note']);return $txt;
 }
+function notify_admin_order(int $orderId,string $event='سفارش جدید',string $source='',string $detail='',mixed $photo=null): array {
+    $o=order_by_id($orderId);if(!$o)return ['sent'=>0,'failed'=>0,'fallback'=>0];$txt="🔔 <b>".h($event)."</b>
+
+".order_admin_card($o,$source);if(trim($detail)!=='')$txt.="
+
+".$detail;return admin_notify($txt,admin_order_keyboard($orderId),$photo);
+}
+function admin_topup_keyboard(int $id,bool $hasReceipt=false): string {
+    $rows=[[['text'=>'✅ تایید و شارژ','callback_data'=>'adm_tu_ok_'.$id],['text'=>'❌ رد','callback_data'=>'adm_tu_no_'.$id]]];if($hasReceipt)$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'adm_tu_rcpt_'.$id]];$t=credit_topup_by_id($id);if($t)$rows[]=[['text'=>'👤 مشتری','callback_data'=>'adm_cust_id_'.(int)$t['user_id']],['text'=>'💳 جزئیات','callback_data'=>'adm_tu_'.$id]];return json_markup(['inline_keyboard'=>$rows]);
+}
+function notify_admin_topup(int $id,string $event='درخواست شارژ',string $detail='',mixed $photo=null): array {
+    $t=credit_topup_by_id($id);if(!$t)return ['sent'=>0,'failed'=>0,'fallback'=>0];$u=get_user_by_id((int)$t['user_id'])?:[];$d=json_decode((string)($t['payment_details']??''),true);if(!is_array($d))$d=[];$tid=real_telegram_chat_id($u);$name=trim((string)($u['first_name']??'').' '.(string)($u['last_name']??''));if($name==='')$name=$u['username']??$u['web_username']??'—';
+    $txt="💳 <b>".h($event)." · شارژ #".(int)$t['id']."</b>
+
+👤 ".h($name)." · User <code>#".(int)$t['user_id']."</code>
+✈️ Telegram: ".($tid?'<code>'.$tid.'</code>':'متصل نیست')."
+";if(!empty($u['email']))$txt.="📧 ".h($u['email'])."
+";$txt.="💰 مبلغ: <b>".money((int)$t['amount'])."</b>
+🏦 روش: <b>".h(payment_method_fa((string)($t['payment_method']??'')))."</b>
+📌 وضعیت: <b>".h(credit_topup_status_fa((string)$t['status']))."</b>
+🕒 <code>".h((string)($t['created_at']??'—'))."</code>";if(!empty($d['note']))$txt.="
+📝 ".h((string)$d['note']);if(!empty($t['tx_hash']))$txt.="
+🔗 TXID: <code>".h((string)$t['tx_hash'])."</code>";if(trim($detail)!=='')$txt.="
+
+".$detail;return admin_notify($txt,admin_topup_keyboard($id,!empty($t['receipt_file_id'])),$photo);
+}
+
 function show_admin_shop_home(int $chat_id, $message_id=null): void {
     $p = db()->query('SELECT COUNT(*) c FROM products')->fetch();
     $active = db()->query('SELECT COUNT(*) c FROM products WHERE is_active=1')->fetch();
@@ -3148,7 +3206,7 @@ function order_by_id(int $id) {
         p.short_description, p.full_description, COALESCE(sp.image_url,p.image_url) image_url, p.duration_days product_duration_days,
         p.price_currency product_price_currency, p.price_usd product_price_usd, p.price_rate_toman product_price_rate_toman, p.price_rate_source product_price_rate_source, p.price_rate_updated_at product_price_rate_updated_at,
         v.title variant_title, v.price variant_price, v.price_currency variant_price_currency, v.price_usd variant_price_usd, v.price_rate_toman variant_price_rate_toman, v.price_rate_source variant_price_rate_source, v.price_rate_updated_at variant_price_rate_updated_at, v.duration_days variant_duration_days, v.discount_percent variant_discount_percent,
-        u.telegram_id, u.username, u.first_name, u.referrer_id
+        u.telegram_id, u.username, u.web_username, u.first_name, u.last_name, u.email, u.phone_number, u.balance, u.referrer_id
         FROM orders o
         JOIN products p ON p.id=o.product_id
         LEFT JOIN product_variants v ON v.id=o.variant_id
@@ -3335,6 +3393,8 @@ function apply_coupon_to_order(int $orderId, int $userId, string $code): array {
 
 function update_order_status(int $orderId, string $status, string $title='', string $note='', bool $public=true): ?array {
     $status = normalize_order_status($status);
+    // Payment approval has one source of truth for Bot, Web and Mini App.
+    if($status==='payment_confirmed') return approve_order_payment($orderId,$title ?: 'پرداخت تایید شد',$note,$public);
     if (in_array($status, ['rejected','canceled','refunded'], true)) refund_wallet_for_order($orderId, 'بازگشت خودکار کیف پول');
     $timeCol = ['receipt_submitted'=>'review_started_at','reviewing'=>'review_started_at','payment_confirmed'=>'paid_at','preparing'=>'prepared_at','delivered'=>'delivered_at','rejected'=>'rejected_at','canceled'=>'canceled_at'][$status] ?? null;
     $sql='UPDATE orders SET status=?'; $params=[$status];
@@ -3343,7 +3403,6 @@ function update_order_status(int $orderId, string $status, string $title='', str
     db()->prepare($sql)->execute($params);
     add_order_event($orderId, $status, $title ?: order_status_fa($status), $note, $public);
     if($public){$fresh=order_by_id($orderId);if($fresh)notify_user_event((int)$fresh['user_id'],'order_status',$title ?: order_status_fa($status),$note ?: order_catalog_display_name($fresh),$orderId);}
-    if($status==='payment_confirmed' && function_exists('bluegate_after_order_paid')) bluegate_after_order_paid($orderId);
     return order_by_id($orderId);
 }
 function submit_order_receipt(int $orderId, int $userId, string $note='', ?string $fileId=null): array {
@@ -3420,16 +3479,22 @@ function hard_delete_cleanup_orders(?int $olderDays=null): int {
     $count=0; foreach($ids as $id) if(hard_delete_order((int)$id, true)) $count++;
     return $count;
 }
-function mark_order_paid(int $orderId): ?array {
+function approve_order_payment(int $orderId,string $title='پرداخت تایید شد',string $note='',bool $public=true): ?array {
     $order=order_by_id($orderId);if(!$order)return null;$status=normalize_order_status((string)$order['status']);
     if(in_array($status,['payment_confirmed','preparing','delivered'],true))return $order;
     if(!in_array($status,['pending_payment','receipt_submitted','reviewing'],true))return null;
-    // Accept legacy aliases only when they normalize to an allowed unpaid state.
     $q=db()->prepare('UPDATE orders SET status="payment_confirmed",paid_at=COALESCE(paid_at,NOW()) WHERE id=? AND status IN ("pending_payment","pending","receipt_submitted","pending_review","reviewing","review")');$q->execute([$orderId]);
-    if($q->rowCount()===1){add_order_event($orderId,'payment_confirmed','پرداخت تایید شد','',true);if(function_exists('bluegate_after_order_paid'))bluegate_after_order_paid($orderId);return order_by_id($orderId);}
+    if($q->rowCount()===1){
+        add_order_event($orderId,'payment_confirmed',$title ?: 'پرداخت تایید شد',$note,$public);
+        $fresh=order_by_id($orderId);
+        if($public&&$fresh)notify_user_event((int)$fresh['user_id'],'order_status',$title ?: 'پرداخت تایید شد',$note ?: order_catalog_display_name($fresh),$orderId);
+        if(function_exists('bluegate_after_order_paid'))bluegate_after_order_paid($orderId);
+        return order_by_id($orderId);
+    }
     $fresh=order_by_id($orderId);if($fresh&&in_array(normalize_order_status((string)$fresh['status']),['payment_confirmed','preparing','delivered'],true))return $fresh;
     return null;
 }
+function mark_order_paid(int $orderId): ?array { return approve_order_payment($orderId); }
 function mark_order_preparing(int $orderId): ?array {
     return update_order_status($orderId, 'preparing', 'سفارش در حال آماده‌سازی است', '', true);
 }
@@ -3687,6 +3752,7 @@ function order_public_payload(array $o, bool $is_admin = false): array {
         }
     }
 
+    $caps=function_exists('bluegate_order_capabilities')?bluegate_order_capabilities($o):['is_vpn'=>false,'has_provider_mapping'=>false,'active_provider_mappings'=>0,'has_managed_service'=>false,'managed_service_id'=>null,'is_managed_vpn'=>false,'can_provision'=>false,'delivery_mode'=>'standard'];
     $payload = [
         'id'=>(int)$o['id'], 'product_name'=>$o['product_name'], 'variant_title'=>$o['variant_title'] ?? null, 'display_name'=>$name,
         'catalog_service_id'=>isset($o['catalog_service_id']) && $o['catalog_service_id'] !== null ? (int)$o['catalog_service_id'] : null,
@@ -3706,6 +3772,8 @@ function order_public_payload(array $o, bool $is_admin = false): array {
         'payment_note'=>$o['payment_note'] ?? null, 'customer_note'=>$o['customer_note'] ?? null, 'receipt_file_id'=>$o['receipt_file_id'] ?? null, 'receipt_url'=>!empty($o['receipt_file_id'])?('/'.ltrim((string)$o['receipt_file_id'],'/')):null,
         'user_id'=>(int)($o['user_id'] ?? 0), 'telegram_id'=>isset($o['telegram_id'])?(int)$o['telegram_id']:null, 'username'=>$o['username'] ?? null, 'first_name'=>$o['first_name'] ?? null,
         'delivery_type'=>$o['delivery_type'], 'delivery_type_fa'=>delivery_type_fa($o['delivery_type']), 'delivery_text'=>$o['delivery_text'],
+        'is_vpn'=>(bool)$caps['is_vpn'], 'has_provider_mapping'=>(bool)$caps['has_provider_mapping'], 'active_provider_mappings'=>(int)$caps['active_provider_mappings'],
+        'has_managed_service'=>(bool)$caps['has_managed_service'], 'managed_service_id'=>$caps['managed_service_id'], 'is_managed_vpn'=>(bool)$caps['is_managed_vpn'], 'provisioning_eligible'=>(bool)$caps['can_provision'], 'delivery_mode'=>(string)$caps['delivery_mode'],
         'has_service_delivery'=>($status === 'delivered' && !empty($o['delivery_url'])),
         'has_service_viewer'=>($status === 'delivered' && !empty($o['delivery_url'])), // compatibility with v1.4 clients
         'service_title'=>trim((string)($o['delivery_title'] ?? '')) ?: 'مدیریت سرویس',

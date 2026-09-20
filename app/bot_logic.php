@@ -23,9 +23,9 @@ function handle_pre_checkout(array $q): void {
 }
 function handle_successful_payment(int $chat_id, array $payment): void {
     $payload=(string)($payment['invoice_payload'] ?? '');
-    if(str_starts_with($payload,'topup_')){$t=confirm_topup_stars_payment($payload,$payment,$chat_id);if($t){send_msg($chat_id,"✅ اعتبار BlueGate شارژ شد.\nمبلغ: <b>".money((int)$t['amount'])."</b>",main_menu_keyboard(is_full_admin($chat_id)));notify_admins("⭐️ شارژ اعتبار با Stars تایید شد\nTop-up: <code>#{$t['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>".money((int)$t['amount'])."</b>");}return;}
+    if(str_starts_with($payload,'topup_')){$t=confirm_topup_stars_payment($payload,$payment,$chat_id);if($t){send_msg($chat_id,"✅ اعتبار BlueGate شارژ شد.\nمبلغ: <b>".money((int)$t['amount'])."</b>",main_menu_keyboard(is_full_admin($chat_id)));notify_admin_topup((int)$t['id'],'پرداخت Stars تایید شد');}return;}
     $order=confirm_stars_payment($payload, $payment, $chat_id);
-    if ($order) {send_msg($chat_id, "✅ پرداخت Stars سفارش <code>#{$order['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($chat_id)));notify_admins("⭐️ پرداخت Telegram Stars تایید شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>{$order['stars_amount']} Stars</b>");}
+    if ($order) {send_msg($chat_id, "✅ پرداخت Stars سفارش <code>#{$order['id']}</code> تایید شد.\nسفارش شما برای آماده‌سازی ثبت شد.", main_menu_keyboard(is_full_admin($chat_id)));notify_admin_order((int)$order['id'],'پرداخت Telegram Stars تایید شد','Telegram Bot','⭐ مبلغ: <b>'.(int)$order['stars_amount'].' Stars</b>');}
 }
 
 function clear_legacy_reply_keyboard(int $chat_id): void {
@@ -73,24 +73,8 @@ function contact_required_for_user(array $user): bool {
     return setting_bool('require_contact_auth', false) && empty($user['phone_number']);
 }
 function maybe_notify_new_start(array $user): void {
-    if (!setting_bool('notify_new_user', true)) return;
-    if ((int)($user['start_notified'] ?? 0) === 1) return;
-    $ref = 'بدون معرف';
-    if (!empty($user['referrer_id'])) { $r = get_user_by_id((int)$user['referrer_id']); if ($r) $ref = '@'.($r['username'] ?: 'بدون یوزرنیم').' | <code>'.$r['telegram_id'].'</code>'; }
-    $name = trim(($user['first_name'] ?? '').' '.($user['last_name'] ?? '')) ?: 'بدون نام';
-    $username = !empty($user['username']) ? '@'.$user['username'] : 'بدون یوزرنیم';
-    $phone = !empty($user['phone_number']) ? $user['phone_number'] : 'ثبت نشده';
-    notify_admins("🆕 <b>عضو جدید ربات</b>
-
-نام: <b>".h($name)."</b>
-یوزرنیم: <b>".h($username)."</b>
-آیدی: <code>{$user['telegram_id']}</code>
-شماره: <code>".h($phone)."</code>
-کد دعوت: <code>".h($user['ref_code'])."</code>
-معرف: {$ref}
-موجودی: <b>".money((int)$user['balance'])."</b>
-تاریخ عضویت: <code>{$user['created_at']}</code>");
-    db()->prepare('UPDATE users SET start_notified=1 WHERE id=?')->execute([(int)$user['id']]);
+    // Unified signup notifier owns the dedupe gate and the message format.
+    notify_new_user_signup($user,'🤖 Telegram Bot');
 }
 
 function handle_message(array $message): void {
@@ -443,10 +427,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'svc_view_')) { show_bot_service($chat_id,$message_id,(int)$user['id'],(int)substr($data,9)); return; }
     if (str_starts_with($data, 'svc_renew_')) {
         $oldId=(int)substr($data,10);
-        try{$order=create_renewal_order_from_order((int)$user['id'],$oldId);show_order_invoice($chat_id,$message_id,$order);notify_admins("🔄 <b>تمدید سریع از Bot</b>
-سفارش جدید: <code>#{$order['id']}</code>
-تمدید سفارش: <code>#{$oldId}</code>
-کاربر: <code>{$chat_id}</code>");}
+        try{$order=create_renewal_order_from_order((int)$user['id'],$oldId);show_order_invoice($chat_id,$message_id,$order);notify_admin_order((int)$order['id'],'سفارش تمدید','Telegram Bot','🔄 تمدید سفارش <code>#'.$oldId.'</code>');}
         catch(Throwable $e){send_or_edit($chat_id,$message_id,'این سرویس در حال حاضر قابل تمدید نیست.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 سرویس‌های من','callback_data'=>'u_services']]]]));}
         return;
     }
@@ -460,7 +441,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
         try {
             $order = create_shop_order((int)$user['id'], $pid, $vid);
             show_order_invoice($chat_id, $message_id, $order);
-            notify_admins("🧾 سفارش جدید ثبت شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمحصول: <b>".h(order_catalog_display_name($order))."</b>\nمبلغ: <b>".money($order['final_amount'])."</b>");
+            notify_admin_order((int)$order['id'],'سفارش جدید','Telegram Bot');
         } catch (Throwable $e) { send_or_edit($chat_id, $message_id, 'محصول/پلن پیدا نشد یا غیرفعال است.', back_main_keyboard()); }
         return;
     }
@@ -469,7 +450,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
         try {
             $order = create_shop_order((int)$user['id'], $pid, null);
             show_order_invoice($chat_id, $message_id, $order);
-            notify_admins("🧾 سفارش جدید ثبت شد\nسفارش: <code>#{$order['id']}</code>\nکاربر: <code>{$chat_id}</code>\nمحصول: <b>".h($order['product_name'])."</b>\nمبلغ: <b>".money($order['final_amount'])."</b>");
+            notify_admin_order((int)$order['id'],'سفارش جدید','Telegram Bot');
         } catch (Throwable $e) {
             if ($e->getMessage()==='VARIANT_REQUIRED') show_shop_product($chat_id, $message_id, $pid);
             else send_or_edit($chat_id, $message_id, 'محصول پیدا نشد یا غیرفعال است.', back_main_keyboard());
@@ -608,9 +589,9 @@ function handle_admin_callback(int $chat_id, $message_id, array $user, string $d
     if (preg_match('/^adm_expr_(\d+)$/',$data,$m)) { $o=order_by_id((int)$m[1]);if($o){$u=get_user_by_id((int)$o['user_id']);if($u){$name=order_catalog_display_name($o);send_msg((int)$u['telegram_id'],"⏳ <b>یادآوری تمدید</b>\n\nسرویس <b>".h($name)."</b> به‌زودی منقضی می‌شود.",json_markup(['inline_keyboard'=>[[['text'=>'🔄 تمدید سریع','callback_data'=>'svc_renew_'.(int)$o['id']],[ 'text'=>'🌐 سرویس من','callback_data'=>'svc_view_'.(int)$o['id']]]]]));}}answer_cb('','ارسال شد');admin_expiring_center($chat_id,$message_id,7);return; }
     if (preg_match('/^adm_expall_(1|3|7)$/',$data,$m)) { $days=(int)$m[1];$q=db()->prepare("SELECT o.*,u.telegram_id FROM orders o JOIN users u ON u.id=o.user_id WHERE o.status='delivered' AND o.expires_at IS NOT NULL AND o.expires_at>=NOW() AND o.expires_at<DATE_ADD(NOW(),INTERVAL ? DAY) ORDER BY o.expires_at ASC LIMIT 100");$q->execute([$days]);$sent=0;foreach($q->fetchAll()?:[] as $o){send_msg((int)$o['telegram_id'],"⏳ <b>یادآوری تمدید</b>\n\nسرویس <b>".h(order_catalog_display_name($o))."</b> به‌زودی منقضی می‌شود.",json_markup(['inline_keyboard'=>[[['text'=>'🔄 تمدید سریع','callback_data'=>'svc_renew_'.(int)$o['id']]]]]));$sent++;usleep(35000);}send_or_edit($chat_id,$message_id,"✅ یادآوری برای <b>{$sent}</b> سرویس ارسال شد.",admin_keyboard());return; }
     if (preg_match('/^adm_tu_(\d+)$/',$data,$m)) { admin_topup_view($chat_id,$message_id,(int)$m[1]);return; }
-    if (preg_match('/^adm_tu_rcpt_(\d+)$/',$data,$m)) { $t=credit_topup_by_id((int)$m[1]);if($t&&!empty($t['receipt_file_id'])){try{tg('sendPhoto',['chat_id'=>$chat_id,'photo'=>(string)$t['receipt_file_id'],'caption'=>'رسید شارژ #'.(int)$t['id']]);}catch(Throwable $e){send_msg($chat_id,'نمایش رسید ممکن نشد.');}}admin_topup_view($chat_id,$message_id,(int)$m[1]);return; }
-    if (preg_match('/^adm_tu_ok_(\d+)$/',$data,$m)) { try{$t=credit_topup_credit_once((int)$m[1],'تایید از Bot Admin');if($t){$u=get_user_by_id((int)$t['user_id']);if($u)send_msg((int)$u['telegram_id'],"✅ شارژ اعتبار تایید شد.\nمبلغ: <b>".money((int)$t['amount'])."</b>",main_menu_keyboard(false));}admin_topup_center($chat_id,$message_id);}catch(Throwable $e){send_or_edit($chat_id,$message_id,'تایید انجام نشد: <code>'.h($e->getMessage()).'</code>',admin_keyboard());}return; }
-    if (preg_match('/^adm_tu_no_(\d+)$/',$data,$m)) { try{$t=reject_credit_topup((int)$m[1],'رد توسط ادمین از Bot');if($t){$u=get_user_by_id((int)$t['user_id']);if($u)send_msg((int)$u['telegram_id'],'❌ درخواست شارژ اعتبار رد شد.',main_menu_keyboard(false));}admin_topup_center($chat_id,$message_id);}catch(Throwable $e){send_or_edit($chat_id,$message_id,'رد درخواست انجام نشد.',admin_keyboard());}return; }
+    if (preg_match('/^adm_tu_rcpt_(\d+)$/',$data,$m)) { $t=credit_topup_by_id((int)$m[1]);if($t&&!empty($t['receipt_file_id'])){$src=resolve_receipt_photo_source((string)$t['receipt_file_id']);$r=$src?tg('sendPhoto',['chat_id'=>$chat_id,'photo'=>$src,'caption'=>'رسید شارژ #'.(int)$t['id']]):['ok'=>false];if(empty($r['ok']))send_msg($chat_id,'نمایش رسید ممکن نشد؛ فایل ممکن است حذف شده یا شناسه تلگرام نامعتبر باشد.');}admin_topup_view($chat_id,$message_id,(int)$m[1]);return; }
+    if (preg_match('/^adm_tu_ok_(\d+)$/',$data,$m)) { try{$t=credit_topup_credit_once((int)$m[1],'تایید از Bot Admin');if($t){send_user_message_by_id((int)$t['user_id'],"✅ شارژ اعتبار تایید شد.\nمبلغ: <b>".money((int)$t['amount'])."</b>",main_menu_keyboard(false));}admin_topup_center($chat_id,$message_id);}catch(Throwable $e){send_or_edit($chat_id,$message_id,'تایید انجام نشد: <code>'.h($e->getMessage()).'</code>',admin_keyboard());}return; }
+    if (preg_match('/^adm_tu_no_(\d+)$/',$data,$m)) { try{$t=reject_credit_topup((int)$m[1],'رد توسط ادمین از Bot');if($t){send_user_message_by_id((int)$t['user_id'],'❌ درخواست شارژ اعتبار رد شد.',main_menu_keyboard(false));}admin_topup_center($chat_id,$message_id);}catch(Throwable $e){send_or_edit($chat_id,$message_id,'رد درخواست انجام نشد.',admin_keyboard());}return; }
     if (handle_shop_admin_v2_callback($chat_id, $message_id, $user, $data)) return;
     if ($data === 'adm_stats') {
         $u = db()->query('SELECT COUNT(*) c, COALESCE(SUM(balance),0) b, COALESCE(SUM(total_earned),0) e, COALESCE(SUM(referrals_count),0) r, COALESCE(SUM(spin_balance),0) s FROM users')->fetch();
@@ -705,19 +686,14 @@ email2@test.com | pass2</code>", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_archive_')) { $oid=(int)substr($data,12); $o=archive_order($oid); if ($o) send_or_edit($chat_id,$message_id,"📦 سفارش #{$oid} آرشیو شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_delete_')) { $oid=(int)substr($data,11); $o=order_by_id($oid); if (!$o) { send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; } if (!is_cleanup_order_status($o['status'])) { send_or_edit($chat_id,$message_id,'حذف کامل فقط برای سفارش‌های لغو/رد/مرجوع‌شده مجاز است.',admin_order_keyboard($oid)); return; } send_or_edit($chat_id,$message_id,"⚠️ سفارش <code>#{$oid}</code> کامل حذف شود؟ این عملیات قابل برگشت نیست.", json_markup(['inline_keyboard'=>[[['text'=>'✅ بله، حذف کامل', 'callback_data'=>'ord_confirm_delete_'.$oid]],[['text'=>'❌ لغو', 'callback_data'=>'ord_view_'.$oid]]]])); return; }
     if (str_starts_with($data, 'ord_confirm_delete_')) { $oid=(int)substr($data,19); if (hard_delete_order($oid,true)) send_or_edit($chat_id,$message_id,"✅ سفارش #{$oid} کامل حذف شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'حذف انجام نشد. فقط سفارش‌های لغو/رد/مرجوع‌شده قابل حذف کامل هستند.',admin_shop_keyboard()); return; }
-    if (str_starts_with($data, 'ord_review_')) { $oid=(int)substr($data,11); $o=update_order_status($oid, 'reviewing', 'سفارش در حال بررسی است'); if ($o) { send_msg($o['telegram_id'], "👀 سفارش <code>#{$oid}</code> در حال بررسی است.", main_menu_keyboard(is_full_admin($o['telegram_id']))); show_admin_order($chat_id, $message_id, $oid); } return; }
-    if (str_starts_with($data, 'ord_paid_')) { $oid=(int)substr($data,9); $o=mark_order_paid($oid); if ($o) { send_msg($o['telegram_id'], "✅ پرداخت سفارش <code>#{$oid}</code> تایید شد.
-بعد از آماده شدن، اطلاعات تحویل برای شما ارسال می‌شود.", main_menu_keyboard(is_full_admin($o['telegram_id']))); show_admin_order($chat_id, $message_id, $oid); } return; }
-    if (str_starts_with($data, 'ord_prepare_')) { $oid=(int)substr($data,12); $o=mark_order_preparing($oid); if ($o) { send_msg($o['telegram_id'], "📦 سفارش <code>#{$oid}</code> در حال آماده‌سازی است.", main_menu_keyboard(is_full_admin($o['telegram_id']))); show_admin_order($chat_id, $message_id, $oid); } return; }
+    if (str_starts_with($data, 'ord_receipt_')) { $oid=(int)substr($data,12);$o=order_by_id($oid);if(!$o||empty($o['receipt_file_id'])){send_or_edit($chat_id,$message_id,'رسیدی برای این سفارش ثبت نشده است.',admin_order_keyboard($oid));return;}$src=resolve_receipt_photo_source((string)$o['receipt_file_id']);$r=$src?tg('sendPhoto',['chat_id'=>$chat_id,'photo'=>$src,'caption'=>'🧾 رسید سفارش #'.$oid,'reply_markup'=>admin_order_keyboard($oid)]):['ok'=>false];if(empty($r['ok']))send_msg($chat_id,'نمایش تصویر رسید ممکن نشد. متن/جزئیات سفارش همچنان در دسترس است.',admin_order_keyboard($oid));return; }
+    if (str_starts_with($data, 'ord_review_')) { $oid=(int)substr($data,11); $o=update_order_status($oid, 'reviewing', 'سفارش در حال بررسی است'); if ($o) { send_user_message_by_id((int)$o['user_id'], "👀 سفارش <code>#{$oid}</code> در حال بررسی است.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
+    if (str_starts_with($data, 'ord_paid_')) { $oid=(int)substr($data,9); $o=approve_order_payment($oid,'پرداخت تایید شد','',true); if ($o) { send_user_message_by_id((int)$o['user_id'], "✅ پرداخت سفارش <code>#{$oid}</code> تایید شد.\nبعد از آماده شدن، اطلاعات تحویل برای شما ارسال می‌شود.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
+    if (str_starts_with($data, 'ord_prepare_')) { $oid=(int)substr($data,12); $o=mark_order_preparing($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "📦 سفارش <code>#{$oid}</code> در حال آماده‌سازی است.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_provision_')) { $oid=(int)substr($data,14); try{$r=bluegate_admin_provision_order_now($oid);$msg=($r['state']??'')==='delivered'?'✅ Client ساخته شد و لینک Subscription برای مشتری فعال شد.':'⏳ ساخت سرویس شروع شد و Retry خودکار فعال است.';send_or_edit($chat_id,$message_id,$msg,admin_order_keyboard($oid));}catch(Throwable $e){send_or_edit($chat_id,$message_id,"❌ ساخت از پنل ناموفق بود.\n<code>".h(mb_substr($e->getMessage(),0,700))."</code>",admin_order_keyboard($oid));} return; }
     if (str_starts_with($data, 'ord_service_status_')) { $oid=(int)substr($data,19); send_or_edit($chat_id,$message_id,admin_order_service_status_text($oid),admin_order_keyboard($oid)); return; }
-    if (str_starts_with($data, 'ord_auto_deliver_')) { $oid=(int)substr($data,17); $o=auto_deliver_order($oid); if ($o) { send_msg($o['telegram_id'], "📦 سفارش شما تحویل داده شد.
-سفارش: <code>#{$oid}</code>
-محصول: <b>".h(order_catalog_display_name($o))."</b>
-
-اطلاعات تحویل:
-<code>".h($o['delivery_text'])."</code>", main_menu_keyboard(is_full_admin($o['telegram_id']))); show_admin_order($chat_id, $message_id, $oid); } else send_msg($chat_id, 'موجودی آماده برای این سفارش پیدا نشد. از تحویل دستی استفاده کن.', admin_order_keyboard($oid)); return; }
-    if (str_starts_with($data, 'ord_reject_')) { $oid=(int)substr($data,11); $o=reject_order($oid); if ($o) { send_msg($o['telegram_id'], "❌ سفارش <code>#{$oid}</code> رد شد. برای پیگیری با پشتیبانی ارتباط بگیر.", main_menu_keyboard(is_full_admin($o['telegram_id']))); show_admin_order($chat_id, $message_id, $oid); } return; }
+    if (str_starts_with($data, 'ord_auto_deliver_')) { $oid=(int)substr($data,17); $o=auto_deliver_order($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h(order_catalog_display_name($o))."</b>\n\nاطلاعات تحویل:\n<code>".h($o['delivery_text'])."</code>", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } else send_msg($chat_id, 'موجودی آماده برای این سفارش پیدا نشد. از تحویل دستی استفاده کن.', admin_order_keyboard($oid)); return; }
+    if (str_starts_with($data, 'ord_reject_')) { $oid=(int)substr($data,11); $o=reject_order($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "❌ سفارش <code>#{$oid}</code> رد شد. برای پیگیری با پشتیبانی ارتباط بگیر.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_deliver_')) { $oid=(int)substr($data,12); set_step($chat_id, 'admin_deliver_order', (string)$oid); send_msg($chat_id, "📩 متن تحویل سفارش <code>#{$oid}</code> را بفرست.
 مثلاً ایمیل/پسورد، لینک ساب VPN، کد گیفت یا توضیحات تحویل. قالب مناسب محصول خودکار اعمال می‌شود.", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_note_')) { $oid=(int)substr($data,9); set_step($chat_id, 'admin_order_note', (string)$oid); send_msg($chat_id, "📝 یادداشت داخلی سفارش <code>#{$oid}</code> را بفرست. فقط ادمین می‌بیند.", admin_shop_keyboard()); return; }
@@ -798,7 +774,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
             $order=update_order_customer_note($oid, (int)$user['id'], $note);
             clear_step($chat_id);
             send_msg($chat_id, "✅ یادداشت سفارش <code>#{$oid}</code> ثبت شد.", main_menu_keyboard(is_full_admin($chat_id)));
-            notify_admins("📝 یادداشت مشتری برای سفارش <code>#{$oid}</code>\nکاربر: <code>{$chat_id}</code>\n\n".h($note));
+            notify_admin_order($oid,'یادداشت جدید مشتری','Telegram Bot','📝 '.h($note));
         } catch (Throwable $e) { clear_step($chat_id); send_msg($chat_id, 'ثبت یادداشت ممکن نشد. سفارش پیدا نشد.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
@@ -807,13 +783,13 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
         $id=(int)$user['step_payload'];$note=trim((string)($message['caption']??$message['text']??''));$fileId=null;
         if(!empty($message['photo'])&&is_array($message['photo'])){$last=end($message['photo']);$fileId=$last['file_id']??null;}
         if($note===''&&!$fileId){send_msg($chat_id,'لطفاً متن یا عکس رسید را ارسال کن.',back_main_keyboard());return;}
-        try{$t=submit_credit_topup_receipt($id,(int)$user['id'],$note,$fileId);clear_step($chat_id);send_msg($chat_id,"✅ رسید شارژ <code>#{$id}</code> ثبت شد و برای بررسی ارسال شد.",main_menu_keyboard(is_full_admin($chat_id)));$msg="💳 <b>رسید شارژ اعتبار #{$id}</b>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>".money((int)$t['amount'])."</b>\n\n".h($note?:'عکس رسید ارسال شده است.');foreach(app_config('ADMIN_IDS',[]) as $aid){if($fileId)tg('sendPhoto',['chat_id'=>$aid,'photo'=>$fileId,'caption'=>$msg,'parse_mode'=>'HTML']);else send_msg($aid,$msg);}}
+        try{$t=submit_credit_topup_receipt($id,(int)$user['id'],$note,$fileId);clear_step($chat_id);send_msg($chat_id,"✅ رسید شارژ <code>#{$id}</code> ثبت شد و برای بررسی ارسال شد.",main_menu_keyboard(is_full_admin($chat_id)));notify_admin_topup($id,'رسید شارژ اعتبار ثبت شد','', $fileId);}
         catch(Throwable $e){send_msg($chat_id,'ثبت رسید شارژ ممکن نشد.',back_main_keyboard());}return;
     }
     if ($step === 'credit_topup_hash') {
         $id=(int)$user['step_payload'];$hash=trim((string)($message['text']??$message['caption']??''));
         if($hash===''){send_msg($chat_id,'TXID / Hash را به صورت متن ارسال کن.',back_main_keyboard());return;}
-        try{$t=submit_credit_topup_crypto_hash($id,(int)$user['id'],$hash);clear_step($chat_id);send_msg($chat_id,"✅ TXID شارژ <code>#{$id}</code> ثبت شد و برای بررسی ارسال شد.",main_menu_keyboard(is_full_admin($chat_id)));notify_admins("🪙 <b>TXID شارژ اعتبار</b>\nTop-up: <code>#{$id}</code>\nکاربر: <code>{$chat_id}</code>\nمبلغ: <b>".money((int)$t['amount'])."</b>\nTXID: <code>".h($hash)."</code>");}
+        try{$t=submit_credit_topup_crypto_hash($id,(int)$user['id'],$hash);clear_step($chat_id);send_msg($chat_id,"✅ TXID شارژ <code>#{$id}</code> ثبت شد و برای بررسی ارسال شد.",main_menu_keyboard(is_full_admin($chat_id)));notify_admin_topup($id,'TXID شارژ اعتبار ثبت شد','🔗 <code>'.h($hash).'</code>');}
         catch(Throwable $e){send_msg($chat_id,'TXID قابل ثبت نیست یا قبلاً استفاده شده است.',back_main_keyboard());}return;
     }
     if ($step === 'order_crypto_hash') {
@@ -843,11 +819,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
             $order = submit_order_receipt($oid, (int)$user['id'], $note, $fileId);
             clear_step($chat_id);
             send_msg($chat_id, "✅ رسید سفارش <code>#{$oid}</code> ثبت شد.\nوضعیت: <b>".order_status_fa($order['status'])."</b>\nبعد از بررسی ادمین اطلاع داده می‌شود.", main_menu_keyboard(is_full_admin($chat_id)));
-            $msg = order_admin_card($order) . "\n\nرسید/توضیح پرداخت:\n" . h($note ?: 'عکس رسید ارسال شده است.');
-            foreach (app_config('ADMIN_IDS', []) as $aid) {
-                if ($fileId) tg('sendPhoto', ['chat_id'=>$aid, 'photo'=>$fileId, 'caption'=>$msg, 'parse_mode'=>'HTML', 'reply_markup'=>admin_order_keyboard((int)$order['id'])]);
-                else send_msg($aid, $msg, admin_order_keyboard((int)$order['id']));
-            }
+            notify_admin_order((int)$order['id'],'رسید پرداخت جدید','Telegram Bot','🧾 '.h($note ?: 'تصویر رسید ارسال شد'),$fileId);
         } catch (Throwable $e) { clear_step($chat_id); send_msg($chat_id, 'ثبت رسید ممکن نشد. سفارش پیدا نشد یا قابل پرداخت نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
@@ -859,10 +831,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
             $order = update_order_customer_note($oid, (int)$user['id'], $text);
             clear_step($chat_id);
             send_msg($chat_id, "✅ یادداشت سفارش <code>#{$oid}</code> ثبت شد.", order_user_keyboard($order));
-            notify_admins("📝 یادداشت جدید مشتری برای سفارش <code>#{$oid}</code>
-کاربر: <code>{$chat_id}</code>
-
-".h($text));
+            notify_admin_order($oid,'یادداشت جدید مشتری','Telegram Bot','📝 '.h($text));
         } catch (Throwable $e) { clear_step($chat_id); send_msg($chat_id, 'ثبت یادداشت ممکن نشد. سفارش پیدا نشد.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
@@ -1018,7 +987,7 @@ function handle_step_input(int $chat_id, array $user, string $text): void {
         $order=deliver_order($oid, $text);
         clear_step($chat_id);
         if (!$order) { send_msg($chat_id, 'سفارش پیدا نشد.', admin_shop_keyboard()); return; }
-        send_msg($order['telegram_id'], "📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h($order['product_name'])."</b>\n\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>", main_menu_keyboard(is_full_admin($order['telegram_id'])));
+        send_user_message_by_id((int)$order['user_id'], "📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h($order['product_name'])."</b>\n\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>", main_menu_keyboard(false));
         send_msg($chat_id, "✅ سفارش #{$oid} تحویل شد.\nپورسانت معرف: <b>".money($order['referrer_reward_amount'])."</b>", admin_shop_keyboard()); return;
     }
     if ($step === 'admin_payment_instructions') {
