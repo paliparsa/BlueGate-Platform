@@ -1,0 +1,38 @@
+/* BlueGate shared visual tokens — v4.7.0
+   Single semantic palette/spacing/motion contract shared by Web + Mini App.
+   Product-specific layouts stay local to each surface. */
+:root{
+  --bgds-bg:#06101d;
+  --bgds-bg-2:#081522;
+  --bgds-surface-1:#0b1828;
+  --bgds-surface-2:#102035;
+  --bgds-surface-3:#152a43;
+  --bgds-text:#f7fbff;
+  --bgds-muted:#94abc2;
+  --bgds-muted-2:#b7c7d7;
+  --bgds-border:#1c3550;
+  --bgds-border-strong:#315e86;
+  --bgds-primary:#3b9fff;
+  --bgds-primary-soft:#77c9ff;
+  --bgds-success:#4bd8a7;
+  --bgds-warning:#ffd36e;
+  --bgds-danger:#ff758a;
+  --bgds-purple:#a98aff;
+  --bgds-r-1:10px;
+  --bgds-r-2:14px;
+  --bgds-r-3:17px;
+  --bgds-r-4:20px;
+  --bgds-r-5:24px;
+  --bgds-r-6:28px;
+  --bgds-shadow-card:0 18px 46px rgba(0,0,0,.16);
+  --bgds-shadow-float:0 26px 80px rgba(0,0,0,.32);
+  --bgds-focus:0 0 0 3px rgba(59,159,255,.10);
+  --bgds-ease:cubic-bezier(.22,.8,.25,1);
+  --bgds-fast:120ms;
+  --bgds-normal:180ms;
+  --bgds-slow:260ms;
+  --bgds-font-body:16px;
+  --bgds-font-secondary:14px;
+  --bgds-font-micro:12px;
+  --bgds-line-body:1.72;
+}

@@ -1,0 +1,116 @@
+/* BlueGate v4.8.0 — Mini App Component Parity
+   Phase 2: align component language with Web while preserving mobile-first behavior. */
+
+/* Shared page hero language */
+.shop-page-intro,.orders-header,.account-center-mini-hero,.mini-credit-hero-v27{
+  position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent,#1d9bf0) 20%,rgba(255,255,255,.06));
+  background:radial-gradient(circle at 88% 0%,color-mix(in srgb,var(--accent,#1d9bf0) 17%,transparent),transparent 34%),linear-gradient(145deg,rgba(13,29,49,.96),rgba(7,16,28,.94));
+  box-shadow:0 18px 52px rgba(0,0,0,.14);
+}
+.shop-page-intro:after,.orders-header:after,.account-center-mini-hero:after,.mini-credit-hero-v27:after{
+  content:"";position:absolute;inset:auto -15% -55% 40%;height:140px;background:radial-gradient(circle,color-mix(in srgb,var(--accent,#1d9bf0) 10%,transparent),transparent 68%);pointer-events:none;
+}
+.shop-page-intro h2,.orders-header h2,.account-center-mini-hero h2,.mini-credit-hero-v27 h2{letter-spacing:-.02em}
+.shop-page-intro p,.orders-header p,.account-center-mini-hero p,.mini-credit-hero-v27 p{color:var(--muted);line-height:1.75}
+
+/* Card hierarchy parity */
+.account-hub-card,.wallet-card,.order-row,.product-tile,.vpn-client-card,.vpn-sub-panel,.vpn-subscription-card,.vpn-sub-targets{
+  border-color:rgba(119,201,255,.13)!important;
+  background:linear-gradient(180deg,rgba(14,27,44,.82),rgba(8,17,29,.68))!important;
+  box-shadow:0 14px 38px rgba(0,0,0,.10);
+}
+.account-hub-card,.wallet-card,.order-row{border-radius:20px!important}
+
+/* VPN identity + compact home rows */
+.hub-service-row.parity-service-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch;padding:0;border:1px solid rgba(119,201,255,.13);border-radius:16px;background:rgba(58,159,255,.028);overflow:hidden}
+.parity-service-card .hub-order-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:12px 13px;border:0;background:transparent;text-align:right;color:inherit}
+.parity-service-copy{min-width:0;display:grid;gap:5px}
+.parity-service-top{display:flex;align-items:center;gap:7px;min-width:0}
+.parity-service-top b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.parity-service-meta{display:flex;flex-wrap:wrap;gap:5px 8px;align-items:center;color:var(--muted);font-size:11px}
+.parity-service-meta .client{direction:ltr;text-align:left;color:#9edcff;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.parity-service-status{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;border:1px solid rgba(110,219,181,.16);background:rgba(110,219,181,.06);color:#8be5c5;font-size:9px;font-weight:850;white-space:nowrap}
+.parity-service-status:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor}
+.parity-service-card .hub-order-row>span{font-size:22px;color:var(--muted)}
+.parity-service-card .mini-renew-inline{margin:8px 8px 8px 0;border-radius:11px;min-width:64px}
+
+/* Orders: same information hierarchy as Web accordion cards */
+.order-row.parity-order-card{padding:0!important;overflow:hidden;cursor:pointer}
+.parity-order-main{display:grid!important;grid-template-columns:44px minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;width:100%!important;margin:0!important;padding:13px 13px 11px!important}
+.parity-order-main .order-icon{width:44px;height:44px;border-radius:13px;border:1px solid rgba(119,201,255,.13);background:rgba(58,159,255,.055);overflow:hidden;display:grid;place-items:center}
+.parity-order-main .order-icon img{width:100%;height:100%;object-fit:cover}
+.parity-order-copy{min-width:0;display:grid;gap:4px}
+.parity-order-copy h3{margin:0;font-size:14px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.parity-order-copy p{margin:0!important;display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px!important;color:var(--muted);font-size:11px;line-height:1.6}
+.parity-order-side{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.parity-order-side .chev{font-size:20px!important;color:var(--muted)!important;transition:transform .18s ease}
+.order-row.parity-order-card:active .chev{transform:translateX(-2px)}
+.parity-order-card .order-row-stepper{width:100%;padding:0 13px 12px;border-top:1px solid rgba(255,255,255,.045)}
+
+/* Wallet / transaction parity */
+.mini-credit-tx-list>div{display:grid!important;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.mini-credit-tx-list>div:last-child{border-bottom:0}
+.mini-credit-tx-list>div>div{min-width:0}
+.mini-credit-tx-list>div>div b,.mini-credit-tx-list>div>div small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-credit-tx-list>div>div b{font-size:12px}.mini-credit-tx-list>div>div small{color:var(--muted);font-size:10px;margin-top:3px}
+.mini-credit-tx-list>div>strong{white-space:nowrap;font-size:12px}
+.credit-launch-grid{gap:8px!important}.credit-launch{border:1px solid rgba(119,201,255,.13)!important;background:rgba(58,159,255,.025)!important;border-radius:15px!important}
+
+/* Referral / profile / account rows */
+.referral-card-v2,.ref-vip-card-v2,.referral-tree-card,.account-menu-card{overflow:hidden}
+.account-menu-row{min-height:62px;border-bottom:1px solid rgba(255,255,255,.05)!important}
+.account-menu-row:last-child{border-bottom:0!important}
+.account-menu-icon{border:1px solid rgba(119,201,255,.13)!important;background:rgba(58,159,255,.055)!important;color:#91d5ff!important}
+.referral-card-head,.referral-tree-head{align-items:center}
+
+/* Product / purchase hierarchy */
+.product-tile.catalog-tile{border:1px solid rgba(119,201,255,.12)!important;border-radius:18px!important;overflow:hidden;transition:transform .16s ease,border-color .16s ease,background .16s ease}
+.product-tile.catalog-tile:active{transform:scale(.985);border-color:color-mix(in srgb,var(--accent,#1d9bf0) 40%,rgba(119,201,255,.12))!important}
+.product-tile .tile-body{padding-top:9px}.product-tile .tile-name{line-height:1.55}
+.purchase-plan-step{border-color:rgba(119,201,255,.14)!important;background:rgba(58,159,255,.022)!important}
+.purchase-plan-option{border-radius:15px!important}
+.purchase-plan-option.active{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#45c8ff) 6%,transparent),0 12px 28px rgba(0,0,0,.08)!important}
+
+/* App sheets inherit the same header system as Web modals, but remain bottom sheets */
+.app-sheet-panel{border:1px solid rgba(119,201,255,.14)!important;background:linear-gradient(180deg,rgba(12,24,40,.985),rgba(7,14,25,.985))!important;box-shadow:0 -24px 80px rgba(0,0,0,.38)!important}
+.app-sheet-header{padding-bottom:14px!important;border-bottom:1px solid rgba(255,255,255,.065)}
+.app-sheet-heading small{color:#6ec7ff!important;letter-spacing:.13em!important;font-weight:900!important}
+.app-sheet-heading h3{letter-spacing:-.015em}
+.app-sheet-close{border:1px solid rgba(119,201,255,.12)!important;background:rgba(255,255,255,.035)!important}
+.app-sheet-body{scrollbar-width:thin;scrollbar-color:rgba(119,201,255,.16) transparent}
+
+/* VPN detail parity with Web */
+.vpn-sub-identity{background:radial-gradient(circle at 90% 0%,rgba(58,159,255,.19),transparent 32%),linear-gradient(135deg,rgba(13,32,53,.96),rgba(7,17,30,.96))!important;border-color:rgba(119,201,255,.14)!important}
+.vpn-sub-pills span,.vpn-sub-status{border-color:rgba(119,201,255,.15)!important;background:rgba(255,255,255,.025)!important}
+.vpn-client-list section{border-color:rgba(119,201,255,.14)!important;background:rgba(58,159,255,.035)!important}
+.vpn-client-list code{direction:ltr;text-align:left}
+.vpn-sub-actions,.vpn-sub-quick{gap:8px!important}
+.vpn-sub-actions button,.vpn-sub-quick button{min-height:46px}
+
+/* Consistent iconography / spacing */
+.hub-card-head>span,.referral-icon,.admin-card-icon,.u-empty-icon{display:grid;place-items:center}
+.section-title{align-items:flex-end!important}.section-title h2{letter-spacing:-.015em}
+
+/* Touch & accessibility */
+button,.cat-pill,.product-tile,.order-row,.account-menu-row{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible,[role="button"]:focus-visible{outline:2px solid color-mix(in srgb,var(--accent,#1d9bf0) 65%,white);outline-offset:2px}
+
+@media(max-width:430px){
+  .parity-order-main{grid-template-columns:40px minmax(0,1fr) auto!important;padding:11px!important}
+  .parity-order-main .order-icon{width:40px;height:40px}
+  .parity-order-copy h3{font-size:13px}
+  .parity-order-copy p{font-size:10px}
+  .parity-order-card .order-row-stepper{padding-inline:11px}
+  .hub-service-row.parity-service-card{grid-template-columns:minmax(0,1fr)}
+  .parity-service-card .mini-renew-inline{margin:0 11px 10px;width:auto;min-height:38px}
+  .mini-credit-tx-list>div{grid-template-columns:36px minmax(0,1fr);align-items:start}
+  .mini-credit-tx-list>div>strong{grid-column:2;justify-self:start;margin-top:-3px}
+  .vpn-sub-actions,.vpn-sub-quick{grid-template-columns:1fr 1fr!important}
+}
+@media(max-width:360px){
+  .vpn-sub-actions,.vpn-sub-quick{grid-template-columns:1fr!important}
+  .purchase-plan-grid{grid-template-columns:1fr!important}
+  .credit-launch-grid{grid-template-columns:1fr!important}
+  .account-center-mini-hero,.mini-credit-hero-v27,.shop-page-intro,.orders-header{padding-inline:13px!important}
+}
+@media(prefers-reduced-motion:reduce){.product-tile.catalog-tile,.parity-order-side .chev{transition:none!important}}

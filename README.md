@@ -1,8 +1,15 @@
-# BlueGate Platform v4.6.0
+# BlueGate Platform v4.8.0
 
 BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت محصولات دیجیتال و سرویس‌های VPN است و شامل فروشگاه وب، Telegram Mini App، ربات تلگرام، کیف پول، پرداخت، پنل ادمین، Service Engine، Provisioning خودکار، مانیتورینگ و اتصال مستقیم به پنل‌های VPN می‌شود.
 
 ## امکانات
+
+- Design System مشترک بین Web و Mini App برای رنگ‌ها، Surfaceها، Border، Radius، Shadow، Typography و Motion timing.
+- همگام‌سازی بصری Mini App با Web: Hero/Section Header، سلسله‌مراتب Cardها، دکمه‌های Primary/Secondary/Ghost/Danger، Badgeهای وضعیت و Search/Filter.
+- هماهنگ‌سازی کارت Wallet و هویت VPN با زبان بصری نسخه وب، بدون تغییر Navigation یا رفتار touch-first مینی‌اپ.
+- Empty State، Skeleton Loader، Toast/Feedback و Bottom Sheetها با استایل یکپارچه و Motion مشترک.
+- پاکسازی لایه قدیمی `web-parity.css`: قوانین تکراری Componentها حذف و Design Sync به‌عنوان لایه نهایی و مشخص بارگذاری می‌شود.
+- Mini App همچنان Bottom Nav و Bottom Sheet موبایلی خود را حفظ می‌کند؛ فقط ظاهر و hierarchy با Web هم‌خانواده شده است.
 
 - بخش «سرویس‌های من» در Web و Mini App به «VPNهای من» تغییر کرده و فقط برای VPNهای Managed استفاده می‌شود.
 - VPNهای نسخه وب به‌صورت Accordion بسته نمایش داده می‌شوند؛ نام VPN، Client Name و وضعیت در حالت بسته دیده می‌شود و جزئیات با کلیک باز می‌شود.
@@ -189,6 +196,11 @@ BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت مح
 - Dynamic border glow
 - Modal blur و transition
 - Mini App bottom-nav animation
+- Component Parity بین Web و Mini App برای VPN، سفارش‌ها، کیف پول، Referral و Product Picker
+- هدر و Hero مشترک بین Web و Mini App
+- Order Card و VPN identity هماهنگ با نسخه وب
+- Wallet transaction rows و Sheet headerهای یکپارچه
+- Mobile regression rules برای عرض‌های 360px و 430px
 - Connection-test visual states
 - Logo reveal
 - Desktop magnetic CTA و subtle card tilt
