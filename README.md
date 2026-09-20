@@ -1,8 +1,13 @@
-# BlueGate Platform v4.4.0
+# BlueGate Platform v4.5.0
 
 BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت محصولات دیجیتال و سرویس‌های VPN است و شامل فروشگاه وب، Telegram Mini App، ربات تلگرام، کیف پول، پرداخت، پنل ادمین، Service Engine، Provisioning خودکار، مانیتورینگ و اتصال مستقیم به پنل‌های VPN می‌شود.
 
 ## امکانات
+
+- HTTPS Subscription Guard: لینک ساب مشتری فقط از endpoint واقعی و امن Provider پذیرفته می‌شود؛ Panel/API URL و HTTP نمایش داده نمی‌شوند.
+- Auto Repair Subscription: لینک‌های قدیمی ناامن هنگام Sync/نمایش سرویس پاک یا با لینک معتبر Provider جایگزین می‌شوند.
+- Centered Web Auth: ورود، ثبت‌نام، OTP و بازیابی رمز در دسکتاپ بدون تداخل Motion در مرکز صفحه نمایش داده می‌شوند.
+
 
 - تشخیص قطعی سرویس VPN Managed بر اساس نوع تحویل + Provider Mapping فعال؛ بدون حدس از نام محصول.
 - نمایش صفحه Subscription فقط برای سفارش‌های Managed VPN و حفظ صفحه تحویل کلاسیک برای محصولات دستی/اکانت/کد/فایل.
@@ -260,8 +265,8 @@ getent ahostsv4 bot.example.com
 
 ```bash
 cd /root
-unzip BlueGate-Platform-v4.4.0.zip -d BlueGate-Platform-v4.4.0
-cd BlueGate-Platform-v4.4.0
+unzip BlueGate-Platform-v4.5.0.zip -d BlueGate-Platform-v4.5.0
+cd BlueGate-Platform-v4.5.0
 ```
 
 اگر نام ZIP یا پوشه متفاوت است، نام واقعی فایل خودتان را جایگزین کنید.

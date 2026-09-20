@@ -1316,8 +1316,9 @@ const VPN_LOCATION_WORDS=[['turkey','TR','🇹🇷'],['türkiye','TR','🇹🇷'
 function vpnTargetNames(o){const out=[];(o.instances||[]).forEach(i=>{(i.targets||[]).forEach(t=>{const n=String(t.remote_target_name||'').trim();if(n)out.push(n)})});return out}
 function vpnSmartLocations(o){const found=new Map();for(const name of vpnTargetNames(o)){const flags=name.match(/[\u{1F1E6}-\u{1F1FF}]{2}/gu)||[];for(const flag of flags){const code=vpnFlagToCode(flag);if(code&&!found.has(code))found.set(code,{code,flag,name:VPN_LOCATION_FA[code]||name.replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu,'').trim()||code})}if(flags.length)continue;const low=name.toLowerCase();for(const [word,code,flag] of VPN_LOCATION_WORDS){if(low.includes(word)&&!found.has(code)){found.set(code,{code,flag,name:VPN_LOCATION_FA[code]||name});break}}}return [...found.values()]}
 function vpnServiceDetailHtml(o,{context='service',order=null}={}){
-  const hasUrl=!!String(o.subscription_url||o.service_url||o.delivery_url||'').trim();
-  const url=String(o.subscription_url||o.service_url||o.delivery_url||'');
+  const rawUrl=String(o.subscription_url||o.service_url||o.delivery_url||'').trim();
+  const url=/^https:\/\//i.test(rawUrl)?rawUrl:'';
+  const hasUrl=!!url;
   const title=esc(o.display_name||o.product_name||'سرویس BlueGate');
   const expiry=o.expires_at?esc(String(o.expires_at)):'بدون تاریخ انقضا';
   const limit=Number(o.traffic_limit_bytes||0),used=Number(o.traffic_used_bytes||0),remaining=Math.max(0,limit-used),pct=limit?Math.min(100,Math.round(used/limit*100)):0;

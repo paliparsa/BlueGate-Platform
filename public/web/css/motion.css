@@ -99,7 +99,9 @@ button[aria-expanded="true"] > :is(i,.chevron){transform:rotate(180deg)}
 
 /* Modal polish. */
 :is(.bg-drawer-backdrop,.bg-account-menu-scrim){backdrop-filter:blur(8px) saturate(105%)}
-:is(dialog,.bg-account-drawer,.bg-account-popover).bg-modal-enter{animation:bgModalIn .26s var(--bg-motion-ease) both}
+:is(dialog,.bg-account-popover).bg-modal-enter{animation:bgModalIn .26s var(--bg-motion-ease) both}
+.bg-account-drawer.bg-modal-enter{animation:bgAccountFadeIn .22s var(--bg-motion-ease) both}
+@keyframes bgAccountFadeIn{from{opacity:.01}to{opacity:1}}
 @keyframes bgModalIn{from{opacity:0;transform:translateY(8px) scale(.975)}to{opacity:1;transform:none}}
 
 /* Mini connection-test overlay also used by web admin dynamically. */

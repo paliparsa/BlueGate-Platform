@@ -101,7 +101,7 @@
 
   function modalObserver(){
     const obs=new MutationObserver(()=>{
-      $$('dialog[open],.bg-account-drawer.open,.bg-account-popover:not(.hidden)').forEach(el=>{
+      $$('dialog[open],.bg-account-popover:not(.hidden)').forEach(el=>{
         if(el.dataset.bgModalSeen)return;el.dataset.bgModalSeen='1';el.classList.add('bg-modal-enter');setTimeout(()=>{el.classList.remove('bg-modal-enter');delete el.dataset.bgModalSeen},350);
       });
     });obs.observe(document.body,{subtree:true,attributes:true,attributeFilter:['open','class']});

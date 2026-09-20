@@ -366,27 +366,33 @@ final class BlueGateXuiProvider extends BlueGateAbstractProvider {
     private function officialSubscriptionUrl(string $subId): ?string {
         $subId=trim($subId); if($subId==='') return null;
         $settings=$this->panelSettings();
+        $provider=['base_url'=>$this->base()];
         $metaBase=trim((string)($this->meta['subscription_base_url']??''));
         $metaPath=trim((string)($this->meta['subscription_path']??''));
-        // Explicit admin override stays supported, but new panels can be discovered automatically from official settings.
+        // Explicit customer-facing override has highest priority, but it must be HTTPS and cannot be the admin endpoint.
         if($metaBase!=='') {
+            $base=bluegate_safe_subscription_url($metaBase);if($base===null)return null;
             $path=$metaPath!==''?$metaPath:'/sub/';
-            if(str_contains($path,'{subId}')) return rtrim($metaBase,'/').'/'.ltrim(str_replace('{subId}',rawurlencode($subId),$path),'/');
-            return rtrim($metaBase,'/').'/'.trim($path,'/').'/'.rawurlencode($subId);
+            $candidate=str_contains($path,'{subId}')?rtrim($base,'/').'/'.ltrim(str_replace('{subId}',rawurlencode($subId),$path),'/'):rtrim($base,'/').'/'.trim($path,'/').'/'.rawurlencode($subId);
+            return bluegate_safe_subscription_url($candidate,$provider);
         }
+        // Some 3x-ui versions expose the full public subscription URI directly.
         $subUri=trim((string)($settings['subURI']??$settings['subUri']??''));
-        if($subUri!=='') return rtrim($subUri,'/').'/'.rawurlencode($subId);
-        $panel=parse_url($this->base());
+        if($subUri!==''){
+            $candidate=rtrim($subUri,'/').'/'.rawurlencode($subId);
+            $safe=bluegate_safe_subscription_url($candidate,$provider);if($safe!==null)return $safe;
+        }
+        // Discover from dedicated subscription settings only. Never fall back to the admin/API host.
         $host=trim((string)($settings['subDomain']??''));
-        if($host==='') $host=(string)($panel['host']??'');
-        if($host==='') return null;
-        $tls=trim((string)($settings['subCertFile']??''))!=='' && trim((string)($settings['subKeyFile']??''))!=='';
-        $scheme=$tls?'https':'http';
-        $port=(int)($settings['subPort']??2096);
-        $path=trim((string)($settings['subPath']??'/sub/')); if($path==='')$path='/sub/';
-        $path='/'.trim($path,'/').'/';
-        $portPart=(($scheme==='https'&&$port===443)||($scheme==='http'&&$port===80))?'':':'.$port;
-        return $scheme.'://'.$host.$portPart.$path.rawurlencode($subId);
+        if($host==='')return null;
+        $tls=trim((string)($settings['subCertFile']??''))!==''&&trim((string)($settings['subKeyFile']??''))!=='';
+        if(!$tls)return null; // customer links are HTTPS-only
+        $host=preg_replace('#^https?://#i','',$host)??$host;$host=trim($host,'/ ');
+        if($host===''||str_contains($host,'/'))return null;
+        $port=(int)($settings['subPort']??443);if($port<1||$port>65535)return null;
+        $path=trim((string)($settings['subPath']??'/sub/'));if($path==='')$path='/sub/';$path='/'.trim($path,'/').'/';
+        $portPart=$port===443?'':':'.$port;
+        return bluegate_safe_subscription_url('https://'.$host.$portPart.$path.rawurlencode($subId),$provider);
     }
 
     public function getSubscription(string $externalId, array $context=[]): array {
