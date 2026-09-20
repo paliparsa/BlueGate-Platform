@@ -1,8 +1,14 @@
-# BlueGate Platform v4.5.0
+# BlueGate Platform v4.6.0
 
 BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت محصولات دیجیتال و سرویس‌های VPN است و شامل فروشگاه وب، Telegram Mini App، ربات تلگرام، کیف پول، پرداخت، پنل ادمین، Service Engine، Provisioning خودکار، مانیتورینگ و اتصال مستقیم به پنل‌های VPN می‌شود.
 
 ## امکانات
+
+- بخش «سرویس‌های من» در Web و Mini App به «VPNهای من» تغییر کرده و فقط برای VPNهای Managed استفاده می‌شود.
+- VPNهای نسخه وب به‌صورت Accordion بسته نمایش داده می‌شوند؛ نام VPN، Client Name و وضعیت در حالت بسته دیده می‌شود و جزئیات با کلیک باز می‌شود.
+- Client Name، Client ID و Sub ID هر Instance به‌صورت رسمی از Backend به Web/Mini App ارسال و داخل جزئیات VPN نمایش داده می‌شود.
+- Multi-location / Multi-instance: اگر یک سرویس چند Client داشته باشد، هویت هر Client و Provider جداگانه نمایش داده می‌شود.
+- Mobile Regression Layer جدید برای Web: اصلاح Topbar، VPN cards، Service Viewer، Wallet/Transactions، Profile/Referral grids، Package grids و بخش‌های اصلی Admin روی نمایشگرهای کوچک.
 
 - HTTPS Subscription Guard: لینک ساب مشتری فقط از endpoint واقعی و امن Provider پذیرفته می‌شود؛ Panel/API URL و HTTP نمایش داده نمی‌شوند.
 - Auto Repair Subscription: لینک‌های قدیمی ناامن هنگام Sync/نمایش سرویس پاک یا با لینک معتبر Provider جایگزین می‌شوند.
@@ -138,9 +144,11 @@ BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت مح
 - Expire و Suspend خودکار
 - Cronهای خودکار برای Payment، Provisioning، Monitoring و Rates
 
-### My Services
+### VPNهای من
 
-- نمایش سرویس‌های فعال
+- نمایش VPNهای Managed فعال
+- Accordion اختصاصی در نسخه وب برای جلوگیری از شلوغی
+- نمایش Client Name، Client ID و Sub ID
 - حجم کل، مصرف‌شده و باقی‌مانده
 - تاریخ انقضا و وضعیت
 - Subscription Link و QR
@@ -151,13 +159,7 @@ BlueGate یک پلتفرم یکپارچه برای فروش و مدیریت مح
 - Usage History و Event Timeline
 - Service Card گرافیکی
 
-### امکانات
-
-- تشخیص قطعی سرویس VPN Managed بر اساس نوع تحویل + Provider Mapping فعال؛ بدون حدس از نام محصول.
-- نمایش صفحه Subscription فقط برای سفارش‌های Managed VPN و حفظ صفحه تحویل کلاسیک برای محصولات دستی/اکانت/کد/فایل.
-- نمایش دکمه ساخت از پنل فقط برای سفارش‌های واقعاً Provisionable.
-- تأیید پرداخت یکپارچه بین Bot، Web و Mini App با یک مسیر Backend واحد.
- پیشرفته
+### امکانات پیشرفته
 
 - Free Trial واقعی روی Provider
 - محدودیت و Cooldown برای Trial
@@ -265,8 +267,8 @@ getent ahostsv4 bot.example.com
 
 ```bash
 cd /root
-unzip BlueGate-Platform-v4.5.0.zip -d BlueGate-Platform-v4.5.0
-cd BlueGate-Platform-v4.5.0
+unzip BlueGate-Platform-v4.6.0.zip -d BlueGate-Platform-v4.6.0
+cd BlueGate-Platform-v4.6.0
 ```
 
 اگر نام ZIP یا پوشه متفاوت است، نام واقعی فایل خودتان را جایگزین کنید.
