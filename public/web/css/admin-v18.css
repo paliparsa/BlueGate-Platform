@@ -71,3 +71,6 @@ p,.muted{line-height:1.8}
 
 /* v3.0.8.10 Wallet live-sync toolbar */
 .wallet-manager-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wallet-manager-actions button{min-height:42px}.wallet-manager-head{gap:12px;flex-wrap:wrap}.wallet-manager-head>div:first-child{min-width:0;flex:1}.wallet-manager-head small{display:block}@media(max-width:640px){.wallet-manager-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.wallet-manager-actions button{width:100%;min-width:0}}
+
+/* v4.1.1 catalog accordion: service header stays visible; plan structure opens from the title. */
+.catalog-service-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;border:0;background:transparent;color:inherit;text-align:right;cursor:pointer}.catalog-service-toggle h3{margin:3px 0 5px;font-size:18px}.catalog-service-toggle i{font-style:normal;width:28px;height:28px;display:grid;place-items:center;border-radius:9px;border:1px solid rgba(118,205,255,.12);background:rgba(47,150,255,.07);color:#72e1ff;font-size:17px;transition:.18s ease}.catalog-service-toggle:hover h3{color:#c9f5ff}.catalog-studio-card.is-collapsed .catalog-studio-metrics{border-bottom:0}.catalog-studio-card.is-collapsed>footer{border-top:1px solid rgba(255,255,255,.06)}

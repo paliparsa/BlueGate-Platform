@@ -3023,14 +3023,20 @@ function refresh_usd_product_price_cache(): int {
     $rate = (float)$meta['rate'];
     if ($rate <= 0) return 0;
     $count = 0;
-    try {
-        $q = db()->prepare('UPDATE products SET price=ROUND(price_usd * ?), price_rate_toman=?, price_rate_source=?, price_rate_updated_at=NOW() WHERE price_currency="USD" AND price_usd IS NOT NULL AND price_usd>0');
-        $q->execute([$rate,$rate,(string)$meta['source']]); $count += $q->rowCount();
-    } catch (Throwable $e) {}
-    try {
-        $q = db()->prepare('UPDATE product_variants SET price=ROUND(price_usd * ?), price_rate_toman=?, price_rate_source=?, price_rate_updated_at=NOW() WHERE price_currency="USD" AND price_usd IS NOT NULL AND price_usd>0');
-        $q->execute([$rate,$rate,(string)$meta['source']]); $count += $q->rowCount();
-    } catch (Throwable $e) {}
+    // Keep every USD-backed catalog layer in sync with the latest provider/cache rate.
+    // service_plans is the source shown by Catalog v2; previously only the legacy
+    // products/product_variants tables were refreshed, so Catalog v2 stayed stale
+    // until an admin opened and saved the product again.
+    foreach (['products','product_variants','service_plans'] as $table) {
+        try {
+            if (!table_exists($table)) continue;
+            $q = db()->prepare('UPDATE '.$table.' SET price=ROUND(price_usd * ?), price_rate_toman=?, price_rate_source=?, price_rate_updated_at=NOW() WHERE price_currency="USD" AND price_usd IS NOT NULL AND price_usd>0');
+            $q->execute([$rate,$rate,(string)$meta['source']]);
+            $count += $q->rowCount();
+        } catch (Throwable $e) {
+            error_log('[USD Price Refresh] '.$table.' '.$e->getMessage());
+        }
+    }
     return $count;
 }
 function price_meta_public(array $row): array {
