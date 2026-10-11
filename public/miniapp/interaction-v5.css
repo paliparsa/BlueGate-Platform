@@ -1,0 +1,33 @@
+/* Phase 5: predictable feedback for interactive Mini App actions. */
+[aria-busy="true"] {
+  cursor: progress;
+}
+
+form[aria-busy="true"] button[type="submit"],
+button:disabled {
+  cursor: wait;
+  opacity: .68;
+}
+
+form[aria-busy="true"] button[type="submit"]::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 7px;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: mini-v5-spin .7s linear infinite;
+}
+
+@keyframes mini-v5-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  form[aria-busy="true"] button[type="submit"]::before {
+    animation: none;
+  }
+}

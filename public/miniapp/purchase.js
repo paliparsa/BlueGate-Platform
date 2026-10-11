@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-let overlay=null,current=null,busy=false;
+let overlay=null,current=null,busy=false,couponBusy=false;
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const fmt=v=>Number(v||0).toLocaleString('en-US');
 const couponCode=v=>String(v||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
@@ -53,10 +53,12 @@ function bind(){
   overlay.querySelector('[data-mini-purchase-submit]')?.addEventListener('click',submit);
 }
 async function applyCouponPreview(){
-  if(busy)return false;const code=couponCode(overlay?.querySelector('#miniPurchaseCoupon')?.value||current.couponInput||'');if(!code){current.onError?.(new Error('کد تخفیف را وارد کن.'));return false}
+  if(busy||couponBusy)return false;const code=couponCode(overlay?.querySelector('#miniPurchaseCoupon')?.value||current.couponInput||'');if(!code){current.onError?.(new Error('کد تخفیف را وارد کن.'));return false}
   const btn=overlay?.querySelector('[data-mini-purchase-coupon]');if(btn){btn.disabled=true;btn.textContent='بررسی…'}
+  couponBusy=true;
   try{if(typeof current.onCouponPreview!=='function')throw new Error('بررسی کد تخفیف آماده نیست.');const v=selected();const r=await current.onCouponPreview({code,productId:Number(v?.product_id||current.productId),variantId:v?.id||null});current.couponInput=code;current.coupon=r?.coupon||r;render();return true}
   catch(e){current.coupon=null;const fb=overlay?.querySelector('.purchase-coupon-feedback');if(fb){fb.className='purchase-coupon-feedback error';fb.textContent=e.message||'کد تخفیف معتبر نیست.'}try{current.onError?.(e)}catch(_){}if(btn){btn.disabled=false;btn.textContent='ثبت کد'}return false}
+  finally{couponBusy=false}
 }
 async function submit(){
   if(busy)return;const v=selected();if(current.variants.length&&!v)return;current.couponInput=overlay?.querySelector('#miniPurchaseCoupon')?.value?.trim()||current.couponInput||'';const typed=couponCode(current.couponInput);if(typed&&current.coupon?.code!==typed){const ok=await applyCouponPreview();if(!ok)return}
@@ -66,6 +68,6 @@ async function submit(){
   finally{busy=false}
 }
 function open(data){if(busy)return null;try{window.BlueGateUI?.beforeOpen?.('miniPurchaseOverlay')}catch(_){}current=normalize(data||{});if(!current.productId)return null;close(false);overlay=document.createElement('div');overlay.id='miniPurchaseOverlay';overlay.className='purchase-confirm-overlay mini-purchase-overlay';document.body.appendChild(overlay);document.documentElement.classList.add('purchase-confirm-open');document.body.classList.add('purchase-confirm-open');overlay.addEventListener('click',e=>{if(e.target===overlay)close()});render();requestAnimationFrame(()=>overlay.classList.add('open'));return overlay}
-function close(reset=true){if(overlay){overlay.classList.remove('open');const old=overlay;overlay=null;setTimeout(()=>old.remove(),160)}document.documentElement.classList.remove('purchase-confirm-open');document.body.classList.remove('purchase-confirm-open');try{document.dispatchEvent(new CustomEvent('bluegate:layer-closed',{detail:{id:'miniPurchaseOverlay'}}))}catch(_){}if(reset)current=null}
+function close(reset=true){couponBusy=false;if(overlay){overlay.classList.remove('open');const old=overlay;overlay=null;setTimeout(()=>old.remove(),160)}document.documentElement.classList.remove('purchase-confirm-open');document.body.classList.remove('purchase-confirm-open');try{document.dispatchEvent(new CustomEvent('bluegate:layer-closed',{detail:{id:'miniPurchaseOverlay'}}))}catch(_){}if(reset)current=null}
 window.BlueGatePurchase={open,close};
 })();

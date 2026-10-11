@@ -3295,6 +3295,25 @@ window.onTelegramWidgetAuth = async function(user) {
   }
 };
 
+function setAuthFormBusy(form, busy, label) {
+  if (!form) return;
+  form.setAttribute('aria-busy', busy ? 'true' : 'false');
+  form.querySelectorAll('button').forEach(button => {
+    if (busy) {
+      button.dataset.authOriginalLabel = button.textContent;
+      button.disabled = true;
+    } else {
+      button.disabled = false;
+      if (button.dataset.authOriginalLabel) {
+        button.textContent = button.dataset.authOriginalLabel;
+        delete button.dataset.authOriginalLabel;
+      }
+    }
+  });
+  const submit = form.querySelector('button[type="submit"]');
+  if (submit && busy) submit.textContent = label || 'در حال پردازش…';
+}
+
 let _authHandlersInited = false;
 function initAuthHandlers() {
   if (_authHandlersInited) return;
@@ -3354,6 +3373,7 @@ function initAuthHandlers() {
     const errEl = $('loginError');
     if (errEl) errEl.classList.add('hidden');
 
+    setAuthFormBusy(e.currentTarget, true, 'در حال ورود…');
     try {
       const res = await api('login', { username, password });
       localStorage.removeItem('web_token');sessionStorage.removeItem('web_token_session');
@@ -3369,6 +3389,8 @@ function initAuthHandlers() {
         errEl.textContent = err.message || 'خطا در ورود';
         errEl.classList.remove('hidden');
       }
+    } finally {
+      setAuthFormBusy(e.currentTarget, false);
     }
   });
 
@@ -3382,6 +3404,7 @@ function initAuthHandlers() {
     const errEl = $('regError');
     if (errEl) errEl.classList.add('hidden');
 
+    setAuthFormBusy(e.currentTarget, true, 'در حال ساخت حساب…');
     try {
       const res = await api('register', { username, email, first_name, password, ref_code });
       if (res.requires_email_verification) {
@@ -3397,6 +3420,8 @@ function initAuthHandlers() {
         errEl.textContent = err.message || 'خطا در ثبت‌نام';
         errEl.classList.remove('hidden');
       }
+    } finally {
+      setAuthFormBusy(e.currentTarget, false);
     }
   });
 
@@ -3411,6 +3436,7 @@ function initAuthHandlers() {
       return;
     }
 
+    setAuthFormBusy(e.currentTarget, true, 'در حال تأیید…');
     try {
       const res = await api('verify_email_otp', { user_id: pendingVerifUserId, otp });
       localStorage.removeItem('web_token');sessionStorage.removeItem('web_token_session');
@@ -3422,16 +3448,25 @@ function initAuthHandlers() {
         errEl.textContent = err.message || 'کد تایید نامعتبر است';
         errEl.classList.remove('hidden');
       }
+    } finally {
+      setAuthFormBusy(e.currentTarget, false);
     }
   });
 
-  $('resendOtpBtn')?.addEventListener('click', async () => {
+  $('resendOtpBtn')?.addEventListener('click', async (e) => {
     if (!pendingVerifUserId) return;
+    const button = e.currentTarget;
+    const originalLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = 'در حال ارسال…';
     try {
       await api('resend_email_otp', { user_id: pendingVerifUserId });
       showStatus('کد تایید جدید ارسال شد 📩');
     } catch (err) {
       alert(err.message || 'خطا در ارسال مجدد کد');
+    } finally {
+      button.disabled = false;
+      button.textContent = originalLabel;
     }
   });
 }
