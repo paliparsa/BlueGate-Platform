@@ -525,7 +525,7 @@ function fireConfetti(){try{const c=document.createElement('canvas');c.className
 function celebrate(){hapticNotify('success');playChime();fireConfetti()}
 let lastReferralsCount=-1,lastDeliveredOrderId=null;
 function checkAndCelebrate(){const u=state?.user;if(u){if(lastReferralsCount>=0&&Number(u.referrals_count)>lastReferralsCount){celebrate();showStatus('🎉 زیرمجموعه جدید اضافه شد!')}lastReferralsCount=Number(u.referrals_count)}if(currentOrderId&&currentTab==='orders'){const o=orderById(currentOrderId);if(o&&o.status==='delivered'&&lastDeliveredOrderId!==currentOrderId){lastDeliveredOrderId=currentOrderId;celebrate()}}}
-function orderStepperHtml(o){const steps=[{key:'payment',label:'پرداخت',icon:'💳',hint:'انتخاب روش و پرداخت'},{key:'review',label:'بررسی',icon:'🔍',hint:'بررسی رسید توسط ادمین'},{key:'preparing',label:'آماده‌سازی',icon:'📦',hint:'آماده‌سازی سفارش'},{key:'delivered',label:'تحویل',icon:'✅',hint:'تحویل سفارش'}];const canceled=['rejected','canceled','refunded'].includes(o.status);if(canceled)return `<div class="order-stepper canceled"><div class="stepper-cancel"><span class="step-circle cancel">✕</span><div><b>سفارش ${esc(o.status_fa||o.status)}</b><small>${esc(o.stage_description||'این سفارش کامل نشد')}</small></div></div></div>`;const cur=Math.max(0,Math.min(3,Number.isFinite(Number(o.stage_index))?Number(o.stage_index):o.status==='delivered'?3:o.status==='preparing'||o.status==='payment_confirmed'?2:o.status==='reviewing'||o.status==='receipt_submitted'?1:0));return `<div class="order-stepper">${steps.map((s,i)=>{const done=i<cur,active=i===cur;return `<div class="step ${done?'done':''} ${active?'active':''}"><div class="step-circle">${done?'✓':s.icon}</div><span class="step-label">${s.label}</span><small class="step-hint">${s.hint}</small>${i<steps.length-1?`<div class="step-line ${i<cur?'done':''}"></div>`:''}</div>`}).join('')}</div>`}
+function orderStepperHtml(o){const steps=[{key:'payment',label:'پرداخت',icon:'💳',hint:'ثبت سفارش'},{key:'review',label:'بررسی',icon:'🔍',hint:'تایید رسید'},{key:'preparing',label:'آماده‌سازی',icon:'📦',hint:'آماده‌سازی سرویس'},{key:'delivered',label:'تحویل',icon:'✅',hint:'تحویل نهایی'}];const canceled=['rejected','canceled','refunded'].includes(o.status);if(canceled)return `<div class="order-stepper canceled"><div class="stepper-cancel"><span class="step-circle cancel">✕</span><div><b>سفارش ${esc(o.status_fa||o.status)}</b><small>${esc(o.stage_description||'این سفارش کامل نشد')}</small></div></div></div>`;const cur=Math.max(0,Math.min(3,Number.isFinite(Number(o.stage_index))?Number(o.stage_index):o.status==='delivered'?3:o.status==='preparing'||o.status==='payment_confirmed'?2:o.status==='reviewing'||o.status==='receipt_submitted'?1:0));return `<div class="order-stepper">${steps.map((s,i)=>{const done=i<cur,active=i===cur;return `<div class="step ${done?'done':''} ${active?'active':''}"><div class="step-circle">${done?'✓':s.icon}</div><span class="step-label">${s.label}</span><small class="step-hint">${s.hint}</small>${i<steps.length-1?`<div class="step-line ${i<cur?'done':''}"></div>`:''}</div>`}).join('')}</div>`}
 function orderStageLabel(o){return o.stage_label||({pending_payment:'پرداخت',receipt_submitted:'بررسی',reviewing:'بررسی',payment_confirmed:'آماده‌سازی',preparing:'آماده‌سازی',delivered:'تحویل',rejected:'رد شده',canceled:'لغو شده',refunded:'مرجوع شده'}[o.status]||o.status_fa||'در حال پردازش')}
 /* Pull-to-refresh */
 let _ptrAttached=false,_ptrStartX=0,_ptrStartY=0,_ptrPulling=false,_ptrLocked=false,_ptrCanceled=false,_ptrDist=0,_ptrIndicator=null;
@@ -837,7 +837,7 @@ function adminFormIcon(title=''){const s=String(title);if(/پنل|Provider|ات�
 function openEdit(title,inputFields,onSubmit){pendingEdit=onSubmit;let sections=[];if(inputFields.length>0&&typeof inputFields[0]==='string'){sections=[{title:'',fields:inputFields.map(html=>({html}))}]}else{sections=inputFields}let body=`<div class="vy-admin-form-shell"><div class="vy-admin-form-intro"><span>${adminFormIcon(title)}</span><div><small>BLUEGATE ADMIN</small><b>${esc(title)}</b><p>تنظیمات را کامل کن؛ تغییرات بعد از ذخیره بلافاصله روی Mini App اعمال می‌شوند.</p></div></div>`;sections.forEach(sec=>{if(sec?.html){body+=sec.html;return}body+=`<section class="vy-admin-form-section">${sec?.title?`<div class="presentation-section-title"><span></span><b>${esc(sec.title)}</b></div>`:''}`;const fields=Array.isArray(sec?.fields)?sec.fields:[];body+=`<div class="form-grid">`;fields.forEach(f=>{const help=f.help?`<small class="vy-field-help">${esc(f.help)}</small>`:'';if(f.html)body+=f.html;else if(f.type==='checkbox')body+=`<label class="switch-line vy-switch-line"><span><b>${f.label}</b>${help}</span><input id="${f.id}" type="checkbox" ${f.value?'checked':''}></label>`;else if(f.type==='select')body+=`<label class="vy-form-field"><span>${f.label}</span><select id="${f.id}">${f.options}</select>${help}</label>`;else if(f.type==='textarea')body+=`<label class="full vy-form-field"><span>${f.label}</span><textarea id="${f.id}" placeholder="${f.placeholder||f.label}">${esc(f.value||'')}</textarea>${help}</label>`;else body+=`<label class="vy-form-field"><span>${f.label}</span><input id="${f.id}" type="${f.type||'text'}" value="${esc(f.value??'')}" placeholder="${f.placeholder||f.label}" ${f.props||''}>${help}</label>`});body+=`</div></section>`});body+=`</div>`;return BlueGateUI.openSheet({type:'form',eyebrow:'BLUEGATE ADMIN',title,body,footer:`<button type="button" class="secondary" data-edit-cancel>انصراف</button><button type="button" class="primary" id="presentationSaveBtn"><span>ذخیره تغییرات</span></button>`,onClose:()=>{pendingEdit=null},onOpen:(host)=>{host.classList.add('vy-admin-parity-sheet');host.querySelector('[data-edit-cancel]')?.addEventListener('click',closeEdit);host.querySelectorAll('input[type="checkbox"]').forEach(el=>el.addEventListener('change',()=>haptic?.('light')));const saveBtn=host.querySelector('#presentationSaveBtn');saveBtn?.addEventListener('click',async(e)=>{if(!pendingEdit)return;e.preventDefault();haptic?.('medium');const old=saveBtn.innerHTML;saveBtn.disabled=true;saveBtn.innerHTML='<span class="vy-btn-spinner"></span><span>در حال ذخیره…</span>';try{const res=await pendingEdit();if(res!==false)closeEdit();else{saveBtn.disabled=false;saveBtn.innerHTML=old}}catch(err){showStatus(err.message||'خطا','error');saveBtn.disabled=false;saveBtn.innerHTML=old}})}})}
 
 function val(id){const el=$(id);return el?.type==='checkbox'?el.checked:el?.value}
-function timeline(t=[]){return t?.length?`<div class="timeline">${t.map(e=>`<div><b>${esc(e.title)}</b><small>${esc(e.created_at||'')}</small></div>`).join('')}</div>`:''}
+function timeline(t=[]){return t?.length?`<div class="timeline order-history-timeline">${t.map((e,i)=>`<div class="order-history-event"><span class="order-history-dot">${i===t.length-1?'✓':'•'}</span><div><b>${esc(e.title)}</b><small>${esc(e.created_at||'')}</small></div></div>`).join('')}</div>`:''}
 const cleanupStatuses=['rejected','canceled','refunded'];
 function canHideOrder(o){return cleanupStatuses.includes(String(o?.status||''))}
 function statusClass(status){return ({delivered:'success',payment_confirmed:'success',preparing:'warning',receipt_submitted:'warning',reviewing:'warning',pending_payment:'pending',rejected:'danger',canceled:'danger',refunded:'danger'}[status]||'pending')}
@@ -906,22 +906,6 @@ function productCardDiscountNoteText(p){
 function priceCurrencyOptions(selected='IRT'){selected=String(selected||'IRT').toUpperCase();return `<option value="IRT" ${selected!=='USD'?'selected':''}>تومان</option><option value="USD" ${selected==='USD'?'selected':''}>دلار / USDT</option>`}
 function priceAdminFields(prefix,item={}){const c=String(item.price_currency||'IRT').toUpperCase();const usd=item.price_usd||'';const toman=item.price||'';return `<div class="price-editor full"><div class="price-editor-head"><span>💸</span><div><b>نوع قیمت‌گذاری</b><small>تومان ثابت یا دلار با تبدیل خودکار به تومان</small></div></div><div class="price-editor-grid"><label><span>واحد قیمت</span><select id="${prefix}_currency">${priceCurrencyOptions(c)}</select></label><label><span>قیمت تومان</span><input id="${prefix}_price" value="${esc(toman)}" inputmode="numeric" placeholder="مثلاً 2199000"></label><label><span>قیمت دلار</span><input id="${prefix}_price_usd" value="${esc(usd)}" inputmode="decimal" placeholder="مثلاً 19.99"></label><p class="muted full">اگر دلار انتخاب شود، کاربر فقط قیمت تومانی لحظه‌ای را می‌بیند؛ مبلغ دلاری فقط هنگام پرداخت رمزارز/ارزی نمایش داده می‌شود.</p></div></div>`}
 function priceAdminSummary(obj={}){const m=obj.price_meta||{};if((obj.price_currency||m.currency)==='USD'){return `قیمت دلاری: ${nf(obj.price_usd||m.usd||0)}$ → ${fmt(obj.price||m.toman||0)} ${m.rate_source?`· نرخ ${esc(m.rate_source)}`:''}`}return `قیمت تومانی: ${fmt(obj.price||0)}`}
-function orderUsdHint(o){
-  const cur = String(o.price_currency || o.currency || 'IRT').toUpperCase();
-  if (['USD', 'USDT', 'TRX', 'TON', 'STARS'].includes(cur)) {
-    if (cur === 'USD' || cur === 'USDT') {
-      return Number(o.price_usd || 0) > 0 ? `<p class="muted usd-only-hint">مبنای دلاری این سفارش: $${nf(o.price_usd)} USDT · نرخ تبدیل: ${o.usd_rate_toman ? nf(o.usd_rate_toman) + ' تومان' : ''}</p>` : '';
-    }
-    if (cur === 'TRX') {
-      return Number(o.price_crypto || 0) > 0 ? `<p class="muted usd-only-hint">مبنای ترون این سفارش: ${nf(o.price_crypto)} TRX · نرخ تبدیل: ${o.usd_rate_toman ? nf(o.usd_rate_toman) + ' تومان' : ''}</p>` : '';
-    }
-    if (cur === 'TON') {
-      return Number(o.price_crypto || 0) > 0 ? `<p class="muted usd-only-hint">مبنای تون این سفارش: ${nf(o.price_crypto)} TON · نرخ تبدیل: ${o.usd_rate_toman ? nf(o.usd_rate_toman) + ' تومان' : ''}</p>` : '';
-    }
-  }
-  return '';
-}
-
 function openWalletConfirmSheet(orderId){
   const o = orderById(orderId);
   if(!o) return;
@@ -1293,22 +1277,7 @@ function openOrderMoreActions(id){const o=orderById(id);if(!o)return;const st=St
 function orderDetailHtml(o){
   const bal=Number(state.user?.balance||0);
   const d=Number(o.variant_discount_percent)||0;
-  let basePriceHtml=`${fmt(o.amount)}`;
-  if(d>0){
-    const orig=Math.round(Number(o.amount)/(1-d/100));
-    basePriceHtml=`<div style="display:flex;align-items:center;gap:6px"><s class="muted" style="font-size:14px">${fmt(orig)}</s><span>${fmt(o.amount)}</span><span class="flash-pill">−${nf(d)}٪</span></div>`;
-  }
-  const cur = String(o.price_currency || o.currency || 'IRT').toUpperCase();
-  let nativeCurrencyPill = '';
-  if (cur === 'USDT' || cur === 'USD') {
-    nativeCurrencyPill = `<span class="badge" style="margin-right:6px">💵 ${nf(o.price_usd || 0)} USDT</span>`;
-  } else if (cur === 'TRX') {
-    nativeCurrencyPill = `<span class="badge" style="margin-right:6px">🔴 ${nf(o.price_crypto || 0)} TRX</span>`;
-  } else if (cur === 'TON') {
-    nativeCurrencyPill = `<span class="badge" style="margin-right:6px">💎 ${nf(o.price_crypto || 0)} TON</span>`;
-  } else if (cur === 'STARS') {
-    nativeCurrencyPill = `<span class="badge" style="margin-right:6px">⭐ ${nf(o.price_stars || 0)} Stars</span>`;
-  }
+  const basePriceHtml=`<span class="od-money-value">${fmt(o.amount)}</span>`;
   const totalSavings = Number(o.discount_amount||0) + Number(o.wallet_amount||0);
   const savingsCard = totalSavings > 0 ? `
     <div class="savings-breakdown-card" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:16px;padding:14px;margin:12px 0;">
@@ -1349,7 +1318,6 @@ function orderDetailHtml(o){
       <div class="od-badges-row">
         ${orderStatusBadge(o)}
         ${o.is_renewal?`<span class="badge">🔄 تمدید سفارش #${nf(o.renewal_of_order_id||'')}</span>`:''}
-        ${nativeCurrencyPill}
       </div>
       ${topTimerHtml}
     </div>
@@ -1363,7 +1331,6 @@ function orderDetailHtml(o){
         <span>مانده قابل پرداخت</span>
         <b>${fmt(o.final_amount)}</b>
       </div>
-      ${orderUsdHint(o)}
     </div>
 
     ${savingsCard}
@@ -1380,7 +1347,7 @@ function orderDetailHtml(o){
       </div>
       <div class="od-info-card">
         <small>نوع تحویل</small>
-        <b>${esc(o.delivery_type_fa||'-')}</b>
+        <b class="od-delivery-value">${esc(o.delivery_type_fa||'-')}</b>
       </div>
       <div class="od-info-card">
         <small>روش پرداخت</small>

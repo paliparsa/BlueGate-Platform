@@ -165,6 +165,29 @@
 #ordersPage .order-stepper .step-hint { display: block; width: 100%; min-height: 24px; margin-top: 1px; padding: 0 2px; color: var(--muted); font-size: 8px; line-height: 1.35; text-align: center; white-space: normal; overflow-wrap: anywhere; }
 #ordersPage .order-stepper .step-line { z-index: -1; }
 
+/* Order detail and checkout polish. */
+.order-history-timeline { margin: 12px 0 2px; padding: 4px 0 4px 0; border: 0; }
+.order-history-event { position: relative; display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px; align-items: start; padding: 10px 0; margin: 0 !important; }
+.order-history-event:not(:last-child)::after { content: ""; position: absolute; right: 13px; top: 32px; bottom: -10px; width: 2px; background: color-mix(in srgb,var(--accent) 30%,var(--border)); }
+.order-history-dot { position: relative; z-index: 1; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb,var(--accent) 18%,var(--card)); border: 1px solid color-mix(in srgb,var(--accent) 42%,var(--border)); color: var(--accent); font-weight: 900; }
+.order-history-event b { display: block; font-size: 14px; line-height: 1.65; }
+.order-history-event small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; direction: ltr; text-align: right; }
+.od-info-card { min-width: 0; }
+.od-info-card b { display: block; min-width: 0; line-height: 1.65; }
+.od-info-card .od-money-value { white-space: nowrap; }
+.od-delivery-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.od-sticky-actions { position: sticky; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 8; }
+.od-sticky-actions .od-more-btn { min-height: 54px !important; border-radius: 16px !important; }
+.od-sticky-actions .od-more-label { line-height: 1.2; }
+.mini-purchase-card .purchase-confirm-specs { padding: 4px 0; gap: 0; border: 1px solid rgba(255,255,255,.08); border-radius: 16px; background: rgba(255,255,255,.025); overflow: hidden; }
+.mini-purchase-card .purchase-confirm-specs > div { min-height: 46px; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.mini-purchase-card .purchase-confirm-specs > div:last-child { border-bottom: 0; }
+.mini-purchase-card .purchase-confirm-specs b { min-width: 0; max-width: 62%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-purchase-card .purchase-confirm-specs .purchase-delivery-value { white-space: nowrap; }
+.mini-purchase-card .purchase-confirm-price { align-items: center; }
+.mini-purchase-card .purchase-confirm-price > span { min-width: 0; line-height: 1.5; }
+.mini-purchase-card .purchase-confirm-price > div { flex-wrap: wrap; justify-content: flex-end; }
+
 /* Credit center: keep transaction copy readable on narrow screens. */
 .credit-center-mini-v27 { gap: 12px; }
 .credit-center-mini-v27 .mini-credit-hero-v27 { box-shadow: 0 18px 42px rgba(0,0,0,.16); }
@@ -219,6 +242,9 @@
   .credit-center-mini-v27 .mini-credit-tx-list strong { font-size: 12px; }
   .credit-center-mini-v27 .mini-credit-tx-copy b { font-size: 12px; }
   .credit-center-mini-v27 .mini-credit-tx-copy small { font-size: 10px; }
+  .od-sticky-actions .od-more-btn { min-height: 48px !important; }
+  .mini-purchase-card .purchase-confirm-specs > div { padding-inline: 10px; }
+  .mini-purchase-card .purchase-confirm-specs b { max-width: 58%; font-size: 13px; }
 }
 #ordersPage .parity-order-side { align-self: stretch; }
 #ordersPage .status-badge { font-size: 11px; padding: 6px 8px; }
