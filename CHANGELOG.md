@@ -1,5 +1,16 @@
 # Changelog
 
+# BlueGate Platform v5.0.31 — Live support chat
+
+- صفحه ساخت تیکت در Mini App و وب به composer حرفه‌ای گفت‌وگو تبدیل شد.
+- پیام‌ها به شکل bubbleهای دوطرفه با تیک تحویل و تیک دوم خوانده‌شدن نمایش داده می‌شوند.
+- بازخوانی خودکار گفت‌وگو هر ۵ ثانیه در Mini App و وب اضافه شد.
+- ارسال و نمایش پیوست‌های JPEG، PNG، WebP، PDF و TXT تا سقف ۵ مگابایت اضافه شد.
+- خواندن پیام‌های طرف مقابل هنگام بازکردن گفتگو ثبت می‌شود و وضعیت read برای هر پیام برمی‌گردد.
+- نسخه‌های کپی وب و manifest integrity پس از تغییرات همگام شدند.
+
+---
+
 # BlueGate Platform v5.0.30 — Performance hardening
 
 - پاسخ Webhook تلگرام پیش از اجرای handlerهای سنگین flush می‌شود تا تأخیر Provider یا اعلان، صف Telegram را کند نکند.

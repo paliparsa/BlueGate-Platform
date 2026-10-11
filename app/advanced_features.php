@@ -34,7 +34,22 @@ function bluegate_ticket_record(int $ticketId, int $userId=0): ?array {
     return $row?:null;
 }
 function bluegate_user_tickets(int $uid,int $limit=50): array {$q=db()->prepare('SELECT t.*,COUNT(m.id) message_count,MAX(m.created_at) last_message_at FROM support_tickets t LEFT JOIN support_messages m ON m.ticket_id=t.id WHERE t.user_id=? GROUP BY t.id ORDER BY last_message_at DESC,t.id DESC LIMIT '.max(1,min(100,$limit)));$q->execute([$uid]);return$q->fetchAll()?:[];}
-function bluegate_ticket_messages(int $ticketId): array {$q=db()->prepare('SELECT id,ticket_id,sender_type,sender_id,body,created_at FROM support_messages WHERE ticket_id=? ORDER BY id');$q->execute([$ticketId]);return$q->fetchAll()?:[];}
+function bluegate_ticket_messages(int $ticketId, string $viewerType=''): array {
+    if($viewerType==='user')db()->prepare('UPDATE support_messages SET read_at=COALESCE(read_at,NOW()) WHERE ticket_id=? AND sender_type="admin"')->execute([$ticketId]);
+    if($viewerType==='admin')db()->prepare('UPDATE support_messages SET read_at=COALESCE(read_at,NOW()) WHERE ticket_id=? AND sender_type="user"')->execute([$ticketId]);
+    $q=db()->prepare('SELECT id,ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,created_at,delivered_at,read_at FROM support_messages WHERE ticket_id=? ORDER BY id');$q->execute([$ticketId]);return$q->fetchAll()?:[];
+}
+function bluegate_ticket_attachment(?string $data, ?string $name=''): array {
+    $data=trim((string)$data);$name=trim((string)$name);
+    if($data==='')return ['url'=>null,'name'=>null,'mime'=>null];
+    if(strlen($data)>8*1024*1024||!preg_match('#^data:([^;,]+);base64,(.+)$#s',$data,$m))throw new RuntimeException('TICKET_ATTACHMENT_INVALID');
+    $bin=base64_decode($m[2],true);if($bin===false||strlen($bin)>5*1024*1024)throw new RuntimeException('TICKET_ATTACHMENT_TOO_LARGE');
+    $fi=new finfo(FILEINFO_MIME_TYPE);$mime=(string)$fi->buffer($bin);$allowed=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp','application/pdf'=>'pdf','text/plain'=>'txt'];
+    if(!isset($allowed[$mime]))throw new RuntimeException('TICKET_ATTACHMENT_TYPE_UNSUPPORTED');
+    $dir=__DIR__.'/../public/uploads/support';if(!is_dir($dir)&&!mkdir($dir,0750,true))throw new RuntimeException('TICKET_ATTACHMENT_SAVE_FAILED');
+    $file=bin2hex(random_bytes(16)).'.'.$allowed[$mime];if(file_put_contents($dir.'/'.$file,$bin,LOCK_EX)===false)throw new RuntimeException('TICKET_ATTACHMENT_SAVE_FAILED');
+    return ['url'=>'/uploads/support/'.$file,'name'=>mb_substr($name!==''?$name:('attachment.'.$allowed[$mime]),0,255),'mime'=>$mime];
+}
 function bluegate_create_ticket(int $uid,array $in): array {
     $sub=trim((string)($in['subject']??''));$body=trim((string)($in['message']??''));
     if($sub===''||$body==='')throw new RuntimeException('TICKET_SUBJECT_MESSAGE_REQUIRED');
@@ -43,15 +58,15 @@ function bluegate_create_ticket(int $uid,array $in): array {
     $oid=max(0,(int)($in['order_id']??0));if($oid){$q=db()->prepare('SELECT id FROM orders WHERE id=? AND user_id=?');$q->execute([$oid,$uid]);if(!$q->fetchColumn())throw new RuntimeException('ORDER_NOT_FOUND');}
     $category=substr((string)($in['category']??'other'),0,64);$priority=in_array(($in['priority']??'normal'),['low','normal','high','urgent'],true)?(string)$in['priority']:'normal';
     db()->prepare('INSERT INTO support_tickets (user_id,user_service_id,order_id,category,priority,status,subject,last_message_at) VALUES (?,?,?,?,?,"open",?,NOW())')->execute([$uid,$sid?:null,$oid?:null,$category,$priority,mb_substr($sub,0,255)]);
-    $id=(int)db()->lastInsertId();db()->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body) VALUES (?,"user",?,?)')->execute([$id,$uid,$body]);
+    $id=(int)db()->lastInsertId();$a=bluegate_ticket_attachment($in['attachment_data']??null,$in['attachment_name']??'');db()->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,delivered_at) VALUES (?,"user",?,?,?,?,?,NOW())')->execute([$id,$uid,$body,$a['url'],$a['name'],$a['mime']]);
     if(function_exists('notify_admins'))notify_admins("🎫 <b>تیکت جدید #{$id}</b>\n".h($sub));
     return ['ticket_id'=>$id,'ticket'=>bluegate_ticket_record($id,$uid)];
 }
-function bluegate_reply_ticket(int $ticketId,string $senderType,int $senderId,string $body): void {
+function bluegate_reply_ticket(int $ticketId,string $senderType,int $senderId,string $body,?string $attachmentData=null,?string $attachmentName=null): void {
     $body=trim($body);if($body==='')throw new RuntimeException('EMPTY_MESSAGE');if(mb_strlen($body)>4000)throw new RuntimeException('TICKET_MESSAGE_TOO_LONG');
     $ticket=bluegate_ticket_record($ticketId);if(!$ticket)throw new RuntimeException('TICKET_NOT_FOUND');
     if($ticket['status']==='closed')throw new RuntimeException('TICKET_CLOSED');
-    db()->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body) VALUES (?,?,?,?)')->execute([$ticketId,$senderType,$senderId,$body]);
+    $a=bluegate_ticket_attachment($attachmentData,$attachmentName);db()->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,delivered_at) VALUES (?,?,?,?,?,?,?,NOW())')->execute([$ticketId,$senderType,$senderId,$body,$a['url'],$a['name'],$a['mime']]);
     $status=$senderType==='admin'?'waiting_customer':'waiting_admin';db()->prepare('UPDATE support_tickets SET status=?,last_message_at=NOW(),closed_at=NULL WHERE id=?')->execute([$status,$ticketId]);
     if($senderType!=='admin'&&function_exists('notify_admins'))notify_admins("💬 <b>پاسخ جدید در تیکت #{$ticketId}</b>");
 }

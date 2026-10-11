@@ -964,6 +964,10 @@ CREATE TABLE IF NOT EXISTS support_messages (
   sender_id BIGINT NULL,
   body TEXT NOT NULL,
   attachment_url TEXT NULL,
+  attachment_name VARCHAR(255) NULL,
+  attachment_mime VARCHAR(100) NULL,
+  delivered_at DATETIME NULL,
+  read_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX(ticket_id,created_at),
   CONSTRAINT fk_support_message_ticket FOREIGN KEY (ticket_id) REFERENCES support_tickets(id) ON DELETE CASCADE

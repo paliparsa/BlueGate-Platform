@@ -173,6 +173,10 @@ function migrate(): void {
 
     // v3.0.2 catalog editor parity: allow an optional image on every purchasable plan.
     add_column_if_missing('service_plans', 'image_url', 'VARCHAR(1000) NULL AFTER description');
+    add_column_if_missing('support_messages', 'attachment_name', 'VARCHAR(255) NULL AFTER attachment_url');
+    add_column_if_missing('support_messages', 'attachment_mime', 'VARCHAR(100) NULL AFTER attachment_name');
+    add_column_if_missing('support_messages', 'delivered_at', 'DATETIME NULL AFTER attachment_mime');
+    add_column_if_missing('support_messages', 'read_at', 'DATETIME NULL AFTER delivered_at');
 
     // v2.2 security-critical tables are also ensured explicitly so an older install
     // cannot silently lose rate limiting or queued broadcasts if a prior schema step failed.
