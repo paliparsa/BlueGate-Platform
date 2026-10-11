@@ -1,5 +1,15 @@
 # Changelog
 
+# BlueGate Platform v5.0.30 — Performance hardening
+
+- پاسخ Webhook تلگرام پیش از اجرای handlerهای سنگین flush می‌شود تا تأخیر Provider یا اعلان، صف Telegram را کند نکند.
+- timeout پیش‌فرض و سقف timeout ارتباط با Providerهای X-UI، Marzban و Remnawave کوتاه و قابل‌کنترل شد.
+- `connect_timeout` و `request_timeout` هنگام ذخیره تنظیمات Provider محدود و normalize می‌شوند.
+- `web_gate.php` اکنون bootstrap کامل را load می‌کند و خطای `veyra_pro_core_active()` در entry point مستقیم رفع شده است.
+- نسخه هسته پلتفرم به `5.0.30-performance-hardening` و نسخه manifest ماژول Pro Core به `2.1.6` همگام شد.
+
+---
+
 # Mini App design unification — v5.0.16
 
 یکدست‌سازی زبان طراحی Mini App (فقط `public/miniapp/`؛ وب، ماژول‌ها و `integrity.json` دست‌نخورده‌اند).
