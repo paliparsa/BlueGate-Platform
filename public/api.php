@@ -870,6 +870,96 @@ if ($action === 'admin_provider_test') {
     try { $r=bluegate_test_provider((int)($input['provider_id']??0)); api_out(['ok'=>true,'result'=>$r,'infrastructure'=>bluegate_infrastructure_summary()]); }
     catch(Throwable $e){ api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'تست Provider انجام نشد: '.api_exception_code($e)],400); }
 }
+if ($action === 'admin_provider_health_check_all') {
+    require_admin($user);
+    $providers = bluegate_providers(false);
+    $results = [];
+    $healthyCount = 0;
+    $degradedCount = 0;
+    $offlineCount = 0;
+    foreach ($providers as $p) {
+        $pid = (int)$p['id'];
+        $driverMeta = BlueGateProviderRegistry::supportedDrivers()[(string)$p['driver']] ?? [];
+        if (empty($driverMeta['live']) || empty($p['is_active'])) {
+            $results[] = [
+                'provider_id' => $pid,
+                'name' => $p['name'],
+                'driver' => $p['driver'],
+                'is_active' => (int)($p['is_active'] ?? 0),
+                'status' => 'skipped',
+                'ok' => false,
+                'message' => empty($p['is_active']) ? 'غیرفعال' : 'درایور دستی/رزرو',
+                'latency_ms' => null,
+            ];
+            continue;
+        }
+        try {
+            $res = bluegate_test_provider($pid);
+            $lat = (int)($res['latency_ms'] ?? 0);
+            $ok = !empty($res['ok']);
+            if ($ok && $lat <= 2000) {
+                $healthyCount++;
+            } elseif ($ok) {
+                $degradedCount++;
+            } else {
+                $offlineCount++;
+            }
+            $results[] = [
+                'provider_id' => $pid,
+                'name' => $p['name'],
+                'driver' => $p['driver'],
+                'is_active' => 1,
+                'status' => $res['status'] ?? ($ok ? 'online' : 'offline'),
+                'ok' => $ok,
+                'message' => (string)($res['message'] ?? ''),
+                'latency_ms' => $lat,
+            ];
+        } catch (Throwable $e) {
+            $offlineCount++;
+            $results[] = [
+                'provider_id' => $pid,
+                'name' => $p['name'],
+                'driver' => $p['driver'],
+                'is_active' => 1,
+                'status' => 'offline',
+                'ok' => false,
+                'message' => $e->getMessage(),
+                'latency_ms' => null,
+            ];
+        }
+    }
+    api_out([
+        'ok' => true,
+        'summary' => [
+            'total' => count($providers),
+            'healthy' => $healthyCount,
+            'degraded' => $degradedCount,
+            'offline' => $offlineCount,
+        ],
+        'providers' => $results,
+        'infrastructure' => bluegate_infrastructure_summary(),
+    ]);
+}
+if ($action === 'admin_server_diagnostics') {
+    require_admin($user);
+    $dueJobs = 0; $runningJobs = 0; $failedJobs = 0;
+    if (table_exists('provisioning_jobs')) {
+        $dueJobs = (int)(db()->query("SELECT COUNT(*) FROM provisioning_jobs WHERE status IN ('queued','retry') AND available_at<=NOW()")->fetchColumn() ?: 0);
+        $runningJobs = (int)(db()->query("SELECT COUNT(*) FROM provisioning_jobs WHERE status='running'")->fetchColumn() ?: 0);
+        $failedJobs = (int)(db()->query("SELECT COUNT(*) FROM provisioning_jobs WHERE status='failed'")->fetchColumn() ?: 0);
+    }
+    api_out([
+        'ok' => true,
+        'routing' => bluegate_routing_dashboard(),
+        'monitoring' => bluegate_monitoring_dashboard(),
+        'infrastructure' => bluegate_infrastructure_summary(),
+        'jobs_summary' => [
+            'due_jobs' => $dueJobs,
+            'running_jobs' => $runningJobs,
+            'failed_jobs' => $failedJobs,
+        ],
+    ]);
+}
 if ($action === 'admin_provider_toggle') {
     require_admin($user);$id=(int)($input['provider_id']??0);$p=bluegate_provider($id,true);if(!$p)api_out(['ok'=>false,'message'=>'Provider پیدا نشد.'],404);
     db()->prepare('UPDATE service_providers SET is_active=1-is_active WHERE id=?')->execute([$id]);

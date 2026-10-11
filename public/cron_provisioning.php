@@ -1,6 +1,31 @@
 <?php
 require_once dirname(__DIR__).'/app/bootstrap.php';
-$isCli=PHP_SAPI==='cli';$key=(string)($_GET['key']??($_SERVER['HTTP_X_CRON_KEY']??''));$want=(string)app_config('CRON_KEY','');
-if(!$isCli&&($want===''||!hash_equals($want,$key))){http_response_code(403);header('Content-Type: application/json');echo json_encode(['ok'=>false,'error'=>'FORBIDDEN']);exit;}
+$isCli = PHP_SAPI === 'cli';
+$key = (string)($_GET['key'] ?? ($_GET['secret'] ?? ($_SERVER['HTTP_X_CRON_KEY'] ?? '')));
+$wantKey = (string)app_config('CRON_KEY', '');
+$wantSecret = (string)app_config('WEBHOOK_SECRET', '');
+$auth = $isCli
+    || ($wantKey !== '' && hash_equals($wantKey, $key))
+    || ($wantSecret !== '' && hash_equals($wantSecret, $key));
+
+if (!$auth) {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'error' => 'FORBIDDEN'], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
 header('Content-Type: application/json; charset=utf-8');
-try{$r=bluegate_run_due_provisioning_jobs((int)($_GET['limit']??25));echo json_encode(['ok'=>true]+$r,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);}catch(Throwable $e){http_response_code(500);echo json_encode(['ok'=>false,'error'=>'WORKER_FAILED']);}
+try {
+    $limit = max(1, min(100, (int)($_GET['limit'] ?? 25)));
+    $r = bluegate_run_due_provisioning_jobs($limit);
+    $cacheDir = dirname(__DIR__) . '/storage/cache';
+    if (!is_dir($cacheDir)) {
+        @mkdir($cacheDir, 0755, true);
+    }
+    @file_put_contents($cacheDir . '/cron-provisioning.last', (string)time());
+    echo json_encode(['ok' => true] + $r, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'error' => 'WORKER_FAILED', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+}
