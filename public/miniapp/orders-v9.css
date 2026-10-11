@@ -165,9 +165,35 @@
 #ordersPage .order-stepper .step-hint { display: block; width: 100%; min-height: 24px; margin-top: 1px; padding: 0 2px; color: var(--muted); font-size: 8px; line-height: 1.35; text-align: center; white-space: normal; overflow-wrap: anywhere; }
 #ordersPage .order-stepper .step-line { z-index: -1; }
 
+/* Credit center: keep transaction copy readable on narrow screens. */
+.credit-center-mini-v27 { gap: 12px; }
+.credit-center-mini-v27 .mini-credit-hero-v27 { box-shadow: 0 18px 42px rgba(0,0,0,.16); }
+.credit-center-mini-v27 .mini-credit-stats-v27 > div { min-width: 0; }
+.credit-center-mini-v27 .mini-credit-stats-v27 b { display: block; overflow-wrap: anywhere; }
+.credit-center-mini-v27 .mini-credit-history-preview { padding: 16px; }
+.credit-center-mini-v27 .mini-credit-history-preview .section-title { margin-bottom: 10px; }
+.credit-center-mini-v27 .mini-credit-tx-list > div { grid-template-columns: 38px minmax(0,1fr) minmax(78px,auto); align-items: center; min-width: 0; }
+.credit-center-mini-v27 .mini-credit-tx-copy { min-width: 0; overflow: hidden; }
+.credit-center-mini-v27 .mini-credit-tx-copy b,
+.credit-center-mini-v27 .mini-credit-tx-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.credit-center-mini-v27 .mini-credit-tx-copy b { line-height: 1.45; }
+.credit-center-mini-v27 .mini-credit-tx-copy small { direction: rtl; }
+.credit-center-mini-v27 .mini-credit-tx-list strong { direction: rtl; text-align: left; white-space: nowrap; }
+.credit-center-mini-v27 .mini-credit-pending { padding: 15px 16px; }
+.credit-center-mini-v27 .mini-topup-open-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center; }
+.credit-center-mini-v27 .mini-topup-open-main { min-width: 0; }
+.credit-center-mini-v27 .mini-topup-open-main span,
+.credit-center-mini-v27 .mini-topup-open-main small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 @media (max-width: 620px) {
   #ordersPage .parity-order-main { grid-template-columns: 52px minmax(0,1fr) auto !important; }
   #ordersPage .parity-order-main .order-icon { width: 52px; height: 52px; }
+}
+@media (max-width: 390px) {
+  .credit-center-mini-v27 .mini-credit-tx-list > div { grid-template-columns: 32px minmax(0,1fr) auto; gap: 7px; }
+  .credit-center-mini-v27 .mini-credit-tx-list strong { font-size: 12px; }
+  .credit-center-mini-v27 .mini-credit-tx-copy b { font-size: 12px; }
+  .credit-center-mini-v27 .mini-credit-tx-copy small { font-size: 10px; }
 }
 #ordersPage .parity-order-side { align-self: stretch; }
 #ordersPage .status-badge { font-size: 11px; padding: 6px 8px; }
