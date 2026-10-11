@@ -85,6 +85,12 @@ server {
         try_files \$uri =404;
     }
 
+    # Deny direct HTTP access to payment receipts
+    location ^~ /uploads/receipts/ {
+        deny all;
+        return 403;
+    }
+
     location = /web/sw.js {
         try_files \$uri =404;
         expires -1;
@@ -131,6 +137,12 @@ server {
         default_type text/plain;
         allow all;
         try_files \$uri =404;
+    }
+
+    # Deny direct HTTP access to payment receipts
+    location ^~ /uploads/receipts/ {
+        deny all;
+        return 403;
     }
 
     location = /web/sw.js {

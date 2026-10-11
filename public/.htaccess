@@ -43,6 +43,9 @@ Options -Indexes
   RewriteEngine On
   RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
+  # Deny direct HTTP access to uploaded payment receipts (defense-in-depth)
+  RewriteRule ^uploads/receipts/ - [F,L]
+
   # Existing files/directories and API/PHP endpoints must keep their normal behavior.
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d

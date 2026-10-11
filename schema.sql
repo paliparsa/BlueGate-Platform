@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone_verified_at DATETIME NULL,
   welcome_version_seen INT NOT NULL DEFAULT 0,
   is_banned TINYINT(1) NOT NULL DEFAULT 0,
+  is_admin TINYINT(1) NOT NULL DEFAULT 0,
   deleted_at DATETIME NULL,
   start_notified TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS users (
   INDEX(auth_token_hash),
   INDEX(auth_token_expires_at),
   INDEX(is_banned),
+  INDEX(is_admin),
   CONSTRAINT fk_users_referrer FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

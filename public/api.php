@@ -78,6 +78,8 @@ function get_authenticated_user(string $initData, ?string $authToken = null): ar
             }
             return $user;
         }
+        api_clear_session_cookie();
+        return false;
     }
     return false;
 }
@@ -263,7 +265,7 @@ function user_payload(array $user): array {
     $vip = vip_info((int)$user['referrals_count']); $today = today_referrals((int)$user['id']); $customer = customer_stats((int)$user['id']);
     $telegramId=(int)($user['telegram_id']??0);$telegramConnected=$telegramId>0&&$telegramId<9000000000;
     $hasPassword=!empty($user['password_hash']);$completionChecks=[trim((string)($user['first_name']??''))!=='',trim((string)($user['web_username']??$user['username']??''))!=='',!empty($user['email_verified_at']),$telegramConnected];$profileCompletion=(int)round((count(array_filter($completionChecks))/count($completionChecks))*100);$securityScore=count(array_filter([$hasPassword,!empty($user['email_verified_at']),$telegramConnected]));$securityLevel=$securityScore>=3?'great':($securityScore>=2?'good':'attention');
-    return ['id'=>(int)$user['id'], 'telegram_id'=>$telegramId, 'telegram_connected'=>$telegramConnected, 'username'=>$user['username'], 'web_username'=>$user['web_username']??null, 'first_name'=>$user['first_name'], 'last_name'=>$user['last_name'] ?? null, 'email'=>$user['email'] ?? null, 'email_verified_at'=>$user['email_verified_at']??null, 'phone_number'=>$user['phone_number'] ?? null, 'phone_verified_at'=>$user['phone_verified_at'] ?? null, 'welcome_version_seen'=>(int)($user['welcome_version_seen']??0), 'ref_code'=>$user['ref_code'], 'referral_link'=>referral_link($user), 'balance'=>(int)$user['balance'], 'total_earned'=>(int)$user['total_earned'], 'referrals_count'=>(int)$user['referrals_count'], 'today_referrals'=>$today, 'spin_balance'=>(int)$user['spin_balance'], 'vip'=>$vip, 'customer'=>$customer, 'theme_color'=>$user['theme_color'] ?? null, 'avatar_url'=>$user['avatar_url'] ?? null, 'avatar_source'=>$user['avatar_source'] ?? null, 'avatar_synced_at'=>$user['avatar_synced_at'] ?? null, 'member_since'=>$user['created_at']??null, 'has_password'=>$hasPassword, 'profile_completion'=>$profileCompletion, 'security_level'=>$securityLevel];
+    return ['id'=>(int)$user['id'], 'is_admin'=>is_admin($user), 'telegram_id'=>$telegramId, 'telegram_connected'=>$telegramConnected, 'username'=>$user['username'], 'web_username'=>$user['web_username']??null, 'first_name'=>$user['first_name'], 'last_name'=>$user['last_name'] ?? null, 'email'=>$user['email'] ?? null, 'email_verified_at'=>$user['email_verified_at']??null, 'phone_number'=>$user['phone_number'] ?? null, 'phone_verified_at'=>$user['phone_verified_at'] ?? null, 'welcome_version_seen'=>(int)($user['welcome_version_seen']??0), 'ref_code'=>$user['ref_code'], 'referral_link'=>referral_link($user), 'balance'=>(int)$user['balance'], 'total_earned'=>(int)$user['total_earned'], 'referrals_count'=>(int)$user['referrals_count'], 'today_referrals'=>$today, 'spin_balance'=>(int)$user['spin_balance'], 'vip'=>$vip, 'customer'=>$customer, 'theme_color'=>$user['theme_color'] ?? null, 'avatar_url'=>$user['avatar_url'] ?? null, 'avatar_source'=>$user['avatar_source'] ?? null, 'avatar_synced_at'=>$user['avatar_synced_at'] ?? null, 'member_since'=>$user['created_at']??null, 'has_password'=>$hasPassword, 'profile_completion'=>$profileCompletion, 'security_level'=>$securityLevel];
 }
 function safe_mini_optional(callable $fn, $fallback) {
     try { return $fn(); }
@@ -293,7 +295,7 @@ function dashboard_payload(array $user): array {
 function require_admin(array $user): void { if (!is_admin($user)) api_out(['ok'=>false,'error'=>'ADMIN_ONLY','message'=>'دسترسی ادمین لازم است.'],403); }
 function require_admin_perm(array $user,string $perm): void { require_admin($user);if(!admin_can((int)$user['telegram_id'],$perm))api_out(['ok'=>false,'error'=>'ADMIN_PERMISSION_DENIED','message'=>'نقش ادمین شما اجازه این عملیات را نمی‌دهد.'],403);}
 function admin_payload(): array {
-    $admin=$GLOBALS['BG_CURRENT_USER']??null;$tid=is_array($admin)?(int)($admin['telegram_id']??0):0;$role=$tid?admin_role($tid):'full';
+    $admin=$GLOBALS['BG_CURRENT_USER']??null;$tid=is_array($admin)?(int)($admin['telegram_id']??0):0;$role=$tid?admin_role($tid):'full';if(is_array($admin)&&!empty($admin['is_admin'])&&$role==='none'){$role='full';}
     $payload=['ok'=>true,
         'report'=>sales_report(),
         'cleanup'=>['all'=>cleanup_orders_count(), 'older_7'=>cleanup_orders_count(7), 'older_30'=>cleanup_orders_count(30), 'archived'=>archived_orders_count()],
@@ -513,6 +515,56 @@ if ($action === 'storefront') {
     ]);
 }
 
+if ($action === 'view_receipt') {
+    $oid = (int)($input['order_id'] ?? ($_GET['order_id'] ?? 0));
+    $token = trim((string)($input['token'] ?? ($_GET['token'] ?? '')));
+    $order = order_by_id($oid);
+    if (!$order) { http_response_code(404); exit('Order not found'); }
+    $allowed = false;
+    if ($user && ((int)$order['user_id'] === (int)$user['id'] || is_admin($user))) {
+        $allowed = true;
+    } elseif ($token !== '' && verify_receipt_view_token('order', $oid, (int)$order['user_id'], $token)) {
+        $allowed = true;
+    }
+    if (!$allowed) { http_response_code(403); exit('Forbidden'); }
+    $fid = trim((string)($order['receipt_file_id'] ?? ''));
+    $abs = receipt_abs_path($fid);
+    if (!$abs || !is_file($abs)) { http_response_code(404); exit('Receipt not found'); }
+    $mime = 'image/jpeg';
+    if (class_exists('finfo')) { $fi = new finfo(FILEINFO_MIME_TYPE); $mime = $fi->file($abs) ?: $mime; }
+    header('Content-Type: ' . $mime);
+    header('Cache-Control: private, max-age=3600');
+    header('Content-Length: ' . filesize($abs));
+    header('X-Content-Type-Options: nosniff');
+    readfile($abs);
+    exit;
+}
+
+if ($action === 'view_topup_receipt') {
+    $tid = (int)($input['topup_id'] ?? ($_GET['topup_id'] ?? 0));
+    $token = trim((string)($input['token'] ?? ($_GET['token'] ?? '')));
+    $topup = credit_topup_by_id($tid);
+    if (!$topup) { http_response_code(404); exit('Topup not found'); }
+    $allowed = false;
+    if ($user && ((int)$topup['user_id'] === (int)$user['id'] || is_admin($user))) {
+        $allowed = true;
+    } elseif ($token !== '' && verify_receipt_view_token('topup', $tid, (int)$topup['user_id'], $token)) {
+        $allowed = true;
+    }
+    if (!$allowed) { http_response_code(403); exit('Forbidden'); }
+    $fid = trim((string)($topup['receipt_file_id'] ?? ''));
+    $abs = receipt_abs_path($fid);
+    if (!$abs || !is_file($abs)) { http_response_code(404); exit('Receipt not found'); }
+    $mime = 'image/jpeg';
+    if (class_exists('finfo')) { $fi = new finfo(FILEINFO_MIME_TYPE); $mime = $fi->file($abs) ?: $mime; }
+    header('Content-Type: ' . $mime);
+    header('Cache-Control: private, max-age=3600');
+    header('Content-Length: ' . filesize($abs));
+    header('X-Content-Type-Options: nosniff');
+    readfile($abs);
+    exit;
+}
+
 if (!$user) {
     api_out(['ok'=>false, 'error'=>'AUTH_REQUIRED', 'message'=>'برای انجام این عملیات باید وارد حساب کاربری خود شوید.'], 401);
 }
@@ -572,12 +624,10 @@ if ($action === 'get_receipt_url') {
     $owner=(int)$order['user_id']===(int)$user['id'];$admin=is_admin($user);
     if(!$owner&&!$admin)api_out(['ok'=>false,'error'=>'FORBIDDEN','message'=>'دسترسی به این رسید مجاز نیست.'],403);
     $fid=trim((string)($order['receipt_file_id']??''));if($fid==='')api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'برای این سفارش رسید تصویری ثبت نشده است.'],404);
-    if(str_starts_with($fid,'uploads/')){
-        $rel=ltrim($fid,'/');$full=__DIR__.'/'.$rel;$base=realpath(__DIR__.'/uploads/receipts');$real=is_file($full)?realpath($full):false;
-        if(!$base||!$real||!str_starts_with($real,$base.DIRECTORY_SEPARATOR))api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'فایل رسید روی سرور پیدا نشد.'],404);
-        api_out(['ok'=>true,'url'=>'/'.$rel]);
-    }
-    api_out(['ok'=>false,'error'=>'RECEIPT_REMOTE_UNAVAILABLE','message'=>'این رسید از طریق بات ثبت شده و پیش‌نمایش وب آن در دسترس نیست.'],409);
+    $abs=receipt_abs_path($fid);
+    if(!$abs||!is_file($abs))api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'فایل رسید روی سرور پیدا نشد.'],404);
+    $token=receipt_view_token('order',$oid,(int)$order['user_id']);
+    api_out(['ok'=>true,'url'=>'/api.php?action=view_receipt&order_id='.$oid.'&token='.$token]);
 }
 
 if ($action === 'get_credit_topup_receipt_url') {
@@ -587,12 +637,10 @@ if ($action === 'get_credit_topup_receipt_url') {
     if(!$owner&&!$admin)api_out(['ok'=>false,'error'=>'FORBIDDEN','message'=>'دسترسی به این رسید مجاز نیست.'],403);
     $fid=trim((string)($topup['receipt_file_id']??''));
     if($fid==='')api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'برای این درخواست شارژ رسید تصویری ثبت نشده است.'],404);
-    if(str_starts_with($fid,'uploads/')){
-        $rel=ltrim($fid,'/');$full=__DIR__.'/'.$rel;$base=realpath(__DIR__.'/uploads/receipts');$real=is_file($full)?realpath($full):false;
-        if(!$base||!$real||!str_starts_with($real,$base.DIRECTORY_SEPARATOR))api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'فایل رسید روی سرور پیدا نشد یا مسیر آن معتبر نیست.'],404);
-        api_out(['ok'=>true,'url'=>'/'.$rel,'topup_id'=>$tid]);
-    }
-    api_out(['ok'=>false,'error'=>'RECEIPT_REMOTE_UNAVAILABLE','message'=>'این رسید به‌صورت فایل محلی قابل پیش‌نمایش نیست.'],409);
+    $abs=receipt_abs_path($fid);
+    if(!$abs||!is_file($abs))api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'فایل رسید روی سرور پیدا نشد یا مسیر آن معتبر نیست.'],404);
+    $token=receipt_view_token('topup',$tid,(int)$topup['user_id']);
+    api_out(['ok'=>true,'url'=>'/api.php?action=view_topup_receipt&topup_id='.$tid.'&token='.$token,'topup_id'=>$tid]);
 }
 
 if ($action === 'service_link' || $action === 'service_viewer_ticket') {
@@ -729,16 +777,17 @@ if ($action === 'submit_receipt') {
         if(!$mime && function_exists('getimagesizefromstring')){try{$ii=@getimagesizefromstring($bin);$mime=is_array($ii)?($ii['mime']??null):null;}catch(Throwable $e){}}
         $ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;
         if(!$ext) api_out(['ok'=>false,'error'=>'INVALID_RECEIPT_CONTENT','message'=>'محتوای فایل تصویر معتبر نیست.'],400);
-        $dir=__DIR__.'/uploads/receipts/'.date('Ymd');if(!is_dir($dir)&&!@mkdir($dir,0775,true)&&!is_dir($dir))api_out(['ok'=>false,'error'=>'RECEIPT_STORAGE_FAILED','message'=>'پوشه ذخیره رسید قابل ایجاد نیست.'],500);
-        $relative='uploads/receipts/'.date('Ymd').'/r_'.bin2hex(random_bytes(12)).'.'.$ext;$abs=__DIR__.'/'.$relative;
-        if(@file_put_contents($abs,$bin,LOCK_EX)===false) api_out(['ok'=>false,'error'=>'RECEIPT_STORAGE_FAILED','message'=>'ذخیره تصویر رسید روی سرور انجام نشد.'],500);
-        $fileId=$relative;
+        try {
+            $fileId = receipt_save($bin, $ext);
+        } catch (Throwable $e) {
+            api_out(['ok'=>false,'error'=>'RECEIPT_STORAGE_FAILED','message'=>'ذخیره تصویر رسید روی سرور انجام نشد.'],500);
+        }
     }
     try{
         $order=submit_order_receipt($orderId,(int)$user['id'],$note,$fileId);
-        $sourceStr=(!empty($authToken)||!empty($input['is_web']))?'وب‌سایت 🌐':'Mini App 📱';$photoPath=$fileId&&file_exists(__DIR__.'/'.$fileId)?__DIR__.'/'.$fileId:null;notify_admin_order((int)$order['id'],'رسید پرداخت جدید',$sourceStr,'🧾 '.h($note?:'تصویر رسید ارسال شد'),$photoPath);
+        $sourceStr=(!empty($authToken)||!empty($input['is_web']))?'وب‌سایت 🌐':'Mini App 📱';$photoPath=$fileId?receipt_abs_path($fileId):null;notify_admin_order((int)$order['id'],'رسید پرداخت جدید',$sourceStr,'🧾 '.h($note?:'تصویر رسید ارسال شد'),$photoPath);
         $payload=dashboard_payload(get_user_by_id((int)$user['id']));$payload['order']=order_public_payload($order);api_out($payload);
-    }catch(Throwable $e){if($fileId){@unlink(__DIR__.'/'.$fileId);}api_out(['ok'=>false,'error'=>api_exception_code($e,'ORDER_NOT_FOUND'),'message'=>'سفارش پیدا نشد یا در وضعیت قابل ارسال رسید نیست.'],400);}
+    }catch(Throwable $e){if($fileId){$del=receipt_abs_path($fileId);if($del)@unlink($del);}api_out(['ok'=>false,'error'=>api_exception_code($e,'ORDER_NOT_FOUND'),'message'=>'سفارش پیدا نشد یا در وضعیت قابل ارسال رسید نیست.'],400);}
 }
 
 if ($action === 'create_credit_topup') {
@@ -783,8 +832,8 @@ if ($action === 'credit_topup_submit_crypto_hash') {
     }
 }
 
-if ($action === 'credit_topup_submit_receipt') { api_rate_limit('credit_topup_receipt',(string)$user['id'],12,900,900); $id=(int)($input['topup_id']??0);$note=trim((string)($input['note']??''));$fileId=null;if(!empty($input['receipt_b64'])){$raw=(string)$input['receipt_b64'];if(strlen($raw)>8*1024*1024)api_out(['ok'=>false,'message'=>'حجم رسید بیشتر از حد مجاز است.'],400);if(!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,#i',$raw))api_out(['ok'=>false,'message'=>'فرمت رسید معتبر نیست.'],400);$b64=preg_replace('#^data:image/(jpeg|jpg|png|webp);base64,#i','',$raw);$bin=base64_decode($b64,true);if($bin&&strlen($bin)>100&&strlen($bin)<=5*1024*1024){$fi=new finfo(FILEINFO_MIME_TYPE);$mime=$fi->buffer($bin);$ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;if(!$ext)api_out(['ok'=>false,'message'=>'محتوای تصویر معتبر نیست.'],400);$dir=__DIR__.'/uploads/receipts/'.date('Ymd');if(!is_dir($dir))@mkdir($dir,0775,true);$fileId='uploads/receipts/'.date('Ymd').'/topup_'.bin2hex(random_bytes(12)).'.'.$ext;file_put_contents(__DIR__.'/'.$fileId,$bin,LOCK_EX);}}
-    try{$t=submit_credit_topup_receipt($id,(int)$user['id'],$note,$fileId);$photoPath=$fileId&&file_exists(__DIR__.'/'.$fileId)?__DIR__.'/'.$fileId:null;notify_admin_topup((int)$t['id'],'رسید شارژ اعتبار ثبت شد','',$photoPath);api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['topup'=>credit_topup_public($t)]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ثبت رسید شارژ انجام نشد.'],400);} }
+if ($action === 'credit_topup_submit_receipt') { api_rate_limit('credit_topup_receipt',(string)$user['id'],12,900,900); $id=(int)($input['topup_id']??0);$note=trim((string)($input['note']??''));$fileId=null;if(!empty($input['receipt_b64'])){$raw=(string)$input['receipt_b64'];if(strlen($raw)>8*1024*1024)api_out(['ok'=>false,'message'=>'حجم رسید بیشتر از حد مجاز است.'],400);if(!preg_match('#^data:image/(jpeg|jpg|png|webp);base64,#i',$raw))api_out(['ok'=>false,'message'=>'فرمت رسید معتبر نیست.'],400);$b64=preg_replace('#^data:image/(jpeg|jpg|png|webp);base64,#i','',$raw);$bin=base64_decode($b64,true);if($bin&&strlen($bin)>100&&strlen($bin)<=5*1024*1024){$fi=new finfo(FILEINFO_MIME_TYPE);$mime=$fi->buffer($bin);$ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;if(!$ext)api_out(['ok'=>false,'message'=>'محتوای تصویر معتبر نیست.'],400);try{$fileId=receipt_save($bin,$ext);}catch(Throwable $e){api_out(['ok'=>false,'message'=>'ذخیره رسید انجام نشد.'],500);}}}
+    try{$t=submit_credit_topup_receipt($id,(int)$user['id'],$note,$fileId);$photoPath=$fileId?receipt_abs_path($fileId):null;notify_admin_topup((int)$t['id'],'رسید شارژ اعتبار ثبت شد','',$photoPath);api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['topup'=>credit_topup_public($t)]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ثبت رسید شارژ انجام نشد.'],400);} }
 if ($action === 'cancel_credit_topup') {
     api_rate_limit('credit_topup_cancel',(string)$user['id'],15,300,300);
     if(!cancel_credit_topup((int)($input['topup_id']??0),(int)$user['id']))api_out(['ok'=>false,'message'=>'این درخواست شارژ دیگر قابل لغو نیست.'],400);
@@ -1361,11 +1410,13 @@ if ($action === 'delete_my_account') {
 }
 
 if ($action === 'admin_get_user') {
+    require_admin($user);
     $targetUserId=(int)($input['user_id']??0);$targetUser=get_user_by_id($targetUserId);if(!$targetUser)api_out(['ok'=>false,'error'=>'USER_NOT_FOUND','message'=>'کاربر یافت نشد.'],404);
     $safe=$targetUser;unset($safe['password_hash'],$safe['auth_token'],$safe['auth_token_hash'],$safe['email_verification_token']);api_out(['ok'=>true,'user'=>$safe]);
 }
 
 if ($action === 'admin_edit_user') {
+    require_admin($user);
     $targetUserId=(int)($input['user_id']??0);if($targetUserId<=0)api_out(['ok'=>false,'error'=>'INVALID_USER_ID','message'=>'شناسه کاربر معتبر نیست.'],400);
     admin_update_user_profile($targetUserId,$input);$updatedUser=get_user_by_id($targetUserId);$safe=$updatedUser?:[];unset($safe['password_hash'],$safe['auth_token'],$safe['auth_token_hash'],$safe['email_verification_token']);api_out(['ok'=>true,'user'=>$safe,'message'=>'اطلاعات کاربر با موفقیت بروزرسانی شد.']);
 }

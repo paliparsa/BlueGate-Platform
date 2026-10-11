@@ -253,7 +253,8 @@ function migrate(): void {
     add_column_if_missing('users', 'avatar_source', "VARCHAR(24) NULL AFTER avatar_url");
     add_column_if_missing('users', 'avatar_synced_at', 'DATETIME NULL AFTER avatar_source');
     add_column_if_missing('users', 'is_banned', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER phone_verified_at');
-    add_column_if_missing('users', 'deleted_at', 'DATETIME NULL AFTER is_banned');
+    add_column_if_missing('users', 'is_admin', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER is_banned');
+    add_column_if_missing('users', 'deleted_at', 'DATETIME NULL AFTER is_admin');
     add_column_if_missing('users', 'start_notified', 'TINYINT(1) NOT NULL DEFAULT 0 AFTER deleted_at');
     add_column_if_missing('users', 'password_hash', 'VARCHAR(255) NULL AFTER start_notified');
     add_column_if_missing('users', 'auth_token', 'VARCHAR(128) NULL AFTER password_hash');
@@ -267,6 +268,7 @@ function migrate(): void {
     try { db()->exec('CREATE INDEX idx_users_auth_token_hash ON users(auth_token_hash)'); } catch (Throwable $e) {}
     try { db()->exec('CREATE INDEX idx_users_auth_token_expires ON users(auth_token_expires_at)'); } catch (Throwable $e) {}
     try { db()->exec('CREATE INDEX idx_users_is_banned ON users(is_banned)'); } catch (Throwable $e) {}
+    try { db()->exec('CREATE INDEX idx_users_is_admin ON users(is_admin)'); } catch (Throwable $e) {}
     add_column_if_missing('user_notifications', 'action_type', 'VARCHAR(32) NULL AFTER order_id');
     add_column_if_missing('user_notifications', 'action_value', 'VARCHAR(255) NULL AFTER action_type');
     add_column_if_missing('user_notifications', 'campaign_id', 'BIGINT UNSIGNED NULL AFTER action_value');
@@ -1648,17 +1650,56 @@ function security_rate_limit(string $bucket, string $identity, int $maxHits, int
 function security_rate_limit_clear(string $bucket,string $identity): void { if(!table_exists('rate_limits'))return;try{db()->prepare('DELETE FROM rate_limits WHERE rate_key=?')->execute([hash('sha256',$bucket.'|'.$identity)]);}catch(Throwable $e){} }
 function user_is_blocked(array $u): bool { return !empty($u['is_banned']) || !empty($u['deleted_at']); }
 function is_full_admin($userOrId): bool {
-    $id=is_array($userOrId)?(int)($userOrId['telegram_id']??0):(int)$userOrId;if($id<=0)return false;
-    if(in_array($id,array_map('intval',app_config('ADMIN_IDS',[])),true))return true;
-    if(table_exists('admin_roles')){try{$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=? LIMIT 1');$q->execute([$id]);$r=$q->fetch();return $r&&($r['role']??'none')==='full';}catch(Throwable $e){}}
+    if (is_array($userOrId)) {
+        if (!empty($userOrId['is_admin']) && (int)$userOrId['is_admin'] === 1) return true;
+        $id = (int)($userOrId['telegram_id'] ?? 0);
+    } else {
+        $id = (int)$userOrId;
+    }
+    if ($id <= 0) return false;
+    if (in_array($id, array_map('intval', app_config('ADMIN_IDS', [])), true)) return true;
+    if (table_exists('admin_roles')) {
+        try {
+            $q = db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=? LIMIT 1');
+            $q->execute([$id]);
+            $r = $q->fetch();
+            if ($r && ($r['role'] ?? 'none') === 'full') return true;
+        } catch (Throwable $e) {}
+    }
+    if (table_exists('users')) {
+        try {
+            $q = db()->prepare('SELECT is_admin FROM users WHERE (id=? OR telegram_id=?) AND is_admin=1 LIMIT 1');
+            $q->execute([$id, $id]);
+            if ($q->fetchColumn()) return true;
+        } catch (Throwable $e) {}
+    }
     return false;
 }
 function is_admin($userOrId): bool {
-    $id=is_array($userOrId)?(int)($userOrId['telegram_id']??0):(int)$userOrId;
-    if($id<=0)return false;
-    $admins=array_map('intval',app_config('ADMIN_IDS',[]));
-    if(in_array($id,$admins,true))return true;
-    if(table_exists('admin_roles')){try{$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=? LIMIT 1');$q->execute([$id]);$r=$q->fetch();return $r && ($r['role']??'none')!=='none';}catch(Throwable $e){}}
+    if (is_array($userOrId)) {
+        if (!empty($userOrId['is_admin']) && (int)$userOrId['is_admin'] === 1) return true;
+        $id = (int)($userOrId['telegram_id'] ?? 0);
+    } else {
+        $id = (int)$userOrId;
+    }
+    if ($id <= 0) return false;
+    $admins = array_map('intval', app_config('ADMIN_IDS', []));
+    if (in_array($id, $admins, true)) return true;
+    if (table_exists('admin_roles')) {
+        try {
+            $q = db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=? LIMIT 1');
+            $q->execute([$id]);
+            $r = $q->fetch();
+            if ($r && ($r['role'] ?? 'none') !== 'none') return true;
+        } catch (Throwable $e) {}
+    }
+    if (table_exists('users')) {
+        try {
+            $q = db()->prepare('SELECT is_admin FROM users WHERE (id=? OR telegram_id=?) AND is_admin=1 LIMIT 1');
+            $q->execute([$id, $id]);
+            if ($q->fetchColumn()) return true;
+        } catch (Throwable $e) {}
+    }
     return false;
 }
 function display_name(array $u): string {
@@ -2025,6 +2066,7 @@ function admin_update_user_profile(int $userId, array $data): bool {
     if (array_key_exists('phone', $data)) { $fields[] = 'phone_number=?'; $params[] = !empty($data['phone']) ? trim((string)$data['phone']) : null; }
     if (array_key_exists('web_username', $data)) { $fields[] = 'web_username=?'; $params[] = !empty($data['web_username']) ? strtolower(trim((string)$data['web_username'])) : null; }
     if (isset($data['balance'])) { $fields[] = 'balance=?'; $params[] = (float)$data['balance']; }
+    if (array_key_exists('is_admin', $data)) { $fields[] = 'is_admin=?'; $params[] = !empty($data['is_admin']) ? 1 : 0; }
     
     if (empty($fields)) return true;
     
@@ -2191,10 +2233,88 @@ function admin_notify(string $text,?string $replyMarkup=null,mixed $photo=null):
     return $result;
 }
 function notify_admins(string $text): void { admin_notify($text); }
+function receipt_storage_dir(?string $sub = null): string {
+    $base = dirname(__DIR__) . '/storage/receipts';
+    if ($sub !== null && $sub !== '') {
+        $base .= '/' . trim($sub, '/');
+    }
+    if (!is_dir($base)) {
+        @mkdir($base, 0755, true);
+    }
+    return $base;
+}
+
+function receipt_save(string $binaryData, string $ext): string {
+    $dateFolder = date('Ymd');
+    $dir = receipt_storage_dir($dateFolder);
+    $filename = 'r_' . bin2hex(random_bytes(16)) . '.' . $ext;
+    $absPath = $dir . '/' . $filename;
+    if (@file_put_contents($absPath, $binaryData, LOCK_EX) === false) {
+        throw new RuntimeException('RECEIPT_STORAGE_FAILED');
+    }
+    return 'receipts/' . $dateFolder . '/' . $filename;
+}
+
+function receipt_abs_path(?string $ref): ?string {
+    $ref = trim((string)$ref);
+    if ($ref === '') return null;
+    
+    // 1. Storage location (outside public)
+    $storageBase = realpath(dirname(__DIR__) . '/storage/receipts');
+    $testStorage = dirname(__DIR__) . '/storage/' . ltrim($ref, '/');
+    if (is_file($testStorage)) {
+        $real = realpath($testStorage);
+        if ($real && $storageBase && str_starts_with($real, $storageBase . DIRECTORY_SEPARATOR)) {
+            return $real;
+        }
+    }
+    
+    // 2. Legacy public uploads location
+    $publicUploadsBase = realpath(dirname(__DIR__) . '/public/uploads/receipts');
+    $testPublic = dirname(__DIR__) . '/public/' . ltrim($ref, '/');
+    if (is_file($testPublic)) {
+        $real = realpath($testPublic);
+        if ($real && $publicUploadsBase && str_starts_with($real, $publicUploadsBase . DIRECTORY_SEPARATOR)) {
+            return $real;
+        }
+    }
+    
+    // 3. Direct absolute path fallback within storage or public uploads
+    if (is_file($ref)) {
+        $real = realpath($ref);
+        if ($real && (($storageBase && str_starts_with($real, $storageBase . DIRECTORY_SEPARATOR)) || ($publicUploadsBase && str_starts_with($real, $publicUploadsBase . DIRECTORY_SEPARATOR)))) {
+            return $real;
+        }
+    }
+    
+    return null;
+}
+
+function receipt_view_token(string $type, int $id, int $userId): string {
+    $secret = trim((string)app_config('WEBHOOK_SECRET', 'bluegate_receipt_secret'));
+    $window = (int)floor(time() / 7200);
+    return hash_hmac('sha256', "rcpt:{$type}:{$id}:{$userId}:{$window}", $secret);
+}
+
+function verify_receipt_view_token(string $type, int $id, int $userId, string $token): bool {
+    if ($token === '') return false;
+    $secret = trim((string)app_config('WEBHOOK_SECRET', 'bluegate_receipt_secret'));
+    $nowWindow = (int)floor(time() / 7200);
+    for ($w = $nowWindow - 1; $w <= $nowWindow + 1; $w++) {
+        $expected = hash_hmac('sha256', "rcpt:{$type}:{$id}:{$userId}:{$w}", $secret);
+        if (hash_equals($expected, $token)) return true;
+    }
+    return false;
+}
+
 function resolve_receipt_photo_source(?string $ref): mixed {
-    $ref=trim((string)$ref);if($ref==='')return null;
-    $local=dirname(__DIR__).'/public/'.ltrim($ref,'/');
-    if(is_file($local)){$mime=function_exists('mime_content_type')?(mime_content_type($local)?:'image/jpeg'):'image/jpeg';return new CURLFile($local,$mime,basename($local));}
+    $ref = trim((string)$ref);
+    if ($ref === '') return null;
+    $local = receipt_abs_path($ref);
+    if ($local && is_file($local)) {
+        $mime = function_exists('mime_content_type') ? (mime_content_type($local) ?: 'image/jpeg') : 'image/jpeg';
+        return new CURLFile($local, $mime, basename($local));
+    }
     return $ref;
 }
 function notify_new_user_signup(array $user,string $sourceStr='🌐 وب‌سایت'): void {
@@ -3861,7 +3981,9 @@ function admin_delete_coupon(int $couponId): array {
 /* ===== Batch 3 backend: activity log, admin roles, flash sale, achievements, reorder, advanced search ===== */
 function admin_role(int $telegramId): string {
     if(in_array($telegramId,array_map('intval',app_config('ADMIN_IDS',[])),true))return 'full';
-    if(!table_exists('admin_roles'))return 'none';$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=?');$q->execute([$telegramId]);$r=$q->fetch();return $r?((string)$r['role']):'none';
+    if(table_exists('admin_roles')){$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=?');$q->execute([$telegramId]);$r=$q->fetch();if($r&&!empty($r['role']))return (string)$r['role'];}
+    if(table_exists('users')){try{$q=db()->prepare('SELECT is_admin FROM users WHERE (telegram_id=? OR id=?) AND is_admin=1 LIMIT 1');$q->execute([$telegramId,$telegramId]);if($q->fetchColumn())return 'full';}catch(Throwable $e){}}
+    return 'none';
 }
 function admin_can(int $telegramId, string $perm): bool {
     $role=admin_role($telegramId);if($role==='full')return true;if($role==='none')return false;
