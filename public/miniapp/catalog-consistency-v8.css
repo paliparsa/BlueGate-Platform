@@ -1,0 +1,77 @@
+/* Phase 8: one product-card contract for every category and desktop web view. */
+#shopSections .catalog-tile {
+  flex: 0 0 156px !important;
+  width: 156px !important;
+  min-width: 156px !important;
+  max-width: 156px !important;
+  height: 242px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#shopSections .catalog-tile .tile-visual {
+  flex: 0 0 156px !important;
+  width: 100% !important;
+  height: 156px !important;
+  min-height: 156px !important;
+  max-height: 156px !important;
+}
+
+#shopSections .catalog-tile .tile-caption {
+  flex: 1 1 auto !important;
+  min-height: 86px !important;
+  max-height: 86px !important;
+  overflow: hidden !important;
+}
+
+#shopSections .catalog-tile .tile-name {
+  min-height: 40px !important;
+  max-height: 40px !important;
+  overflow: hidden !important;
+}
+
+#shopSections .catalog-grid-view .product-grid-wrap {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  overflow: visible !important;
+}
+
+#shopSections .catalog-grid-view .catalog-tile {
+  flex: 0 0 156px !important;
+}
+
+#shopSections .catalog-tile .discount-badge {
+  max-width: calc(100% - 44px) !important;
+  min-height: 28px !important;
+  padding: 5px 8px !important;
+  background: linear-gradient(135deg, #ef4444, #f97316) !important;
+  border: 1px solid rgba(255,255,255,.28) !important;
+  box-shadow: 0 6px 16px rgba(239,68,68,.28) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+#shopSections .catalog-tile .discount-badge .disc-val {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 390px) {
+  #shopSections .catalog-tile {
+    flex-basis: 148px !important;
+    width: 148px !important;
+    min-width: 148px !important;
+    max-width: 148px !important;
+    height: 230px !important;
+  }
+
+  #shopSections .catalog-tile .tile-visual {
+    flex-basis: 148px !important;
+    height: 148px !important;
+    min-height: 148px !important;
+    max-height: 148px !important;
+  }
+}
