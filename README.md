@@ -1,177 +1,211 @@
 # BlueGate Platform
 
-<p align="center">
-  <strong>فروشگاه، ربات تلگرام و مدیریت سرویس‌های VPN در یک پلتفرم یکپارچه</strong>
-</p>
+<p align="center"><strong>پلتفرم یکپارچه فروش محصولات دیجیتال، ربات تلگرام و مدیریت سرویس‌های VPN</strong></p>
 
-<p align="center">
-  <a href="#قابلیت‌ها">قابلیت‌ها</a> ·
-  <a href="#معماری">معماری</a> ·
-  <a href="#نصب-و-راه‌اندازی">نصب</a> ·
-  <a href="#استقرار">استقرار</a> ·
-  <a href="#امنیت">امنیت</a>
-</p>
+<p align="center"><a href="#معرفی">معرفی</a> · <a href="#قابلیت‌ها">قابلیت‌ها</a> · <a href="#پیش‌نیازها">پیش‌نیازها</a> · <a href="#نصب-خودکار">نصب خودکار</a> · <a href="#مدیریت-و-به‌روزرسانی">مدیریت</a> · <a href="#امنیت">امنیت</a> · <a href="#عیب‌یابی">عیب‌یابی</a></p>
 
-BlueGate یک پلتفرم PHP/MariaDB برای فروش و مدیریت سرویس‌های دیجیتال و VPN است. این پروژه تجربه کاربر را بین **Telegram Mini App**، وب‌اپلیکیشن و ربات تلگرام یکپارچه می‌کند و در سمت مدیریت، سفارش، پرداخت، اعتبار، provisioning و سلامت Providerها را در یک پنل واحد کنترل می‌کند.
+## معرفی
 
-> **نسخه فعلی:** `5.0.30-performance-hardening`
-> **Pro Modules:** `2.1.6`
+BlueGate Platform سامانه‌ای مبتنی بر PHP و MariaDB برای فروش محصولات دیجیتال و مدیریت سرویس‌های VPN است. وب‌سایت، Telegram Mini App، ربات تلگرام، پنل مدیریت، سفارش‌ها، پرداخت‌ها و اتصال به Providerهای VPN در یک پروژه یکپارچه قرار گرفته‌اند.
+
+- **نسخه هسته:** فایل [VERSION](VERSION)
+- **نسخه ماژول‌های Pro:** `2.1.6`
+- **سیستم‌عامل هدف نصب‌کننده:** Debian / Ubuntu با APT
+- **نصب:** راهنمای مرحله‌ای CLI؛ نصب‌کننده برای تنظیمات مهم از شما سؤال می‌پرسد و کاملاً بدون ورودی نیست.
 
 ## قابلیت‌ها
 
-### تجربه مشتری
+### فروشگاه و کاربران
+- فروشگاه واکنش‌گرا برای وب و Telegram Mini App
+- کاتالوگ، دسته‌بندی، پلن، سفارش و پیگیری وضعیت پرداخت
+- کیف پول، اعتبار، کد تخفیف و سیستم دعوت
+- رسید کارت‌به‌کارت، Telegram Stars و پرداخت کریپتو در صورت پیکربندی
+- مشاهده سرویس VPN، لینک اشتراک، مصرف و تاریخ انقضا
+- مأموریت‌ها، گردونه شانس، اعلان‌ها و گفت‌وگوی پشتیبانی با پیوست
 
-- فروشگاه واکنش‌گرا در Mini App و وب
-- کاتالوگ دسته‌بندی‌شده، پلن، Variant، تخفیف و کد دعوت
-- سفارش، پرداخت، ارسال رسید و timeline وضعیت
-- کیف پول و اعتبار، شارژ کارت‌به‌کارت، Telegram Stars و کریپتو
-- مشاهده سرویس‌های VPN، لینک Subscription، مصرف و تاریخ انقضا
-- Referral، مأموریت روزانه، Lucky Wheel و اعلان‌های کاربری
-- سیستم تیکت پشتیبانی دوطرفه برای کاربر و ادمین
-
-### عملیات و مدیریت
-
-- Provisioning خودکار سرویس پس از پرداخت
+### مدیریت و زیرساخت
+- مدیریت کاربران، سفارش‌ها، کاتالوگ، اعتبار و تنظیمات
+- نقش‌ها، مجوزهای مدیر و ثبت رویدادها
+- Provisioning سرویس پس از پرداخت تأییدشده، در صورت تنظیم درست Provider
 - اتصال به `3x-UI / X-UI`، `Marzban` و `Remnawave`
-- Routing، Failover و Mapping پلن به Provider
-- Health Check، Monitoring، Incident و صف Retry
-- مدیریت کاربران، نقش‌ها، سفارش‌ها، کاتالوگ، اعتبار و تنظیمات
-- Audit Log و کنترل مجوزهای ادمین
-- Backup، Restore، Migration و Update از طریق CLI
+- صف کارها، Retry، Health Check، Monitoring و قابلیت‌های Routing در ماژول‌های سازگار
+- CLI برای نصب، تعمیر، Migration، Backup، Restore و Update
 
-### پایداری
-
-- پاسخ سریع Webhook تلگرام پیش از اجرای Handlerهای سنگین
-- timeout محدود برای ارتباط با Providerهای خارجی
-- جلوگیری از قفل‌شدن طولانی PHP-FPM در Health Check و عملیات شبکه
-- کش و نرخ‌دهی کنترل‌شده برای سرویس‌های بیرونی
-- backup سبک‌تر با حذف فایل‌های قابل‌بازسازی و uploads از آرشیو فایل
-
-## معماری
+## ساختار پروژه
 
 ```text
-Telegram Bot ───────┐
-Telegram Mini App ──┼──> public/api.php ──> app/ ──> MariaDB
-Web App ────────────┘          │             │
-                               │             ├── Payments
-                               │             ├── Tickets
-                               │             ├── Provisioning
-                               │             └── Provider Drivers
-                               │
-                               └── 3x-UI / Marzban / Remnawave
+app/                  منطق برنامه، پرداخت، بات و سرویس‌ها
+public/               API، Webhook، وب و Mini App
+public/miniapp/       رابط Telegram Mini App
+public/web/           فایل‌های رابط وب
+modules/pro-core/     قابلیت‌های هسته Pro و Providerها
+modules/pro-web/      ماژول رابط وب Pro
+cli/bluegate          نصب‌کننده و ابزار خط فرمان
+cli/lib/              توابع نصب و نگهداری
+schema.sql            ساختار اولیه دیتابیس
+config.example.php    نمونه تنظیمات دستی
+VERSION               نسخه رسمی هسته
+CHANGELOG.md          تاریخچه تغییرات
 ```
 
-ساختار اصلی پروژه:
+## پیش‌نیازها
 
-| مسیر | مسئولیت |
-|---|---|
-| `app/` | Bootstrap، دامنه، احراز هویت، پرداخت، بات و سرویس‌ها |
-| `public/` | Entry pointهای API، Webhook، Mini App و وب عمومی |
-| `modules/pro-core/` | قابلیت‌های Pro، Providerها، Monitoring و Routing |
-| `modules/pro-web/` | داشبورد وب و assetهای رابط مدیریت |
-| `cli/` | نصب، migration، backup، update و عیب‌یابی |
-| `schema.sql` | ساختار اولیه دیتابیس |
-| `config.example.php` | الگوی تنظیمات محیط |
+- VPS یا سرور اختصاصی Debian/Ubuntu با دسترسی `root` یا `sudo`
+- دامنه با DNS اشاره‌کننده به IP سرور
+- دسترسی ورودی به پورت‌های 80 و 443
+- توکن ربات از [@BotFather](https://t.me/BotFather)
+- شناسه عددی تلگرام حداقل یک مدیر
+- اینترنت برای دریافت بسته‌های سیستم، سورس پروژه و گواهی SSL
 
-## نصب و راه‌اندازی
+نصب‌کننده با APT وابستگی‌هایی مانند Nginx، MariaDB، PHP-FPM، افزونه‌های PHP، Git و Certbot را نصب یا بررسی می‌کند. نصب خودکار برای توزیع‌های غیر Debian/Ubuntu تضمین نشده است.
 
-### پیش‌نیازها
+## نصب خودکار
 
-- Linux Debian/Ubuntu
-- PHP 8.1+ با `curl`, `mbstring`, `mysql`, `xml` و `zip`
-- MariaDB 10.4+
-- Nginx
-- دامنه دارای HTTPS برای Webhook و Mini App
-- Bot Token معتبر از BotFather
+### نصب تازه روی VPS
 
-### نصب سریع
+این دستورات را در ترمینال سرور اجرا کنید:
 
 ```bash
+sudo apt-get update
+sudo apt-get install -y git
 git clone https://github.com/paliparsa/BlueGate-Platform.git
 cd BlueGate-Platform
-cp config.example.php config.php
-nano config.php
 chmod +x cli/bluegate cli/lib/*.sh
 sudo ./cli/bluegate install
 ```
 
-مقادیر مهم `config.php`:
+نصب‌کننده مرحله‌به‌مرحله این کارها را انجام می‌دهد:
 
-```php
-$BOT_TOKEN = '...';
-$BOT_USERNAME = 'YourBotUsername';
-$ADMIN_IDS = [123456789];
-$PUBLIC_BASE_URL = 'https://example.com';
-$WEBHOOK_SECRET = 'یک-رشته-تصادفی-طولانی';
-$DB_NAME = 'bluegate_platform';
-$DB_USER = 'bluegate_user';
-$DB_PASS = '...';
-```
+1. بررسی اولیه سرور و فضای دیسک
+2. دریافت دامنه، نام برند، رنگ تم و اطلاعات ربات تلگرام
+3. دریافت شناسه عددی مدیران و اطلاعات دیتابیس
+4. نصب وابستگی‌ها و سرویس‌های موردنیاز
+5. دریافت و استقرار فایل‌های برنامه
+6. تولید تنظیمات خصوصی، ایجاد دیتابیس و اجرای Migrationها
+7. تنظیم Nginx و تلاش برای فعال‌سازی SSL
+8. تنظیم Cron و تلاش برای ثبت Telegram Webhook و همگام‌سازی منوی ربات
+9. اجرای بررسی نهایی و نمایش خلاصه نصب
 
-اگر سایت پشت Cloudflare یا Reverse Proxy است، فقط IP یا CIDR پراکسی‌های قابل‌اعتماد را در `$TRUSTED_PROXIES` قرار دهید. این تنظیم برای تشخیص IP واقعی است و فهرست مسدودسازی اسکنرها نیست.
+**قبل از اجرا آماده کنید:** دامنه نهایی، Bot Token، نام کاربری ربات بدون `@`، شناسه عددی مدیر یا مدیران (با کاما جدا شوند) و نام کاربری پشتیبانی.
 
-## CLI
+دامنه را بدون `https://` وارد کنید؛ نمونه: `shop.example.com`. برای SSL خودکار، DNS باید به سرور اشاره کند و پورت‌های 80 و 443 از اینترنت قابل دسترسی باشند.
 
-```bash
-./cli/bluegate system-info
-./cli/bluegate migrate
-./cli/bluegate update
-./cli/bluegate backup
-./cli/bluegate repair
-./cli/bluegate telegram webhook
-```
+مسیر پیش‌فرض برنامه `/var/www/bluegate-platform` و فایل تنظیمات خصوصی CLI معمولاً `/etc/bluegate-platform.env` است. مقادیر نهایی را در طول ویزارد بررسی کنید.
 
-قبل از اجرای `update` از دیتابیس و تنظیمات production نسخه پشتیبان بگیرید. فایل‌های `config.php`، `public/uploads/` و credentialهای Provider نباید commit شوند.
-
-## استقرار
-
-1. روی VPS، کد را دریافت یا با `bluegate update` به‌روزرسانی کنید.
-2. migrationها را اجرا کنید.
-3. `nginx -t` و وضعیت PHP-FPM را بررسی کنید.
-4. Webhook را با Token معتبر تنظیم و `getWebhookInfo` را بررسی کنید.
-5. یک ورود Mini App، یک سفارش آزمایشی و یک Health Check Provider را تست کنید.
-
-برای نسخه‌های release:
+### بعد از نصب
 
 ```bash
-./make-release.sh
+sudo bluegate status
+sudo bluegate health
+sudo bluegate system-info
+sudo nginx -t
 ```
 
-نسخه رسمی فقط از فایل `VERSION` خوانده می‌شود و نام بسته از همان مقدار ساخته می‌شود.
+سپس پنل و Mini App را باز کنید، روش‌های پرداخت و اطلاعات فروش را تنظیم کنید، Provider VPN را وصل کنید و Mapping پلن‌ها را انجام دهید. یک سفارش آزمایشی اجرا کنید و ایجاد سرویس را بررسی کنید. نصب برنامه به‌تنهایی به معنی آماده‌بودن پرداخت یا Provider برای فروش واقعی نیست.
+
+## تنظیمات دستی
+
+برای مشاهده الگوی تنظیمات دستی:
+
+```bash
+cp config.example.php config.php
+nano config.php
+```
+
+مقادیر مهم شامل `BOT_TOKEN`، `BOT_USERNAME`، `ADMIN_IDS`، `PUBLIC_BASE_URL`، `WEBHOOK_SECRET`، اطلاعات `DB_*`، `SERVICE_ENCRYPTION_KEY`، `CRON_KEY` و `TRUSTED_PROXIES` هستند. برای نصب تازه، روش پیشنهادی استفاده از `sudo ./cli/bluegate install` است تا نصب‌کننده تنظیمات خصوصی را تولید کند.
+
+**هرگز** `config.php`، رمز دیتابیس، Bot Token، کلیدهای Provider یا secretهای واقعی را به GitHub Commit نکنید.
+
+## مدیریت و به‌روزرسانی
+
+| دستور | کاربرد |
+|---|---|
+| `sudo bluegate status` | وضعیت کلی برنامه |
+| `sudo bluegate health` | بررسی سلامت سرویس‌ها |
+| `sudo bluegate doctor` | تشخیص مشکلات رایج |
+| `sudo bluegate configure` | اجرای مجدد ویزارد تنظیمات |
+| `sudo bluegate repair` | تعمیر تنظیمات و سرویس‌های نصب |
+| `sudo bluegate update` | به‌روزرسانی برنامه |
+| `sudo bluegate migrate` | اجرای Migrationها |
+| `sudo bluegate backup` | ایجاد نسخه پشتیبان |
+| `sudo bluegate backups` | فهرست Backupها |
+| `sudo bluegate restore` | بازیابی تعاملی Backup |
+| `sudo bluegate db status` | بررسی اتصال دیتابیس |
+| `sudo bluegate telegram status` | بررسی اتصال ربات |
+| `sudo bluegate telegram webhook-refresh` | ثبت مجدد Webhook |
+| `sudo bluegate system-info` | اطلاعات سرور |
+| `sudo bluegate logs` | نمایش منوی لاگ‌ها |
+
+### روند پیشنهادی Update
+
+```bash
+sudo bluegate backup
+sudo bluegate update
+sudo bluegate health
+```
+
+قبل از به‌روزرسانی سرور عملیاتی، از وجود نسخه پشتیبان دیتابیس و فایل‌های مهم مطمئن شوید. هنگام Restore، نسخه و مقصد انتخاب‌شده را با دقت بررسی کنید.
+
+## پرداخت و Provisioning سرویس
+
+- پرداخت‌ها به تنظیمات و دسترسی‌های حساب مربوطه وابسته‌اند.
+- بررسی خودکار کریپتو به شبکه، دارایی، کیف پول و تنظیمات API نیاز دارد.
+- ایجاد خودکار سرویس به Provider معتبر، دسترسی API و Mapping صحیح پلن نیاز دارد.
+- پیش از فروش واقعی، پرداخت موفق و ناموفق، سفارش تکراری، Retry و قطع ارتباط Provider را آزمایش کنید.
 
 ## امنیت
 
-- `config.php` و secretها خارج از Git نگهداری می‌شوند.
-- درخواست‌های بدون احراز هویت و عملیات حساس rate limit دارند.
-- هدرهای Proxy فقط از `TRUSTED_PROXIES` پذیرفته می‌شوند.
-- فایل‌های `.env`، backup، log، SQL و مسیرهای داخلی از وب مسدود هستند.
-- PHP داخل `uploads` اجرا نمی‌شود.
-- credentialهای Provider با کلید سرویس رمزگذاری می‌شوند.
-- دسترسی ادمین بر پایه role و permission کنترل می‌شود.
-- Webhook با secret مسیر و در صورت تنظیم با Telegram secret header اعتبارسنجی می‌شود.
+- فایل‌های تنظیمات، secretها و کلیدهای رمزگذاری را محرمانه نگه دارید.
+- اگر از Cloudflare یا Reverse Proxy استفاده می‌کنید، فقط IP/CIDR پراکسی‌های واقعی را در `TRUSTED_PROXIES` وارد کنید؛ در غیر این صورت خالی بگذارید.
+- دسترسی SSH و مجوزهای سرور را محدود کنید.
+- قبل از تغییر مهم یا Update، Backup بگیرید.
+- SSL و تمدید گواهی را بررسی کنید؛ وجود دامنه به‌تنهایی HTTPS را تضمین نمی‌کند.
+- اسکریپت‌های ناشناس را با دسترسی root اجرا نکنید.
 
-## عیب‌یابی سریع
+## عیب‌یابی
+
+### بررسی سرویس‌ها
 
 ```bash
-sudo systemctl status nginx mariadb php*-fpm --no-pager
+sudo bluegate status
+sudo bluegate health
+sudo systemctl status nginx mariadb --no-pager
 sudo nginx -t
-sudo journalctl -u php*-fpm --since "1 hour ago" --no-pager
-curl -sS "https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo" | jq .
+systemctl list-units --type=service --all | grep -E 'php.*fpm'
 ```
 
-اگر `pending_update_count` بالا است، ابتدا خطا و زمان پاسخ Webhook را بررسی کنید. اگر `/api.php` یا پنل Infrastructure timeout می‌دهد، Providerهای خارجی و لاگ PHP-FPM را بررسی کنید؛ Health Check و Provisioning نباید با timeoutهای طولانی اجرا شوند.
+### لاگ‌ها
 
-## توسعه
+```bash
+sudo bluegate logs
+sudo journalctl -u nginx --since '1 hour ago' --no-pager
+sudo journalctl -u mariadb --since '1 hour ago' --no-pager
+```
 
-قبل از ارسال تغییرات:
+### مشکلات رایج
+
+- **دامنه باز نمی‌شود:** DNS، IP سرور، فایروال و پورت‌های 80/443 را بررسی کنید.
+- **SSL فعال نمی‌شود:** DNS و دسترسی بیرونی به مسیر اعتبارسنجی HTTP را بررسی کنید.
+- **ربات پاسخ نمی‌دهد:** Bot Token، نام کاربری و وضعیت Webhook را بررسی کنید.
+- **دیتابیس وصل نمی‌شود:** تنظیمات دیتابیس و وضعیت MariaDB را بررسی کنید.
+- **سرویس VPN ساخته نمی‌شود:** دسترسی API Provider، Health Check، Mapping پلن و لاگ Provisioning را بررسی کنید.
+- **CSS یا JS قدیمی نمایش داده می‌شود:** Refresh کامل انجام دهید و پاسخ فایل‌های CSS/JS را در ابزار توسعه مرورگر بررسی کنید.
+
+## توسعه و بررسی قبل از انتشار
 
 ```bash
 git diff --check
 find . -name '*.php' -not -path './vendor/*' -exec php -l {} \;
 ```
 
-هر دو نسخه `modules/pro-web/public/` و `public/web/` باید بعد از تغییرات frontend همگام بمانند. تغییرات assetهای Pro ممکن است نیازمند به‌روزرسانی `integrity.json` باشند.
+اگر PHP روی محیط توسعه نصب نیست، دستور lint اجرا نخواهد شد؛ این را تست موفق تلقی نکنید. نسخه‌های متناظر رابط وب و ماژول Pro را پس از تغییرات همگام نگه دارید و در صورت تغییر فایل‌های تحت بررسی یکپارچگی، manifest مربوطه را نیز بررسی کنید.
 
-## مجوز و وضعیت
+تاریخچه تغییرات در [CHANGELOG.md](CHANGELOG.md) ثبت می‌شود.
 
-این مخزن برای استقرار و توسعه BlueGate Platform نگهداری می‌شود. جزئیات تغییرات هر release در [`CHANGELOG.md`](CHANGELOG.md) ثبت می‌شود.
+## گزارش باگ
+
+هنگام گزارش مشکل، نسخه موجود در `VERSION`، سیستم‌عامل، مرحله وقوع خطا و متن خطای پاک‌سازی‌شده را ارائه دهید. Bot Token، رمزها، کلیدهای API، اطلاعات پرداخت و داده‌های خصوصی کاربران را ارسال نکنید.
+
+---
+
+<p align="center"><strong>BlueGate Platform</strong><br><sub>فروشگاه، اتوماسیون و مدیریت سرویس‌های دیجیتال</sub></p>
