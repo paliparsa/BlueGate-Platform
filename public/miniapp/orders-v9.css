@@ -147,7 +147,9 @@
   white-space: normal;
 }
 #ordersPage .order-rename-btn { width: 28px; min-width: 28px; height: 28px; padding: 0; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: rgba(255,255,255,.06); color: var(--muted); font-size: 14px; }
-#ordersPage .status-badge.pending { padding: 8px 11px; }
+#ordersPage .parity-order-side { min-width: 92px; max-width: 132px; flex-wrap: wrap; }
+#ordersPage .order-rename-btn { position: relative; z-index: 2; cursor: pointer; touch-action: manipulation; }
+#ordersPage .status-badge.pending { min-height: 34px; padding: 8px 11px; line-height: 1.5; white-space: normal; text-align: center; }
 
 .orders-filter-sheet-grid { display: grid; gap: 8px; padding: 4px 0; }
 .orders-filter-option { display: grid; grid-template-columns: 38px minmax(0,1fr) 22px; align-items: center; gap: 10px; width: 100%; min-height: 60px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.09); border-radius: 15px; background: rgba(255,255,255,.045); color: var(--text); text-align: right; }
@@ -158,6 +160,8 @@
 .orders-filter-option i { display: none; color: var(--accent); font-style: normal; font-weight: 900; }
 .orders-filter-option.active { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 16%, #101827); }
 .orders-filter-option.active i { display: block; }
+#ordersPage .order-stepper .step { min-width: 0; }
+#ordersPage .order-stepper .step-hint { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 1.25; white-space: nowrap; }
 
 @media (max-width: 620px) {
   #ordersPage .parity-order-main { grid-template-columns: 52px minmax(0,1fr) auto !important; }

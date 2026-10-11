@@ -2773,9 +2773,11 @@ function order_admin_card(array $order,string $source=''): string {
     if((int)($order['discount_amount']??0)>0)$txt.="🏷 تخفیف: <b>-".money((int)$order['discount_amount'])."</b>".(!empty($order['coupon_code'])?' · <code>'.h($order['coupon_code']).'</code>':'')."
 ";if((int)($order['wallet_amount']??0)>0)$txt.="💙 از اعتبار: <b>".money((int)$order['wallet_amount'])."</b>
 ";
+    $stage=order_stage((string)$order['status']);
     $txt.="💳 قابل پرداخت: <b>".money((int)$order['final_amount'])."</b>
 🏦 روش پرداخت: <b>".h($pay)."</b>
 📌 وضعیت: <b>".order_status_emoji((string)$order['status']).' '.h(order_status_fa((string)$order['status']))."</b>
+🧭 مرحله: <b>".h($stage['label'])."</b> · ".h($stage['description'])."
 🕒 ثبت: <code>".h((string)($order['created_at']??'—'))."</code>";if(!empty($order['customer_note']))$txt.="
 📝 یادداشت مشتری: ".h((string)$order['customer_note']);return $txt;
 }
@@ -3133,6 +3135,21 @@ function order_status_emoji(string $status): string {
         'pending_payment'=>'🕓','receipt_submitted'=>'📤','reviewing'=>'👀','payment_confirmed'=>'✅','preparing'=>'📦',
         'delivered'=>'📩','rejected'=>'❌','canceled'=>'🚫','refunded'=>'↩️'
     ][$status] ?? '•';
+}
+function order_stage(string $status): array {
+    $status = normalize_order_status($status);
+    $stages = [
+        'pending_payment'=>['key'=>'payment','label'=>'پرداخت','description'=>'پرداخت سفارش و انتخاب روش پرداخت','index'=>0],
+        'receipt_submitted'=>['key'=>'review','label'=>'بررسی','description'=>'رسید ارسال شده و منتظر بررسی ادمین','index'=>1],
+        'reviewing'=>['key'=>'review','label'=>'بررسی','description'=>'ادمین در حال بررسی پرداخت است','index'=>1],
+        'payment_confirmed'=>['key'=>'preparing','label'=>'آماده‌سازی','description'=>'پرداخت تایید شده و سفارش در صف آماده‌سازی است','index'=>2],
+        'preparing'=>['key'=>'preparing','label'=>'آماده‌سازی','description'=>'سفارش در حال آماده‌سازی است','index'=>2],
+        'delivered'=>['key'=>'delivered','label'=>'تحویل','description'=>'سفارش تحویل داده شده است','index'=>3],
+        'rejected'=>['key'=>'closed','label'=>'رد شده','description'=>'این سفارش توسط ادمین رد شده است','index'=>-1],
+        'canceled'=>['key'=>'closed','label'=>'لغو شده','description'=>'این سفارش لغو شده است','index'=>-1],
+        'refunded'=>['key'=>'closed','label'=>'مرجوع شده','description'=>'مبلغ این سفارش برگشت داده شده است','index'=>-1],
+    ];
+    return $stages[$status] ?? ['key'=>'processing','label'=>order_status_fa($status),'description'=>'وضعیت سفارش در حال پردازش است','index'=>1];
 }
 function normalize_coupon_code(string $code): string { return strtoupper(preg_replace('/[^A-Za-z0-9_\-]/', '', trim($code))); }
 
@@ -4033,6 +4050,7 @@ function order_public_payload(array $o, bool $is_admin = false): array {
         'payment_method'=>$o['payment_method'] ?? null, 'payment_method_fa'=>payment_method_fa($o['payment_method'] ?? null), 'payment_details'=>$o['payment_details'] ?? null, 'stars_amount'=>(int)($o['stars_amount'] ?? 0),
         'crypto_amount'=>isset($o['crypto_amount'])?(float)$o['crypto_amount']:null, 'crypto_asset'=>$o['crypto_asset'] ?? null, 'crypto_network'=>$o['crypto_network'] ?? null, 'crypto_check'=>crypto_check_payload(get_crypto_check_by_order((int)$o['id'])), 'crypto_fee_notice'=>'این مبلغ باید دقیقاً به کیف پول مقصد برسد؛ کارمزد صرافی/شبکه بر عهده شماست.', 'swapwallet_invoice'=>null,
         'status'=>$status, 'status_fa'=>order_status_fa($o['status']),
+        'stage_key'=>order_stage($status)['key'], 'stage_label'=>order_stage($status)['label'], 'stage_description'=>order_stage($status)['description'], 'stage_index'=>order_stage($status)['index'],
         'is_renewal'=>(int)($o['is_renewal'] ?? 0), 'renewal_of_order_id'=>!empty($o['renewal_of_order_id'])?(int)$o['renewal_of_order_id']:null, 'user_service_id'=>!empty($o['user_service_id'])?(int)$o['user_service_id']:null, 'service_action'=>$o['service_action']??null,
         'payment_note'=>$o['payment_note'] ?? null, 'customer_note'=>$o['customer_note'] ?? null, 'receipt_file_id'=>$o['receipt_file_id'] ?? null, 'receipt_url'=>!empty($o['receipt_file_id'])?('/'.ltrim((string)$o['receipt_file_id'],'/')):null,
         'user_id'=>(int)($o['user_id'] ?? 0), 'telegram_id'=>isset($o['telegram_id'])?(int)$o['telegram_id']:null, 'username'=>$o['username'] ?? null, 'first_name'=>$o['first_name'] ?? null,
