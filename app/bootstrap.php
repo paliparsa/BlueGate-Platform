@@ -4358,10 +4358,6 @@ function verify_webapp_init_data(string $initData): array|false {
 }
 
 require_once __DIR__ . '/catalog.php';
-<<<<<<< HEAD
 require_once __DIR__ . '/license.php';
 require_once __DIR__ . '/storefront.php';
 require_once __DIR__ . '/module_loader.php';
-=======
-require_once __DIR__ . '/storefront.php';
->>>>>>> b06396cb95f094df789e0b021fa8bf0bb21d4b26
