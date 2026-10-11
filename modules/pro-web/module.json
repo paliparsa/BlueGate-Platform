@@ -1,8 +1,0 @@
-{
-  "name": "Veyra Pro Web",
-  "version": "2.1.6",
-  "requires": "web_storefront",
-  "built_by": "BlueGate",
-  "min_core_version": "2.1.6",
-  "edition": "pro"
-}
