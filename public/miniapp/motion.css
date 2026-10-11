@@ -44,7 +44,7 @@ body::before{content:"";position:fixed;z-index:-3;inset:-24vmax;pointer-events:n
 @property --bgm-angle{syntax:'<angle>';initial-value:0deg;inherits:false}@keyframes bgmBorder{to{--bgm-angle:360deg}}
 
 /* Skeleton utility */
-.bgm-skeleton{position:relative;min-height:72px;overflow:hidden;background:rgba(255,255,255,.035)!important;border-radius:18px;color:transparent!important}
+.bgm-skeleton{position:relative;min-height:72px;overflow:hidden;background:rgba(255,255,255,.035)!important;border-radius:var(--r-lg);color:transparent!important}
 .bgm-skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 24%,rgba(255,255,255,.075) 43%,transparent 62%);transform:translateX(-100%);animation:bgmSkeleton 1.5s ease-in-out infinite}
 @keyframes bgmSkeleton{to{transform:translateX(100%)}}
 
@@ -54,7 +54,7 @@ body::before{content:"";position:fixed;z-index:-3;inset:-24vmax;pointer-events:n
 @keyframes bgmSuccess{0%{opacity:0;transform:scale(.7)}25%,72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.9)}}@keyframes bgmRing{to{opacity:0;transform:scale(1.42)}}
 
 /* Copy morph */
-.bgm-copy-pop{transform:scale(.96)!important;color:#86efac!important;transition:transform var(--bgm-fast),color var(--bgm-fast)!important}
+.bgm-copy-pop{transform:scale(.96)!important;color:var(--bgds-success)!important;transition:transform var(--bgm-fast),color var(--bgm-fast)!important}
 .bgm-copy-badge{position:absolute;z-index:9;inset:50% auto auto 50%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;background:#0d2c22;color:#8af0c6;border:1px solid #6ee7b744;font-size:12px;font-weight:900;white-space:nowrap;pointer-events:none}
 
 
@@ -72,7 +72,7 @@ body::before{content:"";position:fixed;z-index:-3;inset:-24vmax;pointer-events:n
 :is(.lightbox,.cart-sheet,.preview-sheet,.qr-sheet,.share-sheet,.app-sheet){backdrop-filter:blur(7px) saturate(105%)}
 
 /* Connection test staged visual */
-.bgm-connection-steps{margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:11.5px;animation:bgmEnter .2s ease both}
+.bgm-connection-steps{margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:12px;animation:bgmEnter .2s ease both}
 .bgm-connection-steps span{display:flex;align-items:center;gap:4px}.bgm-connection-steps i{width:7px;height:7px;border-radius:50%;background:#ffffff24;transition:.2s}.bgm-connection-steps .done i{background:#6ee7b7;box-shadow:0 0 10px #6ee7b766}.bgm-connection-steps .active i{background:#65cfff;box-shadow:0 0 10px #65cfff77;animation:bgmBlink .65s ease-in-out infinite alternate}@keyframes bgmBlink{to{transform:scale(1.35)}}
 
 /* First-session brand reveal */

@@ -1,0 +1,22 @@
+/* BlueGate Mini App design tokens — single scale for radius, spacing, shadow, icons.
+   Loaded right after design-system.css. Component CSS should use these instead of raw px values. */
+:root{
+  /* radius scale (5 steps + pill) */
+  --r-sm:12px; --r-md:16px; --r-lg:20px; --r-xl:24px; --r-xxl:28px; --r-pill:999px;
+  /* spacing scale */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px;
+  /* elevation: cards use border + sm, floating layers use md/lg */
+  --elev-sm:0 6px 18px rgba(0,0,0,.18);
+  --elev-md:0 12px 30px rgba(0,0,0,.26);
+  --elev-lg:0 22px 60px rgba(0,0,0,.36);
+  /* design-system.css radii snapped onto the same scale (Mini App only; web keeps its own file) */
+  --bgds-r-1:12px; --bgds-r-2:16px; --bgds-r-3:16px; --bgds-r-4:20px; --bgds-r-5:24px; --bgds-r-6:28px;
+  --u-r-sm:var(--r-sm); --u-r-md:var(--r-md); --u-r-lg:var(--r-lg); --u-r-xl:var(--r-xl);
+}
+/* One icon style: 24px grid, 1.9 stroke, inherits text colour */
+.bg-ico{width:22px;height:22px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav-icon{display:inline-grid;place-items:center;line-height:1}
+.nav-icon .bg-ico{width:22px;height:22px}
+.admin-tabs button>span .bg-ico{width:18px;height:18px;display:inline-block;vertical-align:-3px}
+.cart-fab>span:first-child .bg-ico{width:26px;height:26px}
+.icon-btn .bg-ico{width:20px;height:20px;display:inline-block;vertical-align:middle}

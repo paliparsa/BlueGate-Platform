@@ -1,7 +1,6 @@
 {
   "schema": 1,
   "product": "veyra-platform",
-  "version": "2.1.6",
   "items": [
     {
       "id": "domain",

@@ -75,7 +75,7 @@ input[type="file"]::file-selector-button{
   color:var(--fg-contrast-high)!important;
   background:var(--bg-contrast-control-2)!important;
   border:1px solid var(--border-contrast)!important;
-  border-radius:10px;
+  border-radius:var(--r-sm);
   padding:8px 11px;
   margin-inline-end:10px;
   cursor:pointer;
