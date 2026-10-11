@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0b0714">
-  <title>Veyra Store</title>
-  <meta name="description" content="فروشگاه سرویس‌های دیجیتال Veyra؛ VPN، Telegram Stars و Telegram Premium">
+  <meta name="theme-color" content="#06101d">
+  <title>BlueGate Store</title>
+  <meta name="description" content="فروشگاه سرویس‌های دیجیتال BlueGate؛ VPN، Telegram Stars و Telegram Premium">
   <link rel="manifest" href="/web/manifest.json">
   <link rel="icon" href="/web/icon-192.png">
   <script>
@@ -18,25 +18,24 @@
   </script>
   <style>
     #bgRouteBoot{display:none}
-    html.bg-route-boot body{background:#0b0714}
-    html.bg-route-boot #bgRouteBoot{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;background:#0b0714;color:#d9e9ff;font-family:inherit}
-    html.bg-route-boot #bgRouteBoot>div{display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid rgba(168,85,247,.16);border-radius:14px;background:#160d26;box-shadow:0 18px 50px rgba(0,0,0,.22)}
-    html.bg-route-boot #bgRouteBoot i{width:17px;height:17px;border:2px solid rgba(192,132,252,.25);border-top-color:#63c4ff;border-radius:50%;animation:bgRouteSpin .7s linear infinite}
+    html.bg-route-boot body{background:#06101d}
+    html.bg-route-boot #bgRouteBoot{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;background:#06101d;color:#d9e9ff;font-family:inherit}
+    html.bg-route-boot #bgRouteBoot>div{display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid rgba(116,170,225,.16);border-radius:14px;background:#0b1828;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+    html.bg-route-boot #bgRouteBoot i{width:17px;height:17px;border:2px solid rgba(99,196,255,.25);border-top-color:#63c4ff;border-radius:50%;animation:bgRouteSpin .7s linear infinite}
     html.bg-route-boot #siteHeader,html.bg-route-boot #top,html.bg-route-boot .footer,html.bg-route-boot #announcement{visibility:hidden}
     @keyframes bgRouteSpin{to{transform:rotate(360deg)}}
   </style>
-  <link rel="stylesheet" href="/design-system.css?v=1.0.0">
+  <link rel="stylesheet" href="/design-system.css?v=4.7.0">
   <link rel="stylesheet" href="/web/css/store.css?v=v310-avatar-scroll">
   <link rel="stylesheet" href="/web/css/account.css?v=v310-avatar-scroll">
-  <link rel="stylesheet" href="/web/css/dashboard.css?v=1.0.0">
+  <link rel="stylesheet" href="/web/css/dashboard.css?v=4.6.0">
   <link rel="stylesheet" href="/web/css/ui-overhaul.css?v=v310-avatar-scroll">
   <link rel="stylesheet" href="/web/css/admin-v18.css?v=v310-avatar-scroll">
   <link rel="stylesheet" href="/web/css/admin-unified.css?v=4.1.0">
   <link rel="stylesheet" href="/web/css/mobile-v281.css?v=3.0.8.15">
   <link rel="stylesheet" href="/web/css/contrast-guard.css?v=3.0.8.15">
-  <link rel="stylesheet" href="/web/css/motion.css?v=1.0.0">
-  <link rel="stylesheet" href="/web/css/mobile-v460.css?v=1.0.0">
-  <link rel="stylesheet" href="/web/css/veyra-theme.css?v=1.0.0">
+  <link rel="stylesheet" href="/web/css/motion.css?v=4.2.0">
+  <link rel="stylesheet" href="/web/css/mobile-v460.css?v=4.6.0">
 </head>
 <body>
   <div id="bgRouteBoot" aria-live="polite"><div><i></i><span>در حال باز کردن بخش درخواستی…</span></div></div>
@@ -44,7 +43,7 @@
 
   <header class="site-header" id="siteHeader">
     <div class="shell header-inner">
-      <a class="brand" data-store-nav href="#top" aria-label="Veyra home"><img src="/web/assets/logo.png" alt="Veyra" class="brand-wordmark"><span class="sr-only" id="brandName">Veyra</span><span class="sr-only" id="brandSubtitle">Digital Services</span></a>
+      <a class="brand" data-store-nav href="#top" aria-label="BlueGate home"><img src="/web/assets/logo.webp" alt="BlueGate" class="brand-wordmark"><span class="sr-only" id="brandName">BlueGate</span><span class="sr-only" id="brandSubtitle">Digital Services</span></a>
       <nav class="desktop-nav" aria-label="ناوبری اصلی">
         <a data-store-nav data-nav-link href="#products">سرویس‌ها</a>
         <a data-store-nav data-nav-link href="#why">مزایا</a>
@@ -56,7 +55,7 @@
         <button class="member-nav-link admin-only hidden" data-member-route="admin" type="button">مدیریت</button>
       </nav>
       <div class="header-actions">
-        <button id="quickCreditBtn" class="bg-credit-chip hidden" type="button" aria-label="اعتبار Veyra"><span>اعتبار</span><b id="quickCreditValue">0 تومان</b></button>
+        <button id="quickCreditBtn" class="bg-credit-chip hidden" type="button" aria-label="اعتبار BlueGate"><span>اعتبار</span><b id="quickCreditValue">0 تومان</b></button>
         <button id="accountBtn" class="bg-account-btn" type="button" aria-haspopup="menu" aria-expanded="false">
           <span id="accountAvatar" class="bg-header-avatar">👤</span><span id="accountLabel">ورود</span><span id="accountChevron" class="bg-account-chevron hidden">⌄</span><b id="accountBadge" class="bg-account-badge hidden">0</b>
         </button>
@@ -83,7 +82,7 @@
   <main id="top">
     <section class="hero shell">
       <div class="hero-copy">
-        <div class="hero-eyebrow"><span class="pulse-dot"></span><span>VEYRA DIGITAL STORE</span><b>خرید سریع • پشتیبانی مستقیم</b></div>
+        <div class="hero-eyebrow"><span class="pulse-dot"></span><span>BLUEGATE DIGITAL STORE</span><b>خرید سریع • پشتیبانی مستقیم</b></div>
         <h1 id="heroTitle">سرویس‌های دیجیتال، ساده و سریع</h1>
         <p id="heroText">VPN، تلگرام استارز و تلگرام پرمیوم با قیمت شفاف و سفارش مستقیم از پشتیبانی.</p>
         <div class="hero-actions"><a class="btn primary xl hero-primary" data-store-nav href="#products"><span>مشاهده سرویس‌ها</span><b>←</b></a><a id="heroSupport" class="btn ghost xl" target="_blank" rel="noopener">گفتگو با پشتیبانی</a></div>
@@ -91,7 +90,7 @@
       </div>
       <div class="hero-visual" aria-hidden="true">
         <div class="brand-orbit"></div>
-        <div class="brand-stage"><img src="/web/assets/logo-mark.png" alt=""><div class="brand-stage-copy"><span>VEYRA</span><strong>Digital Services</strong><small>VPN • Stars • Premium</small></div><span class="brand-live-badge"><i></i> STORE ONLINE</span></div>
+        <div class="brand-stage"><img src="/web/assets/logo-mark.webp" alt=""><div class="brand-stage-copy"><span>BLUEGATE</span><strong>Digital Services</strong><small>VPN • Stars • Premium</small></div><span class="brand-live-badge"><i></i> STORE ONLINE</span></div>
         <div class="floating-card fc-one"><span>🛡️</span><div><small>BluePing</small><strong>VPN</strong><em>پایدار و منعطف</em></div></div>
         <div class="floating-card fc-two"><span>⭐</span><div><small>Telegram</small><strong>Stars</strong><em>تعداد دلخواه</em></div></div>
         <div class="floating-card fc-three"><span>✈️</span><div><small>Telegram</small><strong>Premium</strong><em>۳ تا ۱۲ ماهه</em></div></div>
@@ -105,7 +104,7 @@
       <div class="rate-cell"><span>TON / USD</span><strong id="tonRate" class="rate-loading">—</strong></div>
     </section>
 
-    <section class="shell conversion-strip" aria-label="مزایای خرید از Veyra">
+    <section class="shell conversion-strip" aria-label="مزایای خرید از BlueGate">
       <div class="conversion-item"><span class="conversion-icon">⚡</span><div><strong>سفارش سریع</strong><small>مسیر خرید کوتاه و مستقیم</small></div></div>
       <div class="conversion-item"><span class="conversion-icon">◉</span><div><strong>قیمت شفاف</strong><small>مبلغ نهایی قبل از سفارش</small></div></div>
       <div class="conversion-item"><span class="conversion-icon">🎧</span><div><strong>پشتیبانی مستقیم</strong><small>ارتباط از طریق تلگرام</small></div></div>
@@ -224,7 +223,7 @@
 
     <section id="genericProductsSection" class="section shell generic-products-section hidden">
       <button id="genericProductsToggle" class="generic-products-toggle" type="button" aria-expanded="false" aria-controls="genericProductsCollapse">
-        <span class="generic-toggle-copy"><span class="kicker">MORE SERVICES</span><strong>سرویس‌های بیشتر Veyra</strong><small>اشتراک‌ها، هوش مصنوعی، موسیقی و سرویس‌های دیجیتال بیشتر</small></span>
+        <span class="generic-toggle-copy"><span class="kicker">MORE SERVICES</span><strong>سرویس‌های بیشتر BlueGate</strong><small>اشتراک‌ها، هوش مصنوعی، موسیقی و سرویس‌های دیجیتال بیشتر</small></span>
         <span class="generic-toggle-action"><b id="genericProductsToggleLabel">مشاهده سرویس‌ها</b><i aria-hidden="true">⌄</i></span>
       </button>
       <div id="genericProductsCollapse" class="generic-products-collapse" aria-hidden="true" inert>
@@ -239,7 +238,7 @@
       </div>
     </section>
 
-    <section id="why" class="section why-section"><div class="shell"><div class="section-head center-head"><span class="kicker">WHY VEYRA</span><h2>خرید راحت، بدون پیچیدگی</h2><p>اطلاعات مهم را همان‌جایی می‌بینی که برای تصمیم گرفتن لازم داری.</p></div><div id="featureGrid" class="feature-grid"></div></div></section>
+    <section id="why" class="section why-section"><div class="shell"><div class="section-head center-head"><span class="kicker">WHY BLUEGATE</span><h2>خرید راحت، بدون پیچیدگی</h2><p>اطلاعات مهم را همان‌جایی می‌بینی که برای تصمیم گرفتن لازم داری.</p></div><div id="featureGrid" class="feature-grid"></div></div></section>
 
     <section id="comparisonSection" class="section shell hidden"><div class="section-head"><div><span class="kicker">COMPARE</span><h2>مقایسه پلن‌های VPN</h2></div></div><div class="table-wrap"><table id="comparisonTable"></table></div></section>
 
@@ -250,7 +249,7 @@
     <section id="faq" class="section faq-section"><div class="shell faq-layout"><div class="faq-heading"><span class="kicker">FAQ</span><h2>سوالات متداول</h2><p>جواب کوتاه و واضح برای چیزهایی که قبل از سفارش معمولاً پرسیده می‌شوند.</p><a id="faqSupport" class="btn ghost" target="_blank" rel="noopener">سوال دیگه‌ای داری؟</a></div><div id="faqList" class="faq-list"></div></div></section>
   </main>
 
-  <footer class="footer"><div class="shell footer-inner"><div class="footer-brand"><img src="/web/assets/logo.png" alt="Veyra"><p id="footerText">سرویس‌های دیجیتال با پشتیبانی واقعی.</p><small class="builder-credit">ساخته‌شده توسط BlueGate</small></div><div class="footer-links"><a id="footerChannel" target="_blank" rel="noopener">کانال تلگرام</a><a id="footerSupport" target="_blank" rel="noopener">پشتیبانی</a><button class="footer-dashboard-link" data-member-route="account" type="button">حساب کاربری</button></div></div></footer>
+  <footer class="footer"><div class="shell footer-inner"><div class="footer-brand"><img src="/web/assets/logo.webp" alt="BlueGate"><p id="footerText">سرویس‌های دیجیتال با پشتیبانی واقعی.</p></div><div class="footer-links"><a id="footerChannel" target="_blank" rel="noopener">کانال تلگرام</a><a id="footerSupport" target="_blank" rel="noopener">پشتیبانی</a><button class="footer-dashboard-link" data-member-route="account" type="button">حساب کاربری</button></div></div></footer>
 
   <div id="stickyCheckout" class="sticky-checkout hidden"><div class="sticky-copy"><small id="stickyProduct">انتخاب شما</small><strong id="stickyVariant">—</strong></div><div class="sticky-price"><strong id="stickyPrice">—</strong><small>تومان</small></div><button id="stickyBuy" class="btn primary sticky-cta" type="button"><span>ثبت سفارش</span><b>←</b></button></div>
 
@@ -260,7 +259,7 @@
 
   <div id="accountBackdrop" class="bg-drawer-backdrop"></div>
   <aside id="accountDrawer" class="bg-account-drawer" role="dialog" aria-modal="true" aria-label="ورود و حساب کاربری">
-    <div class="bg-drawer-head"><strong>Veyra Account</strong><button id="accountClose" class="bg-drawer-close" type="button" aria-label="بستن">×</button></div>
+    <div class="bg-drawer-head"><strong>BlueGate Account</strong><button id="accountClose" class="bg-drawer-close" type="button" aria-label="بستن">×</button></div>
     <div id="accountContent" class="bg-account-content"></div>
   </aside>
 

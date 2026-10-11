@@ -1,4 +1,4 @@
-# Veyra Core capability metadata · v2.1.6
+# BlueGate Core capability metadata · v2.1.6
 
 This release exposes machine-readable metadata for License Control v2.4+:
 

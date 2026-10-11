@@ -15,9 +15,9 @@ function normalize(data){
   let selectedId=Number(data.variantId||data.selectedVariantId||0)||null;
   if(!selectedId&&variants.length) selectedId=variants[0].id;
   return {
-    scope:String(data.scope||'generic'),productId:Number(data.productId||0),product:String(data.product||'محصول Veyra'),
-    image:String(data.image||data.image_url||''),icon:String(data.icon||'⚡'),badge:String(data.badge||'Veyra Service'),
-    description:String(data.description||''),delivery:String(data.delivery||data.delivery_type_fa||'تحویل و پیگیری از حساب Veyra'),
+    scope:String(data.scope||'generic'),productId:Number(data.productId||0),product:String(data.product||'محصول BlueGate'),
+    image:String(data.image||data.image_url||''),icon:String(data.icon||'⚡'),badge:String(data.badge||'BlueGate Service'),
+    description:String(data.description||''),delivery:String(data.delivery||data.delivery_type_fa||'تحویل و پیگیری از حساب BlueGate'),
     variants,selectedId,basePrice:Number(data.toman||data.price||0),
     starsCount:Number(data.starsCount||0),starsMin:Number(data.starsMin||50),starsMax:Number(data.starsMax||10000),starsStep:Number(data.starsStep||25),
     starsPresets:(data.starsPresets||[]).map(Number).filter(Boolean),settings:data.settings||null,rates:data.rates||null,coupon:null,couponInput:''
@@ -44,7 +44,7 @@ function render(){
   modal.innerHTML=`<div class="purchase-confirm-card" role="document" aria-label="تایید سفارش">
     <div class="purchase-confirm-header">
       <button class="purchase-confirm-close" type="button" data-pc-close aria-label="بستن">✕</button>
-      <div class="purchase-confirm-brand"><div><h3>فاکتور رسمی خرید Veyra</h3><p>پیش‌نمایش سفارش قبل از ثبت نهایی</p></div><div class="purchase-confirm-avatar">${current.image?`<img src="${esc(current.image)}" alt="">`:`<span>${esc(current.icon)}</span>`}</div></div>
+      <div class="purchase-confirm-brand"><div><h3>فاکتور رسمی خرید BlueGate</h3><p>پیش‌نمایش سفارش قبل از ثبت نهایی</p></div><div class="purchase-confirm-avatar">${current.image?`<img src="${esc(current.image)}" alt="">`:`<span>${esc(current.icon)}</span>`}</div></div>
     </div>
     ${variantPicker}
     <div class="purchase-confirm-specs">

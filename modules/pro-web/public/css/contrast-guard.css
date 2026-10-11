@@ -1,4 +1,4 @@
-/* Veyra v3.0.8.12 — Global contrast guard
+/* BlueGate v3.0.8.12 — Global contrast guard
    Loaded last on Web + Mini App so native controls and overlays stay readable
    across Windows/Chrome, Telegram WebView and mobile browsers. */
 :root{

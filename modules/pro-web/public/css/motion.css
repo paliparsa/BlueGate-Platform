@@ -1,4 +1,4 @@
-/* Veyra Motion System v4.2.0
+/* BlueGate Motion System v4.2.0
    Additive-only visual layer: no layout ownership, no API/business logic changes. */
 :root{
   --bg-motion-fast:160ms;
@@ -73,7 +73,7 @@ button[aria-expanded="true"] > :is(i,.chevron){transform:rotate(180deg)}
 /* Copy morph. */
 .bg-copy-ok{transition:transform var(--bg-motion-fast) ease,color var(--bg-motion-fast) ease!important}
 .bg-copy-ok.bg-copy-pop{transform:scale(.96);color:#7ce9b9!important}
-.bg-copy-badge{position:absolute;z-index:9;inset:50% auto auto 50%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;background:#0d2c22;color:#8af0c6;border:1px solid rgba(112,228,180,.25);font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none;animation:bgSuccessCheck .2s ease both}
+.bg-copy-badge{position:absolute;z-index:9;inset:50% auto auto 50%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;background:#0d2c22;color:#8af0c6;border:1px solid rgba(112,228,180,.25);font-size:12px;font-weight:900;white-space:nowrap;pointer-events:none;animation:bgSuccessCheck .2s ease both}
 
 
 /* Number count-up overlay: preserves the real DOM text for app logic. */

@@ -1,7 +1,7 @@
 (()=>{
   'use strict';
-  if(window.__VEYRA_MOTION__) return;
-  window.__VEYRA_MOTION__=true;
+  if(window.__BLUEGATE_MOTION__) return;
+  window.__BLUEGATE_MOTION__=true;
   const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const fine=window.matchMedia?.('(hover:hover) and (pointer:fine)').matches;
   const $=(s,r=document)=>r.querySelector(s);

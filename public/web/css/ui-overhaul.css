@@ -875,8 +875,8 @@
 .web-pay-method.card .web-pay-method-icon{background:rgba(29,155,240,.10)}
 .web-pay-method.stars{border-color:rgba(245,158,11,.22)}
 .web-pay-method.stars .web-pay-method-icon{background:rgba(245,158,11,.10)}
-.web-pay-method.crypto{border-color:rgba(139,92,246,.24)}
-.web-pay-method.crypto .web-pay-method-icon{background:rgba(139,92,246,.11)}
+.web-pay-method.crypto{border-color:rgba(37,99,235,.24)}
+.web-pay-method.crypto .web-pay-method-icon{background:rgba(37,99,235,.11)}
 .web-pay-method:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.55)}
 .web-card-v2-container,.web-crypto-v2-container,.web-wallet-v2,.web-stars-v2{display:flex;flex-direction:column;gap:14px;margin-top:6px;animation:bgReveal .28s ease both}
 .web-payment-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}

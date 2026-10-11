@@ -1,4 +1,4 @@
-/* Veyra Platform v1.2+ — Website UI Overhaul
+/* BlueGate Platform v1.2+ — Website UI Overhaul
    Website-only. Telegram Mini App intentionally remains independent. */
 
 :root{
@@ -743,7 +743,7 @@
 }
 
 /* =========================================================
-   Veyra Platform v1.3 — Catalog accordion + MiniApp-inspired payments
+   BlueGate Platform v1.3 — Catalog accordion + MiniApp-inspired payments
    ========================================================= */
 
 /* More services is intentionally collapsed on every page load. */
@@ -875,8 +875,8 @@
 .web-pay-method.card .web-pay-method-icon{background:rgba(29,155,240,.10)}
 .web-pay-method.stars{border-color:rgba(245,158,11,.22)}
 .web-pay-method.stars .web-pay-method-icon{background:rgba(245,158,11,.10)}
-.web-pay-method.crypto{border-color:rgba(139,92,246,.24)}
-.web-pay-method.crypto .web-pay-method-icon{background:rgba(139,92,246,.11)}
+.web-pay-method.crypto{border-color:rgba(37,99,235,.24)}
+.web-pay-method.crypto .web-pay-method-icon{background:rgba(37,99,235,.11)}
 .web-pay-method:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.55)}
 .web-card-v2-container,.web-crypto-v2-container,.web-wallet-v2,.web-stars-v2{display:flex;flex-direction:column;gap:14px;margin-top:6px;animation:bgReveal .28s ease both}
 .web-payment-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -919,7 +919,7 @@
   font-weight:900;
   cursor:pointer;
 }
-.web-copy-primary,.web-payment-submit{width:100%;margin-top:12px;background:linear-gradient(135deg,#00f2fe,#8b5cf6);color:#00111c;box-shadow:0 8px 24px rgba(0,196,255,.19)}
+.web-copy-primary,.web-payment-submit{width:100%;margin-top:12px;background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#00111c;box-shadow:0 8px 24px rgba(0,196,255,.19)}
 .web-receipt-form,.web-crypto-txid{display:grid;gap:12px}
 .web-receipt-form label,.web-crypto-txid label{display:grid;gap:7px;color:var(--muted);font-size:14px;font-weight:750}
 .web-receipt-form input[type="text"],.web-receipt-form input:not([type]),.web-crypto-txid input{
@@ -1015,7 +1015,7 @@ body.service-viewer-open{overflow:hidden}
 .service-copy-btn{border-color:rgba(84,170,255,.24)!important;background:rgba(84,170,255,.08)!important}.service-copy-btn:hover{background:rgba(84,170,255,.14)!important}
 
 /* ======================================================================
-   Veyra Platform v1.6.0 — purchase confirmation, order accordions,
+   BlueGate Platform v1.6.0 — purchase confirmation, order accordions,
    and hardening against horizontal mobile overflow.
    ====================================================================== */
 
@@ -1093,7 +1093,7 @@ html.purchase-confirm-open,body.purchase-confirm-open{overflow:hidden!important;
 .purchase-confirm-guarantee{padding:10px 13px;border:1px solid rgba(34,197,94,.24);border-radius:12px;background:rgba(34,197,94,.075);color:#4ade80;text-align:center;font-size:13.5px;font-weight:750;line-height:1.6}
 .purchase-confirm-coupon{display:grid;gap:7px;color:#aab8c8;font-size:13.5px;font-weight:750}.purchase-confirm-coupon span small{color:#6f8296;font-weight:650}.purchase-confirm-coupon input{width:100%;min-height:44px;border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:0 12px;background:rgba(255,255,255,.035);color:#fff;outline:none;font:inherit}.purchase-confirm-coupon input:focus{border-color:rgba(0,242,254,.38);box-shadow:0 0 0 3px rgba(0,242,254,.045)}
 .purchase-confirm-actions{position:sticky;bottom:-20px;z-index:2;display:grid;gap:8px;margin:0 -4px -4px;padding:10px 4px 4px;background:linear-gradient(180deg,rgba(7,13,24,0),#070d18 32%)}
-.purchase-confirm-submit,.purchase-confirm-cancel{width:100%;min-height:48px;border-radius:14px;font:inherit;font-weight:900;cursor:pointer}.purchase-confirm-submit{border:0;background:linear-gradient(135deg,#00f2fe,#8b5cf6);color:#001017;font-size:14.5px;box-shadow:0 6px 22px rgba(0,242,254,.28)}.purchase-confirm-submit:disabled{opacity:.6;cursor:wait}.purchase-confirm-cancel{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:#dbe7f2;font-size:14px}
+.purchase-confirm-submit,.purchase-confirm-cancel{width:100%;min-height:48px;border-radius:14px;font:inherit;font-weight:900;cursor:pointer}.purchase-confirm-submit{border:0;background:linear-gradient(135deg,#00f2fe,#1d9bf0);color:#001017;font-size:14.5px;box-shadow:0 6px 22px rgba(0,242,254,.28)}.purchase-confirm-submit:disabled{opacity:.6;cursor:wait}.purchase-confirm-cancel{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.045);color:#dbe7f2;font-size:14px}
 .purchase-stars-counter{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;gap:8px;direction:ltr}.purchase-stars-counter button{border:1px solid rgba(0,242,254,.23);border-radius:12px;background:rgba(0,242,254,.07);color:#dffaff;font-size:22px;cursor:pointer}.purchase-stars-counter input{width:100%;min-width:0;min-height:46px;border:1px solid rgba(255,255,255,.11);border-radius:12px;background:rgba(255,255,255,.035);color:#fff;text-align:center;font:inherit;font-size:16px;font-weight:900;outline:none}
 .purchase-stars-range{width:100%;margin:12px 0 8px;accent-color:#00dffc}.purchase-stars-presets{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.purchase-stars-presets::-webkit-scrollbar{display:none}.purchase-stars-presets button{flex:0 0 auto;min-height:34px;padding:0 11px;border:1px solid rgba(255,255,255,.09);border-radius:999px;background:rgba(255,255,255,.035);color:#b8c6d5;font:inherit;font-size:13px;font-weight:800}.purchase-stars-presets button.active{border-color:rgba(0,242,254,.4);background:rgba(0,242,254,.1);color:#e8fdff}
 
@@ -1122,7 +1122,7 @@ html.purchase-confirm-open,body.purchase-confirm-open{overflow:hidden!important;
 @media(max-width:680px){.service-viewer-overlay{width:100%!important;max-width:100%!important}.service-viewer-device{width:min(410px,100%)!important}}
 
 
-/* ===== Veyra v2.3.1 — VPN popup picker + Premium artifact fix ===== */
+/* ===== BlueGate v2.3.1 — VPN popup picker + Premium artifact fix ===== */
 .vpn-inline-legacy{display:none!important}
 .vpn-popup-panel{padding-top:18px!important}
 .vpn-popup-launcher{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:22px 24px;border:1px solid rgba(85,192,236,.22);border-radius:26px;background:radial-gradient(circle at 8% 12%,rgba(85,192,236,.10),transparent 34%),linear-gradient(180deg,rgba(14,29,48,.98),rgba(8,18,33,.98));box-shadow:0 22px 58px rgba(0,0,0,.16)}
@@ -1132,7 +1132,7 @@ html.purchase-confirm-open,body.purchase-confirm-open{overflow:hidden!important;
 html.vpn-picker-open,body.vpn-picker-open{overflow:hidden}
 .vpn-picker-overlay{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:22px;border:0;background:transparent;z-index:170;place-items:center;overflow:hidden;color:var(--text)}
 .vpn-picker-overlay[open]{display:grid}.vpn-picker-overlay::backdrop{background:rgba(2,7,15,.84);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
-.vpn-picker-card{width:min(900px,100%);max-height:calc(100dvh - 44px);overflow:auto;overscroll-behavior:contain;border:1px solid rgba(95,191,238,.22);border-radius:30px;padding:22px;background:radial-gradient(circle at 5% 0,rgba(70,178,234,.10),transparent 32%),linear-gradient(180deg,#0d1c2d,#12091f);box-shadow:0 40px 120px rgba(0,0,0,.58);scrollbar-width:thin;animation:vpnPickerIn .22s cubic-bezier(.2,.8,.25,1)}
+.vpn-picker-card{width:min(900px,100%);max-height:calc(100dvh - 44px);overflow:auto;overscroll-behavior:contain;border:1px solid rgba(95,191,238,.22);border-radius:30px;padding:22px;background:radial-gradient(circle at 5% 0,rgba(70,178,234,.10),transparent 32%),linear-gradient(180deg,#0d1c2d,#071321);box-shadow:0 40px 120px rgba(0,0,0,.58);scrollbar-width:thin;animation:vpnPickerIn .22s cubic-bezier(.2,.8,.25,1)}
 @keyframes vpnPickerIn{from{opacity:0;transform:translateY(14px) scale(.988)}to{opacity:1;transform:none}}
 .vpn-picker-grabber{display:none}.vpn-picker-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.07)}
 .vpn-picker-close{width:42px;height:42px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035);color:var(--text);cursor:pointer;font-size:17px}.vpn-picker-close:hover{border-color:rgba(95,191,238,.42);background:rgba(85,192,236,.07)}
@@ -1185,5 +1185,5 @@ html.vpn-picker-open,body.vpn-picker-open{overflow:hidden}
 .generic-card-kicker,.generic-product-card--catalog .generic-buy{display:none!important}
 .generic-card-name{font-size:14px!important;line-height:1.45!important;min-height:41px!important;margin:0!important}
 .generic-card-price{font-size:12.5px!important;line-height:1.4!important;color:#f0f4f8!important}
-.generic-catalog-badge{top:9px!important;right:9px!important;padding:4px 8px!important;font-size:10.5px!important;max-width:calc(100% - 18px)!important}
+.generic-catalog-badge{top:9px!important;right:9px!important;padding:4px 8px!important;font-size:12px!important;max-width:calc(100% - 18px)!important}
 @media(max-width:860px){.generic-products-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important;gap:12px!important}.generic-card-media{padding:15px!important}.generic-card-name{font-size:13.5px!important;min-height:39px!important}.generic-card-price{font-size:12px!important}}

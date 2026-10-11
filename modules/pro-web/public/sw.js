@@ -1,4 +1,4 @@
-const CACHE = 'veyra-platform-v3.0.6.1';
+const CACHE = 'bluegate-platform-v3.0.6.1';
 const ASSETS = [
   './',
   './index.html',

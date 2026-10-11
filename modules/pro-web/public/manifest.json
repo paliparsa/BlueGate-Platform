@@ -1,10 +1,10 @@
 {
-  "name": "Veyra Store",
-  "short_name": "Veyra",
+  "name": "BlueGate Store",
+  "short_name": "BlueGate",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0d0717",
-  "theme_color": "#0d0717",
+  "background_color": "#06101d",
+  "theme_color": "#06101d",
   "icons": [
     {
       "src": "icon-192.png",

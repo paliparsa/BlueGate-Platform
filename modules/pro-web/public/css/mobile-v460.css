@@ -1,4 +1,4 @@
-/* Veyra v4.6.0 final mobile regression layer. Loaded last on purpose. */
+/* BlueGate v4.6.0 final mobile regression layer. Loaded last on purpose. */
 @media(max-width:760px){
   html,body{max-width:100%;overflow-x:hidden}
   .member-app,.member-shell,.member-main,.member-content{min-width:0;max-width:100%}

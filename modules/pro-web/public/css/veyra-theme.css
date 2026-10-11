@@ -1,7 +1,0 @@
-/* Veyra Platform v1.0.0 — final brand layer */
-:root{--bg:#0b0714;--bg2:#10091c;--surface:#160d26;--surface2:#1d1233;--surface3:#271840;--line:#3b2857;--line2:#68479a;--blue:#8b5cf6;--blue2:#c084fc;--purple:#d946ef;}
-body{background:radial-gradient(circle at 8% -4%,rgba(124,58,237,.22),transparent 30%),radial-gradient(circle at 94% 8%,rgba(217,70,239,.13),transparent 26%),linear-gradient(180deg,#09050f,#12091f 42%,#0b0714)!important;}
-.announcement,.btn.primary,.bg-register-btn,.primary,.web-primary,.checkout-primary{background:linear-gradient(135deg,#7c3aed,#d946ef)!important;box-shadow:0 15px 34px rgba(139,92,246,.25)!important;}
-.site-header{background:rgba(11,7,20,.82)!important;border-color:rgba(192,132,252,.16)!important}.site-header.scrolled{background:rgba(9,5,15,.93)!important}
-.brand-stage::after{background:#8b5cf6!important}.brand-stage img,.brand-wordmark{filter:drop-shadow(0 14px 34px rgba(139,92,246,.24))}.hero::before{content:"V"!important;color:rgba(216,180,254,.025)!important}
-.builder-credit{display:block;margin-top:8px;color:#9d88b5;font-size:12px;letter-spacing:.02em}.footer-brand .builder-credit{direction:rtl}.bg-admin-nav,.bg-admin-card,.bg-admin-row,.bg-order-card{border-color:rgba(192,132,252,.14)!important}
