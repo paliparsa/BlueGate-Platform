@@ -4160,21 +4160,16 @@ function update_inventory_field(int $id, string $field, $value): bool {
 
 // Stable Admin Backup/Restore helpers. Backups are server-side .json.gz files under storage/backups.
 function blue_backup_tables(): array {
+    // Only essential business tables. Large log/event/snapshot tables are excluded
+    // to keep memory and time bounded on production databases.
     $preferred = [
         'settings','users','referrals','transactions','withdrawals','mission_claims','spin_logs','payment_methods',
         'product_categories','products','coupons','product_variants','store_categories','services','service_groups','service_plans','inventory_items','orders','order_events',
-        'crypto_wallets','crypto_payment_checks','swapwallet_invoices'
+        'crypto_wallets','crypto_payment_checks','swapwallet_invoices','credit_topups','user_services','service_instances',
+        'service_providers','service_plan_provider_map','admin_roles'
     ];
     $existing = [];
     foreach ($preferred as $t) if (table_exists($t)) $existing[] = $t;
-    try {
-        $dbName = app_config('DB_NAME');
-        $q = db()->prepare('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=? ORDER BY TABLE_NAME');
-        $q->execute([$dbName]);
-        foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $t) {
-            if (!in_array($t, $existing, true)) $existing[] = $t;
-        }
-    } catch (Throwable $e) {}
     return $existing;
 }
 function blue_backup_dir(): string {
@@ -4230,9 +4225,8 @@ function blue_backup_table_columns(string $table): array {
     return array_map(fn($r)=>(string)$r['Field'], $q->fetchAll());
 }
 function blue_backup_create(string $suffix=''): array {
-    // Raise memory for large dumps; still stream table-by-table to avoid peak usage.
-    @ini_set('memory_limit', '512M');
-    @set_time_limit(300);
+    @ini_set('memory_limit', '256M');
+    @set_time_limit(180);
     $suffix = preg_replace('/[^A-Za-z0-9_-]/', '', $suffix);
     $filename = 'blue-referral-backup-' . date('Ymd-His') . ($suffix ? '-' . $suffix : '') . '.json.gz';
     $dir = blue_backup_dir();
@@ -4240,50 +4234,38 @@ function blue_backup_create(string $suffix=''): array {
     $tmp = $path . '.tmp';
 
     $gz = @gzopen($tmp, 'wb6');
-    if (!$gz) throw new RuntimeException('BACKUP_GZIP_OPEN_FAILED: ' . $tmp);
+    if (!$gz) throw new RuntimeException('BACKUP_GZIP_OPEN_FAILED');
 
-    $header = [
-        'format' => 'blue_referral_backup',
-        'version' => 2,
-        'created_at' => date('c'),
-        'app' => 'BlueReferral',
-        'db_name' => app_config('DB_NAME'),
-        'tables' => new stdClass(),
-    ];
-    // Write opening manually so we can stream tables
-    gzwrite($gz, '{"format":"blue_referral_backup","version":2,"created_at":"' . date('c') . '","app":"BlueReferral","db_name":' . json_encode(app_config('DB_NAME')) . ',"tables":{');
+    gzwrite($gz, '{"format":"blue_referral_backup","version":2,"created_at":"' . date('c') . '","app":"BlueReferral","db_name":' . json_encode((string)app_config('DB_NAME')) . ',"tables":{');
 
     $totalRows = 0;
     $tableCount = 0;
-    $first = true;
+    $firstTable = true;
     foreach (blue_backup_tables() as $table) {
         $columns = blue_backup_table_columns($table);
         $safe = str_replace('`', '``', $table);
+        if (!$firstTable) gzwrite($gz, ',');
+        gzwrite($gz, json_encode($table) . ':{"columns":' . json_encode($columns) . ',"rows":[');
         $stmt = db()->query('SELECT * FROM `' . $safe . '`');
-        $rows = [];
         $count = 0;
+        $firstRow = true;
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $rows[] = $row;
+            if (!$firstRow) gzwrite($gz, ',');
+            $enc = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if ($enc === false) $enc = 'null';
+            gzwrite($gz, $enc);
+            $firstRow = false;
             $count++;
-            // Flush every 500 rows to keep memory bounded
-            if (count($rows) >= 500) {
-                // keep accumulating for valid JSON; for very large tables we still need the array
-                // but we free after writing the table
+            if (($count % 200) === 0) {
+                // keep memory low
+                if (function_exists('gc_collect_cycles')) gc_collect_cycles();
             }
         }
-        $chunk = json_encode(['columns' => $columns, 'rows' => $rows, 'count' => $count], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if ($chunk === false) {
-            gzclose($gz);
-            @unlink($tmp);
-            throw new RuntimeException('BACKUP_JSON_FAILED for table ' . $table);
-        }
-        if (!$first) gzwrite($gz, ',');
-        gzwrite($gz, json_encode($table) . ':' . $chunk);
-        $first = false;
+        gzwrite($gz, '],"count":' . $count . '}');
         $totalRows += $count;
         $tableCount++;
-        unset($rows, $chunk);
-        if (function_exists('gc_collect_cycles')) gc_collect_cycles();
+        $firstTable = false;
+        $stmt->closeCursor();
     }
     gzwrite($gz, '}}');
     gzclose($gz);
@@ -4296,8 +4278,10 @@ function blue_backup_create(string $suffix=''): array {
     set_setting('backup_last_created_at', date('Y-m-d H:i:s'));
     set_setting('backup_last_filename', $filename);
     set_setting('backup_last_size', (string)filesize($path));
-    return ['filename'=>$filename, 'path'=>$path, 'size'=>filesize($path), 'rows'=>$totalRows, 'tables'=>count($payload['tables']), 'download_url'=>blue_backup_download_url($filename)];
+    return ['filename'=>$filename, 'path'=>$path, 'size'=>filesize($path), 'rows'=>$totalRows, 'tables'=>$tableCount, 'download_url'=>blue_backup_download_url($filename)];
 }
+
+
 function blue_backup_list(): array {
     $dir = blue_backup_dir();
     $files = glob($dir . '/blue-referral-backup-*.json.gz') ?: [];
