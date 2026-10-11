@@ -246,6 +246,50 @@
   .mini-purchase-card .purchase-confirm-specs > div { padding-inline: 10px; }
   .mini-purchase-card .purchase-confirm-specs b { max-width: 58%; font-size: 13px; }
 }
+
+/* Cross-surface text, card and action hardening. */
+.parity-order-copy h3 { white-space: normal !important; overflow-wrap: anywhere; }
+.parity-order-copy h3 small { white-space: nowrap; }
+.parity-order-copy .order-card-meta { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; }
+.parity-order-copy .order-card-meta > span:first-child { white-space: nowrap; }
+.parity-order-copy .order-card-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px; min-width: 0; line-height: 1.6; }
+.parity-order-copy .order-card-total > * { max-width: 100%; }
+.parity-order-copy .order-card-total .flash-pill { white-space: nowrap; }
+.parity-order-side .status-badge { max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.product-card-discount-note,
+.product-plan-discount-note { max-width: 100%; white-space: normal !important; overflow-wrap: anywhere; line-height: 1.5; }
+.purchase-plan-title { -webkit-line-clamp: 3 !important; }
+.purchase-plan-price { min-width: 0; }
+.purchase-plan-price > strong { max-width: 100%; }
+.purchase-confirm-desc p { overflow-wrap: anywhere; }
+.purchase-confirm-price > div { min-width: 0; max-width: 62%; }
+.purchase-confirm-price strong { white-space: nowrap; }
+.timeline-details { overflow: hidden; }
+.timeline-details summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 42px; }
+.orders-manage-footer { padding: 12px 0 8px; }
+.orders-manage-btn-bottom { width: auto !important; min-width: 132px !important; height: 42px !important; padding: 0 14px !important; border: 1px solid color-mix(in srgb,var(--accent) 28%,var(--border)) !important; border-radius: 14px !important; background: color-mix(in srgb,var(--accent) 8%,var(--card)) !important; font-size: 13px !important; }
+.orders-manage-btn-bottom::after { content: "مدیریت سفارش‌ها"; margin-inline-start: 7px; font-size: 13px; font-weight: 850; }
+.orders-manage-btn-bottom { font-size: 0 !important; }
+.mini-credit-tx-list > .u-empty,
+.mini-credit-tx-list > .mini-credit-empty { min-height: 150px; display: flex !important; flex-direction: column; justify-content: center; align-items: center; gap: 7px; }
+.app-sheet-footer { align-items: stretch; }
+.app-sheet-footer > button { min-height: 46px; }
+
+@media (max-width: 520px) {
+  .parity-order-main { grid-template-columns: 40px minmax(0,1fr) auto !important; gap: 8px !important; }
+  .parity-order-main .order-icon { width: 40px; height: 40px; }
+  .parity-order-side { gap: 4px; }
+  .parity-order-side .status-badge { max-width: 82px; font-size: 10px; }
+  .purchase-confirm-price { align-items: flex-start; }
+  .purchase-confirm-price > div { max-width: 68%; }
+}
+
+@media (max-width: 360px) {
+  .parity-order-main { grid-template-columns: 36px minmax(0,1fr) !important; }
+  .parity-order-side { grid-column: 2; justify-content: flex-start; margin-top: -2px; }
+  .parity-order-side .status-badge { max-width: none; }
+  .orders-manage-btn-bottom { min-width: 124px !important; }
+}
 #ordersPage .parity-order-side { align-self: stretch; }
 #ordersPage .status-badge { font-size: 11px; padding: 6px 8px; }
 #ordersPage .parity-order-card .order-row-stepper {
