@@ -4179,8 +4179,18 @@ function blue_backup_tables(): array {
 }
 function blue_backup_dir(): string {
     $dir = __DIR__ . '/../storage/backups';
-    if (!is_dir($dir)) @mkdir($dir, 0750, true);
-    if (!is_dir($dir) || !is_writable($dir)) throw new RuntimeException('BACKUP_DIR_NOT_WRITABLE');
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+    if (!is_dir($dir)) {
+        throw new RuntimeException('BACKUP_DIR_CREATE_FAILED: ' . $dir);
+    }
+    if (!is_writable($dir)) {
+        @chmod($dir, 0755);
+    }
+    if (!is_writable($dir)) {
+        throw new RuntimeException('BACKUP_DIR_NOT_WRITABLE: ' . $dir . ' (check ownership/permissions for the web user)');
+    }
     return $dir;
 }
 function blue_backup_safe_filename(string $name): string {
@@ -4242,7 +4252,11 @@ function blue_backup_create(string $suffix=''): array {
     $gz = gzencode($json, 6);
     if ($gz === false) throw new RuntimeException('BACKUP_GZIP_FAILED');
     $path = blue_backup_dir() . '/' . $filename;
-    if (file_put_contents($path, $gz, LOCK_EX) === false) throw new RuntimeException('BACKUP_WRITE_FAILED');
+    $written = @file_put_contents($path, $gz, LOCK_EX);
+    if ($written === false) {
+        $err = error_get_last();
+        throw new RuntimeException('BACKUP_WRITE_FAILED: ' . ($err['message'] ?? 'unknown') . ' path=' . $path);
+    }
     @chmod($path, 0640);
     set_setting('backup_last_created_at', date('Y-m-d H:i:s'));
     set_setting('backup_last_filename', $filename);
