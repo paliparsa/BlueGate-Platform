@@ -8,7 +8,9 @@ final class BlueGateMarzbanProvider extends BlueGateAbstractProvider {
     private function curl(string $method,string $path,$body=null,array $headers=[],bool $form=false): array{
         if(!function_exists('curl_init'))throw new RuntimeException('PHP_CURL_REQUIRED');$ch=curl_init($this->base.$path);$h=['Accept: application/json'];
         if($this->token)$h[]='Authorization: Bearer '.$this->token;foreach($headers as $x)$h[]=$x;
-        curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_HTTPHEADER=>$h,CURLOPT_CONNECTTIMEOUT=>(int)($this->meta['connect_timeout']??8),CURLOPT_TIMEOUT=>(int)($this->meta['request_timeout']??20),CURLOPT_SSL_VERIFYPEER=>$this->verifyTls(),CURLOPT_SSL_VERIFYHOST=>$this->verifyTls()?2:0]);
+        $connectTimeout=min(5,max(2,(int)($this->meta['connect_timeout']??4)));
+        $requestTimeout=min(10,max($connectTimeout+1,(int)($this->meta['request_timeout']??8)));
+        curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_HTTPHEADER=>$h,CURLOPT_CONNECTTIMEOUT=>$connectTimeout,CURLOPT_TIMEOUT=>$requestTimeout,CURLOPT_SSL_VERIFYPEER=>$this->verifyTls(),CURLOPT_SSL_VERIFYHOST=>$this->verifyTls()?2:0]);
         if($body!==null){if($form){curl_setopt($ch,CURLOPT_POSTFIELDS,http_build_query($body));$h[]='Content-Type: application/x-www-form-urlencoded';curl_setopt($ch,CURLOPT_HTTPHEADER,$h);}else{$h[]='Content-Type: application/json';curl_setopt($ch,CURLOPT_HTTPHEADER,$h);curl_setopt($ch,CURLOPT_POSTFIELDS,json_encode($body,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));}}
         $raw=curl_exec($ch);$err=curl_error($ch);$code=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);curl_close($ch);if($raw===false||$err)throw new RuntimeException('MARZBAN_NETWORK:'.$err);$json=json_decode($raw,true);if($code<200||$code>=300)throw new RuntimeException('MARZBAN_HTTP_'.$code.':'.mb_substr(is_array($json)?json_encode($json):$raw,0,600));return is_array($json)?$json:['raw'=>$raw];
     }

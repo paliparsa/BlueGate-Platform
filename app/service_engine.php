@@ -106,6 +106,8 @@ function bluegate_save_provider(array $input): int {
     $token=array_key_exists('api_token',$input)&&trim((string)$input['api_token'])!==''?bluegate_encrypt_secret((string)$input['api_token']):null;
     $meta=is_array($input['metadata']??null)?$input['metadata']:[];
     foreach(['verify_tls','subscription_base_url','subscription_path','default_inbound_id','connect_timeout','request_timeout','api_version'] as $k) if(array_key_exists($k,$input))$meta[$k]=$input[$k];
+    if(array_key_exists('connect_timeout',$meta))$meta['connect_timeout']=min(5,max(2,(int)$meta['connect_timeout']));
+    if(array_key_exists('request_timeout',$meta))$meta['request_timeout']=min(10,max(5,(int)$meta['request_timeout']));
     if(isset($meta['verify_tls']))$meta['verify_tls']=filter_var($meta['verify_tls'],FILTER_VALIDATE_BOOLEAN,FILTER_NULL_ON_FAILURE)??true;
     if(!empty($meta['subscription_base_url'])){
         $safeBase=bluegate_safe_subscription_url((string)$meta['subscription_base_url']);
@@ -590,4 +592,3 @@ if (!function_exists('veyra_service_public')) { function veyra_service_public(ar
 if (!function_exists('veyra_map_inbound_ids')) { function veyra_map_inbound_ids(array $m): array { return bluegate_map_inbound_ids($m); } }
 if (!function_exists('veyra_sync_instance_targets')) { function veyra_sync_instance_targets(int $instanceId, array $targetIds, array $names=[]): void { bluegate_sync_instance_targets($instanceId, $targetIds, $names); } }
 if (!class_exists('VeyraProviderRegistry', false)) { class_alias('BlueGateProviderRegistry', 'VeyraProviderRegistry'); }
-

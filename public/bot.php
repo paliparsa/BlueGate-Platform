@@ -23,6 +23,16 @@ if ($headerExpected !== '') {
 $raw = file_get_contents('php://input');
 $update = json_decode($raw ?: '{}', true) ?: [];
 require_once __DIR__ . '/../app/bot_logic.php';
+
+// Telegram only needs an acknowledgement. Flush it before running handlers so
+// a slow provider or notification call cannot make the webhook look unhealthy.
+ignore_user_abort(true);
+if (function_exists('fastcgi_finish_request')) {
+    http_response_code(200);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'OK';
+    fastcgi_finish_request();
+}
 try {
     handle_update($update);
 } catch (Throwable $e) {
@@ -34,4 +44,4 @@ try {
         if ($cid) { try { send_msg($cid,'⚠️ اجرای این دکمه با خطا روبه‌رو شد. دوباره امتحان کن؛ اگر ادامه داشت لاگ Bot را بررسی کن.'); } catch (Throwable $ignore) {} }
     }
 }
-echo 'OK';
+if (!function_exists('fastcgi_finish_request')) echo 'OK';

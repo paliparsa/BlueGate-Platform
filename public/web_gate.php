@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__.'/../app/license.php';
+// web_gate is a direct entry point, so it must load the same bootstrap and
+// module registry as the API before checking Pro capabilities.
+require_once __DIR__.'/../app/bootstrap.php';
 veyra_license_gate_http('json');
 if(!veyra_license_has_feature('web_storefront') || !veyra_pro_core_active()){http_response_code(403);header('Content-Type: application/json; charset=UTF-8');echo json_encode(['ok'=>false,'error'=>'PRO_FEATURE_REQUIRED_WEB_STOREFRONT','message'=>'Veyra Web Storefront requires an active Pro entitlement and Pro module.','upgrade_url'=>'https://t.me/bluegatesupport','upgrade_support'=>'@bluegatesupport'],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);exit;}
 $uri=(string)(parse_url($_SERVER['REQUEST_URI']??'/web/',PHP_URL_PATH)?:'/web/');
