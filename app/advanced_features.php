@@ -63,7 +63,7 @@ function bluegate_create_ticket(int $uid,array $in): array {
     return ['ticket_id'=>$id,'ticket'=>bluegate_ticket_record($id,$uid)];
 }
 function bluegate_reply_ticket(int $ticketId,string $senderType,int $senderId,string $body,?string $attachmentData=null,?string $attachmentName=null): void {
-    $body=trim($body);if($body==='')throw new RuntimeException('EMPTY_MESSAGE');if(mb_strlen($body)>4000)throw new RuntimeException('TICKET_MESSAGE_TOO_LONG');
+    $body=trim($body);$hasAttachment=trim((string)$attachmentData)!=='';if($body===''&&!$hasAttachment)throw new RuntimeException('EMPTY_MESSAGE');if(mb_strlen($body)>4000)throw new RuntimeException('TICKET_MESSAGE_TOO_LONG');
     $ticket=bluegate_ticket_record($ticketId);if(!$ticket)throw new RuntimeException('TICKET_NOT_FOUND');
     if($ticket['status']==='closed')throw new RuntimeException('TICKET_CLOSED');
     $a=bluegate_ticket_attachment($attachmentData,$attachmentName);db()->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,delivered_at) VALUES (?,?,?,?,?,?,?,NOW())')->execute([$ticketId,$senderType,$senderId,$body,$a['url'],$a['name'],$a['mime']]);
