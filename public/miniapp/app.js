@@ -13,6 +13,21 @@ syncMiniViewport();
 window.addEventListener('resize', syncMiniViewport, {passive: true});
 window.visualViewport?.addEventListener('resize', syncMiniViewport, {passive: true});
 
+function optimizeMiniImages(root = document) {
+  root.querySelectorAll?.('img').forEach(img => {
+    if (!img.hasAttribute('decoding')) img.decoding = 'async';
+    if (!img.hasAttribute('loading') && !img.closest('.hero,.topbar')) img.loading = 'lazy';
+  });
+}
+optimizeMiniImages();
+if (window.MutationObserver) {
+  new MutationObserver(records => records.forEach(record => {
+    record.addedNodes.forEach(node => {
+      if (node.nodeType === 1) optimizeMiniImages(node);
+    });
+  })).observe(document.body, {childList: true, subtree: true});
+}
+
 // Safety: ensure UI helper exists
 if (typeof window.BlueGateUI === 'undefined' && typeof window.VeyraUI !== 'undefined') {
   window.BlueGateUI = window.VeyraUI;

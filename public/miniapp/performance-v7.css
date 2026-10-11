@@ -1,0 +1,27 @@
+/* Phase 7: reduce rendering cost without changing component geometry. */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+:is(.product-grid-wrap, .h-scroll, .glowing-flash-products-row,
+    .category-strip, .catalog-mobile-categories) {
+  contain: inline-size;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 699px) {
+  :is(.glass, .bottom-nav, .topbar, .category-strip, .product-tile,
+      .dialog-card, .app-sheet-panel, .purchase-confirm-card) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

@@ -1,0 +1,73 @@
+/* Phase 6: Persian/RTL typography and keyboard/touch accessibility. */
+:root {
+  --mini-control-size: 44px;
+  --mini-focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+html[dir="rtl"] {
+  text-align: right;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--mini-font-family);
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(.bottom-nav button),
+.icon-btn,
+.close-btn,
+[role="button"] {
+  min-height: var(--mini-control-size);
+}
+
+:is(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px;
+  box-shadow: var(--mini-focus-ring);
+}
+
+:is(input, select, textarea)::placeholder {
+  color: color-mix(in srgb, var(--muted) 82%, transparent);
+  opacity: 1;
+}
+
+:is(.price, .price-pill, .price-row-mini, .product-price-stack,
+    .purchase-confirm-price, .big-money, [data-amount]) {
+  font-variant-numeric: tabular-nums;
+}
+
+:is(.price, .price-pill, .product-price-stack strong,
+    .purchase-confirm-price strong, [data-amount]) {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@media (pointer: coarse) {
+  .icon-btn,
+  .close-btn,
+  .auth-tab,
+  .bottom-nav button,
+  .admin-tabs button {
+    min-height: 44px;
+  }
+}
+
+@media (forced-colors: active) {
+  :is(button, a, input, select, textarea, [role="button"]):focus-visible {
+    outline: 2px solid CanvasText !important;
+    box-shadow: none;
+  }
+}
