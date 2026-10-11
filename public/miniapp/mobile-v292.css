@@ -13,7 +13,7 @@
 
 @media(max-width:720px){
   /* Bottom navigation: always stay inside viewport and Telegram safe-area. */
-  .bottom-nav.glass,.bottom-nav{left:8px!important;right:8px!important;bottom:calc(6px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;transform:none!important;margin:0!important;padding:6px!important;border-radius:var(--r-xl)!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:3px!important;overflow:visible!important}
+  .bottom-nav.glass,.bottom-nav{left:8px!important;right:8px!important;bottom:calc(6px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;transform:none!important;margin:0!important;padding:6px!important;border-radius:var(--r-xl)!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;overflow:visible!important}
   .bottom-nav button{min-width:0!important;width:100%!important;min-height:54px!important;padding:7px 2px!important;border-radius:var(--r-md)!important;font-size:13px!important;line-height:1.25!important;transform:none!important}
   .bottom-nav button.active{transform:none!important;box-shadow:0 5px 15px color-mix(in srgb,var(--accent) 22%,transparent)!important}
 
