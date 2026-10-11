@@ -9,7 +9,16 @@ backup_create(){
   if [[ -n "$DB_PASS" ]] && command -v mysqldump >/dev/null 2>&1; then
     MYSQL_PWD="$DB_PASS" mysqldump --single-transaction --routines --triggers -u"$DB_USER" "$DB_NAME" | gzip -c > "$dir/database.sql.gz" || { rm -rf "$dir"; return 1; }
   else warn "Database credentials unavailable; DB dump skipped"; fi
-  tar -C "$APP_DIR" --exclude='./storage/backups' --exclude='./.git' -czf "$dir/files.tar.gz" . || { rm -rf "$dir"; return 1; }
+  # Uploaded media is intentionally preserved during restore, so archiving it
+  # here only makes every update backup slower and larger without improving
+  # rollback. Runtime cache/log files are disposable and need not be backed up.
+  tar -C "$APP_DIR" \
+    --exclude='./.git' \
+    --exclude='./public/uploads' \
+    --exclude='./storage/backups' \
+    --exclude='./storage/cache' \
+    --exclude='./storage/*.log' \
+    -czf "$dir/files.tar.gz" . || { rm -rf "$dir"; return 1; }
   cp -a "$ENV_FILE" "$dir/environment.env" 2>/dev/null || true
   { echo "version=$(app_version)"; echo "created_at=$(now)"; echo "app_dir=$APP_DIR"; } > "$dir/meta"
   ln -sfn "$dir" "$BACKUP_ROOT/latest"

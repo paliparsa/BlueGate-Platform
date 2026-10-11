@@ -160,8 +160,10 @@
 .orders-filter-option i { display: none; color: var(--accent); font-style: normal; font-weight: 900; }
 .orders-filter-option.active { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 16%, #101827); }
 .orders-filter-option.active i { display: block; }
-#ordersPage .order-stepper .step { min-width: 0; }
-#ordersPage .order-stepper .step-hint { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 1.25; white-space: nowrap; }
+#ordersPage .order-stepper { align-items: flex-start; gap: 2px; overflow: visible; }
+#ordersPage .order-stepper .step { flex: 1 1 25%; min-width: 0; gap: 4px; }
+#ordersPage .order-stepper .step-hint { display: block; width: 100%; min-height: 24px; margin-top: 1px; padding: 0 2px; color: var(--muted); font-size: 8px; line-height: 1.35; text-align: center; white-space: normal; overflow-wrap: anywhere; }
+#ordersPage .order-stepper .step-line { z-index: -1; }
 
 @media (max-width: 620px) {
   #ordersPage .parity-order-main { grid-template-columns: 52px minmax(0,1fr) auto !important; }
