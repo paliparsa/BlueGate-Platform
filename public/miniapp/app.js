@@ -3316,6 +3316,11 @@ function initAuthHandlers() {
     e.preventDefault();
     closeAuthModal();
   });
+  $('authModal')?.addEventListener('close', () => {
+    const modal = $('authModal');
+    modal?.classList.remove('open');
+    modal?.setAttribute('aria-hidden', 'true');
+  });
   $('authModal')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeAuthModal();
   });

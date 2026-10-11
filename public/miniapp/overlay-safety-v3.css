@@ -22,6 +22,19 @@
   z-index: calc(var(--mini-z-feedback) - 10000) !important;
 }
 
+#authModal.auth-modal:not([open]) {
+  display: none !important;
+}
+
+#authModal.auth-modal[open] {
+  display: block !important;
+  position: fixed !important;
+  z-index: var(--mini-z-dialog) !important;
+  max-width: min(440px, calc(100vw - 24px));
+  max-height: calc(var(--mini-viewport-height) - var(--mini-overlay-top) - var(--mini-overlay-bottom));
+  overflow: hidden;
+}
+
 html.sheet-open,
 html:has(.app-sheet.open),
 html:has(.cart-sheet.open),
