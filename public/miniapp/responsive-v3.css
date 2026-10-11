@@ -1,0 +1,162 @@
+/*
+ * Mini App responsive contract.
+ * This is the final responsive layer; component styles stay in their
+ * feature files, while viewport and overflow rules are centralized here.
+ */
+:root {
+  --mini-bottom-nav-height: 78px;
+  --mini-bottom-clearance: calc(var(--mini-bottom-nav-height) + var(--mini-safe-bottom) + 16px);
+  --mini-page-gutter: clamp(12px, 3vw, 28px);
+}
+
+html,
+body {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  padding-inline: 0;
+  padding-bottom: 0;
+}
+
+#userApp,
+#adminApp,
+.app-shell,
+.page,
+.page > *,
+.section-row,
+.catalog-section,
+.admin-content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#userApp {
+  padding-inline: var(--mini-page-gutter);
+  padding-bottom: var(--mini-bottom-clearance);
+}
+
+#adminApp {
+  padding-inline: var(--mini-page-gutter);
+}
+
+.topbar,
+.bottom-nav,
+.admin-tabs {
+  max-width: 100%;
+}
+
+.bottom-nav {
+  min-height: var(--mini-bottom-nav-height);
+  padding-bottom: max(6px, var(--mini-safe-bottom));
+}
+
+.category-strip,
+.h-scroll,
+.product-grid-wrap,
+.catalog-mobile-categories,
+[data-horizontal-scroll] {
+  min-width: 0;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+}
+
+.product-grid-wrap > *,
+.h-scroll > *,
+.category-strip > *,
+.catalog-mobile-categories > * {
+  min-width: 0;
+}
+
+@media (max-width: 699px) {
+  #userApp,
+  #adminApp {
+    padding-inline: 10px;
+  }
+
+  #userApp {
+    padding-bottom: calc(var(--mini-bottom-clearance) + 8px);
+  }
+
+  .topbar {
+    margin-inline: 0;
+  }
+
+  .page {
+    width: 100%;
+  }
+
+  .section-title,
+  .section-title h2,
+  .catalog-section .section-title {
+    min-width: 0;
+  }
+
+  .section-title h2,
+  .section-title small,
+  .section-view-all {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .form-grid,
+  .stats-grid,
+  .dashboard-quick-stats {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .admin-tabs {
+    overflow-x: auto;
+    justify-content: flex-start;
+    touch-action: pan-x;
+  }
+
+  .admin-tabs button {
+    flex: 0 0 auto;
+    min-width: 112px;
+  }
+
+  .dialog-actions,
+  .app-sheet-footer,
+  .admin-actions,
+  .infra-provider-actions,
+  .catalog-mobile-actions {
+    width: 100%;
+  }
+
+  .dialog-actions > button,
+  .app-sheet-footer > button,
+  .admin-actions > button,
+  .infra-provider-actions > button,
+  .catalog-mobile-actions > button {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+}
+
+@media (min-width: 700px) {
+  #userApp,
+  #adminApp {
+    padding-inline: 0;
+  }
+
+  #userApp {
+    padding-bottom: 24px;
+  }
+}
+
+@media (max-width: 390px) {
+  #userApp,
+  #adminApp {
+    padding-inline: 8px;
+  }
+
+  .bottom-nav button {
+    min-height: 52px;
+    padding-inline: 1px;
+  }
+}

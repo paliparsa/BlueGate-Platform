@@ -1,0 +1,129 @@
+/*
+ * Mini App overlay and safe-area contract.
+ * All modal surfaces use dynamic viewport units and one scroll owner.
+ */
+:root {
+  --mini-overlay-gutter: max(12px, env(safe-area-inset-left, 0px));
+  --mini-overlay-gutter-right: max(12px, env(safe-area-inset-right, 0px));
+  --mini-overlay-top: max(12px, env(safe-area-inset-top, 0px));
+  --mini-overlay-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+#onboarding.onboarding {
+  z-index: calc(var(--mini-z-sheet) - 10000) !important;
+}
+
+#shareSheet.share-sheet,
+#qrSheet.qr-sheet {
+  z-index: var(--mini-z-overlay) !important;
+}
+
+.purchase-confirm-overlay {
+  z-index: calc(var(--mini-z-feedback) - 10000) !important;
+}
+
+html.sheet-open,
+html:has(.app-sheet.open),
+html:has(.cart-sheet.open),
+html:has(.preview-sheet.open),
+html:has(.qr-sheet.open),
+html:has(.share-sheet.open),
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+:is(.app-sheet, .cart-sheet, .cust-drawer, .preview-sheet, .qr-sheet,
+    .share-sheet, .lightbox, .onboarding, .palette-popup, .cmd-palette,
+    .purchase-confirm-overlay, .auth-modal) {
+  max-width: 100vw;
+  max-height: 100dvh;
+  overscroll-behavior: contain;
+}
+
+:is(.app-sheet.open, .cart-sheet.open, .cust-drawer.open, .preview-sheet.open,
+    .qr-sheet.open, .share-sheet.open, .lightbox.open, .onboarding.open,
+    .palette-popup.open, .cmd-palette.open, dialog[open]) {
+  padding-top: var(--mini-overlay-top);
+  padding-right: var(--mini-overlay-gutter-right);
+  padding-bottom: var(--mini-overlay-bottom);
+  padding-left: var(--mini-overlay-gutter);
+}
+
+.app-sheet-panel,
+.cart-sheet-inner,
+.preview-sheet-inner,
+.qr-sheet-inner,
+.share-sheet-inner,
+.dialog-card,
+.cmd-inner {
+  min-width: 0;
+  max-width: 100%;
+  max-height: calc(100dvh - var(--mini-overlay-top) - var(--mini-overlay-bottom));
+}
+
+.app-sheet-panel,
+.cart-sheet-inner,
+.preview-sheet-inner,
+.qr-sheet-inner,
+.share-sheet-inner,
+.dialog-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-sheet-body,
+.cart-sheet-body,
+.preview-sheet-body,
+.qr-sheet-body,
+.share-sheet-body,
+.auth-modal-content,
+.cmd-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-sheet-footer {
+  flex-shrink: 0;
+  padding-bottom: max(11px, var(--mini-overlay-bottom));
+}
+
+.app-sheet-handle {
+  flex: 0 0 auto;
+}
+
+:is(.app-sheet-backdrop, .cart-sheet::before, .preview-sheet::before,
+    .qr-sheet::before, .share-sheet::before, .lightbox::before) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 699px) {
+  .app-sheet-panel,
+  .cart-sheet-inner,
+  .preview-sheet-inner,
+  .qr-sheet-inner,
+  .share-sheet-inner,
+  .dialog-card {
+    width: 100%;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+
+  .app-sheet-header,
+  .app-sheet-body {
+    padding-inline: 14px;
+  }
+
+  .app-sheet-footer {
+    gap: 7px;
+    padding-inline: 14px;
+  }
+}
+
+@media (min-width: 700px) {
+  :is(.app-sheet.open, .cart-sheet.open, .cust-drawer.open, .preview-sheet.open,
+      .qr-sheet.open, .share-sheet.open, .lightbox.open, dialog[open]) {
+    padding-inline: 24px;
+  }
+}
