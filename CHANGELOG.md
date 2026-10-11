@@ -123,3 +123,9 @@ This package is based on BlueGate Platform v5.0.0 with the following additions f
 - All polish layers (final-polish, bluegate-theme, admin-web-parity) loaded
 
 These are user-visible improvements in the Telegram Mini App.
+## 5.0.33 - Notification deduplication
+
+- Added a persistent Telegram dispatch guard for admin and user messages.
+- Delivery notifications are now idempotent across Bot, Mini App, web, and retry paths.
+- Order admin notifications use order/event keys to prevent duplicate sends.
+- Removed noisy per-attempt provisioning retry notifications; only the final failure is sent.

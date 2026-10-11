@@ -595,6 +595,17 @@ CREATE TABLE IF NOT EXISTS notification_campaigns (
   INDEX(audience)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS telegram_notification_dispatches (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  dedupe_key VARCHAR(255) NOT NULL,
+  status VARCHAR(16) NOT NULL DEFAULT 'sent',
+  sent_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_telegram_notification_dedupe (dedupe_key),
+  INDEX(status),
+  INDEX(created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- BlueGate Phase 1: Service Engine Foundation
 CREATE TABLE IF NOT EXISTS service_providers (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

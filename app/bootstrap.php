@@ -229,6 +229,11 @@ function migrate(): void {
         title VARCHAR(255) NOT NULL, body VARCHAR(1000) NULL, action_type VARCHAR(32) NULL, action_value VARCHAR(255) NULL, audience VARCHAR(32) NOT NULL DEFAULT \'all\',
         recipient_count INT NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(created_at), INDEX(audience)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    db()->exec('CREATE TABLE IF NOT EXISTS telegram_notification_dispatches (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, dedupe_key VARCHAR(255) NOT NULL,
+        status VARCHAR(16) NOT NULL DEFAULT "sent", sent_at DATETIME NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_telegram_notification_dedupe (dedupe_key), INDEX(status), INDEX(created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
     db()->exec('CREATE TABLE IF NOT EXISTS credit_topups (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, amount BIGINT NOT NULL,
@@ -2280,9 +2285,27 @@ function send_user_message_by_id(int $userId,string $text,?string $replyMarkup=n
     $data=['chat_id'=>$tid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;
     $r=tg('sendMessage',$data);if(empty($r['ok'])){error_log('[User notify failed uid='.$userId.'] '.($r['description']??'unknown'));return false;}return true;
 }
-function admin_notify(string $text,?string $replyMarkup=null,mixed $photo=null): array {
+function telegram_notification_claim(string $dedupeKey): bool {
+    if($dedupeKey===''||!table_exists('telegram_notification_dispatches'))return true;
+    try{$key=mb_substr($dedupeKey,0,255);db()->prepare('DELETE FROM telegram_notification_dispatches WHERE dedupe_key=? AND status="sending" AND created_at < DATE_SUB(NOW(),INTERVAL 10 MINUTE)')->execute([$key]);$q=db()->prepare('INSERT IGNORE INTO telegram_notification_dispatches (dedupe_key,status,sent_at) VALUES (?,"sending",NULL)');$q->execute([$key]);return $q->rowCount()===1;}catch(Throwable $e){error_log('[Telegram notification claim] '.$e->getMessage());return true;}
+}
+function telegram_notification_release(string $dedupeKey): void {
+    if($dedupeKey===''||!table_exists('telegram_notification_dispatches'))return;
+    try{db()->prepare('DELETE FROM telegram_notification_dispatches WHERE dedupe_key=? AND status="sending"')->execute([mb_substr($dedupeKey,0,255)]);}catch(Throwable $e){error_log('[Telegram notification release] '.$e->getMessage());}
+}
+function send_user_message_once(int $userId,string $dedupeKey,string $text,?string $replyMarkup=null): bool {
+    $key='user:'.$userId.':'.$dedupeKey;if(!telegram_notification_claim($key))return true;
+    $ok=send_user_message_by_id($userId,$text,$replyMarkup);
+    if($ok){try{db()->prepare('UPDATE telegram_notification_dispatches SET status="sent",sent_at=NOW() WHERE dedupe_key=?')->execute([$key]);}catch(Throwable $e){error_log('[Telegram notification mark] '.$e->getMessage());}}
+    else telegram_notification_release($key);
+    return $ok;
+}
+function admin_notify(string $text,?string $replyMarkup=null,mixed $photo=null,?string $dedupeKey=null): array {
     $result=['sent'=>0,'failed'=>0,'fallback'=>0];
     foreach(admin_recipient_ids() as $aid){
+        $claimKey=$dedupeKey!==null?'admin:'.$aid.':'.$dedupeKey:'';
+        if($claimKey!==''&&!telegram_notification_claim($claimKey))continue;
+        $delivered=false;
         try{$res=null;
             if($photo!==null&&$photo!==''){
                 $media=$photo;if(is_string($photo)&&is_file($photo)){$mime=function_exists('mime_content_type')?(mime_content_type($photo)?:'image/jpeg'):'image/jpeg';$media=new CURLFile($photo,$mime,basename($photo));}
@@ -2291,8 +2314,9 @@ function admin_notify(string $text,?string $replyMarkup=null,mixed $photo=null):
                 if(!empty($photoRes['ok'])&&$longCaption){$data=['chat_id'=>$aid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;$res=tg('sendMessage',$data);}else{$res=$photoRes;}
                 if(empty($res['ok'])){$result['fallback']++;error_log('[Admin sendPhoto fallback '.$aid.'] '.($res['description']??'unknown'));$data=['chat_id'=>$aid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;$res=tg('sendMessage',$data);}
             }else{$data=['chat_id'=>$aid,'text'=>$text,'parse_mode'=>'HTML','disable_web_page_preview'=>true];if($replyMarkup!==null)$data['reply_markup']=$replyMarkup;$res=tg('sendMessage',$data);}
-            if(!empty($res['ok']))$result['sent']++;else{$result['failed']++;error_log('[Admin notify failed '.$aid.'] '.($res['description']??'unknown'));}
+            if(!empty($res['ok'])){$result['sent']++;$delivered=true;}else{$result['failed']++;error_log('[Admin notify failed '.$aid.'] '.($res['description']??'unknown'));}
         }catch(Throwable $e){$result['failed']++;error_log('[Admin notify exception '.$aid.'] '.$e->getMessage());}
+        if($claimKey!==''&&!$delivered)telegram_notification_release($claimKey);
     }
     return $result;
 }
@@ -2790,7 +2814,7 @@ function notify_admin_order(int $orderId,string $event='سفارش جدید',str
 
 ".order_admin_card($o,$source);if(trim($detail)!=='')$txt.="
 
-".$detail;return admin_notify($txt,admin_order_keyboard($orderId),$photo);
+". $detail;return admin_notify($txt,admin_order_keyboard($orderId),$photo,'order:'.$orderId.':'.sha1(trim($event)));
 }
 function admin_topup_keyboard(int $id,bool $hasReceipt=false): string {
     $rows=[[['text'=>'✅ تایید و شارژ','callback_data'=>'adm_tu_ok_'.$id],['text'=>'❌ رد','callback_data'=>'adm_tu_no_'.$id]]];if($hasReceipt)$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'adm_tu_rcpt_'.$id]];$t=credit_topup_by_id($id);if($t)$rows[]=[['text'=>'👤 مشتری','callback_data'=>'adm_cust_id_'.(int)$t['user_id']],['text'=>'💳 جزئیات','callback_data'=>'adm_tu_'.$id]];return json_markup(['inline_keyboard'=>$rows]);

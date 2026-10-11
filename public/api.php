@@ -1502,7 +1502,7 @@ if ($action === 'admin_order_status') {
     else{$order=update_order_status($oid,$status,order_status_fa($status),(string)($input['note']??''),true);if(!$order)api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404);}
     api_out(admin_payload()+['message'=>$status==='payment_confirmed'?'پرداخت سفارش با موفقیت تأیید شد.':'وضعیت سفارش بروزرسانی شد.']);
 }
-if ($action === 'admin_deliver_order') { require_admin($user); $oid=(int)($input['order_id']??0); $delivery=trim((string)($input['delivery']??'')); if($delivery==='') api_out(['ok'=>false,'message'=>'متن تحویل خالی است.'],400); $order=deliver_order($oid,$delivery); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); send_user_message_by_id((int)$order['user_id'], "📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h($order['product_name'])."</b>\n\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>", main_menu_keyboard(false)); api_out(admin_payload()); }
+if ($action === 'admin_deliver_order') { require_admin($user); $oid=(int)($input['order_id']??0); $delivery=trim((string)($input['delivery']??'')); if($delivery==='') api_out(['ok'=>false,'message'=>'متن تحویل خالی است.'],400); $order=deliver_order($oid,$delivery); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); send_user_message_once((int)$order['user_id'],'order:'.$oid.':delivered',"📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h($order['product_name'])."</b>\n\nاطلاعات تحویل:\n<code>".h($order['delivery_text'])."</code>", main_menu_keyboard(false)); api_out(admin_payload()); }
 if ($action === 'admin_set_service_delivery') {
     require_admin($user);
     $oid=(int)($input['order_id']??0); $rawUrl=(string)($input['delivery_url']??'');
@@ -1523,7 +1523,7 @@ if ($action === 'admin_set_service_delivery') {
         api_out(['ok'=>false,'error'=>api_exception_code($e,'SERVICE_DELIVERY_FAILED'),'message'=>'لینک معتبر است، اما ثبت/تحویل سفارش کامل نشد. دوباره تلاش کن یا وضعیت سفارش را بررسی کن.'],500);
     }
     if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404);
-    send_user_message_by_id((int)$order['user_id'], "✅ سرویس سفارش <code>#{$oid}</code> آماده شد.\nبرای مشاهده یا کپی لینک، وارد «سفارش‌های من» شوید.", main_menu_keyboard(false));
+    send_user_message_once((int)$order['user_id'],'order:'.$oid.':service-ready',"✅ سرویس سفارش <code>#{$oid}</code> آماده شد.\nبرای مشاهده یا کپی لینک، وارد «سفارش‌های من» شوید.", main_menu_keyboard(false));
     api_out(admin_payload());
 }
 if ($action === 'admin_order_note') { require_admin($user); $oid=(int)($input['order_id']??0); $note=trim((string)($input['note']??'')); $order=order_by_id($oid); if(!$order) api_out(['ok'=>false,'message'=>'سفارش پیدا نشد.'],404); db()->prepare('UPDATE orders SET admin_note=? WHERE id=?')->execute([$note, $oid]); add_order_event($oid, 'note', 'یادداشت داخلی ثبت/ویرایش شد', $note, false); api_out(admin_payload()); }
