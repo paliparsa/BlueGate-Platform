@@ -3987,7 +3987,12 @@ function user_notifications(int $userId,int $limit=30): array {
 }
 function admin_notification_campaigns(int $limit=50): array {
     if(!table_exists('notification_campaigns'))return [];$limit=max(1,min(100,$limit));
-    return db()->query('SELECT id,admin_telegram_id,type,title,body,action_type,action_value,audience,recipient_count,created_at FROM notification_campaigns ORDER BY id DESC LIMIT '.(int)$limit)->fetchAll()?:[];
+    return db()->query('SELECT c.id,c.admin_telegram_id,c.type,c.title,c.body,c.action_type,c.action_value,c.audience,c.recipient_count,c.created_at,COALESCE((SELECT COUNT(*) FROM user_notifications n WHERE n.campaign_id=c.id AND n.is_read=1),0) read_count,COALESCE((SELECT COUNT(*) FROM user_notifications n WHERE n.campaign_id=c.id AND n.is_read=0),0) unread_count FROM notification_campaigns c ORDER BY c.id DESC LIMIT '.(int)$limit)->fetchAll()?:[];
+}
+function admin_support_tickets(int $limit=200): array {
+    if(!table_exists('support_tickets'))return [];
+    $limit=max(1,min(500,$limit));
+    return db()->query('SELECT t.*,u.telegram_id,u.username,u.first_name FROM support_tickets t JOIN users u ON u.id=t.user_id ORDER BY FIELD(t.status,"open","waiting_admin","waiting_customer","resolved","closed"),t.last_message_at DESC LIMIT '.(int)$limit)->fetchAll()?:[];
 }
 function create_notification_campaign(int $adminTid,string $type,string $title,string $body,string $actionType='',string $actionValue='',string $audience='all'): array {
     $type=in_array($type,['info','important','promo','service','security'],true)?$type:'info';
