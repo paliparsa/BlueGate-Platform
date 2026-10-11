@@ -195,31 +195,52 @@ domain_db_normalize_current_uploads(){
 domain_db_media_integrity(){
   local old="$1" new="$2" tmp="/tmp/bg-media-values.$$" t c ti ci
   : > "$tmp"
+  # Current schema stores payment receipts under storage/receipts/<date>/...;
+  # legacy receipts and support attachments may still reference public/uploads.
+  # Inspect both reference families across all text columns, not only URL columns.
   while IFS=$'\t' read -r t c; do
     [[ -n "$t" && -n "$c" ]] || continue
     ti="$(_domain_sql_ident "$t")"; ci="$(_domain_sql_ident "$c")"
-    mysql_app -N -B -e "SELECT ${ci} FROM ${ti} WHERE ${ci} IS NOT NULL AND INSTR(${ci},'uploads/')>0 LIMIT 5000" 2>/dev/null >> "$tmp" || true
+    mysql_app -N -B -e "SELECT ${ci} FROM ${ti}
+      WHERE ${ci} IS NOT NULL AND (
+        INSTR(LOWER(${ci}),'uploads/')>0 OR INSTR(LOWER(${ci}),'receipts/')>0
+      ) LIMIT 5000" 2>/dev/null >> "$tmp" || true
   done < <(domain_db_text_columns)
-  python3 - "$tmp" "$APP_DIR/public" "$old" "$new" <<'PY'
+  python3 - "$tmp" "$APP_DIR" "$old" "$new" <<'PY'
 import os,re,sys,urllib.parse
 p,root,old,new=sys.argv[1:]
 text=open(p,encoding='utf-8',errors='ignore').read()
-# Match root-relative and absolute internal upload references, including JSON text.
-pat=re.compile(r'(?:(?:https?:)?(?:\\?/\\?/)?(?:'+re.escape(old)+r'|'+re.escape(new)+r'))?\\?/uploads\\?/[A-Za-z0-9_./%+@=,~:-]+',re.I)
+domains='|'.join(re.escape(x) for x in (old,new) if x)
+hostpart=r'(?:(?:https?:)?(?:\\?/\\?/)?(?:'+domains+r'))?' if domains else r'(?:(?:https?:)?(?:\\?/\\?/)?[A-Za-z0-9.-]+)?'
+# Supports absolute URLs, root-relative paths, JSON-escaped slashes and the
+# current receipt_file_id format ("receipts/YYYYMMDD/file.ext").
+pat=re.compile(hostpart+r'\\?/?(?:uploads|receipts)\\?/[A-Za-z0-9_./%+@=,~:-]+',re.I)
 paths=set()
 for raw in pat.findall(text):
     s=raw.replace('\\/','/')
-    i=s.lower().find('/uploads/')
-    if i<0: continue
-    rel=urllib.parse.unquote(s[i+1:]).split('?',1)[0].split('#',1)[0]
-    rel=rel.rstrip('.,;:)]}')
-    if '..' in rel.split('/'): continue
+    matches=list(re.finditer(r'(?:uploads|receipts)/',s,re.I))
+    if not matches: continue
+    rel=s[matches[-1].start():]
+    rel=urllib.parse.unquote(rel).split('?',1)[0].split('#',1)[0].rstrip('.,;:)]}')
+    parts=rel.split('/')
+    if '..' in parts or not parts: continue
     paths.add(rel)
 missing=[]
 for rel in sorted(paths):
-    if not os.path.isfile(os.path.join(root,rel)):
+    candidates=[]
+    if rel.startswith('uploads/'):
+        candidates.append(os.path.join(root,'public',rel))
+        # Older receipt URLs may have been moved to private storage while
+        # their database references still retain the uploads/receipts prefix.
+        if rel.startswith('uploads/receipts/'):
+            candidates.append(os.path.join(root,'storage',rel[len('uploads/'):]))
+    elif rel.startswith('receipts/'):
+        candidates.append(os.path.join(root,'storage',rel))
+        # Backward compatibility with the former public receipt directory.
+        candidates.append(os.path.join(root,'public','uploads',rel))
+    if not any(os.path.isfile(candidate) for candidate in candidates):
         missing.append(rel)
-print(f"{len(paths)}\t{len(missing)}")
+print(f"{len(paths)}\\t{len(missing)}")
 for x in missing[:20]: print(x,file=sys.stderr)
 PY
   rm -f "$tmp"
