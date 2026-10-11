@@ -2,6 +2,17 @@
 // (prepending a safe comment helps spot versions; remove only when sure)
 let tg = window.Telegram?.WebApp || null;
 
+function syncMiniViewport() {
+  const viewport = window.visualViewport;
+  const height = Math.round(viewport?.height || window.innerHeight || 0);
+  if (height > 0) document.documentElement.style.setProperty('--mini-viewport-height', `${height}px`);
+  const keyboardInset = Math.max(0, Math.round((window.innerHeight || height) - height));
+  document.documentElement.style.setProperty('--mini-keyboard-inset', `${keyboardInset}px`);
+}
+syncMiniViewport();
+window.addEventListener('resize', syncMiniViewport, {passive: true});
+window.visualViewport?.addEventListener('resize', syncMiniViewport, {passive: true});
+
 // Safety: ensure UI helper exists
 if (typeof window.BlueGateUI === 'undefined' && typeof window.VeyraUI !== 'undefined') {
   window.BlueGateUI = window.VeyraUI;
@@ -3456,5 +3467,4 @@ function openPurchaseReward() {
     base_amount: val('pr_base_amount')
   }));
 }
-
 

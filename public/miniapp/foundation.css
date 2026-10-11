@@ -10,6 +10,8 @@
   --mini-space-page: 14px;
   --mini-space-bottom-nav: 100px;
   --mini-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mini-viewport-height: 100dvh;
+  --mini-keyboard-inset: 0px;
   --mini-z-content: 1;
   --mini-z-topbar: 10;
   --mini-z-sticky: 20;

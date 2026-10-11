@@ -58,7 +58,7 @@ html:has(dialog[open]) {
 .cmd-inner {
   min-width: 0;
   max-width: 100%;
-  max-height: calc(100dvh - var(--mini-overlay-top) - var(--mini-overlay-bottom));
+  max-height: calc(var(--mini-viewport-height) - var(--mini-overlay-top) - var(--mini-overlay-bottom));
 }
 
 .app-sheet-panel,
