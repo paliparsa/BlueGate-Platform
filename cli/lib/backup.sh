@@ -1,24 +1,50 @@
 #!/usr/bin/env bash
 backup_create(){
   require_root; [[ -d "$APP_DIR" ]] || { fail "App not installed"; return 1; }
-  local id dir
+  local id dir dump_timeout="${BACKUP_DB_TIMEOUT:-120}" files_timeout="${BACKUP_FILES_TIMEOUT:-300}"
   id="$(slug_now)-v$(app_version)"
   dir="$BACKUP_ROOT/backup-$id"
   mkdir -p "$dir"
   info "Creating backup: $dir" >&2
   if [[ -n "$DB_PASS" ]] && command -v mysqldump >/dev/null 2>&1; then
-    MYSQL_PWD="$DB_PASS" mysqldump --single-transaction --routines --triggers -u"$DB_USER" "$DB_NAME" | gzip -c > "$dir/database.sql.gz" || { rm -rf "$dir"; return 1; }
+    info "Backup database (timeout ${dump_timeout}s)..." >&2
+    if command -v timeout >/dev/null 2>&1; then
+      if ! timeout --foreground "$dump_timeout" bash -o pipefail -c 'MYSQL_PWD="$1" mysqldump --single-transaction --quick --routines --triggers --skip-lock-tables -u"$2" "$3" | gzip -c > "$4"' _ "$DB_PASS" "$DB_USER" "$DB_NAME" "$dir/database.sql.gz"; then
+        fail "Database backup timed out or failed"; rm -rf "$dir"; return 1
+      fi
+    elif ! MYSQL_PWD="$DB_PASS" mysqldump --single-transaction --quick --routines --triggers --skip-lock-tables -u"$DB_USER" "$DB_NAME" | gzip -c > "$dir/database.sql.gz"; then
+      fail "Database backup failed"; rm -rf "$dir"; return 1
+    fi
   else warn "Database credentials unavailable; DB dump skipped"; fi
   # Uploaded media is intentionally preserved during restore, so archiving it
   # here only makes every update backup slower and larger without improving
   # rollback. Runtime cache/log files are disposable and need not be backed up.
-  tar -C "$APP_DIR" \
-    --exclude='./.git' \
-    --exclude='./public/uploads' \
-    --exclude='./storage/backups' \
-    --exclude='./storage/cache' \
-    --exclude='./storage/*.log' \
-    -czf "$dir/files.tar.gz" . || { rm -rf "$dir"; return 1; }
+  info "Backup application files (timeout ${files_timeout}s)..." >&2
+  local tar_status=0
+  if command -v timeout >/dev/null 2>&1; then
+    timeout --foreground "$files_timeout" tar -C "$APP_DIR" \
+      --exclude='./.git' \
+      --exclude='./public/uploads' \
+      --exclude='./storage/backups' \
+      --exclude='./storage/cache' \
+      --exclude='./storage/*.log' \
+      --exclude='./node_modules' \
+      --exclude='./vendor/bin' \
+      -czf "$dir/files.tar.gz" . || tar_status=$?
+  else
+    tar -C "$APP_DIR" \
+      --exclude='./.git' \
+      --exclude='./public/uploads' \
+      --exclude='./storage/backups' \
+      --exclude='./storage/cache' \
+      --exclude='./storage/*.log' \
+      --exclude='./node_modules' \
+      --exclude='./vendor/bin' \
+      -czf "$dir/files.tar.gz" . || tar_status=$?
+  fi
+  if ((tar_status != 0)); then
+    fail "Application files backup timed out or failed"; rm -rf "$dir"; return 1
+  fi
   cp -a "$ENV_FILE" "$dir/environment.env" 2>/dev/null || true
   { echo "version=$(app_version)"; echo "created_at=$(now)"; echo "app_dir=$APP_DIR"; } > "$dir/meta"
   ln -sfn "$dir" "$BACKUP_ROOT/latest"

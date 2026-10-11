@@ -129,3 +129,8 @@ These are user-visible improvements in the Telegram Mini App.
 - Delivery notifications are now idempotent across Bot, Mini App, web, and retry paths.
 - Order admin notifications use order/event keys to prevent duplicate sends.
 - Removed noisy per-attempt provisioning retry notifications; only the final failure is sent.
+## 5.0.34 - Backup timeout fix
+
+- Prevented update step 2/9 from waiting indefinitely on `mysqldump` or file archiving.
+- Added bounded database and application-file backup operations with explicit failure messages.
+- Enabled streaming database dumps and skipped disposable dependency binaries that can unnecessarily slow backups.
