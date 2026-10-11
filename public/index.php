@@ -20,20 +20,27 @@ function veyra_free_landing(): void {
     exit;
 }
 
+function bg_asset_version(string $file): string {
+    return is_file($file) ? (string)filemtime($file) : '0';
+}
+
 function bg_versioned_shell(string $shell): string {
-    // Replace stale ?v= on /web/css, /web/js and /design-system.css with each file's filemtime.
     $html = (string)@file_get_contents($shell);
     if ($html === '') return $html;
     $shellDir = dirname($shell);
     $pubDir = __DIR__;
     $out = preg_replace_callback(
-        '#((?:href|src)=")(/(?:web/(?:css|js)/[^"?]+|design-system\.css))\?v=[^"]*(")#',
+        '#((?:href|src)=["\'])([^"\']+?)(?:\?v=[^"\']*)?(["\'])#',
         function (array $m) use ($shellDir, $pubDir): string {
-            $rel = $m[2];
-            $file = str_starts_with($rel, '/web/') ? $shellDir . '/' . substr($rel, 5) : $pubDir . $rel;
-            return is_file($file) ? $m[1] . $rel . '?v=' . filemtime($file) . $m[3] : $m[0];
-        },
-        $html
+            $url = $m[2];
+            $path = parse_url($url, PHP_URL_PATH) ?: $url;
+            $file = null;
+            if ($path === '/design-system.css') $file = $pubDir . '/design-system.css';
+            elseif (str_starts_with($path, '/web/')) $file = $shellDir . '/' . substr($path, 5);
+            elseif (!str_contains($path, '://') && !str_starts_with($path, '/')) $file = $shellDir . '/' . ltrim($path, '/');
+            if (!$file || !is_file($file)) return $m[0];
+            return $m[1] . $url . '?v=' . bg_asset_version($file) . $m[3];
+        }, $html
     );
     return $out ?? $html;
 }

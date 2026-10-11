@@ -5,26 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#06101d">
   <title>BlueGate</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
   <script defer src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Asset ?v= values are rewritten at runtime by miniapp/index.php (filemtime). The static 5.0.14 below is only a fallback. -->
-  <link rel="stylesheet" href="/design-system.css?v=5.0.14">
-  <link rel="stylesheet" href="style.css?v=5.0.14">
-  <link rel="stylesheet" href="unified.css?v=5.0.14">
-  <link rel="stylesheet" href="purchase.css?v=5.0.14">
-  <link rel="stylesheet" href="web-parity.css?v=5.0.14">
-  <link rel="stylesheet" href="mobile-v292.css?v=5.0.14">
-  <link rel="stylesheet" href="contrast-guard.css?v=5.0.14">
-  <link rel="stylesheet" href="layer-stack.css?v=5.0.14">
-  <link rel="stylesheet" href="motion.css?v=5.0.14">
-  <link rel="stylesheet" href="design-sync.css?v=5.0.14">
-  <link rel="stylesheet" href="component-parity.css?v=5.0.14">
-  <link rel="stylesheet" href="bluegate-theme.css?v=5.0.14">
-  <link rel="stylesheet" href="admin-web-parity.css?v=5.0.14">
-  <link rel="stylesheet" href="final-polish.css?v=5.0.14">
+  <!-- Asset cache keys are rewritten at runtime from each file's filemtime; the static value is only a fallback. -->
+  <link rel="stylesheet" href="/design-system.css?v=0">
+  <link rel="stylesheet" href="tokens.css?v=0">
+  <link rel="stylesheet" href="style.css?v=0">
+  <link rel="stylesheet" href="unified.css?v=0">
+  <link rel="stylesheet" href="purchase.css?v=0">
+  <link rel="stylesheet" href="web-parity.css?v=0">
+  <link rel="stylesheet" href="mobile-v292.css?v=0">
+  <link rel="stylesheet" href="contrast-guard.css?v=0">
+  <link rel="stylesheet" href="layer-stack.css?v=0">
+  <link rel="stylesheet" href="motion.css?v=0">
+  <link rel="stylesheet" href="design-sync.css?v=0">
+  <link rel="stylesheet" href="component-parity.css?v=0">
+  <link rel="stylesheet" href="bluegate-theme.css?v=0">
+  <link rel="stylesheet" href="admin-web-parity.css?v=0">
+  <link rel="stylesheet" href="final-polish.css?v=0">
 </head>
 <body>
   <div id="status" class="toast hidden" role="status" aria-live="polite"></div>
@@ -37,14 +34,14 @@
       </div>
 
       <nav class="topbar-desktop-nav">
-        <button data-tab="shop" class="active"><span class="nav-icon">⌂</span> فروشگاه</button>
-        <button data-tab="orders"><span class="nav-icon">▤</span> سفارش‌ها</button>
-        <button data-tab="wallet"><span class="nav-icon">◫</span> اعتبار</button>
-        <button data-tab="home"><span class="nav-icon">○</span> حساب</button>
+        <button data-tab="shop" class="active"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5.5h4V20"/></svg></span> فروشگاه</button>
+        <button data-tab="orders"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span> سفارش‌ها</button>
+        <button data-tab="wallet"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18v4"/><path d="M3 7.5V18a2 2 0 0 0 2 2h15V9H5.5A2.5 2.5 0 0 1 3 6.5"/><circle cx="16.5" cy="14.5" r="1.1"/></svg></span> اعتبار</button>
+        <button data-tab="home"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span> حساب</button>
       </nav>
 
       <div class="topbar-actions">
-        <button class="icon-btn mini-notification-btn hidden" id="miniNotificationsBtn" aria-label="اعلان‌ها">🔔<span id="miniNotificationBadge" class="mini-notification-badge hidden">0</span></button>
+        <button class="icon-btn mini-notification-btn hidden" id="miniNotificationsBtn" aria-label="اعلان‌ها"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5a6 6 0 0 1 12 0c0 6 2 7.5 2 7.5H4s2-1.5 2-7.5"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span id="miniNotificationBadge" class="mini-notification-badge hidden">0</span></button>
         <button class="auth-top-btn hidden" id="openAuthModalBtn" title="ورود / ثبت نام">ورود / ثبت‌نام</button>
       </div>
     </header>
@@ -55,10 +52,10 @@
     <section id="walletPage" class="page hidden"></section>
 
     <nav class="bottom-nav glass" role="navigation" aria-label="ناوبری پایین">
-      <button data-tab="shop" class="active"><span class="nav-icon">⌂</span>فروشگاه</button>
-      <button data-tab="orders"><span class="nav-icon">▤</span>سفارش‌ها</button>
-      <button data-tab="wallet"><span class="nav-icon">◫</span>اعتبار</button>
-      <button data-tab="home"><span class="nav-icon">○</span>حساب</button>
+      <button data-tab="shop" class="active"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5.5h4V20"/></svg></span>فروشگاه</button>
+      <button data-tab="orders"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>سفارش‌ها</button>
+      <button data-tab="wallet"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18v4"/><path d="M3 7.5V18a2 2 0 0 0 2 2h15V9H5.5A2.5 2.5 0 0 1 3 6.5"/><circle cx="16.5" cy="14.5" r="1.1"/></svg></span>اعتبار</button>
+      <button data-tab="home"><span class="nav-icon"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>حساب</button>
     </nav>
   </main>
 
@@ -73,17 +70,17 @@
     </header>
     <section id="adminStats" class="stats-grid"></section>
     <nav class="admin-tabs glass">
-      <button data-admin-tab="dashboard" class="active"><span>▦</span> داشبورد</button>
-      <button data-admin-tab="catalog"><span>◇</span> کاتالوگ</button>
-      <button data-admin-tab="orders"><span>▤</span> سفارش‌ها</button>
-      <button data-admin-tab="more"><span>•••</span> بیشتر</button>
+      <button data-admin-tab="dashboard" class="active"><span><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg></span> داشبورد</button>
+      <button data-admin-tab="catalog"><span><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 20.5 12 12 20.5 3.5 12z"/></svg></span> کاتالوگ</button>
+      <button data-admin-tab="orders"><span><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span> سفارش‌ها</button>
+      <button data-admin-tab="more"><span><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/></svg></span> بیشتر</button>
     </nav>
     <section id="adminContent" class="admin-content"></section>
   </main>
 
   <div id="lightbox" class="lightbox"></div>
   <div id="cartSheet" class="cart-sheet"></div>
-  <button id="cartFab" class="cart-fab hidden"><span>🛒</span><span class="cart-fab-badge">0</span></button>
+  <button id="cartFab" class="cart-fab hidden"><span><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h3l2.6 12a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.5L21 7.5H6"/></svg></span><span class="cart-fab-badge">0</span></button>
   <div id="custDrawer" class="cust-drawer"></div>
   <div id="previewSheet" class="preview-sheet"></div>
   <div id="qrSheet" class="qr-sheet"></div>
@@ -174,10 +171,10 @@
       <path class="ptr-path" d="M20 4 a16 16 0 1 1 0 32 a16 16 0 1 1 0 -32" />
     </svg>
   </div>
-  <script defer src="ui-system.js?v=5.0.14"></script>
-  <script defer src="purchase.js?v=5.0.14"></script>
-  <script defer src="app.js?v=5.0.15"></script>
-  <script defer src="motion.js?v=5.0.14"></script>
-  <script defer src="final-polish.js?v=5.0.14"></script>
+  <script defer src="ui-system.js?v=0"></script>
+  <script defer src="purchase.js?v=0"></script>
+  <script defer src="app.js?v=0"></script>
+  <script defer src="motion.js?v=0"></script>
+  <script defer src="final-polish.js?v=0"></script>
 </body>
 </html>
