@@ -393,10 +393,35 @@ async function api(action,payload={}){
   refreshTelegramContext();
   const body = JSON.stringify({action,initData,...payload});
   const headers = {'Content-Type':'application/json'};
-  const candidateEndpoints = ['../api.php', 'api.php', '/api.php'];
-  let res = null, data = null, fetchErr = null;
+
+  // Resolve API path robustly. Mini App lives under /miniapp/, so relative
+  // "api.php" hits the wrong place. Prefer parent and absolute candidates.
+  const here = location.pathname || '/';
+  const candidates = [];
+  // 1) Absolute from domain root (most reliable when docroot is public/)
+  candidates.push('/api.php');
+  // 2) Parent of current directory (works when opened from /miniapp/)
+  if (here.includes('/miniapp')) {
+    candidates.push(here.replace(/\/miniapp\/?.*$/, '/api.php'));
+    candidates.push('../api.php');
+  }
+  // 3) Same directory fallback
+  candidates.push('api.php');
+  // 4) Common alternative if docroot is project root
+  candidates.push('/public/api.php');
+
+  // Deduplicate while preserving order
+  const seen = new Set();
+  const candidateEndpoints = candidates.filter(ep => {
+    if (!ep || seen.has(ep)) return false;
+    seen.add(ep);
+    return true;
+  });
+
+  let res = null, data = null, fetchErr = null, lastUrl = '';
   for (const ep of candidateEndpoints) {
     try {
+      lastUrl = ep;
       const r = await fetch(ep, {method:'POST', headers, body, credentials:'include'});
       if (r.status !== 404) {
         res = r;
@@ -414,7 +439,8 @@ async function api(action,payload={}){
       const feature=Object.keys(BLUEGATE_PRO_FEATURES).find(k=>k.toUpperCase()===suffix.toUpperCase())||suffix;
       showProUpgrade(feature);
     }
-    const err = new Error(data?.message || data?.error || fetchErr?.message || 'خطا در ارتباط با سرور');
+    const errMsg = data?.message || data?.error || fetchErr?.message || 'خطا در ارتباط با سرور';
+    const err = new Error(lastUrl ? (errMsg + ' [' + lastUrl + ']') : errMsg);
     if (data?.error) err.code = data.error;
     if (data) Object.assign(err, data);
     throw err;

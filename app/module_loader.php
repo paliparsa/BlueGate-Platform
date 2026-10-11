@@ -38,6 +38,11 @@ if(is_dir($moduleRoot)){
             error_log('[Veyra module] '.$slug.' blocked: '.($check['reason']??'integrity_failed'));
             continue;
         }
+        if ($slug === 'pro-web') {
+            // pro-web is assets only; never require module.php
+            $GLOBALS['VEYRA_MODULES'][$slug]=['loaded'=>true,'version'=>'unrestricted'];
+            continue;
+        }
         if (is_file($entry)) {
             try { require_once $entry; }
             catch(Throwable $e){
@@ -45,8 +50,7 @@ if(is_dir($moduleRoot)){
                 error_log('[Veyra module] '.$slug.': '.$e->getMessage());
             }
         } else {
-            // pro-web has no module.php — mark as available
-            $GLOBALS['VEYRA_MODULES'][$slug]=['loaded'=>true,'version'=>'unrestricted'];
+            $GLOBALS['VEYRA_MODULES'][$slug]=['loaded'=>false,'inactive_reason'=>'NO_ENTRY'];
         }
     }
 }

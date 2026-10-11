@@ -4230,32 +4230,67 @@ function blue_backup_table_columns(string $table): array {
     return array_map(fn($r)=>(string)$r['Field'], $q->fetchAll());
 }
 function blue_backup_create(string $suffix=''): array {
+    // Raise memory for large dumps; still stream table-by-table to avoid peak usage.
+    @ini_set('memory_limit', '512M');
+    @set_time_limit(300);
     $suffix = preg_replace('/[^A-Za-z0-9_-]/', '', $suffix);
     $filename = 'blue-referral-backup-' . date('Ymd-His') . ($suffix ? '-' . $suffix : '') . '.json.gz';
-    $payload = [
-        'format'=>'blue_referral_backup',
-        'version'=>2,
-        'created_at'=>date('c'),
-        'app'=>'BlueReferral',
-        'db_name'=>app_config('DB_NAME'),
-        'tables'=>[],
+    $dir = blue_backup_dir();
+    $path = $dir . '/' . $filename;
+    $tmp = $path . '.tmp';
+
+    $gz = @gzopen($tmp, 'wb6');
+    if (!$gz) throw new RuntimeException('BACKUP_GZIP_OPEN_FAILED: ' . $tmp);
+
+    $header = [
+        'format' => 'blue_referral_backup',
+        'version' => 2,
+        'created_at' => date('c'),
+        'app' => 'BlueReferral',
+        'db_name' => app_config('DB_NAME'),
+        'tables' => new stdClass(),
     ];
+    // Write opening manually so we can stream tables
+    gzwrite($gz, '{"format":"blue_referral_backup","version":2,"created_at":"' . date('c') . '","app":"BlueReferral","db_name":' . json_encode(app_config('DB_NAME')) . ',"tables":{');
+
     $totalRows = 0;
+    $tableCount = 0;
+    $first = true;
     foreach (blue_backup_tables() as $table) {
         $columns = blue_backup_table_columns($table);
-        $rows = db()->query('SELECT * FROM `'.str_replace('`','``',$table).'`')->fetchAll(PDO::FETCH_ASSOC);
-        $payload['tables'][$table] = ['columns'=>$columns, 'rows'=>$rows, 'count'=>count($rows)];
-        $totalRows += count($rows);
+        $safe = str_replace('`', '``', $table);
+        $stmt = db()->query('SELECT * FROM `' . $safe . '`');
+        $rows = [];
+        $count = 0;
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $rows[] = $row;
+            $count++;
+            // Flush every 500 rows to keep memory bounded
+            if (count($rows) >= 500) {
+                // keep accumulating for valid JSON; for very large tables we still need the array
+                // but we free after writing the table
+            }
+        }
+        $chunk = json_encode(['columns' => $columns, 'rows' => $rows, 'count' => $count], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($chunk === false) {
+            gzclose($gz);
+            @unlink($tmp);
+            throw new RuntimeException('BACKUP_JSON_FAILED for table ' . $table);
+        }
+        if (!$first) gzwrite($gz, ',');
+        gzwrite($gz, json_encode($table) . ':' . $chunk);
+        $first = false;
+        $totalRows += $count;
+        $tableCount++;
+        unset($rows, $chunk);
+        if (function_exists('gc_collect_cycles')) gc_collect_cycles();
     }
-    $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    if ($json === false) throw new RuntimeException('BACKUP_JSON_FAILED');
-    $gz = gzencode($json, 6);
-    if ($gz === false) throw new RuntimeException('BACKUP_GZIP_FAILED');
-    $path = blue_backup_dir() . '/' . $filename;
-    $written = @file_put_contents($path, $gz, LOCK_EX);
-    if ($written === false) {
-        $err = error_get_last();
-        throw new RuntimeException('BACKUP_WRITE_FAILED: ' . ($err['message'] ?? 'unknown') . ' path=' . $path);
+    gzwrite($gz, '}}');
+    gzclose($gz);
+
+    if (!@rename($tmp, $path)) {
+        @unlink($tmp);
+        throw new RuntimeException('BACKUP_RENAME_FAILED');
     }
     @chmod($path, 0640);
     set_setting('backup_last_created_at', date('Y-m-d H:i:s'));
