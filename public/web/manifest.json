@@ -3,8 +3,8 @@
   "short_name": "BlueGate",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#07111f",
-  "theme_color": "#07111f",
+  "background_color": "#06101d",
+  "theme_color": "#06101d",
   "icons": [
     {
       "src": "icon-192.png",
