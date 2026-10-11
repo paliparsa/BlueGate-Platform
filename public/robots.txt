@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Allow: /web/
+Disallow: /admin
+Disallow: /public/backup_*
+Disallow: /*?action=admin_*
+

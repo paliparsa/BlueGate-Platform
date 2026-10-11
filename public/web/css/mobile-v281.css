@@ -1,0 +1,163 @@
+/* BlueGate v2.8.1 — Mobile-first storefront stabilization layer
+   Purpose: one predictable responsive surface for the public homepage.
+   Breakpoints: tablet <=1024, mobile <=768, compact <=420. */
+
+:root{--mobile-shell:calc(100% - 28px);--mobile-header-h:66px}
+html,body{max-width:100%;overflow-x:clip}
+img,svg,video,canvas{max-width:100%;height:auto}
+button,a,input,select,textarea{min-width:0}
+
+@media (max-width:1024px){
+  .hero{grid-template-columns:1fr;gap:28px;min-height:auto;padding:44px 0 72px}
+  .hero-copy{max-width:780px;margin-inline:auto;text-align:center}
+  .hero p{margin-inline:auto}
+  .hero-actions,.hero-trust,.hero-microcopy{justify-content:center}
+  .hero-visual{order:0;min-height:330px}
+  .conversion-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .faq-layout{grid-template-columns:1fr;gap:28px}.faq-heading{position:static}
+  .footer-inner{align-items:flex-start}
+}
+
+@media (max-width:768px){
+  :root{--mobile-header-h:64px}
+  body{font-size:16px;padding-bottom:env(safe-area-inset-bottom)}
+  .shell{width:var(--mobile-shell)}
+  .announcement{font-size:13.5px;line-height:1.6;padding:9px 14px}
+
+  /* Header: one compact row, everything secondary moves to drawer. */
+  .site-header{top:0;background:rgba(5,14,25,.9);backdrop-filter:blur(18px)}
+  .header-inner{min-height:var(--mobile-header-h);gap:10px;padding-top:max(0px,env(safe-area-inset-top))}
+  .brand{flex:0 1 auto;min-width:0}.brand-wordmark{width:148px;max-width:42vw}
+  .desktop-nav,.header-support,.bg-register-btn,#quickCreditBtn{display:none!important}
+  .header-actions{margin-inline-start:auto;gap:7px;min-width:0}
+  .mobile-menu-btn{display:grid;place-items:center;width:43px;height:43px;border-radius:14px;order:-1}
+  .bg-account-btn{width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;border-radius:14px!important;display:grid!important;place-items:center!important}
+  .bg-account-btn #accountLabel,.bg-account-btn #accountChevron{display:none!important}
+  .bg-header-avatar{margin:0!important}
+  .bg-account-badge{position:absolute!important;top:-3px!important;right:-3px!important}
+  .mobile-menu{position:fixed;inset:calc(var(--mobile-header-h) + env(safe-area-inset-top)) 10px auto 10px;z-index:100;border:1px solid var(--line);border-radius:22px;background:rgba(8,20,34,.98);box-shadow:0 28px 80px rgba(0,0,0,.42);overflow:hidden;max-height:calc(100dvh - var(--mobile-header-h) - 24px);overflow-y:auto}
+  .mobile-menu-links{width:100%;padding:8px 12px 12px;display:grid;gap:2px}
+  .mobile-menu a,.mobile-menu button{width:100%;min-height:48px;padding:12px 10px!important;border:0!important;border-bottom:1px solid rgba(255,255,255,.055)!important;background:transparent!important;color:var(--text)!important;text-align:right!important;border-radius:10px!important;font-weight:750!important}
+  .mobile-menu a:last-child,.mobile-menu button:last-child{border-bottom:0!important}
+
+  /* Hero: content first. Decorative desktop composition is removed on phones. */
+  .hero{display:block;padding:28px 0 38px;min-height:0;text-align:right}
+  .hero-copy{text-align:right;margin:0;max-width:none}
+  .hero-eyebrow{justify-content:flex-start!important;max-width:100%;overflow:hidden}.hero-eyebrow b{display:none!important}
+  .hero h1{font-size:clamp(34px,9.8vw,46px);line-height:1.13;letter-spacing:-1.1px;margin:14px 0 14px;max-width:12ch}
+  .hero p{font-size:16px;line-height:1.9;margin:0;max-width:34em}
+  .hero-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:22px}
+  .hero-actions .btn{width:100%;min-height:54px}
+  .hero-trust{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:16px;justify-content:stretch}
+  .hero-trust span{min-width:0;justify-content:flex-start;border-radius:15px;padding:9px 10px;font-size:13.5px}
+  .hero-trust span:last-child{grid-column:1/-1}
+  .hero-microcopy{display:none!important}
+  .hero-visual{display:none!important}
+
+  /* Live market and benefit strips become intentional snap rails instead of tall stacks. */
+  .live-strip,.conversion-strip{display:flex!important;gap:10px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory;scrollbar-width:none;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;margin-inline:-14px!important;padding:0 14px 8px!important}
+  .live-strip::-webkit-scrollbar,.conversion-strip::-webkit-scrollbar{display:none}
+  .live-strip{margin-top:0!important;z-index:1}
+  .live-strip>div{flex:0 0 156px;min-height:78px;padding:13px 14px!important;border:1px solid var(--line)!important;border-radius:18px;background:linear-gradient(180deg,var(--surface2),var(--surface));scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center}
+  .live-strip>.live-strip-title{flex-basis:205px;flex-direction:row;justify-content:flex-start;gap:10px}
+  .rate-cell span{font-size:13px}.rate-cell strong{font-size:17px}
+  .conversion-strip{margin-top:12px!important}
+  .conversion-item{flex:0 0 min(76vw,280px);min-height:80px;padding:13px 14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--surface2),var(--surface));scroll-snap-align:center}
+  .conversion-icon{width:40px;height:40px;border-radius:13px}.conversion-item small{font-size:13px}
+
+  /* Section rhythm */
+  .section{padding:58px 0}.products-section{padding-top:62px}
+  .center-head{margin-bottom:20px;text-align:right;justify-items:start}
+  .section-head h2,.center-head h2{font-size:30px;line-height:1.2;letter-spacing:-.5px}.section-head p{font-size:15px;line-height:1.8}
+  .kicker{font-size:12.5px;letter-spacing:.12em}
+
+  /* Purchase path becomes one compact progress label. */
+  .service-flow{justify-content:flex-start;margin:0 0 14px!important;padding:0!important;overflow:visible!important}
+  .service-flow span:not(.active),.service-flow i{display:none!important}
+  .service-flow span.active{min-height:38px;padding:7px 11px;border-radius:12px}
+  .service-flow span.active::after{content:'مرحله ۱ از ۳';margin-right:8px;color:var(--muted);font-size:12.5px;font-weight:700}
+
+  /* Service discovery cards: stable 82vw carousel with visible next card. */
+  .product-tabs{display:flex!important;gap:11px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory;scroll-padding-inline:14px;margin-inline:-14px!important;padding:2px 14px 10px!important;direction:ltr;scrollbar-width:none}
+  .product-tabs::-webkit-scrollbar{display:none}.product-tab{direction:rtl;flex:0 0:min(82vw,345px)!important;min-height:142px!important;padding:18px!important;border-radius:22px!important;scroll-snap-align:center;scroll-snap-stop:always;box-shadow:none!important}
+  .tab-icon{width:52px;height:52px;border-radius:17px;font-size:25px}.tab-copy strong{font-size:19px}.tab-copy small{font-size:14px;line-height:1.65}.product-tab>b{font-size:14px}
+  .service-swipe-hint{margin:0 0 10px;font-size:12.5px}
+
+  /* Sticky service switcher: one row, no viewport collision. */
+  .service-nav-wrap{top:calc(var(--mobile-header-h) + env(safe-area-inset-top))!important;max-width:100vw!important}
+  .service-nav-wrap .service-nav{width:auto!important;max-width:calc(100vw - 24px)!important;margin-inline:auto!important;overflow-x:auto;overscroll-behavior-inline:contain}
+  .service-nav button{flex:0 0 auto!important;min-width:82px!important;padding:8px 11px!important}
+
+  .product-panel{padding-top:12px!important;max-width:100%}.panel-intro{margin:8px 0 16px;gap:10px}.panel-intro h3{font-size:25px}.panel-intro p{font-size:14.5px}
+
+  /* VPN launcher + picker */
+  .vpn-popup-launcher{grid-template-columns:auto minmax(0,1fr)!important;gap:12px!important;padding:16px!important;border-radius:22px!important}
+  .vpn-popup-launcher-icon{width:50px!important;height:50px!important;border-radius:16px!important;font-size:24px!important}.vpn-popup-launcher h3{font-size:21px!important;margin-bottom:5px!important}.vpn-popup-launcher p{font-size:14px!important;line-height:1.7!important}
+  .vpn-popup-open{grid-column:1/-1;width:100%;min-height:50px}
+  .vpn-picker-overlay{padding:0!important;align-items:flex-end!important}.vpn-picker-card{width:100%!important;max-width:none!important;max-height:94dvh!important;border-radius:28px 28px 0 0!important;padding:16px 14px calc(10px + env(safe-area-inset-bottom))!important}
+  .vpn-modal-types{grid-template-columns:1fr!important}.vpn-modal-type{min-height:82px!important}.vpn-modal-packages{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}.vpn-modal-package{min-width:0!important;padding:13px 10px!important}
+  .vpn-picker-footer{grid-template-columns:1fr!important;bottom:calc(-10px - env(safe-area-inset-bottom))!important;margin:14px -14px calc(-10px - env(safe-area-inset-bottom))!important;padding:11px 14px calc(11px + env(safe-area-inset-bottom))!important}
+
+  /* Stars configurator */
+  .configurator-card{margin-top:16px!important;padding:18px 16px!important;border-radius:24px!important;max-width:100%}
+  .config-head{gap:12px;align-items:flex-start}.config-head h3{font-size:25px;margin-top:4px}.config-head p{font-size:14px;line-height:1.75}.large-product-icon{width:54px;height:54px;border-radius:17px;font-size:26px}
+  .star-amount{grid-template-columns:48px minmax(0,1fr) 48px;gap:8px;margin:20px 0}.star-amount>button,.star-amount label{height:58px;border-radius:16px}.star-amount input{width:100%;max-width:74%;font-size:24px}.presets{display:flex;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.presets::-webkit-scrollbar{display:none}.presets button{flex:0 0 auto}
+  .receive-summary{grid-template-columns:1fr!important;gap:8px}.receive-summary>div{padding:11px 13px}.primary-price-card{padding:16px!important;border-radius:20px!important}.hero-price strong{font-size:36px!important}.secondary-currencies{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important}.secondary-currencies span{min-width:0;text-align:center;padding:7px 5px!important;font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Premium cards are a deliberate snap carousel instead of squeezed desktop cards. */
+  .premium-grid{display:flex!important;gap:11px!important;overflow-x:auto!important;scroll-snap-type:x mandatory;scroll-padding-inline:14px;margin-inline:-14px;padding:4px 14px 14px;scrollbar-width:none;align-items:stretch!important;direction:ltr}
+  .premium-grid::-webkit-scrollbar{display:none}.premium-choice{direction:rtl;flex:0 0:min(82vw,340px);scroll-snap-align:center;min-height:420px;padding:22px 18px!important;border-radius:23px!important;transform:none!important}.premium-choice:hover,.premium-choice.featured,.premium-choice.featured:hover{transform:none!important}.premium-choice h4{font-size:24px!important}.premium-main-price{font-size:31px}.premium-benefits{margin:13px 0}.premium-secondary{padding-bottom:34px}
+  .premium-action-wrap{margin-top:10px;max-width:100%}
+
+  /* Generic products / secondary content */
+  .feature-grid,.tutorial-grid{display:flex!important;grid-template-columns:none!important;gap:10px!important;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:-14px;padding:2px 14px 10px;scrollbar-width:none}.feature-grid::-webkit-scrollbar,.tutorial-grid::-webkit-scrollbar{display:none}.feature-card,.tutorial-card{flex:0 0 min(78vw,300px);scroll-snap-align:center;padding:18px;border-radius:20px!important}.feature-card h3{font-size:18px}.feature-card p{font-size:14px}
+  .reviews-section .section-head{align-items:center}.carousel-controls{display:none!important}.reviews-carousel{margin-inline:-14px!important;padding:0 14px 8px!important;scroll-padding-inline:14px}.review-card{min-width:min(82vw,330px)!important;padding:19px;border-radius:20px!important}
+  .faq-layout{gap:18px}.faq-heading{position:static!important}.faq-heading h2{font-size:30px}.faq-heading p{font-size:14.5px}.faq-q{padding:16px 15px;font-size:15px}.faq-a{padding:0 15px 15px;font-size:14px}
+
+  /* Comparison: table is desktop-only; JS companion generates readable mobile cards. */
+  #comparisonSection .table-wrap{display:none}.mobile-comparison-cards{display:grid;gap:10px}.mobile-compare-card{padding:17px;border:1px solid var(--line);border-radius:20px;background:var(--surface)}.mobile-compare-card h3{font-size:18px;margin:0 0 12px}.mobile-compare-row{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid rgba(255,255,255,.055)}.mobile-compare-row span{color:var(--muted);font-size:13.5px}.mobile-compare-row b{font-size:14px;text-align:left}
+
+  /* Footer: compact 2-column link grid. */
+  .footer-inner{padding:28px 0 calc(30px + env(safe-area-inset-bottom));display:grid!important;grid-template-columns:1fr;gap:18px}.footer-brand{max-width:none}.footer-brand img{width:160px!important}.footer-brand p{font-size:13.5px;margin-top:8px}.footer-links{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;width:100%}.footer-links a,.footer-links button{min-height:44px;display:flex;align-items:center;padding:8px 0;font-size:14px}
+
+  /* Sticky purchase / all modal surfaces honor the phone safe area. */
+  .sticky-checkout{left:10px!important;right:10px!important;width:auto!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;max-width:none!important;border-radius:18px!important;padding:9px 10px!important;grid-template-columns:minmax(0,1fr) auto!important}
+  .sticky-copy{min-width:0}.sticky-copy strong{max-width:46vw!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sticky-price{display:none!important}.sticky-checkout .btn{min-height:46px;padding:10px 13px}
+  .modal{align-items:flex-end!important;padding:0!important}.modal-card{width:100%!important;max-width:none!important;max-height:94dvh!important;border-radius:28px 28px 0 0!important;padding:18px 16px calc(18px + env(safe-area-inset-bottom))!important}
+
+  /* Generic horizontal-overflow guard for legacy desktop grids. */
+  .products-section,.product-panel,.configurator-card,.premium-action-wrap,.faq-section,.why-section,.reviews-section,.footer{max-width:100%;overflow-x:clip}
+}
+
+@media (max-width:420px){
+  :root{--mobile-shell:calc(100% - 22px)}
+  .brand-wordmark{width:138px}.header-inner{gap:6px}.mobile-menu-btn,.bg-account-btn{width:41px!important;height:41px!important;min-width:41px!important}
+  .hero{padding-top:22px}.hero h1{font-size:34px;max-width:11ch}.hero p{font-size:15px}.hero-trust{grid-template-columns:1fr}.hero-trust span:last-child{grid-column:auto}
+  .section{padding:50px 0}.section-head h2,.center-head h2{font-size:27px}.section-head p{font-size:14.5px}
+  .product-tab{flex-basis:84vw!important;padding:16px!important}.tab-icon{width:48px;height:48px}.tab-copy strong{font-size:18px}
+  .vpn-popup-launcher{grid-template-columns:1fr!important;text-align:center}.vpn-popup-launcher-icon{margin:auto}.vpn-popup-launcher-copy{text-align:center}.vpn-modal-packages{grid-template-columns:1fr!important}
+  .secondary-currencies{grid-template-columns:1fr!important}.secondary-currencies span{text-align:right;padding-inline:9px!important}
+  .premium-choice{flex-basis:86vw;min-height:400px}
+  .conversion-item{flex-basis:82vw}.feature-card,.tutorial-card{flex-basis:82vw}.review-card{min-width:86vw!important}
+  .footer-links{grid-template-columns:1fr 1fr}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .product-tabs,.premium-grid,.live-strip,.conversion-strip,.feature-grid,.reviews-carousel{scroll-behavior:auto!important}
+}
+
+/* Explicit flex sizing: old compatibility CSS may re-enable shrink via shorthand. */
+@media (max-width:768px){
+  .product-tab{flex-grow:0!important;flex-shrink:0!important;flex-basis:min(82vw,345px)!important;width:min(82vw,345px)!important}
+  .premium-choice{flex-grow:0!important;flex-shrink:0!important;flex-basis:min(82vw,340px)!important;width:min(82vw,340px)!important}
+  .conversion-item{flex-grow:0!important;flex-shrink:0!important;flex-basis:min(76vw,280px)!important}
+  .live-strip>div{flex-grow:0!important;flex-shrink:0!important;flex-basis:156px!important}.live-strip>.live-strip-title{flex-basis:205px!important}
+  .feature-card,.tutorial-card{flex-grow:0!important;flex-shrink:0!important;flex-basis:min(78vw,300px)!important}
+  .review-card{flex-grow:0!important;flex-shrink:0!important}
+}
+@media (max-width:420px){
+  .product-tab{flex-basis:84vw!important;width:84vw!important}
+  .premium-choice{flex-basis:86vw!important;width:86vw!important}
+  .conversion-item{flex-basis:82vw!important}
+  .feature-card,.tutorial-card{flex-basis:82vw!important}
+}

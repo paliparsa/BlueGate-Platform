@@ -1,0 +1,15 @@
+{
+  "algorithm": "sha256",
+  "version": "2.1.6",
+  "files": {
+    "advanced.php": "d95075a6da41fd22210b605e2f5500e85bce3bcac7ab3607a924a3ed429c7844",
+    "api.php": "24ff45d711cc17433ea89108dfc1768fc690916b86db396cce1f48d4101d6fa0",
+    "commerce_ops.php": "b1827bf5d741b01615e753696e5686a80d252e083063f5263303cb774e3508f7",
+    "migration.php": "0c56da54f13124b65d35461d86316a067bdb2acf28416650dbf5c4097e4a3acf",
+    "module.json": "0ea5d291eecbdb0217f6f6fdc83a8be70f661aa2e9df5a47abec394c102730a7",
+    "module.php": "c02fd99e385081d765c34d90eac293be0114e76610f46a9e4971dc87298f8fa6",
+    "monitoring.php": "c53d5e3ea26074864db128c61fd9cc768d4b68a474927efb9ba19ee1faaaeb0e",
+    "payload.php": "9d016d74044306670e06c7afff3e1c153174d8f7bf90e934f73e1cbd459f7e57",
+    "routing.php": "10a5193e5c54b6d71cdeb776ba834ff2f003a885e77cd1eb02f7fa2014feb1e0"
+  }
+}

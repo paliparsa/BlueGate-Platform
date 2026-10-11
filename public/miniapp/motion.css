@@ -1,0 +1,81 @@
+/* BlueGate Mini App Motion System v4.2.0 — additive, layout-safe */
+:root{--bgm-fast:150ms;--bgm-med:240ms;--bgm-ease:cubic-bezier(.2,.75,.25,1)}
+body::before{content:"";position:fixed;z-index:-3;inset:-24vmax;pointer-events:none;background:radial-gradient(circle at 25% 22%,rgba(33,150,243,.14),transparent 23%),radial-gradient(circle at 78% 74%,rgba(139,92,246,.12),transparent 22%);filter:blur(34px);opacity:.34;animation:bgmAmbient 20s ease-in-out infinite alternate}
+@keyframes bgmAmbient{to{transform:translate3d(1.3%,-1%,0) scale(1.035)}}
+
+/* Cards: depth without visual noise */
+:is(.hero,.shop-hero,.wallet-card,.detail-card,.admin-card,.admin-item,.product-tile,.order-row,.quick-card,.mission-card,.vpn-subscription-card,.vpn-sub-targets,.vpn-sub-metrics>div,.mcw-card,.builder-row)[data-bgm-card="1"]{position:relative;isolation:isolate;transition:transform var(--bgm-med) var(--bgm-ease),border-color var(--bgm-med),box-shadow var(--bgm-med),background-color var(--bgm-med)}
+:is(.product-tile,.quick-card,.admin-card,.admin-item,.order-row):active{transform:scale(.985)}
+
+/* Bottom nav signature */
+.bottom-nav button,.topbar-desktop-nav button,.admin-tabs button{position:relative;transition:color var(--bgm-med),background var(--bgm-med),transform var(--bgm-med) var(--bgm-ease)}
+.bottom-nav button.active .nav-icon,.topbar-desktop-nav button.active .nav-icon,.admin-tabs button.active span{display:inline-grid;place-items:center;transform:scale(1.06);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 55%,transparent))}
+.bottom-nav button.active::after{content:"";position:absolute;left:28%;right:28%;bottom:1px;height:2px;border-radius:999px;background:var(--accent);box-shadow:0 0 12px color-mix(in srgb,var(--accent) 60%,transparent);animation:bgmNav .28s var(--bgm-ease) both}
+@keyframes bgmNav{from{opacity:0;transform:scaleX(.25)}to{opacity:1;transform:scaleX(1)}}
+
+/* CTA shimmer */
+:is(button.primary,.primary.block-btn,.success,.cart-fab,[data-bgm-shine="1"]){position:relative;overflow:hidden;isolation:isolate}
+:is(button.primary,.primary.block-btn,.success,.cart-fab,[data-bgm-shine="1"])::after{content:"";position:absolute;z-index:3;top:-55%;left:-35%;width:18%;height:210%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transform:translateX(-280%) rotate(14deg);animation:bgmShine 8.8s ease-in-out infinite}
+@keyframes bgmShine{0%,76%{transform:translateX(-280%) rotate(14deg);opacity:0}80%{opacity:.9}92%{transform:translateX(800%) rotate(14deg);opacity:0}100%{opacity:0}}
+
+/* Page/content transitions */
+.bgm-enter{animation:bgmEnter var(--bgm-med) var(--bgm-ease) both;animation-delay:var(--bgm-delay,0ms)}
+@keyframes bgmEnter{from{opacity:0;transform:translateY(6px) scale(.996)}to{opacity:1;transform:none}}
+
+/* Live status pulse */
+:is(.status-badge.active,.status-badge.ok,.vpn-sub-pills .ok,.mini-notification-badge)[data-bgm-live="1"]{position:relative}
+.vpn-sub-pills .ok[data-bgm-live="1"] i,.status-badge.active[data-bgm-live="1"]::after,.status-badge.ok[data-bgm-live="1"]::after{animation:bgmPulse 2.5s ease-out infinite}
+@keyframes bgmPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 35%,transparent)}75%,100%{box-shadow:0 0 0 7px transparent}}
+
+/* Data flow for VPN service cards */
+.vpn-subscription-card.ready{overflow:hidden}
+.vpn-subscription-card.ready::after{content:"";position:absolute;top:0;bottom:0;width:44px;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(92,204,255,.06),transparent);transform:skewX(-12deg) translateX(-170px);animation:bgmDataSweep 4.8s ease-in-out infinite}
+@keyframes bgmDataSweep{0%,42%{transform:skewX(-12deg) translateX(-170px);opacity:0}50%{opacity:1}80%,100%{transform:skewX(-12deg) translateX(580px);opacity:0}}
+.vpn-sub-micro i{animation:bgmSignal 1.8s ease-in-out infinite alternate}
+@keyframes bgmSignal{to{transform:scale(1.35);filter:drop-shadow(0 0 7px #58cbff)}}
+
+/* Location/flag reveal */
+.vpn-target-flag.bgm-flag-pop{animation:bgmFlag .3s var(--bgm-ease) both}
+@keyframes bgmFlag{from{opacity:.2;transform:scale(.82) translateY(2px)}to{opacity:1;transform:none}}
+
+/* Animated border for only the most valuable surfaces */
+.bgm-energy{position:relative;isolation:isolate}
+.bgm-energy::before{content:"";position:absolute;z-index:-1;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;background:conic-gradient(from var(--bgm-angle,0deg),transparent 0 72%,rgba(72,187,255,.4) 80%,rgba(155,102,255,.33) 88%,transparent 96%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:bgmBorder 13s linear infinite}
+@property --bgm-angle{syntax:'<angle>';initial-value:0deg;inherits:false}@keyframes bgmBorder{to{--bgm-angle:360deg}}
+
+/* Skeleton utility */
+.bgm-skeleton{position:relative;min-height:72px;overflow:hidden;background:rgba(255,255,255,.035)!important;border-radius:18px;color:transparent!important}
+.bgm-skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 24%,rgba(255,255,255,.075) 43%,transparent 62%);transform:translateX(-100%);animation:bgmSkeleton 1.5s ease-in-out infinite}
+@keyframes bgmSkeleton{to{transform:translateX(100%)}}
+
+/* Success micro effect */
+.bgm-success-pop{position:fixed;z-index:100000;left:50%;top:44%;width:68px;height:68px;margin:-34px;border-radius:999px;display:grid;place-items:center;pointer-events:none;background:rgba(6,28,22,.94);border:1px solid rgba(91,235,180,.44);box-shadow:0 16px 56px #0008,0 0 30px rgba(65,220,164,.12);animation:bgmSuccess .8s var(--bgm-ease) both}
+.bgm-success-pop::before{content:"✓";font-size:27px;font-weight:950;color:#8af0c6}.bgm-success-pop::after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:2px solid rgba(112,242,190,.42);animation:bgmRing .75s ease-out both}
+@keyframes bgmSuccess{0%{opacity:0;transform:scale(.7)}25%,72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.9)}}@keyframes bgmRing{to{opacity:0;transform:scale(1.42)}}
+
+/* Copy morph */
+.bgm-copy-pop{transform:scale(.96)!important;color:#86efac!important;transition:transform var(--bgm-fast),color var(--bgm-fast)!important}
+.bgm-copy-badge{position:absolute;z-index:9;inset:50% auto auto 50%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;background:#0d2c22;color:#8af0c6;border:1px solid #6ee7b744;font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none}
+
+
+/* Number count-up overlay; underlying text remains untouched for business logic. */
+.bgm-counter-active{position:relative!important;color:transparent!important}
+.bgm-counter-active::after{content:attr(data-bgm-counter);position:absolute;inset:0;display:flex;align-items:inherit;justify-content:inherit;color:var(--bgm-counter-color,#fff);font:inherit;letter-spacing:inherit;white-space:inherit;direction:inherit;pointer-events:none}
+
+/* Progress reveal */
+:is(.progress-track span,.progress-bar span,.usage-progress span).bgm-progress{transform-origin:right center;transform:scaleX(0);transition:transform .7s var(--bgm-ease)}
+:is(.progress-track span,.progress-bar span,.usage-progress span).bgm-progress.go{transform:scaleX(1)}
+
+/* Modals/sheets */
+:is(dialog[open],.cart-sheet.open,.cust-drawer.open,.preview-sheet.open,.qr-sheet.open,.share-sheet.open,.app-sheet.open,.presentation-sheet.open).bgm-modal-in{animation:bgmModal .25s var(--bgm-ease) both}
+@keyframes bgmModal{from{opacity:0;transform:translateY(8px) scale(.978)}to{opacity:1;transform:none}}
+:is(.lightbox,.cart-sheet,.preview-sheet,.qr-sheet,.share-sheet,.app-sheet){backdrop-filter:blur(7px) saturate(105%)}
+
+/* Connection test staged visual */
+.bgm-connection-steps{margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:11.5px;animation:bgmEnter .2s ease both}
+.bgm-connection-steps span{display:flex;align-items:center;gap:4px}.bgm-connection-steps i{width:7px;height:7px;border-radius:50%;background:#ffffff24;transition:.2s}.bgm-connection-steps .done i{background:#6ee7b7;box-shadow:0 0 10px #6ee7b766}.bgm-connection-steps .active i{background:#65cfff;box-shadow:0 0 10px #65cfff77;animation:bgmBlink .65s ease-in-out infinite alternate}@keyframes bgmBlink{to{transform:scale(1.35)}}
+
+/* First-session brand reveal */
+.brand-box.bgm-logo-intro{animation:bgmBrand .68s var(--bgm-ease) both}@keyframes bgmBrand{from{opacity:0;filter:blur(5px);transform:translateY(-3px) scale(.96)}to{opacity:1;filter:none;transform:none}}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}body::before{display:none}.bgm-enter{opacity:1!important;transform:none!important}}
