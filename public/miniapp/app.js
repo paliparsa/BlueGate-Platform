@@ -3218,11 +3218,24 @@ function openAuthModal(tab = 'login') {
   prepareMiniLayer('authModal');
   const modal = $('authModal');
   if (!modal) return;
+  if (modal.open && typeof modal.close === 'function') {
+    try { modal.close(); } catch (_) {}
+  }
   switchAuthTab(tab);
   if (typeof modal.showModal === 'function') {
-    try { modal.showModal(); } catch (e) { modal.classList.add('open'); }
+    try {
+      modal.showModal();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    } catch (e) {
+      modal.setAttribute('open', '');
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
   } else {
+    modal.setAttribute('open', '');
     modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
   }
 }
 
@@ -3230,10 +3243,11 @@ function closeAuthModal() {
   const modal = $('authModal');
   if (!modal) return;
   if (typeof modal.close === 'function') {
-    try { modal.close(); } catch (e) { modal.classList.remove('open'); }
-  } else {
-    modal.classList.remove('open');
+    try { modal.close(); } catch (_) {}
   }
+  modal.removeAttribute('open');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
 }
 
 function switchAuthTab(tabName) {
@@ -3298,6 +3312,13 @@ function initAuthHandlers() {
     }
   });
   $('closeAuthModal')?.addEventListener('click', () => closeAuthModal());
+  $('authModal')?.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    closeAuthModal();
+  });
+  $('authModal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeAuthModal();
+  });
 
   document.querySelectorAll('.auth-tab').forEach(btn => {
     btn.addEventListener('click', () => switchAuthTab(btn.dataset.authTab));
@@ -3467,4 +3488,3 @@ function openPurchaseReward() {
     base_amount: val('pr_base_amount')
   }));
 }
-
