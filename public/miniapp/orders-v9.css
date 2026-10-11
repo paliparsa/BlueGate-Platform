@@ -290,6 +290,90 @@
   .parity-order-side .status-badge { max-width: none; }
   .orders-manage-btn-bottom { min-width: 124px !important; }
 }
+
+/* VPN account and service detail compact redesign. */
+.vpn-sub-page { display: flex; flex-direction: column; gap: 9px; }
+.vpn-sub-page > .vpn-sub-topbar { order: 0; flex-wrap: wrap; }
+.vpn-sub-page > .vpn-sub-identity { order: 1; }
+.vpn-sub-page > .vpn-subscription-card { order: 2; margin-top: 0; }
+.vpn-sub-page > .vpn-sub-overview { order: 3; margin-top: 0; }
+.vpn-sub-page > .vpn-sub-metrics { order: 4; margin-top: 0; }
+.vpn-sub-page > .vpn-client-card { order: 5; margin-top: 0; }
+.vpn-sub-page > .vpn-sub-targets { order: 6; margin-top: 0; }
+.vpn-sub-page > .vpn-sub-quick { order: 7; margin-top: 0; }
+.vpn-sub-page > .vpn-sub-payment { order: 8; margin-top: 0; }
+.vpn-sub-topbar { position: relative; min-height: 44px; }
+.vpn-sub-top-actions { display: flex; gap: 6px; margin-inline: auto; order: 2; }
+.vpn-sub-top-action { min-height: 36px; padding: 7px 10px; border: 1px solid rgba(119,201,255,.2); border-radius: 11px; background: rgba(255,255,255,.04); color: var(--text); font-size: 11px; font-weight: 900; white-space: nowrap; }
+.vpn-sub-top-action.primary { border-color: transparent; background: linear-gradient(135deg,#1778e8,#43b6ff); color: #fff; }
+.vpn-sub-top-action i { font-style: normal; margin-inline-end: 4px; }
+.vpn-sub-copy h1 { max-width: 100%; overflow-wrap: anywhere; }
+.vpn-sub-pills { margin-top: 12px; }
+.vpn-sub-pills > span { max-width: 100%; min-width: 0; }
+.vpn-sub-pills > span b { min-width: 0; max-width: 180px; overflow-wrap: anywhere; }
+.vpn-sub-orb-wrap { min-height: 160px; padding: 10px; background: linear-gradient(145deg,rgba(119,201,255,.08),rgba(255,255,255,.02)); }
+.vpn-sub-orb { width: 126px; height: 126px; background: conic-gradient(#3a9fff calc(var(--p)*1%),rgba(255,255,255,.08) 0); }
+.vpn-sub-orb:before { inset: 10px; background: radial-gradient(circle at 50% 35%,rgba(58,159,255,.12),#091421 70%); }
+.vpn-sub-orb strong { font-size: 24px; }
+.vpn-sub-overview { gap: 8px; }
+.vpn-sub-panel { padding: 12px; }
+.vpn-sub-panel header > b { font-size: 14px; white-space: nowrap; }
+.vpn-sub-progress { height: 7px; margin: 11px 0; }
+.vpn-sub-duo { gap: 6px; }
+.vpn-sub-duo div { padding: 8px; }
+.vpn-sub-duo b { display: block; margin-top: 3px; overflow-wrap: anywhere; }
+.vpn-sub-expiry { margin-top: 9px; }
+.vpn-sub-expiry strong { font-size: 25px; }
+.vpn-sub-date { margin-top: 8px; padding: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vpn-sub-metrics { gap: 6px; }
+.vpn-sub-metrics > div { min-height: 70px; padding: 9px; border-radius: 14px; }
+.vpn-sub-metrics i { font-size: 15px; }
+.vpn-sub-metrics span { margin-top: 4px; font-size: 10px; }
+.vpn-sub-metrics b { margin-top: 2px; font-size: 11px; }
+.vpn-client-card { margin-top: 0; padding: 12px; }
+.vpn-client-card > header h3 { margin: 2px 0 8px; font-size: 14px; }
+.vpn-client-list { gap: 6px; }
+.vpn-client-list > section { grid-template-columns:minmax(0,1.25fr) minmax(90px,.75fr); gap: 7px; padding: 8px; }
+.vpn-client-list small { margin-bottom: 2px; font-size: 10px; }
+.vpn-client-list b { white-space: normal; overflow-wrap: anywhere; line-height: 1.5; font-size: 12px; }
+.vpn-client-list code { padding: 4px 6px; font-size: 10px; }
+.vpn-subscription-card { padding: 12px; }
+.vpn-subscription-card code { margin: 8px 0; padding: 8px 10px; }
+.vpn-sub-actions button { min-height: 40px; font-size: 11px; }
+.vpn-sub-targets { padding: 12px; }
+.vpn-sub-targets > div { gap: 5px; margin-top: 8px; }
+.vpn-sub-targets section { grid-template-columns: 34px minmax(0,1fr) auto; gap: 7px; padding: 8px; }
+.vpn-target-proto { width: 34px; height: 34px; font-size: 15px; }
+.vpn-sub-targets section b { font-size: 11px; }
+.vpn-sub-targets section small, .vpn-sub-targets section em { font-size: 10px; }
+.vpn-sub-quick.vpn-sub-addons { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.parity-service-copy { gap: 4px; }
+.parity-service-top { align-items: flex-start; }
+.parity-service-top b { white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
+.parity-service-meta { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,.8fr) minmax(0,1fr); gap: 4px; }
+.parity-service-meta span { min-width: 0; display: grid; gap: 1px; line-height: 1.35; }
+.parity-service-meta span em { font-style: normal; color: var(--muted); font-size: 10px; }
+.parity-service-meta .client { white-space: normal; text-overflow: clip; overflow: visible; text-align: right; }
+.parity-service-meta .client em { display: block; }
+.parity-service-meta .client { color: #9edcff; overflow-wrap: anywhere; }
+.hub-service-row.parity-service-card { min-height: 74px; }
+.parity-service-card .hub-order-row { padding: 9px 10px; }
+.parity-service-card .mini-renew-inline { min-width: 56px; margin: 6px 6px 6px 0; padding: 7px 8px; font-size: 11px; }
+
+@media (max-width: 640px) {
+  .vpn-sub-top-actions { flex: 1 1 100%; order: 3; margin: 0; }
+  .vpn-sub-top-action { flex: 1; }
+  .vpn-sub-topmeta { order: 2; margin-inline-start: auto; }
+  .vpn-sub-overview { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 420px) {
+  .vpn-sub-overview { grid-template-columns: 1fr; }
+  .vpn-sub-metrics > div { min-height: 64px; }
+  .vpn-subscription-card .vpn-sub-actions { grid-template-columns: 1fr 1fr; }
+  .vpn-subscription-card .vpn-sub-actions button:last-child { grid-column: 1 / -1; }
+  .parity-service-meta { grid-template-columns: 1fr 1fr; }
+  .parity-service-meta .client { grid-column: 1 / -1; }
+}
 #ordersPage .parity-order-side { align-self: stretch; }
 #ordersPage .status-badge { font-size: 11px; padding: 6px 8px; }
 #ordersPage .parity-order-card .order-row-stepper {
