@@ -8,6 +8,11 @@ function veyra_module_loaded(string $slug): bool { return !empty($GLOBALS['VEYRA
 function veyra_module_mark_loaded(string $slug,array $meta=[]): void { $GLOBALS['VEYRA_MODULES'][$slug]=$meta+['loaded'=>true]; }
 function veyra_pro_core_active(): bool { return veyra_module_loaded('pro-core'); /* unrestricted */ }
 function veyra_pro_core_allows(string $capability): bool { return veyra_pro_core_active(); /* unrestricted */ }
+function api_require_pro_capability(string $capability, string $message = ''): void {
+    // Unrestricted mode: all pro capabilities are allowed
+    return;
+}
+
 function veyra_module_integrity_meta(): array { $f=veyra_license_state_dir().'/pro-module.json'; if(is_file($f)){ $j=json_decode((string)@file_get_contents($f),true); if(is_array($j))return $j; } $bundle=dirname(__DIR__).'/PRO-INTEGRITY.json'; if(is_file($bundle)){ $j=json_decode((string)@file_get_contents($bundle),true); if(is_array($j))return ['package_sha256'=>'direct-pro-bundle','module_integrity'=>$j['module_integrity']??[],'integrity_sha256'=>($j['module_integrity']['pro-core']??'')]; } return []; }
 function veyra_module_safe_relpath(string $p): bool { return $p!=='' && !str_starts_with($p,'/') && !str_contains($p,'..') && !str_contains($p,"\\") && preg_match('#^[A-Za-z0-9._/\-]+$#',$p); }
 function veyra_module_verify_integrity(string $slug,string $dir): array {

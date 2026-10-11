@@ -2750,6 +2750,19 @@ async function adminAction(action,payload={}){
 }
 async function loadAfterAction(action,payload={}){try{state=await api(action,payload);const active=topMiniLayer();if(active==='appSheet')BlueGateUI?.closeSheet?.();applyTheme(state);renderUser();showStatus('انجام شد');syncTelegramBackButton();return true}catch(e){showStatus(e.message,'error');return false}}
 
+// === Dedicated early admin-tab handler (capture) — fixes unresponsive admin navigation ===
+document.addEventListener('click', function(e) {
+  const tabBtn = e.target.closest('[data-admin-tab]');
+  if (!tabBtn) return;
+  if (!document.getElementById('adminApp') || document.getElementById('adminApp').classList.contains('hidden')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const tab = tabBtn.dataset.adminTab;
+  if (tab && typeof setAdminTab === 'function') {
+    setAdminTab(tab);
+  }
+}, true);
+
 document.addEventListener('click',async(e)=>{const t=e.target.closest('[data-admin-add-coupon],[data-admin-add-inventory],[data-admin-add-role],[data-admin-customer-open],[data-admin-customer-id],[data-admin-customer-balance]');if(!t)return;if(!document.getElementById('adminApp')||document.getElementById('adminApp').classList.contains('hidden'))return;e.preventDefault();e.stopPropagation();if(t.dataset.adminAddCoupon!==undefined){haptic?.('light');openAddCoupon();return}if(t.dataset.adminAddInventory!==undefined){haptic?.('light');openAddInventory();return}if(t.dataset.adminAddRole!==undefined){haptic?.('light');if(!hasLicenseFeature('team_roles')){showProUpgrade('team_roles');return}openAddRole();return}if(t.dataset.adminCustomerOpen!==undefined){openAdminCustomer360(Number(document.getElementById('adminCustomerId')?.value||0));return}if(t.dataset.adminCustomerId){openAdminCustomer360(Number(t.dataset.adminCustomerId));return}if(t.dataset.adminCustomerBalance!==undefined){const tid=Number(document.getElementById('adminCustomerTid')?.value||0),amount=Number(document.getElementById('adminCustomerAmount')?.value||0);if(tid<=0||!amount)return showStatus('Telegram ID و مبلغ معتبر وارد کن','error');if(await adminAction('admin_add_balance',{telegram_id:tid,amount})){showStatus('اعتبار مشتری تغییر کرد','success')}return}},true);
 
 document.addEventListener('click',async(e)=>{
