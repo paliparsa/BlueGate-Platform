@@ -1,0 +1,126 @@
+/* Veyra Motion System v4.2.0
+   Additive-only visual layer: no layout ownership, no API/business logic changes. */
+:root{
+  --bg-motion-fast:160ms;
+  --bg-motion-med:260ms;
+  --bg-motion-slow:620ms;
+  --bg-motion-ease:cubic-bezier(.2,.75,.25,1);
+  --bg-glow-a:rgba(77,181,255,.20);
+  --bg-glow-b:rgba(151,105,255,.15);
+}
+
+/* Ambient depth: deliberately low opacity so content remains dominant. */
+body::before{
+  content:"";position:fixed;z-index:-2;inset:-22vmax;pointer-events:none;
+  background:
+    radial-gradient(circle at 22% 28%,var(--bg-glow-a),transparent 24%),
+    radial-gradient(circle at 76% 68%,var(--bg-glow-b),transparent 22%);
+  filter:blur(34px);opacity:.34;transform:translate3d(0,0,0);
+  animation:bgAmbientDrift 22s ease-in-out infinite alternate;
+}
+@keyframes bgAmbientDrift{0%{transform:translate3d(-1.2%,0,0) scale(1)}100%{transform:translate3d(1.2%,-1%,0) scale(1.035)}}
+
+/* Premium card response. Keep selectors broad enough for dynamic catalog/account content. */
+:is(.product-tab,.configurator-card,.premium-card,.vpn-package-card,.feature-card,.review-card,.tutorial-card,.generic-product-card,.bg-order-card,.bg-ref-card,.admin-card,.admin-item,.member-content>section,.member-content>.card){
+  position:relative;isolation:isolate;
+  transition:transform var(--bg-motion-med) var(--bg-motion-ease),border-color var(--bg-motion-med) ease,box-shadow var(--bg-motion-med) ease,background-color var(--bg-motion-med) ease;
+}
+@media (hover:hover) and (pointer:fine){
+  :is(.product-tab,.configurator-card,.premium-card,.vpn-package-card,.feature-card,.review-card,.tutorial-card,.generic-product-card,.bg-order-card,.bg-ref-card,.admin-card,.admin-item)[data-bg-hoverable="1"]:hover{
+    transform:translateY(-2px);border-color:rgba(103,194,255,.28)!important;box-shadow:0 16px 44px rgba(0,0,0,.20),0 0 28px rgba(83,167,255,.045);
+  }
+}
+
+/* Soft CTA shine — runs rarely and never blocks interaction. */
+:is(.btn.primary,.purchase-cta,.bg-register-btn,.sticky-cta,[data-bg-cta-shine="1"]){position:relative;overflow:hidden;isolation:isolate}
+:is(.btn.primary,.purchase-cta,.bg-register-btn,.sticky-cta,[data-bg-cta-shine="1"])::after{
+  content:"";position:absolute;z-index:2;top:-45%;left:-42%;width:22%;height:190%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);transform:translateX(-260%) rotate(14deg);
+  animation:bgCtaShine 8.5s ease-in-out infinite;
+}
+@keyframes bgCtaShine{0%,74%{transform:translateX(-260%) rotate(14deg);opacity:0}78%{opacity:.9}90%{transform:translateX(760%) rotate(14deg);opacity:0}100%{opacity:0}}
+
+/* Online/active pulse. */
+:is(.pulse-dot,.live-dot,.brand-live-badge i,.bg-status.ok,.status-badge.ok,.status-badge.active)[data-bg-live="1"]{position:relative}
+:is(.pulse-dot,.live-dot,.brand-live-badge i)[data-bg-live="1"]::after{
+  content:"";position:absolute;inset:-4px;border-radius:999px;border:1px solid currentColor;opacity:.34;animation:bgStatusPulse 2.6s ease-out infinite;
+}
+@keyframes bgStatusPulse{0%{transform:scale(.7);opacity:.42}70%,100%{transform:scale(1.65);opacity:0}}
+
+/* Staggered page/content entry. */
+.bg-motion-enter{animation:bgEnter var(--bg-motion-med) var(--bg-motion-ease) both;animation-delay:var(--bg-delay,0ms)}
+@keyframes bgEnter{from{opacity:0;transform:translateY(7px) scale(.995)}to{opacity:1;transform:none}}
+
+/* Generic accordion enhancer: works with existing aria-expanded state without changing markup. */
+[aria-expanded] :is(.accordion-chevron,.generic-toggle-action i,.bg-account-chevron),
+button[aria-expanded] > :is(i,.chevron){transition:transform var(--bg-motion-med) var(--bg-motion-ease)}
+[aria-expanded="true"] :is(.accordion-chevron,.generic-toggle-action i,.bg-account-chevron),
+button[aria-expanded="true"] > :is(i,.chevron){transform:rotate(180deg)}
+
+/* Skeleton utility injected only while async regions are empty/loading. */
+.bg-motion-skeleton{position:relative;overflow:hidden!important;background:rgba(255,255,255,.035)!important;color:transparent!important;border-color:rgba(255,255,255,.055)!important}
+.bg-motion-skeleton::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 26%,rgba(255,255,255,.08) 43%,transparent 60%);transform:translateX(-100%);animation:bgSkeleton 1.55s ease-in-out infinite}
+@keyframes bgSkeleton{to{transform:translateX(100%)}}
+
+/* Success ring micro-animation. */
+.bg-success-pop{position:fixed;z-index:100000;left:50%;top:50%;width:70px;height:70px;margin:-35px;border-radius:999px;display:grid;place-items:center;pointer-events:none;background:rgba(6,28,22,.92);border:1px solid rgba(87,235,176,.46);box-shadow:0 18px 65px rgba(0,0,0,.34),0 0 36px rgba(73,215,165,.14);animation:bgSuccessPop .82s var(--bg-motion-ease) both}
+.bg-success-pop::before{content:"✓";font-weight:950;font-size:28px;color:#8af0c6;animation:bgSuccessCheck .55s .08s var(--bg-motion-ease) both}
+.bg-success-pop::after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:2px solid rgba(112,242,190,.45);animation:bgSuccessRing .78s ease-out both}
+@keyframes bgSuccessPop{0%{opacity:0;transform:scale(.72)}24%,72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.92)}}
+@keyframes bgSuccessCheck{from{opacity:0;transform:scale(.5) rotate(-18deg)}to{opacity:1;transform:none}}
+@keyframes bgSuccessRing{from{opacity:.8;transform:scale(.72)}to{opacity:0;transform:scale(1.42)}}
+
+/* Copy morph. */
+.bg-copy-ok{transition:transform var(--bg-motion-fast) ease,color var(--bg-motion-fast) ease!important}
+.bg-copy-ok.bg-copy-pop{transform:scale(.96);color:#7ce9b9!important}
+.bg-copy-badge{position:absolute;z-index:9;inset:50% auto auto 50%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;background:#0d2c22;color:#8af0c6;border:1px solid rgba(112,228,180,.25);font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none;animation:bgSuccessCheck .2s ease both}
+
+
+/* Number count-up overlay: preserves the real DOM text for app logic. */
+.bg-counter-active{position:relative!important;color:transparent!important}
+.bg-counter-active::after{content:attr(data-bg-counter);position:absolute;inset:0;display:flex;align-items:inherit;justify-content:inherit;color:var(--bg-counter-color,#fff);font:inherit;letter-spacing:inherit;white-space:inherit;direction:inherit;pointer-events:none}
+
+/* Progress bars animate when revealed. */
+:is(.progress-track span,.progress-bar span,[role="progressbar"] .bar,.usage-progress span).bg-progress-ready{transform-origin:right center;transform:scaleX(0);transition:transform .72s var(--bg-motion-ease)}
+:is(.progress-track span,.progress-bar span,[role="progressbar"] .bar,.usage-progress span).bg-progress-ready.bg-progress-go{transform:scaleX(1)}
+
+/* VPN/data-flow signature. */
+.vpn-network-visual::after,.bg-data-flow::after{
+  content:"";position:absolute;pointer-events:none;width:7px;height:7px;border-radius:50%;background:#73d4ff;box-shadow:0 0 14px rgba(92,204,255,.65);opacity:.88;
+  animation:bgDataFlow 3.4s ease-in-out infinite;
+}
+@keyframes bgDataFlow{0%{transform:translate3d(-28px,12px,0) scale(.7);opacity:0}16%{opacity:.9}55%{transform:translate3d(12px,-10px,0) scale(1)}88%{opacity:.75}100%{transform:translate3d(38px,8px,0) scale(.75);opacity:0}}
+
+/* Subtle animated border only on selected/high value cards. */
+.bg-energy-border{position:relative;isolation:isolate}
+.bg-energy-border::before{content:"";position:absolute;z-index:-1;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;background:conic-gradient(from var(--bg-angle,0deg),transparent 0 68%,rgba(102,196,255,.42) 76%,rgba(163,117,255,.36) 84%,transparent 92%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:bgBorderSpin 12s linear infinite}
+@property --bg-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes bgBorderSpin{to{--bg-angle:360deg}}
+
+/* Modal polish. */
+:is(.bg-drawer-backdrop,.bg-account-menu-scrim){backdrop-filter:blur(8px) saturate(105%)}
+:is(dialog,.bg-account-popover).bg-modal-enter{animation:bgModalIn .26s var(--bg-motion-ease) both}
+.bg-account-drawer.bg-modal-enter{animation:bgAccountFadeIn .22s var(--bg-motion-ease) both}
+@keyframes bgAccountFadeIn{from{opacity:.01}to{opacity:1}}
+@keyframes bgModalIn{from{opacity:0;transform:translateY(8px) scale(.975)}to{opacity:1;transform:none}}
+
+/* Mini connection-test overlay also used by web admin dynamically. */
+.bg-connection-steps{margin-top:9px;display:flex;align-items:center;gap:7px;direction:rtl;font-size:12px;color:rgba(218,232,247,.62);animation:bgEnter .2s ease both}
+.bg-connection-steps span{display:inline-flex;align-items:center;gap:4px}
+.bg-connection-steps i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);transition:.2s}
+.bg-connection-steps span.done i{background:#70e4b4;box-shadow:0 0 10px rgba(112,228,180,.4)}
+.bg-connection-steps span.active i{background:#70cfff;box-shadow:0 0 12px rgba(112,207,255,.5);animation:bgDotBlink .7s ease-in-out infinite alternate}
+@keyframes bgDotBlink{to{transform:scale(1.35)}}
+
+/* Desktop-only magnetic/tilt feedback is applied by JS, with tiny bounds. */
+@media (hover:hover) and (pointer:fine){.bg-magnetic{will-change:transform;transition:transform .18s var(--bg-motion-ease)}}
+
+/* First-load brand reveal. */
+.brand.bg-logo-intro img,.brand-stage.bg-logo-intro img{animation:bgLogoIntro .75s var(--bg-motion-ease) both}
+@keyframes bgLogoIntro{0%{opacity:0;filter:blur(7px);transform:scale(.92)}55%{filter:blur(0);opacity:1}100%{transform:scale(1)}}
+
+/* Never trade accessibility/performance for motion. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  body::before{display:none}.bg-motion-enter{opacity:1!important;transform:none!important}
+}
