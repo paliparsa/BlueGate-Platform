@@ -22,6 +22,11 @@
   --mini-z-feedback: 900000;
 }
 
+html,
+body {
+  touch-action: pan-y;
+}
+
 html {
   box-sizing: border-box;
   -webkit-text-size-adjust: 100%;

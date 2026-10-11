@@ -13,6 +13,22 @@ syncMiniViewport();
 window.addEventListener('resize', syncMiniViewport, {passive: true});
 window.visualViewport?.addEventListener('resize', syncMiniViewport, {passive: true});
 
+// Keep the Mini App at a fixed scale without blocking normal one-finger scrolling.
+function lockMiniAppZoom() {
+  const preventZoomGesture = event => event.preventDefault();
+  document.addEventListener('gesturestart', preventZoomGesture, {passive: false});
+  document.addEventListener('gesturechange', preventZoomGesture, {passive: false});
+  document.addEventListener('gestureend', preventZoomGesture, {passive: false});
+  document.addEventListener('wheel', event => {
+    if (event.ctrlKey) event.preventDefault();
+  }, {passive: false});
+  document.addEventListener('keydown', event => {
+    if (event.ctrlKey && ['+', '-', '=', '0'].includes(event.key)) event.preventDefault();
+  }, {passive: false});
+  document.addEventListener('dblclick', preventZoomGesture, {passive: false});
+}
+lockMiniAppZoom();
+
 function optimizeMiniImages(root = document) {
   root.querySelectorAll?.('img').forEach(img => {
     if (!img.hasAttribute('decoding')) img.decoding = 'async';
