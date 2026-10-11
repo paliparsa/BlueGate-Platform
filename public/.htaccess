@@ -1,5 +1,5 @@
 Options -Indexes
-<FilesMatch "^(config|schema|.*\.sql)$">
+<FilesMatch "^(config(\.example)?\.php|schema\.sql|.*\.(sql|log|bak|sh|env|ini))$">
   Require all denied
 </FilesMatch>
 

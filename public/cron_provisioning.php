@@ -1,12 +1,10 @@
 <?php
 require_once dirname(__DIR__).'/app/bootstrap.php';
 $isCli = PHP_SAPI === 'cli';
-$key = (string)($_GET['key'] ?? ($_GET['secret'] ?? ($_SERVER['HTTP_X_CRON_KEY'] ?? '')));
+$key = (string)($_GET['key'] ?? ($_SERVER['HTTP_X_CRON_KEY'] ?? ''));
 $wantKey = (string)app_config('CRON_KEY', '');
-$wantSecret = (string)app_config('WEBHOOK_SECRET', '');
-$auth = $isCli
-    || ($wantKey !== '' && hash_equals($wantKey, $key))
-    || ($wantSecret !== '' && hash_equals($wantSecret, $key));
+$placeholder = ($wantKey === '' || str_starts_with($wantKey, 'CHANGE_ME'));
+$auth = $isCli || (!$placeholder && $key !== '' && hash_equals($wantKey, $key));
 
 if (!$auth) {
     http_response_code(403);
@@ -26,6 +24,7 @@ try {
     @file_put_contents($cacheDir . '/cron-provisioning.last', (string)time());
     echo json_encode(['ok' => true] + $r, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 } catch (Throwable $e) {
+    error_log('[cron_provisioning] ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'WORKER_FAILED', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    echo json_encode(['ok' => false, 'error' => 'WORKER_FAILED'], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 }

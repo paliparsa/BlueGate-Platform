@@ -21,11 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 function api_out(array $data, int $code = 200): void { http_response_code($code); echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit; }
 set_exception_handler(function(Throwable $e){
-    $msg = $e->getMessage();
-    error_log('[BlueReferral API] '.$msg.' in '.$e->getFile().':'.$e->getLine());
-    // Return a more useful message for RuntimeExceptions so admin can see the real cause
-    $safe = ($e instanceof RuntimeException && mb_strlen($msg) < 200 && !preg_match('/SQLSTATE|PDO|stack trace/i', $msg));
-    $outMsg = $safe ? ('خطا: '.$msg) : 'خطای داخلی سرور؛ لاگ را بررسی کن.';
+    error_log('[BlueReferral API] '.get_class($e).': '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+    $outMsg = 'خطای داخلی سرور؛ لاگ را بررسی کن.';
+    if ($e instanceof RuntimeException) { $s = api_client_safe_message((string)$e->getMessage()); if ($s !== null) $outMsg = 'خطا: '.$s; }
     if (!headers_sent()) api_out(['ok'=>false,'error'=>'SERVER_ERROR','message'=>$outMsg], 500);
 });
 register_shutdown_function(function(){
@@ -36,18 +34,27 @@ register_shutdown_function(function(){
     }
 });
 function request_json(): array { $raw = file_get_contents('php://input'); $data = json_decode($raw ?: '{}', true); return is_array($data) ? $data : []; }
-function api_rate_limit(string $bucket,string $identity,int $max,int $window,int $block=0): void {$r=security_rate_limit($bucket,security_client_ip().'|'.$identity,$max,$window,$block);if(empty($r['allowed'])){header('Retry-After: '.(int)$r['retry_after']);api_out(['ok'=>false,'error'=>'RATE_LIMITED','message'=>'تعداد تلاش‌ها بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.','retry_after'=>(int)$r['retry_after']],429);}}
+function api_rate_limit(string $bucket,string $identity,int $max,int $window,int $block=0): void {$failClosed=in_array($bucket,['register','login','verify_email_otp','resend_email_otp','forgot_password','reset_password','telegram_login','telegram_link'],true)||str_starts_with($bucket,'email_change_');$r=security_rate_limit($bucket,security_client_ip().'|'.$identity,$max,$window,$block,$failClosed);if(empty($r['allowed'])){header('Retry-After: '.(int)$r['retry_after']);api_out(['ok'=>false,'error'=>'RATE_LIMITED','message'=>'تعداد تلاش‌ها بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.','retry_after'=>(int)$r['retry_after']],429);}}
 function api_exception_code(Throwable $e,string $fallback='REQUEST_FAILED'): string {
     $raw=trim((string)$e->getMessage());
     if(preg_match('/^[A-Z][A-Z0-9_]{2,80}$/',$raw))return $raw;
     error_log('[BlueGate API handled exception] '.$raw);
     return $fallback;
 }
+/* Only deliberately-authored Persian user messages may reach the client; anything technical is dropped. */
+function api_client_safe_message(string $raw): ?string {
+    $raw = trim($raw);
+    if ($raw === '' || mb_strlen($raw) > 240) return null;
+    if (!preg_match('/\p{Arabic}/u', $raw)) return null;
+    if (preg_match('~SQLSTATE|PDO|HTTP_|CURL|\bBODY\b|stack trace|\.php|\.sql|https?://|[A-Za-z]:\\\\|/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+|Exception|mysql|errno|Fatal|Warning|Notice|token|secret|password|api[_ -]?key~i', $raw)) return null;
+    return $raw;
+}
 function api_exception_message(Throwable $e,string $fallback): string {
     $raw=trim((string)$e->getMessage());
-    $unsafe=$raw===''||mb_strlen($raw)>240||preg_match('/SQLSTATE|PDO|HTTP_FAILED|CURL|\bBODY\b|stack trace|\.php:\d+/i',$raw);
-    if(!$unsafe && $e instanceof RuntimeException && !preg_match('/^[A-Z][A-Z0-9_]{2,80}$/',$raw))return $raw;
-    if($unsafe)error_log('[BlueGate API hidden exception] '.$raw);
+    if($raw!==''&&$e instanceof RuntimeException&&!preg_match('/^[A-Z][A-Z0-9_]{2,80}$/',$raw)){
+        $s=api_client_safe_message($raw); if($s!==null)return $s;
+    }
+    if($raw!=='')error_log('[BlueGate API hidden exception] '.$raw);
     return $fallback;
 }
 function api_cookie_token(): string { return trim((string)($_COOKIE['nx_session']??'')); }
@@ -330,7 +337,7 @@ function admin_payload(): array {
 }
 function bool_input($v): int { return in_array(strtolower((string)$v), ['1','true','yes','on'], true) ? 1 : 0; }
 
-$method=strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET'));$input=$method==='GET'?$_GET:array_merge($_POST,request_json());$action=(string)($input['action']??'me');$initData=(string)($input['initData']??'');$authToken=api_cookie_token();if($authToken==='')$authToken=trim((string)($_SERVER['HTTP_X_WEB_TOKEN']??''));if($authToken===''&&$method!=='GET')$authToken=trim((string)($input['authToken']??''));
+$method=strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET'));$input=$method==='GET'?$_GET:array_merge($_POST,request_json());$action=(string)($input['action']??'me');$initData=(string)($input['initData']??'');$authToken=api_cookie_token();if($authToken==='')$authToken=trim((string)($_SERVER['HTTP_X_WEB_TOKEN']??''));
 if($method==='POST'&&api_cookie_token()!==''&&$initData===''&&trim((string)($_SERVER['HTTP_X_WEB_TOKEN']??''))===''){$origin=trim((string)($_SERVER['HTTP_ORIGIN']??''));$originHost=strtolower((string)(parse_url($origin,PHP_URL_HOST)?:''));$host=strtolower(preg_replace('/:\d+$/','',(string)($_SERVER['HTTP_HOST']??'')));$allowed=trim((string)app_config('WEB_ALLOWED_ORIGIN',''));$originOk=$origin!==''&&(($allowed!==''&&rtrim($origin,'/')===rtrim($allowed,'/'))||($originHost!==''&&$originHost===$host));$ct=strtolower((string)($_SERVER['CONTENT_TYPE']??''));if(!$originOk||!str_starts_with($ct,'application/json'))api_out(['ok'=>false,'error'=>'CSRF_CHECK_FAILED','message'=>'درخواست امنیتی معتبر نیست.'],403);}
 
 if ($action === 'register') {
@@ -532,8 +539,12 @@ if ($action === 'view_receipt') {
     if (!$abs || !is_file($abs)) { http_response_code(404); exit('Receipt not found'); }
     $mime = 'image/jpeg';
     if (class_exists('finfo')) { $fi = new finfo(FILEINFO_MIME_TYPE); $mime = $fi->file($abs) ?: $mime; }
+    if (!in_array($mime, ['image/jpeg','image/png','image/webp'], true)) { http_response_code(415); exit('Unsupported media'); }
     header('Content-Type: ' . $mime);
-    header('Cache-Control: private, max-age=3600');
+    header('Content-Disposition: inline');
+    header('Cache-Control: private, no-store, max-age=0');
+    header('Referrer-Policy: no-referrer');
+    header("Content-Security-Policy: default-src 'none'; sandbox");
     header('Content-Length: ' . filesize($abs));
     header('X-Content-Type-Options: nosniff');
     readfile($abs);
@@ -557,8 +568,12 @@ if ($action === 'view_topup_receipt') {
     if (!$abs || !is_file($abs)) { http_response_code(404); exit('Receipt not found'); }
     $mime = 'image/jpeg';
     if (class_exists('finfo')) { $fi = new finfo(FILEINFO_MIME_TYPE); $mime = $fi->file($abs) ?: $mime; }
+    if (!in_array($mime, ['image/jpeg','image/png','image/webp'], true)) { http_response_code(415); exit('Unsupported media'); }
     header('Content-Type: ' . $mime);
-    header('Cache-Control: private, max-age=3600');
+    header('Content-Disposition: inline');
+    header('Cache-Control: private, no-store, max-age=0');
+    header('Referrer-Policy: no-referrer');
+    header("Content-Security-Policy: default-src 'none'; sandbox");
     header('Content-Length: ' . filesize($abs));
     header('X-Content-Type-Options: nosniff');
     readfile($abs);
@@ -571,6 +586,7 @@ if (!$user) {
 $GLOBALS['BG_CURRENT_USER']=$user;
 function admin_action_perm(string $a): string {if(in_array($a,['admin_summary'],true))return 'dashboard';if(in_array($a,['admin_notification_broadcast'],true))return 'full';if(str_starts_with($a,'admin_catalog_')||in_array($a,['admin_add_inventory','admin_update_inventory','admin_delete_inventory','admin_hard_delete_inventory','admin_add_coupon','admin_update_coupon','admin_toggle_coupon','admin_delete_coupon'],true))return 'products';if(in_array($a,['admin_add_balance','admin_credit_topup_approve','admin_credit_topup_reject'],true))return 'finance';if(in_array($a,['admin_search_orders','admin_archive_order','admin_delete_order','admin_cleanup_orders','admin_order_status','admin_deliver_order','admin_set_service_delivery','admin_order_provision_now','admin_order_note','admin_customer_view'],true))return 'orders';return 'full';}
 if(str_starts_with($action,'admin_'))require_admin_perm($user,admin_action_perm($action));
+if(!str_starts_with($action,'admin_')&&preg_match('/(?:^|_)(?:broadcast|backup|restore|provisioning|routing|monitoring|vip_rates|set_role|remove_role)(?:_|$)/',$action))require_admin_perm($user,'full');
 
 if ($action === 'logout') {
     if (!empty($user['id'])) {
@@ -626,7 +642,7 @@ if ($action === 'get_receipt_url') {
     $fid=trim((string)($order['receipt_file_id']??''));if($fid==='')api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'برای این سفارش رسید تصویری ثبت نشده است.'],404);
     $abs=receipt_abs_path($fid);
     if(!$abs||!is_file($abs))api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'فایل رسید روی سرور پیدا نشد.'],404);
-    $token=receipt_view_token('order',$oid,(int)$order['user_id']);
+    $token=receipt_view_token('order',$oid,(int)$order['user_id']);if($token==='')api_out(['ok'=>false,'error'=>'RECEIPT_UNAVAILABLE','message'=>'پیش‌نمایش رسید در دسترس نیست.'],503);
     api_out(['ok'=>true,'url'=>'/api.php?action=view_receipt&order_id='.$oid.'&token='.$token]);
 }
 
@@ -639,7 +655,7 @@ if ($action === 'get_credit_topup_receipt_url') {
     if($fid==='')api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'برای این درخواست شارژ رسید تصویری ثبت نشده است.'],404);
     $abs=receipt_abs_path($fid);
     if(!$abs||!is_file($abs))api_out(['ok'=>false,'error'=>'RECEIPT_NOT_FOUND','message'=>'فایل رسید روی سرور پیدا نشد یا مسیر آن معتبر نیست.'],404);
-    $token=receipt_view_token('topup',$tid,(int)$topup['user_id']);
+    $token=receipt_view_token('topup',$tid,(int)$topup['user_id']);if($token==='')api_out(['ok'=>false,'error'=>'RECEIPT_UNAVAILABLE','message'=>'پیش‌نمایش رسید در دسترس نیست.'],503);
     api_out(['ok'=>true,'url'=>'/api.php?action=view_topup_receipt&topup_id='.$tid.'&token='.$token,'topup_id'=>$tid]);
 }
 
@@ -872,6 +888,8 @@ if ($action === 'admin_provider_test') {
 }
 if ($action === 'admin_provider_health_check_all') {
     require_admin($user);
+    api_rate_limit('admin_health_all',(string)$user['id'],6,300,300);
+    @set_time_limit(180);
     $providers = bluegate_providers(false);
     $results = [];
     $healthyCount = 0;
@@ -911,10 +929,11 @@ if ($action === 'admin_provider_health_check_all') {
                 'is_active' => 1,
                 'status' => $res['status'] ?? ($ok ? 'online' : 'offline'),
                 'ok' => $ok,
-                'message' => (string)($res['message'] ?? ''),
+                'message' => mb_substr((string)($res['message'] ?? ''), 0, 200),
                 'latency_ms' => $lat,
             ];
         } catch (Throwable $e) {
+            error_log('[BlueGate provider health] '.$e->getMessage());
             $offlineCount++;
             $results[] = [
                 'provider_id' => $pid,
@@ -923,7 +942,7 @@ if ($action === 'admin_provider_health_check_all') {
                 'is_active' => 1,
                 'status' => 'offline',
                 'ok' => false,
-                'message' => $e->getMessage(),
+                'message' => api_client_safe_message((string)$e->getMessage()) ?? 'اتصال به Provider ناموفق بود',
                 'latency_ms' => null,
             ];
         }
@@ -1003,7 +1022,7 @@ if ($action === 'admin_plan_provider_map_save') { require_admin($user); try{$id=
 if ($action === 'admin_plan_provider_map_delete') { require_admin($user);$id=(int)($input['map_id']??0);bluegate_delete_plan_provider_map($id);log_admin_action((int)$user['telegram_id'],'plan_provider_map_delete','service_plan_provider_map',$id);api_out(['ok'=>true,'maps'=>bluegate_plan_provider_maps(),'infrastructure'=>bluegate_infrastructure_summary()]); }
 if ($action === 'admin_provisioning_run') { require_admin($user);$r=bluegate_run_due_provisioning_jobs((int)($input['limit']??20));api_out(['ok'=>true,'result'=>$r,'jobs'=>bluegate_provisioning_jobs(60),'infrastructure'=>bluegate_infrastructure_summary()]); }
 if ($action === 'admin_provisioning_retry') { require_admin($user);try{$r=bluegate_retry_provisioning_job((int)($input['job_id']??0),true);api_out(['ok'=>true,'result'=>$r,'jobs'=>bluegate_provisioning_jobs(60),'infrastructure'=>bluegate_infrastructure_summary()]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'Retry ناموفق بود: '.api_exception_code($e)],400);} }
-if ($action === 'admin_order_provision_now') { require_admin_perm($user,'orders');try{$oid=(int)($input['order_id']??0);$r=bluegate_admin_provision_order_now($oid);$fresh=$r['order']??order_by_id($oid);$msg=($r['state']??'')==='delivered'?'Client ساخته شد و لینک Subscription برای مشتری ارسال شد.':'ساخت سرویس شروع شد و در صف Retry خودکار قرار دارد.';api_out(['ok'=>true,'message'=>$msg,'result'=>$r,'order'=>$fresh?order_public_payload($fresh,true):null,'jobs'=>bluegate_provisioning_jobs(60),'infrastructure'=>bluegate_infrastructure_summary()]);}catch(Throwable $e){$code=api_exception_code($e);$raw=$e->getMessage();$msg=$code==='NO_AUTOMATED_MAPPING'?'برای این پلن هنوز پنل/Inbound مپ نشده است.':($code==='ORDER_NOT_PAID'?'اول پرداخت سفارش را تأیید کن.':('ساخت سرویس از پنل ناموفق بود: '.preg_replace('/^PROVISIONING_FAILED:\s*/','',$raw)));api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400);} }
+if ($action === 'admin_order_provision_now') { require_admin_perm($user,'orders');try{$oid=(int)($input['order_id']??0);$r=bluegate_admin_provision_order_now($oid);$fresh=$r['order']??order_by_id($oid);$msg=($r['state']??'')==='delivered'?'Client ساخته شد و لینک Subscription برای مشتری ارسال شد.':'ساخت سرویس شروع شد و در صف Retry خودکار قرار دارد.';api_out(['ok'=>true,'message'=>$msg,'result'=>$r,'order'=>$fresh?order_public_payload($fresh,true):null,'jobs'=>bluegate_provisioning_jobs(60),'infrastructure'=>bluegate_infrastructure_summary()]);}catch(Throwable $e){$code=api_exception_code($e);error_log('[BlueGate provision_now] '.$e->getMessage());$raw=(string)api_client_safe_message((string)$e->getMessage());$msg=$code==='NO_AUTOMATED_MAPPING'?'برای این پلن هنوز پنل/Inbound مپ نشده است.':($code==='ORDER_NOT_PAID'?'اول پرداخت سفارش را تأیید کن.':('ساخت سرویس از پنل ناموفق بود: '.preg_replace('/^PROVISIONING_FAILED:\s*/','',$raw)));api_out(['ok'=>false,'error'=>$code,'message'=>$msg],400);} }
 if ($action === 'admin_routing_settings') { require_admin($user);try{$r=bluegate_save_routing_settings($input);log_admin_action((int)$user['telegram_id'],'routing_settings','system',1);api_out(['ok'=>true,'settings'=>$r,'routing'=>bluegate_routing_dashboard(),'infrastructure'=>bluegate_infrastructure_summary()]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'Saving routing settings failed.'],400);} }
 if ($action === 'admin_monitoring_run') { require_admin($user);try{$r=bluegate_run_monitoring((int)($input['limit']??0));api_out(['ok'=>true,'result'=>$r,'monitoring'=>bluegate_monitoring_dashboard(),'infrastructure'=>bluegate_infrastructure_summary()]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'Monitoring run failed.'],500);} }
 if ($action === 'admin_monitoring_settings') { require_admin($user);try{$r=bluegate_save_monitoring_settings($input);log_admin_action((int)$user['telegram_id'],'monitoring_settings','system',1);api_out(['ok'=>true,'settings'=>$r,'monitoring'=>bluegate_monitoring_dashboard()]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'Saving monitoring settings failed.'],400);} }
@@ -1508,7 +1527,7 @@ if ($action === 'admin_get_user') {
 if ($action === 'admin_edit_user') {
     require_admin($user);
     $targetUserId=(int)($input['user_id']??0);if($targetUserId<=0)api_out(['ok'=>false,'error'=>'INVALID_USER_ID','message'=>'شناسه کاربر معتبر نیست.'],400);
-    admin_update_user_profile($targetUserId,$input);$updatedUser=get_user_by_id($targetUserId);$safe=$updatedUser?:[];unset($safe['password_hash'],$safe['auth_token'],$safe['auth_token_hash'],$safe['email_verification_token']);api_out(['ok'=>true,'user'=>$safe,'message'=>'اطلاعات کاربر با موفقیت بروزرسانی شد.']);
+    try{admin_update_user_profile($targetUserId,$input,$user);}catch(RuntimeException $e){$c=api_exception_code($e,'UPDATE_FAILED');$m=['ADMIN_CHANGE_FORBIDDEN'=>'اجازه تغییر سطح ادمین را ندارید.','ADMIN_SELF_DEMOTE_FORBIDDEN'=>'نمی‌توانید دسترسی ادمین خودتان را حذف کنید.','LAST_ADMIN_FORBIDDEN'=>'حداقل یک ادمین کامل باید باقی بماند.'];api_out(['ok'=>false,'error'=>$c,'message'=>$m[$c]??'بروزرسانی کاربر انجام نشد.'],403);}$updatedUser=get_user_by_id($targetUserId);$safe=$updatedUser?:[];unset($safe['password_hash'],$safe['auth_token'],$safe['auth_token_hash'],$safe['email_verification_token']);api_out(['ok'=>true,'user'=>$safe,'message'=>'اطلاعات کاربر با موفقیت بروزرسانی شد.']);
 }
 
 

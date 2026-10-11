@@ -57,7 +57,7 @@ function veyra_pro_create_notification_campaign(int $adminTid,string $type,strin
 function veyra_pro_admin_role(int $telegramId): string {
     if(in_array($telegramId,array_map('intval',app_config('ADMIN_IDS',[])),true))return 'full';
     if(table_exists('admin_roles')){$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=?');$q->execute([$telegramId]);$r=$q->fetch();if($r&&!empty($r['role']))return (string)$r['role'];}
-    if(table_exists('users')){try{$q=db()->prepare('SELECT is_admin FROM users WHERE (telegram_id=? OR id=?) AND is_admin=1 LIMIT 1');$q->execute([$telegramId,$telegramId]);if($q->fetchColumn())return 'full';}catch(Throwable $e){}}
+    if(table_exists('users')){try{$q=db()->prepare('SELECT is_admin FROM users WHERE telegram_id=? AND is_admin=1 LIMIT 1');$q->execute([$telegramId]);if($q->fetchColumn())return 'full';}catch(Throwable $e){}}
     return 'none';
 }
 

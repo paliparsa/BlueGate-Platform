@@ -63,9 +63,12 @@ server {
     ssl_certificate ${cert_dir}/fullchain.pem;
     ssl_certificate_key ${cert_dir}/privkey.pem;${ssl_extra}
 
+    add_header Strict-Transport-Security "max-age=15552000" always;
     root ${APP_DIR}/public;
     index index.php index.html;
     client_max_body_size 20M;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     gzip on;
     gzip_vary on;
@@ -101,13 +104,23 @@ server {
         try_files \$uri =404;
         expires 30d;
         add_header Cache-Control "public, max-age=2592000, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
         access_log off;
+    }
+    # --- Hardening: sensitive files must be denied BEFORE the generic PHP handler (regex order matters) ---
+    location ~* \.(?:sql|log|bak|backup|sh|env|ini|dist)$ { deny all; }
+    location ~* ^/(?:config(?:\.example)?\.php|schema\.sql|cli/|app/|modules/|storage/|vendor/) { deny all; }
+    # Uploads: never execute scripts here; receipts stay denied by the more specific rule above.
+    location ^~ /uploads/ {
+        location ~* \.(?:php\d?|phtml|phar)$ { deny all; }
+        try_files \$uri =404;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Cache-Control "private, max-age=3600";
     }
     location / { try_files \$uri \$uri/ /index.php?\$query_string; }
     location = /install.php { deny all; }
     location ~ \.php$ { include snippets/fastcgi-php.conf; fastcgi_pass unix:${sock}; }
     location ~ /\. { deny all; }
-    location ~* ^/(?:config\.php|schema\.sql|cli/|storage/) { deny all; }
 }
 EOF_NGINX
   else
@@ -120,6 +133,8 @@ server {
     root ${APP_DIR}/public;
     index index.php index.html;
     client_max_body_size 20M;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     gzip on;
     gzip_vary on;
@@ -155,13 +170,23 @@ server {
         try_files \$uri =404;
         expires 30d;
         add_header Cache-Control "public, max-age=2592000, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
         access_log off;
+    }
+    # --- Hardening: sensitive files must be denied BEFORE the generic PHP handler (regex order matters) ---
+    location ~* \.(?:sql|log|bak|backup|sh|env|ini|dist)$ { deny all; }
+    location ~* ^/(?:config(?:\.example)?\.php|schema\.sql|cli/|app/|modules/|storage/|vendor/) { deny all; }
+    # Uploads: never execute scripts here; receipts stay denied by the more specific rule above.
+    location ^~ /uploads/ {
+        location ~* \.(?:php\d?|phtml|phar)$ { deny all; }
+        try_files \$uri =404;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Cache-Control "private, max-age=3600";
     }
     location / { try_files \$uri \$uri/ /index.php?\$query_string; }
     location = /install.php { deny all; }
     location ~ \.php$ { include snippets/fastcgi-php.conf; fastcgi_pass unix:${sock}; }
     location ~ /\. { deny all; }
-    location ~* ^/(?:config\.php|schema\.sql|cli/|storage/) { deny all; }
 }
 EOF_NGINX
   fi

@@ -80,3 +80,9 @@ $BSC_RPC_URL = 'https://bsc-dataseed.binance.org/'; // BNB Smart Chain JSON-RPC 
 // BlueGate Service Engine (Phase 1). Generate with: openssl rand -hex 32
 $SERVICE_ENCRYPTION_KEY = 'CHANGE_ME_WITH_A_LONG_RANDOM_SECRET';
 $CRON_KEY = 'CHANGE_ME_WITH_ANOTHER_LONG_RANDOM_SECRET'; // protects HTTP provisioning worker
+
+// Reverse proxy / CDN (Cloudflare, load balancer). Forwarding headers (CF-Connecting-IP, X-Forwarded-For)
+// are trusted ONLY when the direct connection comes from one of these IPs/CIDRs. Leave empty if not behind a proxy.
+$TRUSTED_PROXIES = []; // e.g. ['127.0.0.1', '10.0.0.0/8']
+// Optional dedicated secret for signed receipt links. Empty = derived from WEBHOOK_SECRET.
+$RECEIPT_VIEW_SECRET = '';

@@ -1631,9 +1631,42 @@ function tg(string $method, array $data = []) {
 
 function h($value): string { return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function money($amount): string { $a = (int)$amount; if ($a === 0) return 'رایگان'; return number_format($a) . ' تومان'; }
-function security_client_ip(): string { return trim((string)($_SERVER['REMOTE_ADDR'] ?? 'unknown')) ?: 'unknown'; }
-function security_rate_limit(string $bucket, string $identity, int $maxHits, int $windowSeconds, int $blockSeconds=0): array {
-    if (!table_exists('rate_limits')) return ['allowed'=>true,'retry_after'=>0];
+function security_ip_in_list(string $ip, array $list): bool {
+    $bin=@inet_pton($ip); if($bin===false)return false;
+    foreach($list as $entry){
+        $entry=trim((string)$entry); if($entry==='')continue;
+        $bits=null; $net=$entry;
+        if(str_contains($entry,'/')){[$net,$b]=explode('/',$entry,2);$bits=(int)$b;}
+        $nbin=@inet_pton($net); if($nbin===false||strlen($nbin)!==strlen($bin))continue;
+        $max=strlen($bin)*8; if($bits===null||$bits>$max)$bits=$max; if($bits<0)continue;
+        $full=intdiv($bits,8); $rem=$bits%8;
+        if($full>0&&substr($bin,0,$full)!==substr($nbin,0,$full))continue;
+        if($rem>0){$mask=(0xFF<<(8-$rem))&0xFF; if((ord($bin[$full])&$mask)!==(ord($nbin[$full])&$mask))continue;}
+        return true;
+    }
+    return false;
+}
+/* Real client IP. Forwarding headers are honoured ONLY when REMOTE_ADDR is listed in TRUSTED_PROXIES (config). */
+function security_client_ip(): string {
+    $remote=trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+    if($remote===''||!filter_var($remote,FILTER_VALIDATE_IP))return 'unknown';
+    $trusted=app_config('TRUSTED_PROXIES',[]);
+    if(is_string($trusted))$trusted=array_filter(array_map('trim',explode(',',$trusted)));
+    if(!is_array($trusted)||!$trusted||!security_ip_in_list($remote,$trusted))return $remote;
+    $cf=trim((string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+    if($cf!==''&&filter_var($cf,FILTER_VALIDATE_IP))return $cf;
+    $xff=(string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+    if($xff!==''){
+        foreach(array_reverse(array_map('trim',explode(',',$xff))) as $p){
+            if($p===''||!filter_var($p,FILTER_VALIDATE_IP))continue;
+            if(security_ip_in_list($p,$trusted))continue; /* skip our own proxy hops, take first untrusted from the right */
+            return $p;
+        }
+    }
+    return $remote;
+}
+function security_rate_limit(string $bucket, string $identity, int $maxHits, int $windowSeconds, int $blockSeconds=0, bool $failClosed=false): array {
+    if (!table_exists('rate_limits')) return ['allowed'=>!$failClosed,'retry_after'=>$failClosed?30:0];
     $maxHits=max(1,$maxHits);$windowSeconds=max(1,$windowSeconds);$blockSeconds=max(0,$blockSeconds);
     $key=hash('sha256',$bucket.'|'.$identity);$pdo=db();$own=!$pdo->inTransaction();if($own)$pdo->beginTransaction();
     try{
@@ -1645,7 +1678,7 @@ function security_rate_limit(string $bucket, string $identity, int $maxHits, int
         if(!$r)$pdo->prepare('INSERT INTO rate_limits (rate_key,bucket,hits,window_started_at,blocked_until) VALUES (?,?,?,?,?)')->execute([$key,$bucket,$hits,date('Y-m-d H:i:s',$start),$blocked]);
         else $pdo->prepare('UPDATE rate_limits SET bucket=?,hits=?,window_started_at=?,blocked_until=? WHERE rate_key=?')->execute([$bucket,$hits,date('Y-m-d H:i:s',$start),$blocked,$key]);
         $allowed=$hits<=$maxHits && !$blocked;$retry=$allowed?0:max(1,($blocked?strtotime($blocked):($start+$windowSeconds))-$now);if($own)$pdo->commit();return ['allowed'=>$allowed,'retry_after'=>$retry];
-    }catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();error_log('[Security RateLimit] '.$e->getMessage());return ['allowed'=>true,'retry_after'=>0];}
+    }catch(Throwable $e){if($own&&$pdo->inTransaction())$pdo->rollBack();error_log('[Security RateLimit] '.$e->getMessage());return ['allowed'=>!$failClosed,'retry_after'=>$failClosed?30:0];}
 }
 function security_rate_limit_clear(string $bucket,string $identity): void { if(!table_exists('rate_limits'))return;try{db()->prepare('DELETE FROM rate_limits WHERE rate_key=?')->execute([hash('sha256',$bucket.'|'.$identity)]);}catch(Throwable $e){} }
 function user_is_blocked(array $u): bool { return !empty($u['is_banned']) || !empty($u['deleted_at']); }
@@ -1668,8 +1701,8 @@ function is_full_admin($userOrId): bool {
     }
     if (table_exists('users')) {
         try {
-            $q = db()->prepare('SELECT is_admin FROM users WHERE (id=? OR telegram_id=?) AND is_admin=1 LIMIT 1');
-            $q->execute([$id, $id]);
+            $q = db()->prepare('SELECT is_admin FROM users WHERE telegram_id=? AND is_admin=1 LIMIT 1');
+            $q->execute([$id]);
             if ($q->fetchColumn()) return true;
         } catch (Throwable $e) {}
     }
@@ -1695,8 +1728,8 @@ function is_admin($userOrId): bool {
     }
     if (table_exists('users')) {
         try {
-            $q = db()->prepare('SELECT is_admin FROM users WHERE (id=? OR telegram_id=?) AND is_admin=1 LIMIT 1');
-            $q->execute([$id, $id]);
+            $q = db()->prepare('SELECT is_admin FROM users WHERE telegram_id=? AND is_admin=1 LIMIT 1');
+            $q->execute([$id]);
             if ($q->fetchColumn()) return true;
         } catch (Throwable $e) {}
     }
@@ -2053,7 +2086,16 @@ function delete_user_account(int $userId): bool {
     return true;
 }
 
-function admin_update_user_profile(int $userId, array $data): bool {
+function admin_has_other_full_admin(int $excludeUserId): bool {
+    if(array_filter(array_map('intval',(array)app_config('ADMIN_IDS',[]))))return true;
+    try{
+        $q=db()->prepare('SELECT COUNT(*) FROM users WHERE is_admin=1 AND id<>?');$q->execute([$excludeUserId]);
+        if((int)$q->fetchColumn()>0)return true;
+        if(table_exists('admin_roles')){$q=db()->query("SELECT COUNT(*) FROM admin_roles WHERE role='full'");if((int)$q->fetchColumn()>0)return true;}
+    }catch(Throwable $e){}
+    return false;
+}
+function admin_update_user_profile(int $userId, array $data, ?array $actor=null): bool {
     $user = get_user_by_id($userId);
     if (!$user) return false;
     
@@ -2066,7 +2108,17 @@ function admin_update_user_profile(int $userId, array $data): bool {
     if (array_key_exists('phone', $data)) { $fields[] = 'phone_number=?'; $params[] = !empty($data['phone']) ? trim((string)$data['phone']) : null; }
     if (array_key_exists('web_username', $data)) { $fields[] = 'web_username=?'; $params[] = !empty($data['web_username']) ? strtolower(trim((string)$data['web_username'])) : null; }
     if (isset($data['balance'])) { $fields[] = 'balance=?'; $params[] = (float)$data['balance']; }
-    if (array_key_exists('is_admin', $data)) { $fields[] = 'is_admin=?'; $params[] = !empty($data['is_admin']) ? 1 : 0; }
+    if (array_key_exists('is_admin', $data)) {
+        $wantAdmin = !empty($data['is_admin']) ? 1 : 0;
+        if ($wantAdmin !== (int)($user['is_admin'] ?? 0)) {
+            if (!is_array($actor) || !is_full_admin($actor)) throw new RuntimeException('ADMIN_CHANGE_FORBIDDEN');
+            if ($wantAdmin === 0) {
+                if ((int)($actor['id'] ?? 0) === $userId) throw new RuntimeException('ADMIN_SELF_DEMOTE_FORBIDDEN');
+                if (!admin_has_other_full_admin($userId)) throw new RuntimeException('LAST_ADMIN_FORBIDDEN');
+            }
+            $fields[] = 'is_admin=?'; $params[] = $wantAdmin;
+        }
+    }
     
     if (empty($fields)) return true;
     
@@ -2290,21 +2342,22 @@ function receipt_abs_path(?string $ref): ?string {
     return null;
 }
 
-function receipt_view_token(string $type, int $id, int $userId): string {
-    $secret = trim((string)app_config('WEBHOOK_SECRET', 'bluegate_receipt_secret'));
-    $window = (int)floor(time() / 7200);
-    return hash_hmac('sha256', "rcpt:{$type}:{$id}:{$userId}:{$window}", $secret);
+function receipt_token_secret(): string { return derived_secret('receipt-view','RECEIPT_VIEW_SECRET'); }
+/* Signed, short-lived receipt link token: "<expiry>.<hmac>" bound to type + id + owner user id + expiry. */
+function receipt_view_token(string $type, int $id, int $userId, int $ttl=900): string {
+    $secret = receipt_token_secret();
+    if ($secret === '') return '';
+    $exp = time() + max(60, min(3600, $ttl));
+    return $exp . '.' . hash_hmac('sha256', "rcpt2:{$type}:{$id}:{$userId}:{$exp}", $secret);
 }
 
 function verify_receipt_view_token(string $type, int $id, int $userId, string $token): bool {
-    if ($token === '') return false;
-    $secret = trim((string)app_config('WEBHOOK_SECRET', 'bluegate_receipt_secret'));
-    $nowWindow = (int)floor(time() / 7200);
-    for ($w = $nowWindow - 1; $w <= $nowWindow + 1; $w++) {
-        $expected = hash_hmac('sha256', "rcpt:{$type}:{$id}:{$userId}:{$w}", $secret);
-        if (hash_equals($expected, $token)) return true;
-    }
-    return false;
+    $secret = receipt_token_secret();
+    if ($secret === '' || $token === '') return false;
+    if (!preg_match('/^(\d{9,11})\.([a-f0-9]{64})$/', $token, $m)) return false;
+    $exp = (int)$m[1];
+    if ($exp < time() || $exp > time() + 3600) return false;
+    return hash_equals(hash_hmac('sha256', "rcpt2:{$type}:{$id}:{$userId}:{$exp}", $secret), $m[2]);
 }
 
 function resolve_receipt_photo_source(?string $ref): mixed {
@@ -3982,7 +4035,7 @@ function admin_delete_coupon(int $couponId): array {
 function admin_role(int $telegramId): string {
     if(in_array($telegramId,array_map('intval',app_config('ADMIN_IDS',[])),true))return 'full';
     if(table_exists('admin_roles')){$q=db()->prepare('SELECT role FROM admin_roles WHERE telegram_id=?');$q->execute([$telegramId]);$r=$q->fetch();if($r&&!empty($r['role']))return (string)$r['role'];}
-    if(table_exists('users')){try{$q=db()->prepare('SELECT is_admin FROM users WHERE (telegram_id=? OR id=?) AND is_admin=1 LIMIT 1');$q->execute([$telegramId,$telegramId]);if($q->fetchColumn())return 'full';}catch(Throwable $e){}}
+    if(table_exists('users')){try{$q=db()->prepare('SELECT is_admin FROM users WHERE telegram_id=? AND is_admin=1 LIMIT 1');$q->execute([$telegramId]);if($q->fetchColumn())return 'full';}catch(Throwable $e){}}
     return 'none';
 }
 function admin_can(int $telegramId, string $perm): bool {
@@ -4496,19 +4549,21 @@ function telegram_download_file(string $fileId, string $dest): bool {
 
 
 function verify_webapp_init_data(string $initData): array|false {
-    $token = app_config('BOT_TOKEN');
+    $token = trim((string)app_config('BOT_TOKEN', ''));
+    if ($token === '' || $initData === '' || strlen($initData) > 8192) return false;
     parse_str($initData, $data);
-    if (empty($data['hash'])) return false;
+    if (empty($data['hash']) || !is_string($data['hash'])) return false;
     $hash = $data['hash'];
     unset($data['hash']);
     ksort($data);
     $pairs = [];
-    foreach ($data as $k => $v) $pairs[] = $k . '=' . $v;
+    foreach ($data as $k => $v) { if (!is_string($v)) return false; $pairs[] = $k . '=' . $v; }
     $checkString = implode("\n", $pairs);
     $secretKey = hash_hmac('sha256', $token, 'WebAppData', true);
     $calculated = hash_hmac('sha256', $checkString, $secretKey);
     if (!hash_equals($calculated, $hash)) return false;
-    if (!empty($data['auth_date']) && time() - (int)$data['auth_date'] > 86400) return false;
+    $authDate = (int)($data['auth_date'] ?? 0);
+    if ($authDate <= 0 || $authDate > time() + 300 || time() - $authDate > 86400) return false;
     return $data;
 }
 
