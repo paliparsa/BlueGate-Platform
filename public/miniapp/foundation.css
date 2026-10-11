@@ -1,0 +1,52 @@
+/*
+ * Mini App UI foundation
+ *
+ * This file is the stable contract between the base styles and the visual
+ * enhancement layers below it. Component-specific rules stay in their
+ * existing files; shared tokens and layer boundaries belong here.
+ */
+:root {
+  --mini-font-family: "Vazirmatn", "Inter", Tahoma, "Segoe UI", sans-serif;
+  --mini-space-page: 14px;
+  --mini-space-bottom-nav: 100px;
+  --mini-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mini-z-content: 1;
+  --mini-z-topbar: 10;
+  --mini-z-sticky: 20;
+  --mini-z-navigation: 100;
+  --mini-z-sheet: 240000;
+  --mini-z-dialog: 270000;
+  --mini-z-overlay: 500000;
+  --mini-z-feedback: 900000;
+}
+
+html {
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+body {
+  font-family: var(--mini-font-family);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
