@@ -53,7 +53,7 @@
   .flash-card-vname{display:block!important;font-size:11.5px!important;color:#72e6b4!important;margin-top:2px!important}
   .flash-card-bottom{gap:5px!important;align-items:end!important}
   .flash-card-bottom .primary{padding:7px 8px!important;font-size:12.5px!important;min-height:35px!important}
-  .flash-card-cur-price{font-size:13px!important}.flash-card-orig-price{font-size:11px!important}
+  .flash-card-cur-price{font-size:13px!important}.flash-card-orig-price{font-size:12px!important}
 
   /* Credit center: actions and recent transactions fit comfortably on phones. */
   .mini-credit-hero-v27{padding:15px!important;gap:12px!important;border-radius:19px!important}
@@ -80,7 +80,7 @@
   .glowing-flash-card .tile-img{height:92px!important}
   .bottom-nav.glass,.bottom-nav{left:6px!important;right:6px!important}
   .bottom-nav button{font-size:12px!important}
-  .credit-launch b{font-size:12px!important}.credit-launch small{font-size:11px!important}
+  .credit-launch b{font-size:12px!important}.credit-launch small{font-size:12px!important}
 }
 
 
@@ -102,7 +102,7 @@
 #shopSections .catalog-tile .product-price-stack span{font-size:12px!important;color:var(--muted)!important;font-weight:700!important}
 #shopSections .catalog-tile .product-price-stack em{font-style:normal!important;font-size:12px!important;color:var(--muted)!important}
 #shopSections .catalog-tile .wishlist-fab{top:8px!important;left:8px!important;width:30px!important;height:30px!important;border-radius:11px!important;font-size:13px!important}
-#shopSections .catalog-tile .discount-badge{right:8px!important;top:8px!important;left:auto!important;max-width:calc(100% - 52px)!important;padding:4px 8px!important;border-radius:999px!important;font-size:11px!important;line-height:1.35!important}
+#shopSections .catalog-tile .discount-badge{right:8px!important;top:8px!important;left:auto!important;max-width:calc(100% - 52px)!important;padding:4px 8px!important;border-radius:999px!important;font-size:12px!important;line-height:1.35!important}
 #shopSections .catalog-grid-view .product-grid-wrap{flex-wrap:wrap!important;overflow:visible!important}
 #shopSections .catalog-grid-view .product-tile.catalog-tile{min-width:calc(50% - 6px)!important;width:calc(50% - 6px)!important}
 @media (min-width:720px){#shopSections .product-tile.catalog-tile{min-width:154px!important;width:154px!important}}
@@ -118,8 +118,8 @@
 #shopSections .catalog-tile .product-price-stack{display:flex!important;align-items:baseline!important;gap:3px!important;min-height:20px!important;margin:0!important;white-space:nowrap!important}
 #shopSections .catalog-tile .product-price-stack span,#shopSections .catalog-tile .product-price-stack em{font-size:11.5px!important;font-weight:650!important;color:#9fb0c8!important}
 #shopSections .catalog-tile .product-price-stack strong{font-size:13px!important;line-height:1!important;font-weight:900!important;color:#f3f7fb!important}
-#shopSections .catalog-tile .discount-badge{top:7px!important;right:7px!important;max-width:96px!important;padding:4px 7px!important;font-size:10.5px!important;line-height:1.2!important}
-#shopSections .catalog-tile .disc-fire{font-size:10px!important}
+#shopSections .catalog-tile .discount-badge{top:7px!important;right:7px!important;max-width:96px!important;padding:4px 7px!important;font-size:12px!important;line-height:1.2!important}
+#shopSections .catalog-tile .disc-fire{font-size:12px!important}
 #shopSections .catalog-tile .wishlist-fab{top:7px!important;left:7px!important;width:28px!important;height:28px!important;border-radius:10px!important;font-size:12px!important}
 #shopSections .catalog-tile .product-card-discount-note{display:none!important}
 @media(max-width:390px){#shopSections .product-tile.catalog-tile{flex-basis:148px!important;min-width:148px!important;width:148px!important;max-width:148px!important}#shopSections .catalog-tile .tile-visual{height:148px!important;min-height:148px!important}}

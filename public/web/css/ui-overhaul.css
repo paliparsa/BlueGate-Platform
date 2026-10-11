@@ -1185,5 +1185,5 @@ html.vpn-picker-open,body.vpn-picker-open{overflow:hidden}
 .generic-card-kicker,.generic-product-card--catalog .generic-buy{display:none!important}
 .generic-card-name{font-size:14px!important;line-height:1.45!important;min-height:41px!important;margin:0!important}
 .generic-card-price{font-size:12.5px!important;line-height:1.4!important;color:#f0f4f8!important}
-.generic-catalog-badge{top:9px!important;right:9px!important;padding:4px 8px!important;font-size:10.5px!important;max-width:calc(100% - 18px)!important}
+.generic-catalog-badge{top:9px!important;right:9px!important;padding:4px 8px!important;font-size:12px!important;max-width:calc(100% - 18px)!important}
 @media(max-width:860px){.generic-products-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important;gap:12px!important}.generic-card-media{padding:15px!important}.generic-card-name{font-size:13.5px!important;min-height:39px!important}.generic-card-price{font-size:12px!important}}

@@ -1,6 +1,11 @@
 /* BlueGate shared visual tokens — v4.7.0
    Single semantic palette/spacing/motion contract shared by Web + Mini App.
    Product-specific layouts stay local to each surface. */
+/* Self-hosted Persian font. Files: public/assets/fonts/ (see README.txt there). */
+@font-face{font-family:'Vazirmatn';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/Vazirmatn-Regular.woff2') format('woff2')}
+@font-face{font-family:'Vazirmatn';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/Vazirmatn-Medium.woff2') format('woff2')}
+@font-face{font-family:'Vazirmatn';font-style:normal;font-weight:700;font-display:swap;src:url('/assets/fonts/Vazirmatn-Bold.woff2') format('woff2')}
+@font-face{font-family:'Vazirmatn';font-style:normal;font-weight:800;font-display:swap;src:url('/assets/fonts/Vazirmatn-ExtraBold.woff2') format('woff2')}
 :root{
   --bgds-bg:#06101d;
   --bgds-bg-2:#081522;

@@ -20,6 +20,24 @@ function veyra_free_landing(): void {
     exit;
 }
 
+function bg_versioned_shell(string $shell): string {
+    // Replace stale ?v= on /web/css, /web/js and /design-system.css with each file's filemtime.
+    $html = (string)@file_get_contents($shell);
+    if ($html === '') return $html;
+    $shellDir = dirname($shell);
+    $pubDir = __DIR__;
+    $out = preg_replace_callback(
+        '#((?:href|src)=")(/(?:web/(?:css|js)/[^"?]+|design-system\.css))\?v=[^"]*(")#',
+        function (array $m) use ($shellDir, $pubDir): string {
+            $rel = $m[2];
+            $file = str_starts_with($rel, '/web/') ? $shellDir . '/' . substr($rel, 5) : $pubDir . $rel;
+            return is_file($file) ? $m[1] . $rel . '?v=' . filemtime($file) . $m[3] : $m[0];
+        },
+        $html
+    );
+    return $out ?? $html;
+}
+
 $path='/' . trim((string)(parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH)?:'/'),'/');
 if($path==='//')$path='/';
 $allowed=['/','/index.php','/account','/orders','/wallet','/referral','/profile','/admin','/admin/overview','/admin/orders','/admin/catalog','/admin/inventory','/admin/customers','/admin/users','/admin/coupons','/admin/settings','/admin/activity','/admin/roles','/admin/backups'];
@@ -29,7 +47,7 @@ if(in_array(rtrim($path,'/')?:'/',$allowed,true)){
     $shell=dirname(__DIR__).'/modules/pro-web/public/index.html';
     if(!is_file($shell)) $shell=__DIR__.'/web/index.html';
     if(!is_file($shell)){http_response_code(503);header('Content-Type:text/plain; charset=UTF-8');echo 'BlueGate Pro Web module is not installed. Run: sudo bluegate pro install';exit;}
-    header('Content-Type: text/html; charset=UTF-8'); readfile($shell); exit;
+    header('Content-Type: text/html; charset=UTF-8'); echo bg_versioned_shell($shell); exit;
 }
 if(str_starts_with($path,'/web')){require __DIR__.'/web_gate.php';exit;}
 header('Location: /',true,302);exit;

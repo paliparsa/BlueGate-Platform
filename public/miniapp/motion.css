@@ -55,7 +55,7 @@ body::before{content:"";position:fixed;z-index:-3;inset:-24vmax;pointer-events:n
 
 /* Copy morph */
 .bgm-copy-pop{transform:scale(.96)!important;color:#86efac!important;transition:transform var(--bgm-fast),color var(--bgm-fast)!important}
-.bgm-copy-badge{position:absolute;z-index:9;inset:50% auto auto 50%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;background:#0d2c22;color:#8af0c6;border:1px solid #6ee7b744;font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none}
+.bgm-copy-badge{position:absolute;z-index:9;inset:50% auto auto 50%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;background:#0d2c22;color:#8af0c6;border:1px solid #6ee7b744;font-size:12px;font-weight:900;white-space:nowrap;pointer-events:none}
 
 
 /* Number count-up overlay; underlying text remains untouched for business logic. */
