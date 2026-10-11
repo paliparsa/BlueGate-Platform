@@ -422,6 +422,7 @@ function migrate(): void {
     db()->exec('CREATE TABLE IF NOT EXISTS service_usage_snapshots (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,user_service_id BIGINT UNSIGNED NOT NULL,service_instance_id BIGINT UNSIGNED NOT NULL,traffic_used_bytes BIGINT UNSIGNED NOT NULL DEFAULT 0,traffic_limit_bytes BIGINT UNSIGNED NULL,remaining_bytes BIGINT UNSIGNED NULL,expires_at DATETIME NULL,status VARCHAR(32) NOT NULL DEFAULT \'active\',raw_json LONGTEXT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,INDEX(user_service_id,created_at),INDEX(service_instance_id,created_at),CONSTRAINT fk_usage_service FOREIGN KEY (user_service_id) REFERENCES user_services(id) ON DELETE CASCADE,CONSTRAINT fk_usage_instance FOREIGN KEY (service_instance_id) REFERENCES service_instances(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     add_column_if_missing('orders', 'delivered_inventory_id', 'BIGINT UNSIGNED NULL AFTER delivery_text');
     add_column_if_missing('orders', 'customer_note', 'TEXT NULL AFTER payment_note');
+    add_column_if_missing('orders', 'user_label', 'VARCHAR(160) NULL AFTER customer_note');
     add_column_if_missing('orders', 'review_started_at', 'DATETIME NULL AFTER receipt_file_id');
     add_column_if_missing('orders', 'paid_at', 'DATETIME NULL AFTER review_started_at');
     add_column_if_missing('orders', 'prepared_at', 'DATETIME NULL AFTER paid_at');
@@ -3678,6 +3679,14 @@ function update_order_customer_note(int $orderId, int $userId, string $note): ar
     add_order_event($orderId, 'customer_note', 'یادداشت مشتری ثبت شد', $note, false);
     return order_by_id($orderId);
 }
+function update_order_user_label(int $orderId, int $userId, string $label): array {
+    $order=order_by_id($orderId);
+    if (!$order || (int)$order['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
+    $label=trim($label);
+    if ($label!=='' && mb_strlen($label)>160) throw new RuntimeException('LABEL_TOO_LONG');
+    db()->prepare('UPDATE orders SET user_label=? WHERE id=?')->execute([$label!==''?$label:null,$orderId]);
+    return order_by_id($orderId);
+}
 function reject_order(int $orderId, string $note=''): ?array {
     $order=order_by_id($orderId); if (!$order) return null;
     refund_wallet_for_order($orderId, 'بازگشت کیف پول سفارش رد شده');
@@ -4010,7 +4019,7 @@ function order_public_payload(array $o, bool $is_admin = false): array {
 
     $caps=function_exists('bluegate_order_capabilities')?bluegate_order_capabilities($o):['is_vpn'=>false,'has_provider_mapping'=>false,'active_provider_mappings'=>0,'has_managed_service'=>false,'managed_service_id'=>null,'is_managed_vpn'=>false,'can_provision'=>false,'delivery_mode'=>'standard'];
     $payload = [
-        'id'=>(int)$o['id'], 'product_name'=>$o['product_name'], 'variant_title'=>$o['variant_title'] ?? null, 'display_name'=>$name,
+        'id'=>(int)$o['id'], 'product_name'=>$o['product_name'], 'variant_title'=>$o['variant_title'] ?? null, 'display_name'=>$name, 'user_label'=>$o['user_label'] ?? null,
         'catalog_service_id'=>isset($o['catalog_service_id']) && $o['catalog_service_id'] !== null ? (int)$o['catalog_service_id'] : null,
         'catalog_group_id'=>isset($o['catalog_group_id']) && $o['catalog_group_id'] !== null ? (int)$o['catalog_group_id'] : null,
         'catalog_plan_id'=>isset($o['catalog_plan_id']) && $o['catalog_plan_id'] !== null ? (int)$o['catalog_plan_id'] : null,

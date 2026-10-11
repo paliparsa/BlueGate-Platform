@@ -761,6 +761,25 @@ if ($action === 'hide_order') {
     if(!hide_user_order($oid,(int)$user['id']))api_out(['ok'=>false,'error'=>'ORDER_NOT_HIDEABLE','message'=>'فقط سفارش‌های لغو، رد یا مرجوع‌شده قابل حذف از لیست هستند.'],400);
     api_out(dashboard_payload(get_user_by_id((int)$user['id'])));
 }
+if ($action === 'update_order_label') {
+    $oid=(int)($input['order_id']??0);
+    try {
+        $updated=update_order_user_label($oid,(int)$user['id'],(string)($input['label']??''));
+        api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['order'=>order_public_payload($updated)]);
+    } catch(Throwable $e) {
+        $message=$e->getMessage()==='LABEL_TOO_LONG'?'نام سفارشی باید حداکثر ۱۶۰ کاراکتر باشد.':'نام سفارشی سفارش ثبت نشد.';
+        api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>$message],400);
+    }
+}
+if ($action === 'customer_order_note') {
+    $oid=(int)($input['order_id']??0);
+    try {
+        $updated=update_order_customer_note($oid,(int)$user['id'],(string)($input['note']??''));
+        api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['order'=>order_public_payload($updated)]);
+    } catch(Throwable $e) {
+        api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'یادداشت سفارش ثبت نشد.'],400);
+    }
+}
 if ($action === 'clear_canceled_orders') {
     $count=hide_user_cleanup_orders((int)$user['id']);
     api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['hidden_count'=>$count]);

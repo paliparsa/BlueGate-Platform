@@ -9,6 +9,7 @@ const ASSETS = [
   './css/admin-v18.css',
   './css/admin-unified.css',
   './css/mobile-v281.css',
+  './css/orders-v9.css',
   './js/config.js',
   './js/api.js',
   './js/rates.js',

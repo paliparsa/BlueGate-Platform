@@ -25,7 +25,7 @@
 #ordersPage .orders-header h2 { font-size: clamp(24px, 5vw, 32px) !important; }
 #ordersPage .orders-header p { margin-top: 5px; font-size: 13px; }
 #ordersPage .orders-header-icon {
-  display: grid;
+  display: none;
   flex: 0 0 68px;
   width: 68px;
   height: 68px;
@@ -114,13 +114,21 @@
 }
 #ordersPage .parity-order-main { padding: 15px 15px 13px !important; }
 #ordersPage .parity-order-main .order-icon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
   width: 48px;
   height: 48px;
   border-radius: 16px;
   background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 27%, #111827), #0d1726);
 }
 #ordersPage .parity-order-copy { gap: 5px; }
-#ordersPage .parity-order-copy h3 { font-size: 14px; }
+#ordersPage .parity-order-copy h3 { overflow-wrap: anywhere; white-space: normal; font-size: 14px; line-height: 1.55; }
+#ordersPage .parity-order-copy h3 small { color: var(--muted); font-size: 11px; font-weight: 700; }
+#ordersPage .order-icon > small { color: var(--muted); font-size: 8px; line-height: 1.2; text-align: center; white-space: nowrap; }
+#ordersPage .order-original-name { overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 #ordersPage .order-card-meta {
   display: flex;
   flex-wrap: wrap;
@@ -136,7 +144,24 @@
   font-weight: 800;
   line-height: 1.6;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+}
+#ordersPage .order-rename-btn { width: 28px; min-width: 28px; height: 28px; padding: 0; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: rgba(255,255,255,.06); color: var(--muted); font-size: 14px; }
+#ordersPage .status-badge.pending { padding: 8px 11px; }
+
+.orders-filter-sheet-grid { display: grid; gap: 8px; padding: 4px 0; }
+.orders-filter-option { display: grid; grid-template-columns: 38px minmax(0,1fr) 22px; align-items: center; gap: 10px; width: 100%; min-height: 60px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.09); border-radius: 15px; background: rgba(255,255,255,.045); color: var(--text); text-align: right; }
+.orders-filter-option-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: rgba(255,255,255,.08); color: var(--accent); font-size: 17px; }
+.orders-filter-option b, .orders-filter-option small { display: block; }
+.orders-filter-option b { font-size: 13px; }
+.orders-filter-option small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.orders-filter-option i { display: none; color: var(--accent); font-style: normal; font-weight: 900; }
+.orders-filter-option.active { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 16%, #101827); }
+.orders-filter-option.active i { display: block; }
+
+@media (max-width: 620px) {
+  #ordersPage .parity-order-main { grid-template-columns: 52px minmax(0,1fr) auto !important; }
+  #ordersPage .parity-order-main .order-icon { width: 52px; height: 52px; }
 }
 #ordersPage .parity-order-side { align-self: stretch; }
 #ordersPage .status-badge { font-size: 11px; padding: 6px 8px; }

@@ -279,6 +279,7 @@ CREATE TABLE IF NOT EXISTS orders (
   service_action VARCHAR(32) NULL,
   service_action_json LONGTEXT NULL,
   payment_note TEXT NULL,
+  user_label VARCHAR(160) NULL,
   receipt_file_id VARCHAR(255) NULL,
   delivery_text TEXT NULL,
   delivery_url TEXT NULL,
