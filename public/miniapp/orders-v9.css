@@ -179,6 +179,31 @@
 .credit-center-mini-v27 .mini-credit-tx-copy b { line-height: 1.45; }
 .credit-center-mini-v27 .mini-credit-tx-copy small { direction: rtl; }
 .credit-center-mini-v27 .mini-credit-tx-list strong { direction: rtl; text-align: left; white-space: nowrap; }
+.credit-center-mini-v27 .mini-credit-tx-list > .u-empty,
+.credit-center-mini-v27 .mini-credit-tx-list > .mini-credit-empty {
+  display: block !important;
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: center;
+}
+.credit-center-mini-v27 .mini-credit-tx-list > .u-empty p,
+.credit-center-mini-v27 .mini-credit-tx-list > .mini-credit-empty p {
+  display: block;
+  width: auto;
+  margin: 0 auto 12px;
+  line-height: 1.8;
+}
+.credit-center-mini-v27 .mini-credit-tx-list > .u-empty button,
+.credit-center-mini-v27 .mini-credit-tx-list > .mini-credit-empty button {
+  display: inline-flex;
+  width: auto;
+  min-width: 132px;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
 .credit-center-mini-v27 .mini-credit-pending { padding: 15px 16px; }
 .credit-center-mini-v27 .mini-topup-open-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center; }
 .credit-center-mini-v27 .mini-topup-open-main { min-width: 0; }
