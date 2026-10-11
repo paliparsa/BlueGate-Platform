@@ -415,6 +415,7 @@ async function api(action,payload={}){
       showProUpgrade(feature);
     }
     const err = new Error(data?.message || data?.error || fetchErr?.message || 'خطا در ارتباط با سرور');
+    if (data?.error) err.code = data.error;
     if (data) Object.assign(err, data);
     throw err;
   }

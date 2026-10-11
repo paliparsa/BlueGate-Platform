@@ -21,8 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 function api_out(array $data, int $code = 200): void { http_response_code($code); echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit; }
 set_exception_handler(function(Throwable $e){
-    error_log('[BlueReferral API] '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
-    if (!headers_sent()) api_out(['ok'=>false,'error'=>'SERVER_ERROR','message'=>'خطای داخلی سرور؛ لاگ را بررسی کن.'], 500);
+    $msg = $e->getMessage();
+    error_log('[BlueReferral API] '.$msg.' in '.$e->getFile().':'.$e->getLine());
+    // Return a more useful message for RuntimeExceptions so admin can see the real cause
+    $safe = ($e instanceof RuntimeException && mb_strlen($msg) < 200 && !preg_match('/SQLSTATE|PDO|stack trace/i', $msg));
+    $outMsg = $safe ? ('خطا: '.$msg) : 'خطای داخلی سرور؛ لاگ را بررسی کن.';
+    if (!headers_sent()) api_out(['ok'=>false,'error'=>'SERVER_ERROR','message'=>$outMsg], 500);
 });
 register_shutdown_function(function(){
     $e = error_get_last();
@@ -1046,7 +1050,26 @@ if ($action === 'admin_reorder_categories') { require_admin($user); $ids=is_arra
 if ($action === 'admin_search_orders') { require_admin($user); $s=(string)($input['search']??''); $st=(string)($input['status']??'all'); $list=admin_search_orders($s,$st,80); api_out(['ok'=>true,'orders'=>array_map('order_public_payload',$list)]); }
 if ($action === 'admin_set_role') { require_admin($user); if(admin_role((int)$user['telegram_id'])!=='full') api_out(['ok'=>false,'error'=>'FULL_ADMIN_ONLY','message'=>'فقط ادمین کامل می‌تواند نقش بسازد.'],403); $tid=(int)($input['telegram_id']??0); $role=(string)($input['role']??'full'); $name=(string)($input['display_name']??''); if($tid<=0) api_out(['ok'=>false,'error'=>'INVALID_TID','message'=>'Telegram ID نامعتبر.'],400); log_admin_action((int)$user['telegram_id'],'set_role','admin_role',$tid,$role); $list=admin_set_role($tid,$role,$name); api_out(['ok'=>true,'admin_roles'=>$list]); }
 if ($action === 'admin_remove_role') { require_admin($user); if(admin_role((int)$user['telegram_id'])!=='full') api_out(['ok'=>false,'error'=>'FULL_ADMIN_ONLY','message'=>'فقط ادمین کامل می‌تواند نقش حذف کند.'],403); $tid=(int)($input['telegram_id']??0); log_admin_action((int)$user['telegram_id'],'remove_role','admin_role',$tid); $list=admin_remove_role($tid); api_out(['ok'=>true,'admin_roles'=>$list]); }
-if ($action === 'admin_backup_create') { require_admin($user); $b=blue_backup_create(); api_out(admin_payload() + ['backup'=>$b, 'message'=>'Backup saved on server.']); }
+if ($action === 'admin_backup_create') {
+    require_admin($user);
+    try {
+        $b = blue_backup_create();
+        api_out(admin_payload() + ['backup'=>$b, 'message'=>'بکاپ با موفقیت روی سرور ذخیره شد.']);
+    } catch (Throwable $e) {
+        error_log('[BlueGate Backup] '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+        $msg = $e->getMessage();
+        if (str_contains($msg, 'BACKUP_DIR_NOT_WRITABLE') || str_contains($msg, 'BACKUP_DIR_CREATE_FAILED')) {
+            api_out(['ok'=>false,'error'=>'BACKUP_DIR','message'=>'پوشه بکاپ قابل نوشتن نیست. دسترسی storage/backups را برای کاربر وب‌سرور اصلاح کنید.'], 500);
+        }
+        if (str_contains($msg, 'BACKUP_WRITE_FAILED')) {
+            api_out(['ok'=>false,'error'=>'BACKUP_WRITE','message'=>'نوشتن فایل بکاپ ناموفق بود: '.$msg], 500);
+        }
+        if (str_contains($msg, 'BACKUP_JSON_FAILED') || str_contains($msg, 'BACKUP_GZIP_FAILED')) {
+            api_out(['ok'=>false,'error'=>'BACKUP_ENCODE','message'=>'ساخت فایل بکاپ ناموفق بود (حافظه یا داده نامعتبر).'], 500);
+        }
+        api_out(['ok'=>false,'error'=>'BACKUP_FAILED','message'=>'خطا در ساخت بکاپ: '.$msg], 500);
+    }
+}
 if ($action === 'admin_backup_send_bot') { require_admin($user); $b=blue_backup_send_to_admin((int)$user['telegram_id']); api_out(admin_payload() + ['backup'=>$b, 'message'=>'Backup sent to your Telegram chat.']); }
 if ($action === 'admin_backup_delete') { require_admin($user); $fn=(string)($input['filename']??''); $ok=blue_backup_delete($fn); api_out(admin_payload() + ['deleted'=>$ok, 'message'=>$ok?'Backup deleted.':'Backup not found.']); }
 if ($action === 'admin_backup_restore_server') { require_admin($user); $fn=(string)($input['filename']??''); if (!empty($input['confirm']) && strtoupper((string)$input['confirm'])==='RESTORE') { $res=blue_backup_restore_from_file(blue_backup_file_path($fn), true); api_out(admin_payload() + ['restore'=>$res, 'message'=>'Backup restored.']); } api_out(['ok'=>false,'message'=>'برای restore باید confirm=RESTORE ارسال شود.'],400); }
