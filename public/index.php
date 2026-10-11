@@ -2,10 +2,6 @@
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 require_once __DIR__.'/../app/license.php';
-require_once __DIR__.'/../app/module_loader.php';
-if (!function_exists('veyra_pro_core_active')) {
-    function veyra_pro_core_active(): bool { return true; }
-}
 veyra_license_gate_http('html');
 
 function veyra_free_landing(): void {
