@@ -584,7 +584,7 @@ if (!$user) {
     api_out(['ok'=>false, 'error'=>'AUTH_REQUIRED', 'message'=>'برای انجام این عملیات باید وارد حساب کاربری خود شوید.'], 401);
 }
 $GLOBALS['BG_CURRENT_USER']=$user;
-function admin_action_perm(string $a): string {if(in_array($a,['admin_summary'],true))return 'dashboard';if(in_array($a,['admin_notification_broadcast'],true))return 'full';if(str_starts_with($a,'admin_catalog_')||in_array($a,['admin_add_inventory','admin_update_inventory','admin_delete_inventory','admin_hard_delete_inventory','admin_add_coupon','admin_update_coupon','admin_toggle_coupon','admin_delete_coupon'],true))return 'products';if(in_array($a,['admin_add_balance','admin_credit_topup_approve','admin_credit_topup_reject'],true))return 'finance';if(in_array($a,['admin_search_orders','admin_archive_order','admin_delete_order','admin_cleanup_orders','admin_order_status','admin_deliver_order','admin_set_service_delivery','admin_order_provision_now','admin_order_note','admin_customer_view'],true))return 'orders';return 'full';}
+function admin_action_perm(string $a): string {if(in_array($a,['admin_summary','admin_stars_stats'],true))return 'dashboard';if(in_array($a,['admin_notification_broadcast'],true))return 'full';if(str_starts_with($a,'admin_catalog_')||in_array($a,['admin_add_inventory','admin_update_inventory','admin_delete_inventory','admin_hard_delete_inventory','admin_add_coupon','admin_update_coupon','admin_toggle_coupon','admin_delete_coupon'],true))return 'products';if(in_array($a,['admin_add_balance','admin_credit_topup_approve','admin_credit_topup_reject'],true))return 'finance';if(in_array($a,['admin_search_orders','admin_archive_order','admin_delete_order','admin_cleanup_orders','admin_order_status','admin_deliver_order','admin_set_service_delivery','admin_order_provision_now','admin_order_note','admin_customer_view'],true))return 'orders';return 'full';}
 if(str_starts_with($action,'admin_'))require_admin_perm($user,admin_action_perm($action));
 if(!str_starts_with($action,'admin_')&&preg_match('/(?:^|_)(?:broadcast|backup|restore|provisioning|routing|monitoring|vip_rates|set_role|remove_role)(?:_|$)/',$action))require_admin_perm($user,'full');
 
@@ -1028,6 +1028,12 @@ if ($action === 'admin_monitoring_run') { require_admin($user);try{$r=bluegate_r
 if ($action === 'admin_monitoring_settings') { require_admin($user);try{$r=bluegate_save_monitoring_settings($input);log_admin_action((int)$user['telegram_id'],'monitoring_settings','system',1);api_out(['ok'=>true,'settings'=>$r,'monitoring'=>bluegate_monitoring_dashboard()]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'Saving monitoring settings failed.'],400);} }
 
 if ($action === 'admin_summary') { require_admin($user); api_out(admin_payload()); }
+if ($action === 'admin_stars_stats') {
+    require_admin($user);
+    api_rate_limit('admin_stars_stats',(string)($user['id']??0),30,60);
+    try { api_out(bluegate_stars_stats(!empty($input['refresh']))); }
+    catch (Throwable $e) { error_log('[Stars stats] '.$e->getMessage()); api_out(['ok'=>false,'error'=>'STARS_STATS_FAILED','message'=>'دریافت آمار Stars ناموفق بود. کمی بعد دوباره تلاش کنید.'],500); }
+}
 if ($action === 'admin_catalog_preview') {
     require_admin($user);
     set_setting('catalog_v2_last_scan',date('Y-m-d H:i:s')); api_out(admin_payload());

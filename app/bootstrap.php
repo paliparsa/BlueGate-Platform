@@ -437,6 +437,13 @@ function migrate(): void {
     add_column_if_missing('orders', 'stars_charge_id', 'VARCHAR(255) NULL AFTER stars_amount');
     add_column_if_missing('orders', 'stars_provider_charge_id', 'VARCHAR(255) NULL AFTER stars_charge_id');
     try { db()->exec('ALTER TABLE orders ADD UNIQUE KEY uq_orders_stars_charge (stars_charge_id)'); } catch (Throwable $e) {}
+    // v5.0.15 Stars stats: payment timestamp for time-window totals (backfilled from the closest existing timestamp).
+    add_column_if_missing('orders', 'stars_paid_at', 'DATETIME NULL AFTER stars_provider_charge_id');
+    add_column_if_missing('credit_topups', 'stars_paid_at', 'DATETIME NULL AFTER stars_provider_charge_id');
+    try { db()->exec("UPDATE orders SET stars_paid_at=created_at WHERE stars_charge_id IS NOT NULL AND stars_charge_id<>'' AND stars_paid_at IS NULL"); } catch (Throwable $e) {}
+    try { db()->exec("UPDATE credit_topups SET stars_paid_at=COALESCE(credited_at,created_at) WHERE stars_charge_id IS NOT NULL AND stars_charge_id<>'' AND stars_paid_at IS NULL"); } catch (Throwable $e) {}
+    try { db()->exec('ALTER TABLE orders ADD INDEX idx_orders_stars_paid (stars_paid_at)'); } catch (Throwable $e) {}
+    try { db()->exec('ALTER TABLE credit_topups ADD INDEX idx_topups_stars_paid (stars_paid_at)'); } catch (Throwable $e) {}
     add_column_if_missing('orders', 'crypto_amount', 'DECIMAL(24,8) NULL AFTER stars_amount');
     add_column_if_missing('orders', 'crypto_asset', 'VARCHAR(32) NULL AFTER crypto_amount');
     add_column_if_missing('orders', 'crypto_network', 'VARCHAR(32) NULL AFTER crypto_asset');
@@ -1275,7 +1282,7 @@ function confirm_stars_payment(string $payload,array $payment=[],int $chatId=0):
         $status=normalize_order_status((string)$order['status']);if(in_array($status,['payment_confirmed','preparing','delivered'],true)){if(!empty($order['stars_charge_id'])&&!hash_equals((string)$order['stars_charge_id'],$charge)){$pdo->rollBack();error_log('[Stars payment] second charge for paid order '.$orderId);return null;}$pdo->commit();return $order;}if(!in_array($status,['pending_payment','receipt_submitted','reviewing'],true)){$pdo->rollBack();return null;}
         $dup=$pdo->prepare('SELECT id FROM orders WHERE stars_charge_id=? AND id<>? LIMIT 1');$dup->execute([$charge,$orderId]);if($dup->fetch()){$pdo->rollBack();return null;}
         $pdo->prepare('UPDATE orders SET payment_method="stars",stars_amount=?,stars_charge_id=?,stars_provider_charge_id=?,payment_details=? WHERE id=?')->execute([$required,$charge,$provider?:null,json_encode($payment,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$orderId]);
-        $paid=mark_order_paid($orderId);if(!$paid)throw new RuntimeException('ORDER_PAYMENT_STATE_INVALID');$pdo->commit();return order_by_id($orderId);
+        $paid=mark_order_paid($orderId);if(!$paid)throw new RuntimeException('ORDER_PAYMENT_STATE_INVALID');$pdo->commit();bluegate_stars_stamp_paid('orders',$orderId);return order_by_id($orderId);
     }catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();error_log('[Stars payment] '.$e->getMessage());return null;}
 }
 
@@ -3538,7 +3545,79 @@ function replace_credit_topup_payment(int $id,int $uid): array {
 function stars_required_for_topup(array $t): int { $stored=(int)($t['stars_amount']??0); if($stored>0)return $stored; return max(1,(int)ceil((int)$t['amount']/max(1,stars_rate_toman()))); }
 function send_stars_invoice_for_topup(array $t): array { if(!credit_topup_method_allowed('stars'))throw new RuntimeException('STARS_DISABLED');$stars=stars_required_for_topup($t);$payload='topup_'.$t['id'].'_stars_'.$stars;return tg('sendInvoice',['chat_id'=>(int)$t['telegram_id'],'title'=>'شارژ اعتبار BlueGate','description'=>'افزایش اعتبار حساب به مبلغ '.money((int)$t['amount']),'payload'=>$payload,'provider_token'=>'','currency'=>'XTR','prices'=>json_encode([['label'=>'Credit top-up #'.$t['id'],'amount'=>$stars]],JSON_UNESCAPED_UNICODE),'start_parameter'=>'bluegate_topup_'.$t['id']]); }
 function validate_topup_stars_precheckout(array $q): array|false { $p=(string)($q['invoice_payload']??'');if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$p,$m))return false;$t=credit_topup_by_id((int)$m[1]);if(!$t)return false;$required=stars_required_for_topup($t);if((int)($q['from']['id']??0)!==(int)$t['telegram_id']||(int)$m[2]!==$required||(int)($q['total_amount']??0)!==$required||strtoupper((string)($q['currency']??''))!=='XTR')return false;if(!in_array($t['status'],['pending_payment','receipt_submitted','reviewing'],true))return false;return $t; }
-function confirm_topup_stars_payment(string $payload,array $payment,int $chatId=0): ?array { if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$payload,$m))return null;$id=(int)$m[1];$charge=trim((string)($payment['telegram_payment_charge_id']??''));$provider=trim((string)($payment['provider_payment_charge_id']??''));$total=(int)($payment['total_amount']??0);if($charge===''||strtoupper((string)($payment['currency']??''))!=='XTR')return null;$pdo=db();$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT t.*,u.telegram_id FROM credit_topups t JOIN users u ON u.id=t.user_id WHERE t.id=? FOR UPDATE');$q->execute([$id]);$t=$q->fetch();if(!$t||($chatId>0&&(int)$t['telegram_id']!==$chatId)){$pdo->rollBack();return null;}if(!in_array((string)$t['status'],['pending_payment','receipt_submitted','reviewing'],true)||(string)($t['payment_method']??'')!=='stars'){$pdo->rollBack();return null;}$required=stars_required_for_topup($t);if((int)$m[2]!==$required||$total!==$required){$pdo->rollBack();return null;}if(!empty($t['credited_at'])){$pdo->commit();return credit_topup_by_id($id);}$dup=$pdo->prepare('SELECT id FROM credit_topups WHERE stars_charge_id=? AND id<>? LIMIT 1');$dup->execute([$charge,$id]);if($dup->fetch()){$pdo->rollBack();return null;}$dup2=$pdo->prepare('SELECT id FROM orders WHERE stars_charge_id=? LIMIT 1');$dup2->execute([$charge]);if($dup2->fetch()){$pdo->rollBack();return null;}$pdo->prepare('UPDATE credit_topups SET payment_method="stars",stars_amount=?,stars_charge_id=?,stars_provider_charge_id=?,payment_details=?,status="reviewing" WHERE id=?')->execute([$required,$charge,$provider?:null,json_encode($payment,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$id]);$pdo->commit();return credit_topup_credit_once($id,'تایید خودکار Telegram Stars');}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();error_log('[Stars topup] '.$e->getMessage());return null;} }
+function confirm_topup_stars_payment(string $payload,array $payment,int $chatId=0): ?array { if(!preg_match('/^topup_(\d+)_stars_(\d+)$/',$payload,$m))return null;$id=(int)$m[1];$charge=trim((string)($payment['telegram_payment_charge_id']??''));$provider=trim((string)($payment['provider_payment_charge_id']??''));$total=(int)($payment['total_amount']??0);if($charge===''||strtoupper((string)($payment['currency']??''))!=='XTR')return null;$pdo=db();$pdo->beginTransaction();try{$q=$pdo->prepare('SELECT t.*,u.telegram_id FROM credit_topups t JOIN users u ON u.id=t.user_id WHERE t.id=? FOR UPDATE');$q->execute([$id]);$t=$q->fetch();if(!$t||($chatId>0&&(int)$t['telegram_id']!==$chatId)){$pdo->rollBack();return null;}if(!in_array((string)$t['status'],['pending_payment','receipt_submitted','reviewing'],true)||(string)($t['payment_method']??'')!=='stars'){$pdo->rollBack();return null;}$required=stars_required_for_topup($t);if((int)$m[2]!==$required||$total!==$required){$pdo->rollBack();return null;}if(!empty($t['credited_at'])){$pdo->commit();return credit_topup_by_id($id);}$dup=$pdo->prepare('SELECT id FROM credit_topups WHERE stars_charge_id=? AND id<>? LIMIT 1');$dup->execute([$charge,$id]);if($dup->fetch()){$pdo->rollBack();return null;}$dup2=$pdo->prepare('SELECT id FROM orders WHERE stars_charge_id=? LIMIT 1');$dup2->execute([$charge]);if($dup2->fetch()){$pdo->rollBack();return null;}$pdo->prepare('UPDATE credit_topups SET payment_method="stars",stars_amount=?,stars_charge_id=?,stars_provider_charge_id=?,payment_details=?,status="reviewing" WHERE id=?')->execute([$required,$charge,$provider?:null,json_encode($payment,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$id]);$pdo->commit();bluegate_stars_stamp_paid('credit_topups',$id);return credit_topup_credit_once($id,'تایید خودکار Telegram Stars');}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();error_log('[Stars topup] '.$e->getMessage());return null;} }
+
+/* ===== Telegram Stars statistics (admin dashboard, v5.0.15) =====
+ * Totals are aggregated from orders + credit_topups rows that carry a Telegram charge id
+ * (i.e. Stars actually received). The live bot balance comes from Bot API getMyStarBalance
+ * and is cached briefly. Admin-only: exposed through the admin_stars_stats API action. */
+function bluegate_stars_has_paid_at(): bool {
+    static $has=null;
+    if($has===null){ try{ $has=column_exists('orders','stars_paid_at')&&column_exists('credit_topups','stars_paid_at'); }catch(Throwable $e){ $has=false; } }
+    return $has;
+}
+function bluegate_stars_stamp_paid(string $table,int $id): void {
+    if(!in_array($table,['orders','credit_topups'],true)||$id<=0||!bluegate_stars_has_paid_at())return;
+    try{ db()->prepare("UPDATE {$table} SET stars_paid_at=COALESCE(stars_paid_at,NOW()) WHERE id=?")->execute([$id]); }
+    catch(Throwable $e){ error_log('[Stars stamp] '.$e->getMessage()); }
+}
+function bluegate_stars_window_sql(?string $window,string $col): string {
+    return match($window){
+        'today'=>" AND DATE({$col})=CURDATE()",
+        'd7'=>" AND {$col}>=DATE_SUB(NOW(),INTERVAL 7 DAY)",
+        'd30'=>" AND {$col}>=DATE_SUB(NOW(),INTERVAL 30 DAY)",
+        default=>'',
+    };
+}
+function bluegate_stars_sum(?string $window=null): array {
+    $has=bluegate_stars_has_paid_at();
+    $cols=[
+        'orders'=>$has?'COALESCE(stars_paid_at,created_at)':'created_at',
+        'credit_topups'=>$has?'COALESCE(stars_paid_at,credited_at,created_at)':'COALESCE(credited_at,created_at)',
+    ];
+    $out=['stars'=>0,'count'=>0,'orders_stars'=>0,'orders_count'=>0,'topups_stars'=>0,'topups_count'=>0];
+    foreach(['orders'=>'orders','credit_topups'=>'topups'] as $table=>$key){
+        if(!table_exists($table))continue;
+        $sql="SELECT COUNT(*) c, COALESCE(SUM(stars_amount),0) s FROM {$table} WHERE stars_charge_id IS NOT NULL AND stars_charge_id<>'' AND stars_amount>0".bluegate_stars_window_sql($window,$cols[$table]);
+        $r=db()->query($sql)->fetch();
+        $out[$key.'_stars']=(int)($r['s']??0);
+        $out[$key.'_count']=(int)($r['c']??0);
+    }
+    $out['stars']=$out['orders_stars']+$out['topups_stars'];
+    $out['count']=$out['orders_count']+$out['topups_count'];
+    return $out;
+}
+function bluegate_stars_live_balance(bool $force=false): array {
+    $cache=setting_json('stars_balance_cache',[]);
+    $hasCache=isset($cache['amount'],$cache['fetched_ts']);
+    $age=$hasCache?time()-(int)$cache['fetched_ts']:PHP_INT_MAX;
+    $shape=function(array $c,bool $stale): array {
+        return ['available'=>true,'amount'=>(int)$c['amount'],'nano'=>(int)($c['nano']??0),'fetched_at'=>date('Y-m-d H:i:s',(int)$c['fetched_ts']),'stale'=>$stale];
+    };
+    // Fresh cache is reused for 60s; a forced refresh is still throttled to one Telegram call per 10s.
+    if($hasCache&&(($force&&$age<10)||(!$force&&$age<60)))return $shape($cache,false);
+    $res=tg('getMyStarBalance');
+    $r=(is_array($res)&&!empty($res['ok'])&&is_array($res['result']??null))?$res['result']:null;
+    if($r!==null&&isset($r['amount'])){
+        $c=['amount'=>(int)$r['amount'],'nano'=>(int)($r['nanostar_amount']??0),'fetched_ts'=>time()];
+        try{ set_setting('stars_balance_cache',$c); }catch(Throwable $e){}
+        return $shape($c,false);
+    }
+    // Details stay in the server log only; the client just sees "unavailable" or a stale cached value.
+    error_log('[Stars balance] getMyStarBalance failed: '.substr((string)(is_array($res)?($res['description']??''):''),0,200));
+    return $hasCache?$shape($cache,true):['available'=>false];
+}
+function bluegate_stars_stats(bool $forceBalance=false): array {
+    return [
+        'ok'=>true,
+        'total'=>bluegate_stars_sum(),
+        'today'=>bluegate_stars_sum('today'),
+        'd7'=>bluegate_stars_sum('d7'),
+        'd30'=>bluegate_stars_sum('d30'),
+        'balance'=>bluegate_stars_live_balance($forceBalance),
+        'generated_at'=>date('Y-m-d H:i:s'),
+    ];
+}
 function apply_wallet_to_order(int $orderId, int $userId): array {
     $pdo=db();$pdo->beginTransaction();try{
         $q=$pdo->prepare('SELECT * FROM orders WHERE id=? FOR UPDATE');$q->execute([$orderId]);$order=$q->fetch();if(!$order||(int)$order['user_id']!==$userId)throw new RuntimeException('ORDER_NOT_FOUND');
