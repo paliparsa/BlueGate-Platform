@@ -63,3 +63,34 @@ button,.admin-card,.product-tile,.quick-action,.cat-pill,.catalog-mobile-categor
 button:active{transform:scale(.985)!important}
 :focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+/* Phase 1 — service cards */
+.svc-card{border:1px solid var(--border,#ffffff14);border-radius:18px;background:linear-gradient(180deg,#ffffff08,#ffffff03);overflow:hidden;margin-bottom:10px}
+.svc-card-main{display:block;width:100%;text-align:right;background:transparent;border:0;color:inherit;padding:14px 14px 10px}
+.svc-card-head{display:flex;align-items:center;gap:10px}
+.svc-card-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#7c3aed22;color:#c4b5fd;font-weight:800}
+.svc-card-title{flex:1;min-width:0}
+.svc-card-title b{display:block;font-size:15px}
+.svc-card-title small{display:block;color:var(--muted,#9ca3af);font-size:12px;margin-top:2px}
+.svc-status{font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:#ffffff10}
+.svc-status.ok{color:#86efac;background:#14532d55}
+.svc-status.warn{color:#fde68a;background:#78350f55}
+.svc-status.bad{color:#fca5a5;background:#7f1d1d55}
+.svc-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.svc-metrics div{background:#ffffff08;border-radius:12px;padding:8px 10px}
+.svc-metrics small{display:block;color:var(--muted,#9ca3af);font-size:11px}
+.svc-metrics b{display:block;margin-top:2px;font-size:14px}
+.svc-bar{height:6px;border-radius:99px;background:#ffffff12;overflow:hidden;margin-top:10px}
+.svc-bar i{display:block;height:100%;border-radius:99px}
+.svc-card-actions{display:flex;gap:8px;padding:0 14px 14px}
+.svc-btn{flex:1;border-radius:12px;padding:10px;font-weight:800;border:1px solid var(--border,#ffffff14);background:transparent;color:inherit}
+.svc-btn.primary{background:linear-gradient(135deg,#7c3aed,#a855f7);border:0;color:#fff}
+.svc-btn.ghost{background:#ffffff08}
+
+/* Phase 1 — provisioning jobs */
+.job-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--border,#ffffff14);border-radius:14px;margin-bottom:8px;background:#ffffff06}
+.job-row.failed{border-color:#7f1d1d;background:#450a0a33}
+.job-row.waiting{border-color:#78350f55}
+.job-row b{display:block}
+.job-row small{display:block;color:var(--muted,#9ca3af);margin-top:3px;line-height:1.5}
+.job-err{color:#fca5a5!important}
