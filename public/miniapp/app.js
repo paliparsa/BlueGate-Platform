@@ -220,6 +220,34 @@ document.addEventListener('bluegate:before-layer-open',e=>{const id=e.detail?.id
 function syncTelegramBackButton(){try{const bb=tg?.BackButton;if(!bb)return;if(topMiniLayer()||currentOrderId||currentServiceOrderId||currentTab!=='shop')bb.show();else bb.hide()}catch(_){}}
 setInterval(syncTelegramBackButton,700);
 try{tg?.BackButton?.onClick?.(()=>{if(closeTopMiniLayer()){syncTelegramBackButton();return}if(currentServiceOrderId){currentServiceOrderId=null;currentTab='home';renderUser();miniScrollTop();return}if(currentOrderId){currentOrderId=null;currentTab='orders';renderUser();return}if(currentTab!=='shop'){currentTab='shop';renderUser();miniScrollTop();return}})}catch(_){}
+/* Edge swipe back: keep normal scrolling and horizontal controls untouched. */
+let _edgeBackStart=null,_edgeBackTracking=false;
+function miniAppBack(){
+  if(closeTopMiniLayer()){syncTelegramBackButton();return true}
+  if(currentServiceOrderId){currentServiceOrderId=null;currentTab='home';renderUser();miniScrollTop();return true}
+  if(currentOrderId){currentOrderId=null;currentTab='orders';renderUser();return true}
+  if(currentTab!=='shop'){currentTab='shop';renderUser();miniScrollTop();return true}
+  return false;
+}
+document.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1)return;
+  const t=e.target;
+  if(t.closest('input,textarea,select,[contenteditable="true"],[data-horizontal-scroll],.h-scroll,.category-strip,.order-filters'))return;
+  const p=e.touches[0];
+  if(p.clientX<=34){_edgeBackStart={x:p.clientX,y:p.clientY};_edgeBackTracking=false;document.documentElement.classList.remove('edge-back-ready');}
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(!_edgeBackStart||e.touches.length!==1)return;
+  const p=e.touches[0],dx=p.clientX-_edgeBackStart.x,dy=Math.abs(p.clientY-_edgeBackStart.y);
+  if(dx<0||dy>Math.max(28,dx*.75)){_edgeBackStart=null;_edgeBackTracking=false;document.documentElement.classList.remove('edge-back-ready');return}
+  if(dx>18){_edgeBackTracking=true;document.documentElement.classList.toggle('edge-back-ready',dx>54);if(dx>54)e.preventDefault();}
+},{passive:false});
+document.addEventListener('touchend',e=>{
+  if(!_edgeBackStart)return;
+  const p=e.changedTouches[0],dx=p.clientX-_edgeBackStart.x,dy=Math.abs(p.clientY-_edgeBackStart.y),valid=_edgeBackTracking&&dx>=72&&dy<Math.max(42,dx*.65);
+  _edgeBackStart=null;_edgeBackTracking=false;document.documentElement.classList.remove('edge-back-ready');
+  if(valid){e.preventDefault();miniAppBack();}
+},{passive:false});
 
 function saveAppLastState(){
   try {
