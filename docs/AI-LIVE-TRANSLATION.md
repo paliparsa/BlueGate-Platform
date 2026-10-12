@@ -21,7 +21,7 @@ $TRANSLATION_AI_MODEL = 'gpt-4o-mini';
 
 An existing `$OPENAI_API_KEY` is also accepted as the key fallback. For an OpenAI-compatible provider, set its API base URL and model explicitly. Keep credentials server-side.
 
-If no AI key is configured, the endpoint falls back to the existing catalog translation providers for short, plain English UI labels. Complex HTML or multiline Telegram messages remain in the source language rather than being flattened or corrupted.
+If no AI key is configured, unknown live UI strings remain in the source language rather than triggering a chain of slow provider requests. The existing catalog translation providers continue to handle catalog translations through the catalog's current workflow. Configure the AI key to enable live translation of previously unseen UI strings and full Telegram messages.
 
 ## Runtime behavior
 
