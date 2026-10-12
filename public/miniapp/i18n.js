@@ -27,7 +27,7 @@ let language=getLanguage(), translating=false;
 function translateString(value){
  let s=String(value??''); if(language!=='en')return s;
  const trimmed=s.trim();if(!trimmed)return s;
- const normalized=trimmed.replace(/[\\u200c\\u200f\\u200e]/g,'').replace(/\\s+/g,' ');
+ const normalized=trimmed.replace(/[\u200c\u200f\u200e]/g,'').replace(/\s+/g,' ');
  for(const [fa,en] of pairs){if(normalized===fa||trimmed===fa)return en;}
  for(const [fa,en] of pairs){if(fa.length>=3&&s.includes(fa))s=s.split(fa).join(en);}
  return s;
@@ -39,7 +39,7 @@ function translateElement(root){
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let nodes=[];
   while(walker.nextNode())nodes.push(walker.currentNode);
   for(const node of nodes){if(node.parentElement?.closest('#bluegateLanguageToggle,script,style,textarea,pre,code,[data-no-translate]'))continue;const old=node.nodeValue;if(old&&old.trim()){const next=translateString(old);if(next!==old)node.nodeValue=next;}}
-  root.querySelectorAll?.('input[placeholder],textarea[placeholder],input[value],button[aria-label],[aria-label],[title]').forEach(el=>{for(const attr of ['placeholder','aria-label','title'])if(el.hasAttribute(attr)){const old=el.getAttribute(attr),next=translateString(old);if(next!==old)el.setAttribute(attr,next);}});
+  root.querySelectorAll?.('input[placeholder],textarea[placeholder],input[value],button[aria-label],[aria-label],[title]').forEach(el=>{for(const attr of ['placeholder','value','aria-label','title'])if(el.hasAttribute(attr)){const old=el.getAttribute(attr),next=translateString(old);if(next!==old)el.setAttribute(attr,next);}});
  } finally {translating=false;}
 }
 function apply(){
