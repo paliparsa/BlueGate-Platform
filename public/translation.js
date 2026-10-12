@@ -28,7 +28,7 @@ function setupToggle(){
   paint();
 }
 const attempted=new WeakSet(), attemptedAttrs=new WeakMap();
-const skip='script,style,textarea,pre,code,input,select,option,[contenteditable="true"],[data-no-translate],#bluegateLanguageToggle,#bgAiLanguageToggle';
+const skip='script,style,textarea,pre,code,[contenteditable="true"],[data-no-translate],#bluegateLanguageToggle,#bgAiLanguageToggle';
 const hasPersian=s=>/[\u0600-\u06FF]/.test(s||'');
 let queue=new Map(), timer=0, running=false;
 function addNode(node){
