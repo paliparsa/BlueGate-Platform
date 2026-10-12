@@ -1,3 +1,12 @@
+# BlueGate Platform v5.0.54 — Shared AI Live Translation
+
+- Add a shared OpenAI-compatible AI translation service with server-side cache and protected placeholders, links, numbers, and markup.
+- Add a rate-limited public translation endpoint for unknown UI strings.
+- Add browser-side live translation fallback for Mini App, website, and web admin, including a website language toggle.
+- Localize Telegram bot messages and visible keyboard labels according to Telegram's detected language while preserving callback payloads.
+- Add optional server-side AI provider settings; existing catalog providers remain a fallback.
+- Extend CI syntax checks for the new translation components.
+
 # BlueGate Platform v5.0.53 — Automatic translation worker and complete account UI localization
 
 - Add DeepL API and Google Cloud Translation provider support, then fall back to Google Translate web endpoint and MyMemory; all translations remain cached server-side.
