@@ -1,5 +1,13 @@
 # Changelog
 
+# BlueGate Platform v5.0.49 — Web visual wheel and VIP editors
+
+- Replace the web admin wheel prize line editor with add/remove prize cards matching the Mini App workflow.
+- Replace the VIP JSON editor with per-tier threshold and commission multiplier fields matching Mini App.
+- Save wheel prizes through shared settings and VIP rates through the dedicated API.
+
+---
+
 # BlueGate Platform v5.0.48 — Mobile auth drawer hardening
 
 - Fix mobile login/register dialog positioning and overflow using a viewport-bounded centered dialog with explicit closed/open visibility states.
