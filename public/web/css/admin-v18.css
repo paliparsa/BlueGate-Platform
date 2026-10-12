@@ -74,3 +74,13 @@ p,.muted{line-height:1.8}
 
 /* v4.1.1 catalog accordion: service header stays visible; plan structure opens from the title. */
 .catalog-service-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;border:0;background:transparent;color:inherit;text-align:right;cursor:pointer}.catalog-service-toggle h3{margin:3px 0 5px;font-size:18px}.catalog-service-toggle i{font-style:normal;width:28px;height:28px;display:grid;place-items:center;border-radius:9px;border:1px solid rgba(118,205,255,.12);background:rgba(47,150,255,.07);color:#72e1ff;font-size:17px;transition:.18s ease}.catalog-service-toggle:hover h3{color:#c9f5ff}.catalog-studio-card.is-collapsed .catalog-studio-metrics{border-bottom:0}.catalog-studio-card.is-collapsed>footer{border-top:1px solid rgba(255,255,255,.06)}
+
+/* Support ticket status and action parity */
+.bg-admin-list .support-ticket-status{margin-top:5px}
+.bg-admin-row-main>div:has(>.support-ticket-status){display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.bg-inline.support-admin-status-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.bg-inline.support-admin-status-actions button{min-height:40px;flex:1 1 135px}
+.support-admin-ticket-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.support-admin-ticket-heading p{margin:5px 0;color:var(--muted,#6b7280);font-size:12px;overflow-wrap:anywhere}
+.web-ticket-admin-preview-image{display:block;max-width:100%;max-height:75vh;object-fit:contain;margin:auto}
+@media(max-width:640px){.support-admin-ticket-heading{flex-direction:column}.bg-inline.support-admin-status-actions button{flex-basis:42%}}
