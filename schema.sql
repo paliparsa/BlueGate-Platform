@@ -1029,3 +1029,20 @@ CREATE TABLE IF NOT EXISTS catalog_translation_cache (
   translated_text TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS ai_translation_cache (
+  cache_key CHAR(64) NOT NULL PRIMARY KEY,
+  source_text TEXT NOT NULL,
+  target_language VARCHAR(8) NOT NULL,
+  context_label VARCHAR(80) NOT NULL DEFAULT 'ui',
+  translated_text TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_ai_translation_target (target_language)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS ai_translation_user_languages (
+  telegram_id BIGINT NOT NULL PRIMARY KEY,
+  language_code VARCHAR(16) NOT NULL DEFAULT 'fa',
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
