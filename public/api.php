@@ -499,6 +499,9 @@ if ($action === 'telegram_boot') {
 }
 
 $user = get_authenticated_user((string)$initData, (string)$authToken);
+if (is_array($user ?? null) && !empty($user['telegram_id']) && in_array(strtolower((string)($input['language'] ?? '')), ['fa','en'], true)) {
+    bg_ai_set_telegram_language((int)$user['telegram_id'], (string)$input['language'], true);
+}
 
 if ($action === 'telegram_link') {
     if (!$user) api_out(['ok'=>false,'error'=>'AUTH_REQUIRED','message'=>'ابتدا وارد حساب BlueGate شوید.'],401);
