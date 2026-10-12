@@ -1,5 +1,15 @@
 # Changelog
 
+# BlueGate Platform v5.0.43 — Web/Mini App ticketing parity
+
+- Match web user/admin ticket statuses to Mini App with consistent green/yellow/red badges and summary counts.
+- Make resolved/closed user conversations read-only in the web UI while retaining message history and keeping backend enforcement.
+- Add image attachment previews, delivery/read ticks, live message polling and live status/composer updates to web ticket chats.
+- Add full admin status controls (open, waiting for support, waiting for customer, resolved, closed), customer identity details and live message polling.
+- Refresh web asset cache keys so the ticketing updates are loaded immediately after deployment.
+
+---
+
 # BlueGate Platform v5.0.42 — Close ticket creation sheet after submit
 
 - Close the new-ticket creation sheet after successful submission (including duplicate-detection recovery) before opening the exact ticket chat, reducing overlapping screens and confusion.
