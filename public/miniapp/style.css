@@ -4761,3 +4761,110 @@ small{font-size:var(--bg-font-micro)!important;line-height:1.65}
  .admin-mini-chat .support-chat-composer .primary{max-width:100%;padding-inline:8px;font-size:11px}
  .admin-mini-chat .admin-support-status-actions button{font-size:11px}
 }
+
+
+/* Support chat composer clearance + calmer admin ticket controls */
+.preview-sheet-inner.mini-chat-shell{
+  padding-bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));
+  gap:10px;
+}
+.mini-chat-shell .support-chat-messages{
+  min-height:0;
+  overscroll-behavior-y:contain;
+  scrollbar-gutter:stable;
+}
+.mini-chat-shell .support-chat-composer{
+  position:relative;
+  z-index:2;
+  flex-shrink:0;
+  margin:2px 0 max(8px,env(safe-area-inset-bottom));
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:color-mix(in srgb,var(--surface) 96%,#ffffff08);
+  box-shadow:0 8px 22px #00000018;
+}
+.mini-chat-shell .support-chat-composer textarea{
+  min-height:46px;
+  max-height:104px;
+}
+.mini-chat-shell .support-chat-composer .attach-button,
+.mini-chat-shell .support-chat-composer .primary{
+  align-self:flex-end;
+  flex-shrink:0;
+}
+.admin-mini-chat{
+  height:calc(100dvh - var(--mini-overlay-top, 0px) - var(--mini-overlay-bottom, 0px));
+  max-height:calc(100dvh - var(--mini-overlay-top, 0px) - var(--mini-overlay-bottom, 0px));
+  padding:0 14px max(20px,calc(env(safe-area-inset-bottom) + 14px));
+  grid-template-rows:auto minmax(0,1fr) auto auto;
+  gap:9px;
+}
+.admin-mini-chat .support-chat-composer{
+  margin-bottom:max(8px,env(safe-area-inset-bottom));
+}
+.admin-mini-chat .admin-support-status-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:color-mix(in srgb,var(--surface) 96%,#ffffff08);
+}
+.admin-mini-chat .admin-support-status-actions button{
+  min-width:0;
+  min-height:40px;
+  padding:9px 8px;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.35;
+  border-radius:12px;
+  touch-action:manipulation;
+}
+.admin-mini-chat .support-chat-messages{
+  min-height:0;
+  overscroll-behavior-y:contain;
+  scrollbar-gutter:stable;
+  padding-bottom:14px;
+}
+.admin-support-hero-actions{
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+@media(max-width:620px){
+  .preview-sheet-inner.mini-chat-shell{
+    padding-inline:10px;
+    padding-bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px));
+    gap:8px;
+  }
+  .mini-chat-shell .support-chat-composer{
+    gap:7px;
+    margin-bottom:max(10px,env(safe-area-inset-bottom));
+    padding:10px;
+    border-radius:16px;
+  }
+  .admin-mini-chat{
+    height:calc(100dvh - var(--mini-overlay-top, 0px) - var(--mini-overlay-bottom, 0px));
+    max-height:calc(100dvh - var(--mini-overlay-top, 0px) - var(--mini-overlay-bottom, 0px));
+    padding:0 10px max(22px,calc(env(safe-area-inset-bottom) + 14px));
+    gap:8px;
+  }
+  .admin-mini-chat .admin-support-status-actions{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+    padding:7px;
+  }
+  .admin-mini-chat .admin-support-status-actions button{
+    min-height:42px;
+    font-size:12px;
+    padding:9px 6px;
+  }
+  .admin-support-hero-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:7px}
+  .admin-support-hero-actions>*{min-width:0;width:100%}
+}
+@media(max-width:360px){
+  .mini-chat-shell .support-chat-composer{padding:8px;gap:5px}
+  .admin-mini-chat{padding-inline:8px}
+  .admin-mini-chat .admin-support-status-actions button{font-size:11px;padding:8px 4px}
+}
