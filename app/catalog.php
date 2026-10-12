@@ -514,6 +514,22 @@ function catalog_save_plan(array $d): int {
     return $id;
 }
 
+function catalog_translate_service_tree(int $serviceId): array {
+    $done=0;$failed=0;
+    $q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$serviceId]);$s=$q->fetch();
+    if(!$s)return ['translated'=>0,'failed'=>0];
+    $fields=[['services','name','name_en'],['services','description','description_en']];
+    foreach($fields as [$table,$src,$en]){if(trim((string)($s[$src]??''))==='')continue;if(trim((string)($s[$en]??''))!=='')continue;$v=catalog_ensure_translation($table,$serviceId,$src,$en,(string)$s[$src]);$v!==''?$done++:$failed++;}
+    $catId=(int)($s['category_id']??0);if($catId>0){$q=db()->prepare('SELECT * FROM store_categories WHERE id=?');$q->execute([$catId]);$cat=$q->fetch();if($cat&&trim((string)($cat['title_en']??''))===''){$v=catalog_ensure_translation('store_categories',$catId,'title','title_en',(string)$cat['title']);$v!==''?$done++:$failed++;}}
+    $q=db()->prepare('SELECT * FROM service_groups WHERE service_id=? AND is_archived=0');$q->execute([$serviceId]);
+    foreach($q->fetchAll() as $g){foreach([['name','name_en'],['description','description_en']] as [$src,$en]){if(trim((string)($g[$src]??''))===''||trim((string)($g[$en]??''))!=='')continue;$v=catalog_ensure_translation('service_groups',(int)$g['id'],$src,$en,(string)$g[$src]);$v!==''?$done++:$failed++;}
+      $pq=db()->prepare('SELECT * FROM service_plans WHERE group_id=? AND is_archived=0');$pq->execute([(int)$g['id']]);
+      foreach($pq->fetchAll() as $p){foreach([['title','title_en'],['description','description_en']] as [$src,$en]){if(trim((string)($p[$src]??''))===''||trim((string)($p[$en]??''))!=='')continue;$v=catalog_ensure_translation('service_plans',(int)$p['id'],$src,$en,(string)$p[$src]);$v!==''?$done++:$failed++;}
+        $vid=(int)($p['legacy_variant_id']??0);if($vid>0){$vrow=db()->prepare('SELECT * FROM product_variants WHERE id=?');$vrow->execute([$vid]);$vdata=$vrow->fetch();if($vdata){foreach([['title','title_en'],['description','description_en']] as [$src,$en])if(trim((string)($vdata[$src]??''))!==''&&trim((string)($vdata[$en]??''))===''){$v=catalog_ensure_translation('product_variants',$vid,$src,$en,(string)$vdata[$src]);$v!==''?$done++:$failed++;}}}
+      }
+    }
+    return ['translated'=>$done,'failed'=>$failed];
+}
 function catalog_soft_disable_plan(int $id): void {
     $q=db()->prepare('SELECT * FROM service_plans WHERE id=?');$q->execute([$id]);$p=$q->fetch();if(!$p)return;
     db()->prepare('UPDATE service_plans SET is_active=0,is_archived=1 WHERE id=?')->execute([$id]);
@@ -640,6 +656,8 @@ function catalog_save_blueprint(array $d): array {
         catalog_sync_service_legacy_visibility($serviceId);
         set_setting('catalog_v2_storefront_enabled','1');if(!setting('catalog_v2_applied_at',''))set_setting('catalog_v2_applied_at',date('Y-m-d H:i:s'));
         db()->commit();
+        // Translation is deliberately post-commit: a remote translator outage must never roll back catalog edits.
+        try{catalog_translate_service_tree($serviceId);}catch(Throwable $translationError){error_log('[BlueGate catalog translation] '.$translationError->getMessage());}
         if(!$skipUndo){
             $undo=$undoBefore?['type'=>'restore','service_id'=>$serviceId,'service_name'=>$undoBefore['name']??($bp['name']??'سرویس'),'blueprint'=>$undoBefore,'at'=>date('Y-m-d H:i:s')]:['type'=>'deactivate','service_id'=>$serviceId,'service_name'=>$bp['name']??'سرویس','at'=>date('Y-m-d H:i:s')];
             set_setting(catalog_undo_key($adminTid),json_encode($undo,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
