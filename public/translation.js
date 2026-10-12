@@ -28,7 +28,7 @@ function setupToggle(){
   paint();
 }
 const attempted=new WeakSet(), attemptedAttrs=new WeakMap();
-const skip='script,style,textarea,pre,code,[contenteditable="true"],[data-no-translate],#bluegateLanguageToggle,#bgAiLanguageToggle';
+const skip='script,style,textarea,pre,code,[contenteditable="true"],[data-no-translate],[data-private],[data-user-content],.support-message,.ticket-message,.chat-message,.user-message,.customer-message,.review-content,.review-text,.user-content,#bluegateLanguageToggle,#bgAiLanguageToggle';
 const hasPersian=s=>/[\u0600-\u06FF]/.test(s||'');
 let queue=new Map(), timer=0, running=false;
 function addNode(node){
@@ -99,10 +99,11 @@ function init(){
     for(const record of records){
       if(record.type==='childList')record.addedNodes.forEach(n=>scan(n));
       else if(record.type==='characterData')addNode(record.target);
+      else if(record.type==='attributes')scan(record.target);
     }
     schedule();
   });
-  observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+  observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title','alt','value']});
   if(isMini&&window.BlueGateI18n){
     const prior=window.BlueGateI18n.refresh;
     window.BlueGateI18n.refresh=()=>{try{prior?.()}finally{scan(document.body)}};
