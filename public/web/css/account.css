@@ -65,3 +65,29 @@
     .bg-account-drawer,.bg-account-drawer.open{max-height:calc(100vh - 24px)!important}
   }
 }
+
+/* Auth drawer hardening: centered mobile dialog and reliable closed state */
+@media(max-width:680px){
+  .bg-drawer-backdrop{position:fixed!important;inset:0!important;width:100vw;height:100vh;height:100dvh;min-height:0!important}
+  .bg-account-drawer,.bg-account-drawer.open{
+    position:fixed!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
+    width:calc(100vw - 24px)!important;max-width:480px!important;
+    height:auto!important;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 20px)!important;
+    overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;box-sizing:border-box;
+    border-radius:20px!important;transform:translate(-50%,-50%)!important;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .bg-account-drawer:not(.open){opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translate(-50%,-48%) scale(.98)!important}
+  .bg-account-drawer.open{opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translate(-50%,-50%) scale(1)!important}
+  .bg-drawer-head{position:sticky;top:0;z-index:5;padding:12px 14px!important}
+  .bg-account-content{padding:12px!important;min-width:0}
+  .bg-auth-wrap,.bg-auth-form,.bg-auth-hero,.bg-auth-cols>*{min-width:0;max-width:100%;box-sizing:border-box}
+  .bg-auth-form input,.bg-auth-form button{max-width:100%;min-width:0;box-sizing:border-box;font-size:16px}
+}
+@media(max-width:390px){
+  .bg-account-drawer,.bg-account-drawer.open{width:calc(100vw - 16px)!important;max-height:calc(100dvh - 12px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;border-radius:17px!important}
+  .bg-account-content{padding:10px!important}
+}
+@supports not (height:100dvh){
+ @media(max-width:680px){.bg-account-drawer,.bg-account-drawer.open{max-height:calc(100vh - 20px)!important}}
+}
