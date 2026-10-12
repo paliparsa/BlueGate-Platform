@@ -1846,10 +1846,25 @@ function newMiniSupportTicket(){
     subtitle:'یک گفت‌وگوی مستقیم با پشتیبانی بساز.',
     body:`<form class="support-compose-form mini-ticket-create"><div class="support-compose-intro"><b>چطور می‌تونیم کمکت کنیم؟</b><small>موضوع و توضیحات رو بنویس؛ در صورت نیاز فایل هم پیوست کن.</small></div><label class="support-form-field"><span>موضوع درخواست</span><input name="subject" maxlength="255" required placeholder="مثلاً مشکل اتصال سرویس"></label><label class="support-form-field"><span>توضیحات</span><textarea name="message" maxlength="4000" rows="5" required placeholder="مشکل رو با جزئیات توضیح بده..."></textarea></label><label class="support-file-label"><span aria-hidden="true">📎</span><span class="support-file-copy"><b>پیوست اختیاری</b><small>تصویر، PDF یا فایل متنی · حداکثر ۵ مگابایت</small></span><input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary support-submit-ticket" type="submit">ثبت تیکت و شروع گفتگو</button></form>`,
     onOpen:host=>{
-      host.querySelector('form')?.addEventListener('submit',async e=>{
-        e.preventDefault();const f=new FormData(e.currentTarget);
-        try{const a=await supportFilePayload(f.get('attachment'));const r=await api('support_ticket_create',{subject:String(f.get('subject')||'').trim(),message:String(f.get('message')||'').trim(),category:'other',...a});state={...state,support_tickets:r.tickets||[r.ticket,...(state.support_tickets||[])]};showStatus('گفت‌وگو ایجاد شد','success');openMiniSupportTicket(Number(r.ticket_id))}
-        catch(e){showStatus(e.message||'ثبت تیکت انجام نشد','error')}
+      const form=host.querySelector('form.mini-ticket-create');
+      form?.addEventListener('submit',async e=>{
+        e.preventDefault();
+        if(form.dataset.submitting==='1')return;
+        form.dataset.submitting='1';
+        const submit=form.querySelector('[type="submit"]'),originalLabel=submit?.textContent||'ثبت تیکت و شروع گفتگو';
+        if(submit){submit.disabled=true;submit.textContent='در حال ثبت تیکت…';}
+        const f=new FormData(form);
+        try{
+          const a=await supportFilePayload(f.get('attachment'));
+          const r=await api('support_ticket_create',{subject:String(f.get('subject')||'').trim(),message:String(f.get('message')||'').trim(),category:'other',...a});
+          state={...state,support_tickets:r.tickets||[r.ticket,...(state.support_tickets||[])]};
+          showStatus(r.duplicate?'این درخواست قبلاً ثبت شده؛ همان تیکت باز شد.':'گفت‌وگو ایجاد شد','success');
+          await openMiniSupportTicket(Number(r.ticket_id));
+        }catch(err){
+          delete form.dataset.submitting;
+          if(submit){submit.disabled=false;submit.textContent=originalLabel;}
+          showStatus(err.message||'ثبت تیکت انجام نشد','error');
+        }
       });
     }
   });
@@ -2052,23 +2067,81 @@ function renderAdminMore(){
 async function openMiniAdminSupportTicket(id){
   try{
     const load=async()=>api('admin_support_ticket_messages',{ticket_id:Number(id)});
-    const r=await load(),ticket=(adminState.support_tickets||[]).find(x=>Number(x.id)===Number(id))||r.ticket||{};
-    const renderMessages=messages=>(messages||[]).map(m=>`<article class="support-bubble ${m.sender_type==='admin'?'mine':'theirs'}"><div class="support-bubble-meta"><b>${m.sender_type==='admin'?'مدیر':'کاربر'}</b><small>${esc(m.created_at||'')} ${m.sender_type==='admin'?`<span class="support-ticks ${m.read_at?'seen':''}">${m.read_at?'✓✓':m.delivered_at?'✓':'○'}</span>`:''}</small></div>${m.body?`<p>${esc(m.body)}</p>`:''}${supportAttachmentHtml(m)}</article>`).join('')||'<div class="u-empty">پیامی ثبت نشده.</div>';
-    BlueGateUI.openSheet({type:'fullscreen',eyebrow:'SUPPORT TICKET',title:`#${ticket.id||id} ${esc(ticket.subject||'تیکت')}`,subtitle:esc(ticket.status||'open'),body:`<div class="mini-chat-shell admin-mini-chat"><div class="support-chat-messages" id="miniAdminSupportMessages">${renderMessages(r.messages)}</div><form class="support-chat-composer" id="miniAdminSupportComposer"><textarea name="message" rows="1" maxlength="4000" placeholder="پاسخ پشتیبانی..."></textarea><label class="attach-button">📎<input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary" type="submit">ارسال</button></form><div class="support-status-actions"><button type="button" class="ghost" data-mini-admin-status="resolved">حل شد</button><button type="button" class="ghost" data-mini-admin-status="closed">بستن</button></div></div>`,onOpen:host=>{
+    const r=await load(),ticket={...((adminState.support_tickets||[]).find(x=>Number(x.id)===Number(id))||{}),...(r.ticket||{})};
+    const statusLabels={open:'باز',waiting_admin:'در انتظار پاسخ ادمین',waiting_customer:'در انتظار کاربر',resolved:'حل‌شده',closed:'بسته'};
+    const renderMessages=messages=>(messages||[]).map(m=>`<article class="support-bubble ${m.sender_type==='admin'?'mine':'theirs'}"><div class="support-bubble-meta"><b>${m.sender_type==='admin'?'مدیر':'کاربر'}</b><small>${esc(m.created_at||'')} ${m.sender_type==='admin'?`<span class="support-ticks ${m.read_at?'seen':''}">${m.read_at?'✓✓':m.delivered_at?'✓':'○'}</span>`:''}</small></div>${m.body?`<p>${esc(m.body)}</p>`:''}${supportAttachmentHtml(m)}</article>`).join('')||'<div class="u-empty support-ticket-empty"><div class="u-empty-icon">✉</div><h3>هنوز پیامی ثبت نشده</h3><p>برای شروع گفت‌وگو، پاسخ خود را ارسال کنید.</p></div>';
+    const customerName=ticket.first_name||ticket.username||(ticket.telegram_id?String(ticket.telegram_id):'کاربر');
+    BlueGateUI.openSheet({type:'fullscreen',eyebrow:'BLUEGATE SUPPORT · ADMIN',title:`#${ticket.id||id} ${esc(ticket.subject||'تیکت پشتیبانی')}`,subtitle:`${esc(customerName)} · ${esc(statusLabels[ticket.status]||miniSupportStatusLabel(ticket.status))}`,body:`<div class="mini-chat-shell admin-mini-chat">
+      <header class="support-chat-head admin-support-chat-head"><div><span class="member-kicker">درخواست کاربر</span><b>${esc(customerName)}</b><small>${esc(ticket.username?'@'+ticket.username:ticket.telegram_id?'Telegram ID: '+ticket.telegram_id:'کاربر BlueGate')} · ${esc(ticket.created_at||'')}</small><span class="support-ticket-status ${miniSupportStatusClass(ticket.status)}">${esc(statusLabels[ticket.status]||miniSupportStatusLabel(ticket.status))}</span></div><button type="button" class="ghost support-chat-close" data-close-admin-ticket>بستن</button></header>
+      <div class="support-chat-messages" id="miniAdminSupportMessages">${renderMessages(r.messages)}</div>
+      <form class="support-chat-composer" id="miniAdminSupportComposer"><textarea name="message" rows="1" maxlength="4000" placeholder="پاسخ پشتیبانی را بنویس…" aria-label="متن پاسخ"></textarea><label class="attach-button" title="پیوست فایل">📎<input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary" type="submit">ارسال پاسخ</button></form>
+      <div class="support-status-actions admin-support-status-actions"><button type="button" class="ghost" data-mini-admin-status="open">بازگشایی</button><button type="button" class="ghost" data-mini-admin-status="waiting_customer">انتظار کاربر</button><button type="button" class="secondary" data-mini-admin-status="resolved">حل شد</button><button type="button" class="danger" data-mini-admin-status="closed">بستن تیکت</button></div>
+    </div>`,onOpen:host=>{
       bindSupportPreview(host);
+      host.querySelector('[data-close-admin-ticket]')?.addEventListener('click',()=>BlueGateUI.closeSheet?.());
       const form=host.querySelector('#miniAdminSupportComposer');
-      form?.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(form),msg=String(f.get('message')||'').trim(),file=f.get('attachment');if(!msg&&!file?.size)return;try{const a=await supportFilePayload(file);await api('admin_support_ticket_reply',{ticket_id:Number(id),message:msg,...a});form.reset();await openMiniAdminSupportTicket(id)}catch(err){showStatus(err.message||'ارسال پاسخ ناموفق بود','error')}});
-      host.querySelectorAll('[data-mini-admin-status]').forEach(b=>b.addEventListener('click',async()=>{try{await api('admin_support_ticket_status',{ticket_id:Number(id),status:b.dataset.miniAdminStatus});showStatus('وضعیت تیکت بروزرسانی شد','success');BlueGateUI.closeSheet?.();adminState=await api('admin_summary');renderAdmin()}catch(err){showStatus(err.message||'تغییر وضعیت ناموفق بود','error')}}));
+      form?.addEventListener('submit',async e=>{
+        e.preventDefault();
+        if(form.dataset.submitting==='1')return;
+        const f=new FormData(form),msg=String(f.get('message')||'').trim(),file=f.get('attachment');
+        if(!msg&&!file?.size)return;
+        form.dataset.submitting='1';
+        const submit=form.querySelector('[type="submit"]'),label=submit?.textContent||'ارسال پاسخ';
+        if(submit){submit.disabled=true;submit.textContent='در حال ارسال…';}
+        try{
+          const a=await supportFilePayload(file);
+          await api('admin_support_ticket_reply',{ticket_id:Number(id),message:msg,...a});
+          form.reset();
+          await openMiniAdminSupportTicket(id);
+        }catch(err){
+          delete form.dataset.submitting;
+          if(submit){submit.disabled=false;submit.textContent=label;}
+          showStatus(err.message||'ارسال پاسخ ناموفق بود','error');
+        }
+      });
+      host.querySelectorAll('[data-mini-admin-status]').forEach(b=>b.addEventListener('click',async()=>{
+        if(b.disabled)return;b.disabled=true;
+        try{
+          await api('admin_support_ticket_status',{ticket_id:Number(id),status:b.dataset.miniAdminStatus});
+          showStatus('وضعیت تیکت بروزرسانی شد','success');
+          window.clearInterval(window.__miniAdminTicketPoll);
+          BlueGateUI.closeSheet?.();
+          adminState=await api('admin_summary');renderAdmin();
+        }catch(err){b.disabled=false;showStatus(err.message||'تغییر وضعیت ناموفق بود','error')}
+      }));
       const box=host.querySelector('#miniAdminSupportMessages');if(box)box.scrollTop=box.scrollHeight;
     }});
-    window.clearInterval(window.__miniAdminTicketPoll);window.__miniAdminTicketPoll=window.setInterval(async()=>{const box=document.querySelector('#miniAdminSupportMessages');if(!box)return window.clearInterval(window.__miniAdminTicketPoll);try{const x=await load();box.innerHTML=renderMessages(x.messages);bindSupportPreview(box);box.scrollTop=box.scrollHeight}catch(_){}} ,5000);
+    window.clearInterval(window.__miniAdminTicketPoll);
+    window.__miniAdminTicketPoll=window.setInterval(async()=>{
+      const box=document.querySelector('#miniAdminSupportMessages');
+      if(!box){window.clearInterval(window.__miniAdminTicketPoll);return;}
+      try{const x=await load();box.innerHTML=renderMessages(x.messages);bindSupportPreview(box);box.scrollTop=box.scrollHeight;}catch(_){}
+    },5000);
   }catch(e){showStatus(e.message||'دریافت تیکت ناموفق بود','error')}
 }
-document.addEventListener('click',e=>{const target=e.target.closest?.('[data-admin-support-ticket]');if(!target)return;e.preventDefault();e.stopImmediatePropagation();openMiniAdminSupportTicket(Number(target.dataset.adminSupportTicket))},true);
+document.addEventListener('click',e=>{
+  const target=e.target.closest?.('[data-admin-support-ticket]');
+  if(!target)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  openMiniAdminSupportTicket(Number(target.dataset.adminSupportTicket));
+},true);
 function renderAdminSupport(){
   const rows=adminState.support_tickets||[];
   const fa={open:'باز',waiting_admin:'در انتظار پاسخ شما',waiting_customer:'در انتظار کاربر',resolved:'حل‌شده',closed:'بسته'};
-  return `<article class="admin-card"><div class="admin-card-head"><span class="admin-card-icon">?</span><div><h3>تیکت‌های پشتیبانی</h3><p class="muted">${nf(rows.filter(x=>['open','waiting_admin'].includes(x.status)).length)} مورد نیازمند پیگیری</p></div><button class="secondary" data-admin-action="reload">بروزرسانی</button></div><div class="admin-support-list">${rows.length?rows.map(t=>`<article class="admin-support-row"><div><b>#${nf(t.id)} · ${esc(t.subject||'بدون موضوع')}</b><small>${esc(t.first_name||t.username||String(t.telegram_id||'کاربر'))} · ${fa[t.status]||esc(miniSupportStatusLabel(t.status))} · ${esc(t.last_message_at||t.created_at||'')}</small></div><button class="secondary" data-admin-support-ticket="${t.id}">مشاهده</button></article>`).join(''):'<div class="u-empty"><h3>تیکتی ثبت نشده</h3><p>درخواست‌های کاربران اینجا نمایش داده می‌شوند.</p></div>'}</div></article>`;
+  const needsReply=rows.filter(x=>['open','waiting_admin'].includes(x.status)).length;
+  const waitingCustomer=rows.filter(x=>x.status==='waiting_customer').length;
+  const resolved=rows.filter(x=>['resolved','closed'].includes(x.status)).length;
+  return `<section class="admin-support-page">
+    <div class="admin-support-hero support-page-hero"><div class="support-page-intro"><span class="member-kicker">BLUEGATE SUPPORT</span><h2>تیکت‌های پشتیبانی</h2><p>درخواست‌های کاربران را بررسی کن، پاسخ بده و وضعیت هر گفت‌وگو را مدیریت کن.</p></div><div class="admin-support-hero-actions"><button class="secondary" data-admin-action="reload">↻ بروزرسانی</button></div></div>
+    <div class="admin-support-stats">
+      <article><span class="admin-support-stat-icon">✉</span><div><b>${nf(rows.length)}</b><small>کل تیکت‌ها</small></div></article>
+      <article class="needs-reply"><span class="admin-support-stat-icon">◷</span><div><b>${nf(needsReply)}</b><small>نیازمند پاسخ</small></div></article>
+      <article><span class="admin-support-stat-icon">↗</span><div><b>${nf(waitingCustomer)}</b><small>در انتظار کاربر</small></div></article>
+      <article><span class="admin-support-stat-icon">✓</span><div><b>${nf(resolved)}</b><small>حل‌شده / بسته</small></div></article>
+    </div>
+    <div class="support-list-heading"><b>همه درخواست‌ها</b><span>${nf(rows.length)} تیکت</span></div>
+    <div class="admin-support-list admin-support-list-modern">${rows.length?rows.map(t=>{const customer=t.first_name||t.username||(t.telegram_id?String(t.telegram_id):'کاربر');return `<button type="button" class="admin-support-card" data-admin-support-ticket="${Number(t.id)||0}"><span class="admin-support-avatar">#${esc(String(t.id||''))}</span><span class="admin-support-card-main"><span class="admin-support-card-title"><b>${esc(t.subject||'بدون موضوع')}</b><small>${esc(customer)}</small></span><span class="admin-support-card-meta"><span class="support-ticket-status ${miniSupportStatusClass(t.status)}">${esc(fa[t.status]||miniSupportStatusLabel(t.status))}</span><small>${esc(t.last_message_at||t.created_at||'بدون پیام')}</small></span></span><span class="admin-support-card-arrow" aria-hidden="true">‹</span></button>`;}).join(''):'<div class="u-empty support-ticket-empty"><div class="u-empty-icon">✉</div><h3>تیکتی ثبت نشده</h3><p>وقتی کاربری تیکت جدیدی ایجاد کند، درخواستش اینجا نمایش داده می‌شود.</p></div>'}</div>
+  </section>`;
 }
 function infraPlanOptions(selected=''){const tree=adminState.catalog_admin?.tree||[];const out=[];for(const svc of tree)for(const g of (svc.groups||[]))for(const p of (g.plans||[]))out.push(`<option value="${p.id}" ${String(selected)===String(p.id)?'selected':''}>${esc(svc.name||'')} / ${esc(g.is_default?'پلن اصلی':g.name||'')} / ${esc(p.title||('پلن #'+p.id))}</option>`);return out.join('')}
 function infraProviderOptions(selected=''){return (adminState.infrastructure?.providers||[]).filter(p=>Number(p.is_active??1)).map(p=>`<option value="${p.id}" ${String(selected)===String(p.id)?'selected':''}>${esc(p.name||('پنل #'+p.id))} · ${p.driver==='xui'?'3x-ui':p.driver==='marzban'?'Marzban':p.driver==='remnawave'?'Remnawave':esc(p.driver||'')}</option>`).join('')}
