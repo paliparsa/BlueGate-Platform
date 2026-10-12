@@ -1,3 +1,11 @@
+# BlueGate Platform v5.0.53 — Automatic translation worker and complete account UI localization
+
+- Add DeepL API and Google Cloud Translation provider support, then fall back to Google Translate web endpoint and MyMemory; all translations remain cached server-side.
+- Start a bounded background translation worker automatically when the admin panel opens and after catalog saves; the Translate button resumes the worker instead of doing just one isolated batch.
+- Expand English dictionary coverage for account completion, Telegram connection, account details, balance center, top-ups, profile/security, VPN services, referrals, and support.
+- Normalize Persian spacing/zero-width characters before dictionary matching and translate relevant input values, placeholders, labels, and titles.
+- Add provider configuration examples; existing Persian text remains unchanged and saved manual translations are preserved.
+
 # BlueGate Platform v5.0.52 — Editable automatic English catalog translations
 
 - Add persisted English translation fields for categories, products, variants, services, service groups, and plans, including descriptions.
