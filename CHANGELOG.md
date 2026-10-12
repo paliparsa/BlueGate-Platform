@@ -1,5 +1,11 @@
 # Changelog
 
+# BlueGate Platform v5.0.42 — Close ticket creation sheet after submit
+
+- Close the new-ticket creation sheet after successful submission (including duplicate-detection recovery) before opening the exact ticket chat, reducing overlapping screens and confusion.
+
+---
+
 # BlueGate Platform v5.0.41 — Closed ticket restrictions and status colors
 
 - Prevent user replies and re-opening for resolved/closed tickets in the backend.
