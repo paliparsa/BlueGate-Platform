@@ -364,14 +364,15 @@ function catalog_move_plan(int $planId,int $groupId): void {
 
 function catalog_save_category(array $d): int {
     $id=(int)($d['id']??$d['category_id']??0);$title=trim((string)($d['title']??''));if($title==='')throw new RuntimeException('CATEGORY_TITLE_REQUIRED');
-    $titleEn=trim((string)($d['title_en']??$existing['title_en']??''));$emoji=trim((string)($d['emoji']??'🛍️'))?:'🛍️';$image=normalize_internal_media_reference(trim((string)($d['image_url']??''))?:null);$sort=(int)($d['sort_order']??99);$active=array_key_exists('is_active',$d)?(!empty($d['is_active'])?1:0):1;
+    $emoji=trim((string)($d['emoji']??'🛍️'))?:'🛍️';$image=normalize_internal_media_reference(trim((string)($d['image_url']??''))?:null);$sort=(int)($d['sort_order']??99);$active=array_key_exists('is_active',$d)?(!empty($d['is_active'])?1:0):1;
     $existing=null;if($id>0){$q=db()->prepare('SELECT * FROM store_categories WHERE id=?');$q->execute([$id]);$existing=$q->fetch();if(!$existing)throw new RuntimeException('CATEGORY_NOT_FOUND');}
+    $titleEn=trim((string)($d['title_en']??$existing['title_en']??''));
     $slug=catalog_unique_slug('store_categories',(string)($d['slug']??$title),'category',$id>0?$id:null);
     $legacyId=(int)($existing['legacy_category_id']??0);
     if($legacyId>0){db()->prepare('UPDATE product_categories SET title=?,title_en=?,emoji=?,image_url=?,sort_order=?,is_active=? WHERE id=?')->execute([$title,$titleEn,$emoji,$image,$sort,$active,$legacyId]);}
     else{db()->prepare('INSERT INTO product_categories (title,title_en,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?)')->execute([$title,$titleEn,$emoji,$image,$sort,$active]);$legacyId=(int)db()->lastInsertId();}
     if($existing){db()->prepare('UPDATE store_categories SET legacy_category_id=?,title=?,title_en=?,slug=?,emoji=?,image_url=?,sort_order=?,is_active=? WHERE id=?')->execute([$legacyId,$title,$titleEn,$slug,$emoji,$image,$sort,$active,$id]);return $id;}
-    db()->prepare('INSERT INTO store_categories (legacy_category_id,title,slug,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?,?)')->execute([$legacyId,$title,$titleEn,$slug,$emoji,$image,$sort,$active]);return (int)db()->lastInsertId();
+    db()->prepare('INSERT INTO store_categories (legacy_category_id,title,title_en,slug,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?,?,?)')->execute([$legacyId,$title,$titleEn,$slug,$emoji,$image,$sort,$active]);return (int)db()->lastInsertId();
 }
 
 function catalog_ensure_legacy_category(int $storeCategoryId): int {
