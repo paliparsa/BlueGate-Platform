@@ -1,5 +1,13 @@
 # Changelog
 
+# BlueGate Platform v5.0.48 — Mobile auth drawer hardening
+
+- Fix mobile login/register dialog positioning and overflow using a viewport-bounded centered dialog with explicit closed/open visibility states.
+- Ensure the account drawer and backdrop are dismissed after successful login, including the pending-action path, preventing a blank “BlueGate Account” panel from remaining open.
+- Refresh auth CSS and JavaScript cache keys for web and pro-web.
+
+---
+
 # BlueGate Platform v5.0.47 — Referral reward settings UI
 
 - Add visible settings in Mini App and web admin for valid-invite reward, referred-purchase base reward, custom referral-code threshold and wheel chances.
