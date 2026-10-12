@@ -1104,7 +1104,7 @@ if ($action === 'admin_catalog_translation_save') {
       'legacy_category'=>['table'=>'product_categories','fields'=>['title_en'=>'title_en']]
     ];
     if($id<=0||!isset($map[$entity]['fields'][$field]))api_out(['ok'=>false,'error'=>'INVALID_TRANSLATION_FIELD','message'=>'فیلد ترجمه معتبر نیست.'],400);
-    $table=$map[$entity]['table'];$column=$map[$entity]['fields'][$field];$q=db()->prepare("UPDATE {$table} SET {$column}=? WHERE id=?");$q->execute([$value,$id]);
+    $table=$map[$entity]['table'];$column=$map[$entity]['fields'][$field];$q=db()->prepare("UPDATE {$table} SET {$column}=? WHERE id=?");$q->execute([$value,$id]);catalog_sync_translation_mirror($table,$id,$column,$value);
     log_admin_action((int)$user['telegram_id'],'catalog_translation_save',$entity,$id,$field);
     api_out(['ok'=>true,'message'=>'ترجمه انگلیسی ذخیره شد.','catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)$user['telegram_id'])],'products'=>array_map(fn($p)=>product_payload($p,false),shop_products(null,false)),'categories'=>array_map('category_payload',shop_categories(false))]);
 }
