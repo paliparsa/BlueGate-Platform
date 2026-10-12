@@ -53,7 +53,27 @@ function catalog_ensure_translation(string $table,int $id,string $sourceColumn,s
     if(is_string($existing)&&trim($existing)!=='')return trim($existing);
     $translated=catalog_translate_text($source);if($translated==='')return '';
     db()->prepare("UPDATE {$table} SET {$englishColumn}=? WHERE id=? AND ({$englishColumn} IS NULL OR {$englishColumn}='')")->execute([$translated,$id]);
+    catalog_sync_translation_mirror($table,$id,$englishColumn,$translated);
     return $translated;
+}
+function catalog_sync_translation_mirror(string $table,int $id,string $field,string $value): void {
+    if($id<=0||!str_ends_with($field,'_en'))return;
+    try{
+        if($table==='store_categories'&&$field==='title_en'){
+            $q=db()->prepare('SELECT legacy_category_id FROM store_categories WHERE id=?');$q->execute([$id]);$legacy=(int)$q->fetchColumn();if($legacy>0)db()->prepare('UPDATE product_categories SET title_en=? WHERE id=?')->execute([$value,$legacy]);
+        }elseif($table==='product_categories'&&$field==='title_en'){
+            db()->prepare('UPDATE store_categories SET title_en=? WHERE legacy_category_id=?')->execute([$value,$id]);
+        }elseif(in_array($table,['services','service_groups'],true)){
+            $q=db()->prepare("SELECT legacy_product_id FROM {$table} WHERE id=?");$q->execute([$id]);$legacy=(int)$q->fetchColumn();
+            if($legacy>0){if($field==='name_en')db()->prepare('UPDATE products SET name_en=? WHERE id=?')->execute([$value,$legacy]);elseif($field==='description_en')db()->prepare('UPDATE products SET short_description_en=?,full_description_en=? WHERE id=?')->execute([$value,$value,$legacy]);}
+        }elseif($table==='service_plans'){
+            $q=db()->prepare('SELECT legacy_variant_id,legacy_product_id FROM service_plans WHERE id=?');$q->execute([$id]);$r=$q->fetch();
+            if($r){$vid=(int)($r['legacy_variant_id']??0);$pid=(int)($r['legacy_product_id']??0);if($vid>0){$col=$field==='title_en'?'title_en':($field==='description_en'?'description_en':'');if($col!=='')db()->prepare("UPDATE product_variants SET {$col}=? WHERE id=?")->execute([$value,$vid]);}elseif($pid>0){$col=$field==='title_en'?'name_en':($field==='description_en'?'full_description_en':'');if($col!=='')db()->prepare("UPDATE products SET {$col}=? WHERE id=?")->execute([$value,$pid]);}}
+        }elseif($table==='product_variants'){
+            $q=db()->prepare('SELECT id FROM service_plans WHERE legacy_variant_id=?');$q->execute([$id]);$planId=(int)$q->fetchColumn();
+            if($planId>0){$col=$field==='title_en'?'title_en':($field==='description_en'?'description_en':'');if($col!=='')db()->prepare("UPDATE service_plans SET {$col}=? WHERE id=?")->execute([$value,$planId]);}
+        }
+    }catch(Throwable $e){error_log('[BlueGate translation mirror] '.$e->getMessage());}
 }
 function catalog_english(string $table,array $row,string $idColumn,string $sourceColumn,string $englishColumn): string {
     $source=(string)($row[$sourceColumn]??'');$existing=trim((string)($row[$englishColumn]??''));
