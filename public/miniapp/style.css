@@ -4625,11 +4625,12 @@ small{font-size:var(--bg-font-micro)!important;line-height:1.65}
 .support-ticket-main small{font-size:11px!important;line-height:1.5;color:var(--muted)!important;font-variant-numeric:tabular-nums}
 .support-ticket-side{display:flex;align-items:center;gap:7px;min-width:0;max-width:48%}
 .support-ticket-status,.support-chat-status{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#ffffff05;color:var(--muted);font-size:10px;line-height:1.4;font-weight:750;text-align:center;white-space:normal}
-.support-ticket-status.is-open,.support-chat-status.is-open{color:#69c6ff;border-color:#3b9fff35;background:#3b9fff12}
-.support-ticket-status.is-waiting,.support-chat-status.is-waiting{color:#f6c66b;border-color:#f6c66b35;background:#f6c66b10}
-.support-ticket-status.is-reply,.support-chat-status.is-reply{color:#8bd9bd;border-color:#50c99a35;background:#50c99a10}
-.support-ticket-status.is-resolved,.support-chat-status.is-resolved{color:#8bd9bd;border-color:#50c99a35;background:#50c99a10}
-.support-ticket-status.is-closed,.support-chat-status.is-closed{color:var(--muted);background:#ffffff04}
+.support-ticket-status.is-open,.support-chat-status.is-open{color:#75dda8;border-color:#36c27555;background:#20a85b1c}
+.support-ticket-status.is-waiting,.support-chat-status.is-waiting,.support-ticket-status.is-reply,.support-chat-status.is-reply{color:#f6c66b;border-color:#e6b84c55;background:#d99b171a}
+.support-ticket-status.is-resolved,.support-chat-status.is-resolved,.support-ticket-status.is-closed,.support-chat-status.is-closed{color:#ff8f96;border-color:#ef444455;background:#ef44441c}
+.support-ticket-closed-notice{display:flex;flex-direction:column;gap:5px;margin:8px 0 max(16px,env(safe-area-inset-bottom));padding:14px 15px;border:1px solid #ef444455;border-radius:15px;background:#ef444412;color:var(--text)}
+.support-ticket-closed-notice b{color:#ff8f96;font-size:13px}
+.support-ticket-closed-notice span{color:var(--muted);font-size:12px;line-height:1.6}
 .support-ticket-chevron{font-size:22px;line-height:1;color:var(--muted)}
 .support-ticket-empty{padding:24px 16px;border-radius:18px}
 .support-ticket-empty .primary{min-height:44px;padding-inline:18px}
