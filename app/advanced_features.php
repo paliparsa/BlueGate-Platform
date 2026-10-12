@@ -27,14 +27,22 @@ function bluegate_request_trial(int $userId): array {
     try{$username='vytrial_u'.$userId.'_t'.$tid;$driver=bluegate_provider_driver($providerId);$targets=function_exists('bluegate_map_inbound_ids')?bluegate_map_inbound_ids($map):[(string)$map['remote_target_id']];$r=$driver->createService(['email'=>$username,'external_username'=>$username,'inbound_ids'=>$targets,'inbound_id'=>(string)($targets[0]??$map['remote_target_id']),'remote_target_id'=>(string)($targets[0]??$map['remote_target_id']),'provider_config'=>$cfg,'traffic_limit_bytes'=>(int)$s['traffic_limit_bytes'],'expires_at'=>$expires]);$sub=$r['subscription']['url']??$r['subscription_url']??null;$ext=(string)($r['external_client_id']??$r['id']??$username);db()->prepare('INSERT INTO service_instances (user_service_id,provider_id,external_client_id,external_username,remote_target_id,status,subscription_url,traffic_limit_bytes,expires_at,metadata_json) VALUES (?,?,?,?,?,"active",?,?,?,?)')->execute([$sid,$providerId,$ext,$username,(string)$map['remote_target_id'],$sub,(int)$s['traffic_limit_bytes'],$expires,json_encode(['trial'=>true,'provider_result'=>$r],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)]);$iid=(int)db()->lastInsertId();if(function_exists('bluegate_sync_instance_targets'))bluegate_sync_instance_targets($iid,$targets);db()->prepare('UPDATE user_services SET status="active" WHERE id=?')->execute([$sid]);db()->prepare('UPDATE trial_requests SET status="active",provisioned_at=NOW() WHERE id=?')->execute([$tid]);db()->prepare('INSERT INTO service_events (user_service_id,service_instance_id,event_type,title,details_json) VALUES (?,? ,"trial_started","Trial started",?)')->execute([$sid,$iid,json_encode(['trial_request_id'=>$tid],JSON_UNESCAPED_SLASHES)]);return bluegate_service_public(bluegate_service_record($sid,$userId),true);}catch(Throwable $x){db()->prepare('UPDATE trial_requests SET status="failed",reason=? WHERE id=?')->execute([mb_substr($x->getMessage(),0,255),$tid]);db()->prepare('UPDATE user_services SET status="provisioning_failed" WHERE id=?')->execute([$sid]);throw$x;}
 }
 function bluegate_ticket_miniapp_url(int $ticketId): string {
-    $bot=ltrim(trim((string)app_config('BOT_USERNAME','')),'@');
-    if($bot!=='')return 'https://t.me/'.rawurlencode($bot).'?startapp=ticket_'.max(1,$ticketId);
-    $base=rtrim((string)app_config('PUBLIC_BASE_URL',''),'/');
-    return $base!==''?$base.'/miniapp/?ticket='.max(1,$ticketId):'';
+    // Use the configured Mini App URL as a Telegram WebApp button target.
+    // A t.me?startapp link depends on Main Mini App configuration and can fall back
+    // to a normal browser, where Telegram initData is unavailable.
+    $mini=trim((string)app_config('MINIAPP_URL',''));
+    if($mini===''){
+        $base=rtrim((string)app_config('PUBLIC_BASE_URL',''),'/');
+        $mini=$base!==''?$base.'/miniapp/':'';
+    }
+    if($mini==='')return '';
+    $sep=str_contains($mini,'?')?'&':'?';
+    return $mini.$sep.'ticket='.max(1,$ticketId);
 }
 function bluegate_ticket_keyboard(int $ticketId): ?string {
     $url=bluegate_ticket_miniapp_url($ticketId);if($url==='')return null;
-    return json_encode(['inline_keyboard'=>[[['text'=>'🎫 باز کردن تیکت در Mini App','url'=>$url]]]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+    // WebApp button makes Telegram open the page inside its own WebView and attach initData.
+    return json_encode(['inline_keyboard'=>[[['text'=>'🎫 باز کردن تیکت در Mini App','web_app'=>['url'=>$url]]]]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 }
 function bluegate_ticket_status_fa(string $status): string {
     return ['open'=>'باز','waiting_admin'=>'در انتظار پاسخ پشتیبانی','waiting_customer'=>'در انتظار پاسخ شما','resolved'=>'حل‌شده','closed'=>'بسته'][$status]??$status;
