@@ -26,8 +26,40 @@ function bluegate_request_trial(int $userId): array {
     $pdo=db();$pdo->beginTransaction();try{$pdo->prepare('INSERT INTO user_services (user_id,service_plan_id,service_type,display_name,status,traffic_limit_bytes,started_at,expires_at,subscription_token,metadata_json) VALUES (?,? ,"trial",?,"pending",?,NOW(),?,?,?)')->execute([$userId,(int)$plan['id'],'Trial '.trim(($plan['service_name']??'').' '.($plan['title']??'')),(int)$s['traffic_limit_bytes'],$expires,$token,json_encode(['source'=>'trial','phase'=>10],JSON_UNESCAPED_SLASHES)]);$sid=(int)$pdo->lastInsertId();$pdo->prepare('INSERT INTO trial_requests (user_id,service_plan_id,user_service_id,status,expires_at) VALUES (?,?,?,"provisioning",?)')->execute([$userId,(int)$plan['id'],$sid,$expires]);$tid=(int)$pdo->lastInsertId();$pdo->commit();}catch(Throwable $x){if($pdo->inTransaction())$pdo->rollBack();throw$x;}
     try{$username='vytrial_u'.$userId.'_t'.$tid;$driver=bluegate_provider_driver($providerId);$targets=function_exists('bluegate_map_inbound_ids')?bluegate_map_inbound_ids($map):[(string)$map['remote_target_id']];$r=$driver->createService(['email'=>$username,'external_username'=>$username,'inbound_ids'=>$targets,'inbound_id'=>(string)($targets[0]??$map['remote_target_id']),'remote_target_id'=>(string)($targets[0]??$map['remote_target_id']),'provider_config'=>$cfg,'traffic_limit_bytes'=>(int)$s['traffic_limit_bytes'],'expires_at'=>$expires]);$sub=$r['subscription']['url']??$r['subscription_url']??null;$ext=(string)($r['external_client_id']??$r['id']??$username);db()->prepare('INSERT INTO service_instances (user_service_id,provider_id,external_client_id,external_username,remote_target_id,status,subscription_url,traffic_limit_bytes,expires_at,metadata_json) VALUES (?,?,?,?,?,"active",?,?,?,?)')->execute([$sid,$providerId,$ext,$username,(string)$map['remote_target_id'],$sub,(int)$s['traffic_limit_bytes'],$expires,json_encode(['trial'=>true,'provider_result'=>$r],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)]);$iid=(int)db()->lastInsertId();if(function_exists('bluegate_sync_instance_targets'))bluegate_sync_instance_targets($iid,$targets);db()->prepare('UPDATE user_services SET status="active" WHERE id=?')->execute([$sid]);db()->prepare('UPDATE trial_requests SET status="active",provisioned_at=NOW() WHERE id=?')->execute([$tid]);db()->prepare('INSERT INTO service_events (user_service_id,service_instance_id,event_type,title,details_json) VALUES (?,? ,"trial_started","Trial started",?)')->execute([$sid,$iid,json_encode(['trial_request_id'=>$tid],JSON_UNESCAPED_SLASHES)]);return bluegate_service_public(bluegate_service_record($sid,$userId),true);}catch(Throwable $x){db()->prepare('UPDATE trial_requests SET status="failed",reason=? WHERE id=?')->execute([mb_substr($x->getMessage(),0,255),$tid]);db()->prepare('UPDATE user_services SET status="provisioning_failed" WHERE id=?')->execute([$sid]);throw$x;}
 }
+function bluegate_ticket_miniapp_url(int $ticketId): string {
+    $bot=ltrim(trim((string)app_config('BOT_USERNAME','')),'@');
+    if($bot!=='')return 'https://t.me/'.rawurlencode($bot).'?startapp=ticket_'.max(1,$ticketId);
+    $base=rtrim((string)app_config('PUBLIC_BASE_URL',''),'/');
+    return $base!==''?$base.'/miniapp/?ticket='.max(1,$ticketId):'';
+}
+function bluegate_ticket_keyboard(int $ticketId): ?string {
+    $url=bluegate_ticket_miniapp_url($ticketId);if($url==='')return null;
+    return json_encode(['inline_keyboard'=>[[['text'=>'🎫 باز کردن تیکت در Mini App','url'=>$url]]]],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+}
+function bluegate_ticket_status_fa(string $status): string {
+    return ['open'=>'باز','waiting_admin'=>'در انتظار پاسخ پشتیبانی','waiting_customer'=>'در انتظار پاسخ شما','resolved'=>'حل‌شده','closed'=>'بسته'][$status]??$status;
+}
+function bluegate_notify_ticket_admin(int $ticketId,string $prefix='🎫 تیکت جدید'): void {
+    if(!function_exists('admin_notify'))return;
+    $t=bluegate_ticket_record($ticketId);if(!$t)return;
+    $name=trim((string)($t['first_name']??''));$username=trim((string)($t['username']??''));$tid=(int)($t['telegram_id']??0);
+    $identity=($name!==''?h($name):'کاربر');
+    if($username!=='')$identity.=' (@'.h(ltrim($username,'@')).')';
+    $identity.=' · شناسه کاربر #'.(int)$t['user_id'];
+    if($tid>0)$identity.=' · Telegram ID <code>'.$tid.'</code>';
+    $text=$prefix.' <b>#'.(int)$ticketId.'</b>'."\n".'موضوع: <b>'.h((string)$t['subject']).'</b>'."\n".'از طرف: '.$identity;
+    admin_notify($text,bluegate_ticket_keyboard($ticketId),null,'support-ticket:'.$ticketId.':'.$prefix);
+}
+function bluegate_notify_ticket_user(int $ticketId,string $kind,string $detail=''): void {
+    if(!function_exists('send_user_message_once'))return;
+    $t=bluegate_ticket_record($ticketId);if(!$t)return;
+    $uid=(int)$t['user_id'];$status=bluegate_ticket_status_fa((string)$t['status']);
+    if($kind==='reply')$text="💬 <b>پشتیبانی به تیکت شما پاسخ داد</b>\n🎫 تیکت #".(int)$ticketId." · ".h((string)$t['subject'])."\nوضعیت فعلی: <b>".h($status)."</b>";
+    else $text="🔔 <b>وضعیت تیکت شما تغییر کرد</b>\n🎫 تیکت #".(int)$ticketId." · ".h((string)$t['subject'])."\nوضعیت جدید: <b>".h($status)."</b>".($detail!==''?"\n".h($detail):'');
+    send_user_message_once($uid,'support-ticket:'.$ticketId.':'.$kind.':'.sha1($status.'|'.$detail.'|'.(string)($t['last_message_at']??'')),$text,bluegate_ticket_keyboard($ticketId));
+}
 function bluegate_ticket_record(int $ticketId, int $userId=0): ?array {
-    $sql='SELECT t.*,u.username,u.first_name FROM support_tickets t JOIN users u ON u.id=t.user_id WHERE t.id=?';
+    $sql='SELECT t.*,u.username,u.first_name,u.telegram_id FROM support_tickets t JOIN users u ON u.id=t.user_id WHERE t.id=?';
     $args=[$ticketId];
     if($userId>0){$sql.=' AND t.user_id=?';$args[]=$userId;}
     $q=db()->prepare($sql);$q->execute($args);$row=$q->fetch();
@@ -74,7 +106,7 @@ function bluegate_create_ticket(int $uid,array $in): array {
         $pdo->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,delivered_at) VALUES (?,"user",?,?,?,?,?,NOW())')->execute([$id,$uid,$body,$a['url'],$a['name'],$a['mime']]);
         if($ownsTransaction)$pdo->commit();
     }catch(Throwable $e){if($ownsTransaction&&$pdo->inTransaction())$pdo->rollBack();throw $e;}
-    if(function_exists('notify_admins'))notify_admins("🎫 <b>تیکت جدید #{$id}</b>\n".h($sub));
+    bluegate_notify_ticket_admin($id,'🎫 تیکت جدید');
     return ['ticket_id'=>$id,'ticket'=>bluegate_ticket_record($id,$uid),'duplicate'=>false];
 }
 function bluegate_reply_ticket(int $ticketId,string $senderType,int $senderId,string $body,?string $attachmentData=null,?string $attachmentName=null): void {
@@ -83,7 +115,7 @@ function bluegate_reply_ticket(int $ticketId,string $senderType,int $senderId,st
     if($ticket['status']==='closed')throw new RuntimeException('TICKET_CLOSED');
     $a=bluegate_ticket_attachment($attachmentData,$attachmentName);db()->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,delivered_at) VALUES (?,?,?,?,?,?,?,NOW())')->execute([$ticketId,$senderType,$senderId,$body,$a['url'],$a['name'],$a['mime']]);
     $status=$senderType==='admin'?'waiting_customer':'waiting_admin';db()->prepare('UPDATE support_tickets SET status=?,last_message_at=NOW(),closed_at=NULL WHERE id=?')->execute([$status,$ticketId]);
-    if($senderType!=='admin'&&function_exists('notify_admins'))notify_admins("💬 <b>پاسخ جدید در تیکت #{$ticketId}</b>");
+    if($senderType==='admin')bluegate_notify_ticket_user($ticketId,'reply');else bluegate_notify_ticket_admin($ticketId,'💬 پاسخ جدید در');
 }
 function bluegate_service_usage_history(int $serviceId,int $userId=0,int $days=30): array {if($userId&&!bluegate_service_record($serviceId,$userId))throw new RuntimeException('SERVICE_NOT_FOUND');$days=max(1,min(365,$days));$q=db()->prepare('SELECT created_at,SUM(traffic_used_bytes) traffic_used_bytes,SUM(COALESCE(traffic_limit_bytes,0)) traffic_limit_bytes,MIN(expires_at) expires_at FROM service_usage_snapshots WHERE user_service_id=? AND created_at>=DATE_SUB(NOW(),INTERVAL '.$days.' DAY) GROUP BY DATE_FORMAT(created_at,"%Y-%m-%d %H:00:00") ORDER BY created_at');$q->execute([$serviceId]);return$q->fetchAll()?:[];}
 function bluegate_service_event_history(int $serviceId,int $userId=0,int $limit=100): array {if($userId&&!bluegate_service_record($serviceId,$userId))throw new RuntimeException('SERVICE_NOT_FOUND');$q=db()->prepare('SELECT * FROM service_events WHERE user_service_id=? ORDER BY id DESC LIMIT '.max(1,min(300,$limit)));$q->execute([$serviceId]);return$q->fetchAll()?:[];}
