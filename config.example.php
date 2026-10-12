@@ -88,5 +88,9 @@ $TRUSTED_PROXIES = []; // e.g. ['127.0.0.1', '10.0.0.0/8']
 $RECEIPT_VIEW_SECRET = '';
 
 // Optional catalog translation provider. LibreTranslate is preferred when configured; MyMemory is fallback.
-$LIBRETRANSLATE_URL = ''; // e.g. https://translate.example.com
+// Optional preferred translation providers. Leave keys empty to use the public Google Translate fallback, then MyMemory.
+$DEEPL_API_KEY = ''; // DeepL API Free or Pro key (server-side only)
+$DEEPL_API_URL = 'https://api-free.deepl.com'; // use https://api.deepl.com for Pro keys
+$GOOGLE_TRANSLATE_API_KEY = ''; // optional Google Cloud Translation API key
+$LIBRETRANSLATE_URL = ''; // optional trusted LibreTranslate endpoint, e.g. https://translate.example.com
 $LIBRETRANSLATE_API_KEY = ''; // keep private; never expose in frontend
