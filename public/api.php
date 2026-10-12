@@ -180,6 +180,8 @@ function product_payload(array $p, bool $activeVariants=true): array {
             'description' => $v['description'] ?? '',
             'image_url' => $v['plan_image_url'] ?? null,
             'delivery_type' => $v['plan_delivery_type'] ?? $v['delivery_type'] ?? null,
+            'title_en' => $v['title_en'] ?? '',
+            'description_en' => $v['description_en'] ?? '',
             'delivery_type_fa' => delivery_type_fa($v['plan_delivery_type'] ?? $v['delivery_type'] ?? 'manual'),
             'commission_type' => $v['plan_commission_type'] ?? $v['commission_type'] ?? 'none',
             'commission_value' => (int)($v['plan_commission_value'] ?? $v['commission_value'] ?? 0),
@@ -202,8 +204,12 @@ function product_payload(array $p, bool $activeVariants=true): array {
         'child_count' => (int)($p['child_count'] ?? 0),
         'parent_name' => $p['parent_name'] ?? null,
         'category_title' => $p['category_title'] ?? null,
+        'category_title_en' => $p['category_title_en'] ?? '',
         'category_emoji' => $p['category_emoji'] ?? null,
         'name' => $p['name'],
+        'name_en' => $p['name_en'] ?? '',
+        'short_description_en' => $p['short_description_en'] ?? '',
+        'full_description_en' => $p['full_description_en'] ?? '',
         'price' => $rawPPrice,
         'old_price' => $pOrigPrice,
         'price_label' => product_price_label($p),
@@ -230,7 +236,7 @@ function product_payload(array $p, bool $activeVariants=true): array {
         'updated_at' => $p['updated_at'] ?? null,
     ];
 }
-function category_payload(array $c): array { return ['id'=>(int)$c['id'],'title'=>$c['title'],'emoji'=>$c['emoji'],'image_url'=>$c['image_url'] ?? null,'sort_order'=>(int)($c['sort_order'] ?? 0),'is_active'=>(int)$c['is_active']]; }
+function category_payload(array $c): array { return ['id'=>(int)$c['id'],'title'=>$c['title'],'title_en'=>$c['title_en'] ?? '', 'emoji'=>$c['emoji'],'image_url'=>$c['image_url'] ?? null,'sort_order'=>(int)($c['sort_order'] ?? 0),'is_active'=>(int)$c['is_active']]; }
 
 function spin_rewards_public(): array {
     $items = setting_json('spin_rewards', app_config('SPIN_REWARDS', []));
@@ -1080,6 +1086,28 @@ if ($action === 'admin_catalog_move_plan') {
     require_admin($user); $pid=(int)($input['plan_id']??0); $gid=(int)($input['group_id']??0);
     if($pid<=0||$gid<=0) api_out(['ok'=>false,'message'=>'زیرسرویس و پلن معتبر انتخاب کن.'],400);
     catalog_move_plan($pid,$gid); log_admin_action((int)$user['telegram_id'],'catalog_move_plan','service_plan',$pid,'to group '.$gid); api_out(admin_payload());
+}
+if ($action === 'admin_catalog_translate_batch') {
+    require_admin($user);
+    try { $r=catalog_translate_existing_batch(max(1,min(8,(int)($input['limit']??5)))); log_admin_action((int)$user['telegram_id'],'catalog_translate_batch','catalog',0,'translated '.$r['translated']); api_out(['ok'=>true,'translation'=>$r,'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)$user['telegram_id'])],'products'=>array_map(fn($p)=>product_payload($p,false),shop_products(null,false)),'categories'=>array_map('category_payload',shop_categories(false))]); }
+    catch(Throwable $e){api_out(['ok'=>false,'error'=>'CATALOG_TRANSLATION_FAILED','message'=>'ترجمه خودکار در حال حاضر در دسترس نیست. تنظیمات سرویس ترجمه و اتصال سرور را بررسی کن.'],502);}
+}
+if ($action === 'admin_catalog_translation_save') {
+    require_admin($user);
+    $entity=(string)($input['entity']??'');$id=(int)($input['id']??0);$field=(string)($input['field']??'');$value=trim((string)($input['value']??''));
+    $map=[
+      'category'=>['table'=>'store_categories','fields'=>['title_en'=>'title_en']],
+      'service'=>['table'=>'services','fields'=>['name_en'=>'name_en','description_en'=>'description_en']],
+      'group'=>['table'=>'service_groups','fields'=>['name_en'=>'name_en','description_en'=>'description_en']],
+      'plan'=>['table'=>'service_plans','fields'=>['title_en'=>'title_en','description_en'=>'description_en']],
+      'product'=>['table'=>'products','fields'=>['name_en'=>'name_en','short_description_en'=>'short_description_en','full_description_en'=>'full_description_en']],
+      'variant'=>['table'=>'product_variants','fields'=>['title_en'=>'title_en','description_en'=>'description_en']],
+      'legacy_category'=>['table'=>'product_categories','fields'=>['title_en'=>'title_en']]
+    ];
+    if($id<=0||!isset($map[$entity]['fields'][$field]))api_out(['ok'=>false,'error'=>'INVALID_TRANSLATION_FIELD','message'=>'فیلد ترجمه معتبر نیست.'],400);
+    $table=$map[$entity]['table'];$column=$map[$entity]['fields'][$field];$q=db()->prepare("UPDATE {$table} SET {$column}=? WHERE id=?");$q->execute([$value,$id]);catalog_sync_translation_mirror($table,$id,$column,$value);
+    log_admin_action((int)$user['telegram_id'],'catalog_translation_save',$entity,$id,$field);
+    api_out(['ok'=>true,'message'=>'ترجمه انگلیسی ذخیره شد.','catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)$user['telegram_id'])],'products'=>array_map(fn($p)=>product_payload($p,false),shop_products(null,false)),'categories'=>array_map('category_payload',shop_categories(false))]);
 }
 if ($action === 'admin_catalog_save_category') {
     require_admin($user); try{$id=catalog_save_category($input);log_admin_action((int)$user['telegram_id'],'catalog_save_category','store_category',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ذخیره دسته فروشگاه ناموفق بود.'],400);}

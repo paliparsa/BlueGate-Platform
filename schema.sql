@@ -76,6 +76,10 @@ CREATE TABLE IF NOT EXISTS transactions (
   type VARCHAR(64) NOT NULL,
   amount BIGINT NOT NULL,
   description TEXT NULL,
+
+
+
+
   related_user_id BIGINT UNSIGNED NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX(user_id),
@@ -176,6 +180,10 @@ CREATE TABLE IF NOT EXISTS payment_methods (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   method_key VARCHAR(64) NOT NULL UNIQUE,
   title VARCHAR(255) NOT NULL,
+
+
+
+
   method_type VARCHAR(32) NOT NULL DEFAULT 'manual',
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   settings_json TEXT NULL,
@@ -191,6 +199,7 @@ CREATE TABLE IF NOT EXISTS payment_methods (
 CREATE TABLE IF NOT EXISTS product_categories (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
+  title_en VARCHAR(255) NULL,
   emoji VARCHAR(16) NULL,
   image_url VARCHAR(1024) NULL,
   sort_order INT NOT NULL DEFAULT 0,
@@ -206,6 +215,10 @@ CREATE TABLE IF NOT EXISTS products (
   category_id BIGINT UNSIGNED NULL,
   parent_id BIGINT UNSIGNED NULL,
   name VARCHAR(255) NOT NULL,
+  name_en VARCHAR(255) NULL,
+
+
+
   price BIGINT NOT NULL DEFAULT 0,
   price_currency VARCHAR(8) NOT NULL DEFAULT 'IRT',
   price_usd DECIMAL(14,4) NULL,
@@ -213,7 +226,11 @@ CREATE TABLE IF NOT EXISTS products (
   price_rate_source VARCHAR(32) NULL,
   price_rate_updated_at DATETIME NULL,
   short_description VARCHAR(500) NULL,
+  short_description_en VARCHAR(500) NULL,
+
   full_description TEXT NULL,
+  full_description_en TEXT NULL,
+
   delivery_type VARCHAR(32) NOT NULL DEFAULT 'manual',
   commission_type VARCHAR(16) NOT NULL DEFAULT 'none',
   commission_value BIGINT NOT NULL DEFAULT 0,
@@ -308,6 +325,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   product_id BIGINT UNSIGNED NOT NULL,
   title VARCHAR(255) NOT NULL,
+  title_en VARCHAR(255) NULL,
   price BIGINT NOT NULL DEFAULT 0,
   price_currency VARCHAR(8) NOT NULL DEFAULT 'IRT',
   price_usd DECIMAL(14,4) NULL,
@@ -317,6 +335,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
   duration_days INT NOT NULL DEFAULT 0,
   discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   description TEXT NULL,
+  description_en TEXT NULL,
   sort_order INT NOT NULL DEFAULT 0,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -332,6 +351,7 @@ CREATE TABLE IF NOT EXISTS store_categories (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   legacy_category_id BIGINT UNSIGNED NULL UNIQUE,
   title VARCHAR(255) NOT NULL,
+  title_en VARCHAR(255) NULL,
   slug VARCHAR(128) NOT NULL,
   emoji VARCHAR(16) NULL,
   image_url VARCHAR(1024) NULL,
@@ -347,8 +367,10 @@ CREATE TABLE IF NOT EXISTS services (
   category_id BIGINT UNSIGNED NULL,
   legacy_product_id BIGINT UNSIGNED NULL UNIQUE,
   name VARCHAR(255) NOT NULL,
+  name_en VARCHAR(255) NULL,
   slug VARCHAR(128) NOT NULL,
   description TEXT NULL,
+  description_en TEXT NULL,
   image_url VARCHAR(1024) NULL,
   theme VARCHAR(64) NULL,
   badge VARCHAR(128) NULL,
@@ -367,8 +389,10 @@ CREATE TABLE IF NOT EXISTS service_groups (
   service_id BIGINT UNSIGNED NOT NULL,
   legacy_product_id BIGINT UNSIGNED NULL,
   name VARCHAR(255) NOT NULL,
+  name_en VARCHAR(255) NULL,
   slug VARCHAR(128) NOT NULL,
   description TEXT NULL,
+  description_en TEXT NULL,
   image_url VARCHAR(1024) NULL,
   config_json LONGTEXT NULL,
   is_default TINYINT(1) NOT NULL DEFAULT 0,
@@ -388,6 +412,7 @@ CREATE TABLE IF NOT EXISTS service_plans (
   legacy_product_id BIGINT UNSIGNED NULL,
   legacy_variant_id BIGINT UNSIGNED NULL UNIQUE,
   title VARCHAR(255) NOT NULL,
+  title_en VARCHAR(255) NULL,
   price BIGINT NOT NULL DEFAULT 0,
   price_currency VARCHAR(8) NOT NULL DEFAULT 'IRT',
   price_usd DECIMAL(14,4) NULL,
@@ -403,6 +428,7 @@ CREATE TABLE IF NOT EXISTS service_plans (
   addon_max_days INT NOT NULL DEFAULT 365,
   discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   description TEXT NULL,
+  description_en TEXT NULL,
   image_url VARCHAR(1000) NULL,
   delivery_type VARCHAR(32) NOT NULL DEFAULT 'manual',
   commission_type VARCHAR(16) NOT NULL DEFAULT 'none',
@@ -994,4 +1020,12 @@ CREATE TABLE IF NOT EXISTS provider_economics (
   soft_capacity_percent INT NOT NULL DEFAULT 90,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_provider_economics_provider FOREIGN KEY (provider_id) REFERENCES service_providers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS catalog_translation_cache (
+  source_hash CHAR(64) PRIMARY KEY,
+  source_text TEXT NOT NULL,
+  translated_text TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

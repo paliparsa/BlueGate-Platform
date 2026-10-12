@@ -173,6 +173,24 @@ function migrate(): void {
 
     // v3.0.2 catalog editor parity: allow an optional image on every purchasable plan.
     add_column_if_missing('service_plans', 'image_url', 'VARCHAR(1000) NULL AFTER description');
+    // v5.0.52 bilingual catalog translations; safe additive migration for existing installations.
+    add_column_if_missing('product_categories', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('products', 'name_en', 'VARCHAR(255) NULL AFTER name');
+    add_column_if_missing('products', 'short_description_en', 'VARCHAR(500) NULL AFTER short_description');
+    add_column_if_missing('products', 'full_description_en', 'TEXT NULL AFTER full_description');
+    add_column_if_missing('product_variants', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('product_variants', 'description_en', 'TEXT NULL AFTER description');
+    add_column_if_missing('store_categories', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('services', 'name_en', 'VARCHAR(255) NULL AFTER name');
+    add_column_if_missing('services', 'description_en', 'TEXT NULL AFTER description');
+    add_column_if_missing('service_groups', 'name_en', 'VARCHAR(255) NULL AFTER name');
+    add_column_if_missing('service_groups', 'description_en', 'TEXT NULL AFTER description');
+    add_column_if_missing('service_plans', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('service_plans', 'description_en', 'TEXT NULL AFTER description');
+    db()->exec('CREATE TABLE IF NOT EXISTS catalog_translation_cache (
+        source_hash CHAR(64) PRIMARY KEY, source_text TEXT NOT NULL, translated_text TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     add_column_if_missing('support_messages', 'attachment_name', 'VARCHAR(255) NULL AFTER attachment_url');
     add_column_if_missing('support_messages', 'attachment_mime', 'VARCHAR(100) NULL AFTER attachment_name');
     add_column_if_missing('support_messages', 'delivered_at', 'DATETIME NULL AFTER attachment_mime');
@@ -3189,7 +3207,7 @@ function shop_products(?int $categoryId=null, bool $activeOnly=true): array {
     $where=[]; $params=[];
     if ($activeOnly) $where[]='p.is_active=1';
     if ($categoryId) { $where[]='p.category_id=?'; $params[]=$categoryId; }
-    $sql='SELECT p.*, c.title category_title, c.emoji category_emoji,
+    $sql='SELECT p.*, c.title category_title, c.title_en category_title_en, c.emoji category_emoji,
         (SELECT COUNT(*) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) variant_count,
         (SELECT COUNT(*) FROM products ch WHERE ch.parent_id=p.id AND ch.is_active=1) child_count,
         (SELECT name FROM products pp WHERE pp.id=p.parent_id LIMIT 1) parent_name,
@@ -3201,7 +3219,7 @@ function shop_products(?int $categoryId=null, bool $activeOnly=true): array {
     $q=db()->prepare($sql); $q->execute($params); return $q->fetchAll();
 }
 function shop_product(int $id) {
-    $q=db()->prepare('SELECT p.*, c.title category_title, c.emoji category_emoji,
+    $q=db()->prepare('SELECT p.*, c.title category_title, c.title_en category_title_en, c.emoji category_emoji,
         (SELECT COUNT(*) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) variant_count,
         (SELECT COUNT(*) FROM products ch WHERE ch.parent_id=p.id AND ch.is_active=1) child_count,
         (SELECT name FROM products pp WHERE pp.id=p.parent_id LIMIT 1) parent_name,

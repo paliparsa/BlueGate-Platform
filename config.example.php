@@ -86,3 +86,7 @@ $CRON_KEY = 'CHANGE_ME_WITH_ANOTHER_LONG_RANDOM_SECRET'; // protects HTTP provis
 $TRUSTED_PROXIES = []; // e.g. ['127.0.0.1', '10.0.0.0/8']
 // Optional dedicated secret for signed receipt links. Empty = derived from WEBHOOK_SECRET.
 $RECEIPT_VIEW_SECRET = '';
+
+// Optional catalog translation provider. LibreTranslate is preferred when configured; MyMemory is fallback.
+$LIBRETRANSLATE_URL = ''; // e.g. https://translate.example.com
+$LIBRETRANSLATE_API_KEY = ''; // keep private; never expose in frontend

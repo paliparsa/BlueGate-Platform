@@ -1,0 +1,47 @@
+name: Catalog translation validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, catalog-auto-translation-editable]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Check PHP syntax
+        run: |
+          php -l app/catalog.php
+          php -l app/bootstrap.php
+          php -l public/api.php
+      - name: Check JavaScript syntax
+        run: |
+          node --check public/miniapp/app.js
+          node --check public/web/js/admin.js
+      - name: Check translation columns are unique per SQL table
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          sql = Path('schema.sql').read_text()
+          tables = re.findall(r'CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\((.*?)\)\s*ENGINE=', sql, re.S | re.I)
+          for name, body in tables:
+              cols = []
+              for line in body.splitlines():
+                  line = line.strip()
+                  m = re.match(r'([A-Za-z_][A-Za-z0-9_]*)\s+(?:BIGINT|INT|TINYINT|VARCHAR|CHAR|TEXT|LONGTEXT|DECIMAL|DATETIME|TIMESTAMP|ENUM|JSON|BOOLEAN|DATE|MEDIUMTEXT|FLOAT|DOUBLE)\b', line, re.I)
+                  if m:
+                      col = m.group(1).lower()
+                      if col in cols:
+                          raise SystemExit(f'Duplicate column {name}.{col}')
+                      cols.append(col)
+          print(f'Validated {len(tables)} SQL table definitions.')
+          PY

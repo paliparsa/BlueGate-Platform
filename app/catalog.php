@@ -9,6 +9,120 @@ function catalog_enabled(): bool {
     return setting_bool('catalog_v2_storefront_enabled', false) && table_exists('services') && table_exists('service_groups') && table_exists('service_plans');
 }
 
+/**
+ * Cached Persian-to-English catalog translation.
+ * Provider order: LibreTranslate (optional configured URL/key), then MyMemory.
+ * Failures return an empty string so callers can safely fall back to the source text.
+ */
+function catalog_translate_text(string $source): string {
+    $source=trim(preg_replace('/\\s+/u',' ',$source)??$source);
+    if($source==='' || !preg_match('/[\\x{0600}-\\x{06FF}]/u',$source))return '';
+    $hash=hash('sha256',$source);
+    try{
+        $q=db()->prepare('SELECT translated_text FROM catalog_translation_cache WHERE source_hash=? LIMIT 1');$q->execute([$hash]);$cached=$q->fetchColumn();
+        if(is_string($cached)&&trim($cached)!=='')return trim($cached);
+    }catch(Throwable $e){}
+    $translated='';
+    $base=rtrim(trim((string)app_config('LIBRETRANSLATE_URL','')),'/');
+    $key=trim((string)app_config('LIBRETRANSLATE_API_KEY',''));
+    if($base!=='' && function_exists('curl_init')){
+        try{
+            $payload=['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'];if($key!=='')$payload['api_key']=$key;
+            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>3,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
+            $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+            if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim((string)($json['translatedText']??''));}
+        }catch(Throwable $e){}
+    }
+    if($translated===''&&function_exists('curl_init')){
+        try{
+            $url='https://api.mymemory.translated.net/get?q='.rawurlencode($source).'&langpair=fa|en';
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>3,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
+            $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+            if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$candidate=trim((string)($json['responseData']['translatedText']??''));if(($json['responseStatus']??0)==200 && $candidate!=='')$translated=$candidate;}
+        }catch(Throwable $e){}
+    }
+    if($translated==='' || preg_match('/[\\x{0600}-\\x{06FF}]/u',$translated))return '';
+    try{$q=db()->prepare('INSERT INTO catalog_translation_cache(source_hash,source_text,translated_text) VALUES(?,?,?) ON DUPLICATE KEY UPDATE source_text=VALUES(source_text),translated_text=VALUES(translated_text)');$q->execute([$hash,$source,$translated]);}catch(Throwable $e){}
+    return $translated;
+}
+function catalog_ensure_translation(string $table,int $id,string $sourceColumn,string $englishColumn,string $source): string {
+    $allowed=['product_categories','products','product_variants','store_categories','services','service_groups','service_plans'];
+    if(!in_array($table,$allowed,true)||$id<=0)return '';
+    $source=trim($source);if($source==='')return '';
+    $q=db()->prepare("SELECT {$englishColumn} FROM {$table} WHERE id=?");$q->execute([$id]);$existing=$q->fetchColumn();
+    if(is_string($existing)&&trim($existing)!=='')return trim($existing);
+    $translated=catalog_translate_text($source);if($translated==='')return '';
+    db()->prepare("UPDATE {$table} SET {$englishColumn}=? WHERE id=? AND ({$englishColumn} IS NULL OR {$englishColumn}='')")->execute([$translated,$id]);
+    catalog_sync_translation_mirror($table,$id,$englishColumn,$translated);
+    return $translated;
+}
+function catalog_sync_translation_mirror(string $table,int $id,string $field,string $value): void {
+    if($id<=0||!str_ends_with($field,'_en'))return;
+    try{
+        if($table==='store_categories'&&$field==='title_en'){
+            $q=db()->prepare('SELECT legacy_category_id FROM store_categories WHERE id=?');$q->execute([$id]);$legacy=(int)$q->fetchColumn();if($legacy>0)db()->prepare('UPDATE product_categories SET title_en=? WHERE id=?')->execute([$value,$legacy]);
+        }elseif($table==='product_categories'&&$field==='title_en'){
+            db()->prepare('UPDATE store_categories SET title_en=? WHERE legacy_category_id=?')->execute([$value,$id]);
+        }elseif(in_array($table,['services','service_groups'],true)){
+            $q=db()->prepare("SELECT legacy_product_id FROM {$table} WHERE id=?");$q->execute([$id]);$legacy=(int)$q->fetchColumn();
+            if($legacy>0){if($field==='name_en')db()->prepare('UPDATE products SET name_en=? WHERE id=?')->execute([$value,$legacy]);elseif($field==='description_en')db()->prepare('UPDATE products SET short_description_en=?,full_description_en=? WHERE id=?')->execute([$value,$value,$legacy]);}
+        }elseif($table==='service_plans'){
+            $q=db()->prepare('SELECT legacy_variant_id,legacy_product_id FROM service_plans WHERE id=?');$q->execute([$id]);$r=$q->fetch();
+            if($r){$vid=(int)($r['legacy_variant_id']??0);$pid=(int)($r['legacy_product_id']??0);if($vid>0){$col=$field==='title_en'?'title_en':($field==='description_en'?'description_en':'');if($col!=='')db()->prepare("UPDATE product_variants SET {$col}=? WHERE id=?")->execute([$value,$vid]);}elseif($pid>0){$col=$field==='title_en'?'name_en':($field==='description_en'?'full_description_en':'');if($col!=='')db()->prepare("UPDATE products SET {$col}=? WHERE id=?")->execute([$value,$pid]);}}
+        }elseif($table==='product_variants'){
+            $q=db()->prepare('SELECT id FROM service_plans WHERE legacy_variant_id=?');$q->execute([$id]);$planId=(int)$q->fetchColumn();
+            if($planId>0){$col=$field==='title_en'?'title_en':($field==='description_en'?'description_en':'');if($col!=='')db()->prepare("UPDATE service_plans SET {$col}=? WHERE id=?")->execute([$value,$planId]);}
+        }
+    }catch(Throwable $e){error_log('[BlueGate translation mirror] '.$e->getMessage());}
+}
+function catalog_english(string $table,array $row,string $idColumn,string $sourceColumn,string $englishColumn): string {
+    $source=(string)($row[$sourceColumn]??'');$existing=trim((string)($row[$englishColumn]??''));
+    if($existing!=='')return $existing;
+    return catalog_ensure_translation($table,(int)($row[$idColumn]??0),$sourceColumn,$englishColumn,$source)?:$source;
+}
+function catalog_translation_targets(): array {
+    return [
+      ['table'=>'store_categories','source'=>'title','english'=>'title_en','label'=>'دسته‌های فروشگاه'],
+      ['table'=>'services','source'=>'name','english'=>'name_en','label'=>'سرویس‌ها'],
+      ['table'=>'services','source'=>'description','english'=>'description_en','label'=>'توضیحات سرویس‌ها'],
+      ['table'=>'service_groups','source'=>'name','english'=>'name_en','label'=>'زیرسرویس‌ها'],
+      ['table'=>'service_groups','source'=>'description','english'=>'description_en','label'=>'توضیحات زیرسرویس‌ها'],
+      ['table'=>'service_plans','source'=>'title','english'=>'title_en','label'=>'پلن‌ها'],
+      ['table'=>'service_plans','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌ها'],
+      ['table'=>'product_categories','source'=>'title','english'=>'title_en','label'=>'دسته‌های قدیمی'],
+      ['table'=>'products','source'=>'name','english'=>'name_en','label'=>'محصولات'],
+      ['table'=>'products','source'=>'short_description','english'=>'short_description_en','label'=>'توضیحات کوتاه'],
+      ['table'=>'products','source'=>'full_description','english'=>'full_description_en','label'=>'توضیحات کامل'],
+      ['table'=>'product_variants','source'=>'title','english'=>'title_en','label'=>'پلن‌های قدیمی'],
+      ['table'=>'product_variants','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌های قدیمی']
+    ];
+}
+function catalog_translate_existing_batch(int $limit=35): array {
+    $limit=max(1,min(100,$limit));$translated=0;$skipped=0;$failed=0;$remaining=0;
+    $budget=$limit;
+    foreach(catalog_translation_targets() as $target){
+        if($budget<=0)break;
+        $t=$target['table'];$src=$target['source'];$en=$target['english'];
+        if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
+        // The actual language check is Unicode-aware in PHP; keep SQL portable.
+        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id DESC LIMIT ".(int)min(100,$budget*10);
+        $rows=db()->query($sql)->fetchAll();
+        foreach($rows as $row){
+            $source=(string)$row['source_text'];if(!preg_match('/[\\x{0600}-\\x{06FF}]/u',$source)){$skipped++;continue;}
+            $budget--;
+            $value=catalog_ensure_translation($t,(int)$row['id'],$src,$en,$source);
+            if($value!=='')$translated++;else $failed++;
+        }
+    }
+    foreach(catalog_translation_targets() as $target){
+        $t=$target['table'];$src=$target['source'];$en=$target['english'];
+        if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
+        $q=db()->query("SELECT {$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='')");
+        foreach($q->fetchAll() as $row)if(preg_match('/[\\x{0600}-\\x{06FF}]/u',(string)$row['source_text']))$remaining++;
+    }
+    return ['translated'=>$translated,'skipped'=>$skipped,'failed'=>$failed,'remaining'=>$remaining,'batch_limit'=>$limit];
+}
+
 function catalog_slugify(string $value, string $fallback='item'): string {
     $value = trim(mb_strtolower($value));
     $value = preg_replace('/[^\p{L}\p{N}]+/u', '-', $value) ?: '';
@@ -37,7 +151,7 @@ function catalog_store_categories(bool $activeOnly=false): array {
 function catalog_tree(bool $activeOnly=false): array {
     if (!table_exists('services') || !table_exists('service_groups') || !table_exists('service_plans')) return [];
     $where=$activeOnly?' WHERE s.is_active=1 AND (c.id IS NULL OR c.is_active=1)':'';
-    $services=db()->query('SELECT s.*,c.title category_title,c.emoji category_emoji,c.legacy_category_id FROM services s LEFT JOIN store_categories c ON c.id=s.category_id'.$where.' ORDER BY s.sort_order ASC,s.id ASC')->fetchAll();
+    $services=db()->query('SELECT s.*,c.title category_title,c.title_en category_title_en,c.emoji category_emoji,c.legacy_category_id FROM services s LEFT JOIN store_categories c ON c.id=s.category_id'.$where.' ORDER BY s.sort_order ASC,s.id ASC')->fetchAll();
     $gq=db()->query('SELECT * FROM service_groups'.($activeOnly?' WHERE is_active=1 AND is_archived=0':' WHERE is_archived=0').' ORDER BY sort_order ASC,id ASC')->fetchAll();
     $pq=db()->query('SELECT * FROM service_plans'.($activeOnly?' WHERE is_active=1 AND is_archived=0':' WHERE is_archived=0').' ORDER BY sort_order ASC,id ASC')->fetchAll();
     $groupsBy=[];$plansBy=[];
@@ -55,7 +169,7 @@ function catalog_public_payload(): array {
             $plans=[];
             foreach($g['plans'] as $p){
                 $plans[]=[
-                    'id'=>(int)$p['id'],'title'=>$p['title'],'price'=>(int)$p['price'],'price_currency'=>$p['price_currency'],
+                    'id'=>(int)$p['id'],'title'=>$p['title'],'title_en'=>$p['title_en']??'','description_en'=>$p['description_en']??'','price'=>(int)$p['price'],'price_currency'=>$p['price_currency'],
                     'price_usd'=>$p['price_usd']!==null?(float)$p['price_usd']:null,'duration_days'=>(int)$p['duration_days'],
                     'discount_percent'=>(float)$p['discount_percent'],'description'=>$p['description']??'','image_url'=>$p['image_url']??null,
                     'delivery_type'=>$p['delivery_type'],'commission_type'=>$p['commission_type'],'commission_value'=>(int)$p['commission_value'],
@@ -64,9 +178,9 @@ function catalog_public_payload(): array {
                     'sort_order'=>(int)$p['sort_order']
                 ];
             }
-            $groups[]=['id'=>(int)$g['id'],'name'=>$g['name'],'slug'=>$g['slug'],'description'=>$g['description']??'','image_url'=>$g['image_url']??null,'is_default'=>(int)$g['is_default'],'legacy_product_id'=>$g['legacy_product_id']!==null?(int)$g['legacy_product_id']:null,'sort_order'=>(int)$g['sort_order'],'plans'=>$plans];
+            $groups[]=['id'=>(int)$g['id'],'name'=>$g['name'],'name_en'=>$g['name_en']??'','slug'=>$g['slug'],'description'=>$g['description']??'','description_en'=>$g['description_en']??'','image_url'=>$g['image_url']??null,'is_default'=>(int)$g['is_default'],'legacy_product_id'=>$g['legacy_product_id']!==null?(int)$g['legacy_product_id']:null,'sort_order'=>(int)$g['sort_order'],'plans'=>$plans];
         }
-        $out[]=['id'=>(int)$s['id'],'name'=>$s['name'],'slug'=>$s['slug'],'description'=>$s['description']??'','image_url'=>$s['image_url']??null,'theme'=>$s['theme']??null,'badge'=>$s['badge']??null,'is_featured'=>(int)$s['is_featured'],'legacy_product_id'=>$s['legacy_product_id']!==null?(int)$s['legacy_product_id']:null,'category'=>['id'=>$s['category_id']!==null?(int)$s['category_id']:null,'title'=>$s['category_title']??null,'emoji'=>$s['category_emoji']??null,'legacy_category_id'=>$s['legacy_category_id']!==null?(int)$s['legacy_category_id']:null],'groups'=>$groups];
+        $out[]=['id'=>(int)$s['id'],'name'=>$s['name'],'name_en'=>$s['name_en']??'','slug'=>$s['slug'],'description'=>$s['description']??'','description_en'=>$s['description_en']??'','image_url'=>$s['image_url']??null,'theme'=>$s['theme']??null,'badge'=>$s['badge']??null,'is_featured'=>(int)$s['is_featured'],'legacy_product_id'=>$s['legacy_product_id']!==null?(int)$s['legacy_product_id']:null,'category'=>['id'=>$s['category_id']!==null?(int)$s['category_id']:null,'title'=>$s['category_title']??null,'title_en'=>$s['category_title_en']??null,'emoji'=>$s['category_emoji']??null,'legacy_category_id'=>$s['legacy_category_id']!==null?(int)$s['legacy_category_id']:null],'groups'=>$groups];
     }
     return ['enabled'=>catalog_enabled(),'applied_at'=>setting('catalog_v2_applied_at',''),'services'=>$out];
 }
@@ -137,7 +251,7 @@ function catalog_upsert_store_category(?int $legacyCategoryId): int {
         if($c){
             $find=db()->prepare('SELECT id FROM store_categories WHERE legacy_category_id=? LIMIT 1');$find->execute([$legacyCategoryId]);$r=$find->fetch();
             if($r){db()->prepare('UPDATE store_categories SET title=?,emoji=?,image_url=?,sort_order=?,is_active=? WHERE id=?')->execute([$c['title'],$c['emoji'],$c['image_url']??null,(int)$c['sort_order'],(int)$c['is_active'],(int)$r['id']]);return (int)$r['id'];}
-            db()->prepare('INSERT INTO store_categories (legacy_category_id,title,slug,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?,?)')->execute([$legacyCategoryId,$c['title'],catalog_unique_slug('store_categories',$c['title'],'category'),$c['emoji'],$c['image_url']??null,(int)$c['sort_order'],(int)$c['is_active']]);return (int)db()->lastInsertId();
+            db()->prepare('INSERT INTO store_categories (legacy_category_id,title,title_en,slug,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?,?,?)')->execute([$legacyCategoryId,$c['title'],catalog_unique_slug('store_categories',$c['title'],'category'),$c['emoji'],$c['image_url']??null,(int)$c['sort_order'],(int)$c['is_active']]);return (int)db()->lastInsertId();
         }
     }
     $q=db()->query('SELECT id FROM store_categories WHERE legacy_category_id IS NULL AND slug="other" LIMIT 1');$r=$q->fetch();if($r)return (int)$r['id'];
@@ -272,12 +386,13 @@ function catalog_save_category(array $d): int {
     $id=(int)($d['id']??$d['category_id']??0);$title=trim((string)($d['title']??''));if($title==='')throw new RuntimeException('CATEGORY_TITLE_REQUIRED');
     $emoji=trim((string)($d['emoji']??'🛍️'))?:'🛍️';$image=normalize_internal_media_reference(trim((string)($d['image_url']??''))?:null);$sort=(int)($d['sort_order']??99);$active=array_key_exists('is_active',$d)?(!empty($d['is_active'])?1:0):1;
     $existing=null;if($id>0){$q=db()->prepare('SELECT * FROM store_categories WHERE id=?');$q->execute([$id]);$existing=$q->fetch();if(!$existing)throw new RuntimeException('CATEGORY_NOT_FOUND');}
+    $titleEn=trim((string)($d['title_en']??$existing['title_en']??''));
     $slug=catalog_unique_slug('store_categories',(string)($d['slug']??$title),'category',$id>0?$id:null);
     $legacyId=(int)($existing['legacy_category_id']??0);
-    if($legacyId>0){db()->prepare('UPDATE product_categories SET title=?,emoji=?,image_url=?,sort_order=?,is_active=? WHERE id=?')->execute([$title,$emoji,$image,$sort,$active,$legacyId]);}
-    else{db()->prepare('INSERT INTO product_categories (title,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?)')->execute([$title,$emoji,$image,$sort,$active]);$legacyId=(int)db()->lastInsertId();}
-    if($existing){db()->prepare('UPDATE store_categories SET legacy_category_id=?,title=?,slug=?,emoji=?,image_url=?,sort_order=?,is_active=? WHERE id=?')->execute([$legacyId,$title,$slug,$emoji,$image,$sort,$active,$id]);return $id;}
-    db()->prepare('INSERT INTO store_categories (legacy_category_id,title,slug,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?,?)')->execute([$legacyId,$title,$slug,$emoji,$image,$sort,$active]);return (int)db()->lastInsertId();
+    if($legacyId>0){db()->prepare('UPDATE product_categories SET title=?,title_en=?,emoji=?,image_url=?,sort_order=?,is_active=? WHERE id=?')->execute([$title,$titleEn,$emoji,$image,$sort,$active,$legacyId]);}
+    else{db()->prepare('INSERT INTO product_categories (title,title_en,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?)')->execute([$title,$titleEn,$emoji,$image,$sort,$active]);$legacyId=(int)db()->lastInsertId();}
+    if($existing){db()->prepare('UPDATE store_categories SET legacy_category_id=?,title=?,title_en=?,slug=?,emoji=?,image_url=?,sort_order=?,is_active=? WHERE id=?')->execute([$legacyId,$title,$titleEn,$slug,$emoji,$image,$sort,$active,$id]);return $id;}
+    db()->prepare('INSERT INTO store_categories (legacy_category_id,title,title_en,slug,emoji,image_url,sort_order,is_active) VALUES (?,?,?,?,?,?,?,?)')->execute([$legacyId,$title,$titleEn,$slug,$emoji,$image,$sort,$active]);return (int)db()->lastInsertId();
 }
 
 function catalog_ensure_legacy_category(int $storeCategoryId): int {
@@ -423,6 +538,22 @@ function catalog_save_plan(array $d): int {
     return $id;
 }
 
+function catalog_translate_service_tree(int $serviceId): array {
+    $done=0;$failed=0;
+    $q=db()->prepare('SELECT * FROM services WHERE id=?');$q->execute([$serviceId]);$s=$q->fetch();
+    if(!$s)return ['translated'=>0,'failed'=>0];
+    $fields=[['services','name','name_en'],['services','description','description_en']];
+    foreach($fields as [$table,$src,$en]){if(trim((string)($s[$src]??''))==='')continue;if(trim((string)($s[$en]??''))!=='')continue;$v=catalog_ensure_translation($table,$serviceId,$src,$en,(string)$s[$src]);$v!==''?$done++:$failed++;}
+    $catId=(int)($s['category_id']??0);if($catId>0){$q=db()->prepare('SELECT * FROM store_categories WHERE id=?');$q->execute([$catId]);$cat=$q->fetch();if($cat&&trim((string)($cat['title_en']??''))===''){$v=catalog_ensure_translation('store_categories',$catId,'title','title_en',(string)$cat['title']);$v!==''?$done++:$failed++;}}
+    $q=db()->prepare('SELECT * FROM service_groups WHERE service_id=? AND is_archived=0');$q->execute([$serviceId]);
+    foreach($q->fetchAll() as $g){foreach([['name','name_en'],['description','description_en']] as [$src,$en]){if(trim((string)($g[$src]??''))===''||trim((string)($g[$en]??''))!=='')continue;$v=catalog_ensure_translation('service_groups',(int)$g['id'],$src,$en,(string)$g[$src]);$v!==''?$done++:$failed++;}
+      $pq=db()->prepare('SELECT * FROM service_plans WHERE group_id=? AND is_archived=0');$pq->execute([(int)$g['id']]);
+      foreach($pq->fetchAll() as $p){foreach([['title','title_en'],['description','description_en']] as [$src,$en]){if(trim((string)($p[$src]??''))===''||trim((string)($p[$en]??''))!=='')continue;$v=catalog_ensure_translation('service_plans',(int)$p['id'],$src,$en,(string)$p[$src]);$v!==''?$done++:$failed++;}
+        $vid=(int)($p['legacy_variant_id']??0);if($vid>0){$vrow=db()->prepare('SELECT * FROM product_variants WHERE id=?');$vrow->execute([$vid]);$vdata=$vrow->fetch();if($vdata){foreach([['title','title_en'],['description','description_en']] as [$src,$en])if(trim((string)($vdata[$src]??''))!==''&&trim((string)($vdata[$en]??''))===''){$v=catalog_ensure_translation('product_variants',$vid,$src,$en,(string)$vdata[$src]);$v!==''?$done++:$failed++;}}}
+      }
+    }
+    return ['translated'=>$done,'failed'=>$failed];
+}
 function catalog_soft_disable_plan(int $id): void {
     $q=db()->prepare('SELECT * FROM service_plans WHERE id=?');$q->execute([$id]);$p=$q->fetch();if(!$p)return;
     db()->prepare('UPDATE service_plans SET is_active=0,is_archived=1 WHERE id=?')->execute([$id]);
