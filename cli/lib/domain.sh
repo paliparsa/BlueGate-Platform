@@ -211,7 +211,7 @@ import os,re,sys,urllib.parse
 p,root,old,new=sys.argv[1:]
 text=open(p,encoding='utf-8',errors='ignore').read()
 # JSON frequently stores escaped URL slashes (\\/); normalize before scanning.
-text=text.replace(r'\\/', '/')
+text=text.replace(r'\/', '/')
 pat=re.compile(r'/?(?:uploads|receipts)/[A-Za-z0-9_./%+@=,~:-]+',re.I)
 paths=set()
 for raw in pat.findall(text):
