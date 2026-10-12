@@ -1763,25 +1763,61 @@ function openShareSheet(pid){prepareMiniLayer('shareSheet');
   });
 }
 function closeShareSheet(){const ss=$('shareSheet');if(ss){ss.classList.remove('open');ss.style.display='none';_shareUrl=''}}
+function miniSupportStatusLabel(status){
+  const labels={open:'باز',waiting_admin:'در انتظار پاسخ پشتیبانی',waiting_customer:'در انتظار پاسخ شما',resolved:'حل‌شده',closed:'بسته'};
+  return labels[String(status||'open').toLowerCase()]||'در حال بررسی';
+}
+function miniSupportStatusClass(status){
+  const classes={open:'is-open',waiting_admin:'is-waiting',waiting_customer:'is-reply',resolved:'is-resolved',closed:'is-closed'};
+  return classes[String(status||'open').toLowerCase()]||'is-open';
+}
 function miniSupportUrl(){let raw=String(state?.support_username||'BlueGateSupport').trim();if(/^https?:\/\//i.test(raw))return raw;raw=raw.replace(/^@/,'').replace(/^https?:\/\/t\.me\//i,'').split(/[/?#]/)[0].trim();return raw?`https://t.me/${encodeURIComponent(raw)}`:'https://t.me/BlueGateSupport'}
 function renderMiniSupportPage(){
   const host=$('supportPage');
   if(!host)return;
   if(state?.is_guest){
-    host.innerHTML=`<section class="mini-support-page"><div class="support-page-hero"><span class="member-kicker">BLUEGATE SUPPORT</span><h2>تیکت‌های پشتیبانی</h2><p>برای ثبت و پیگیری تیکت، ابتدا وارد حساب شو.</p><button class="primary" id="miniSupportLogin">ورود / ثبت‌نام</button><a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener">ارتباط مستقیم در تلگرام</a></div></section>`;
+    host.innerHTML=`<section class="mini-support-page">
+      <div class="support-page-hero support-page-hero-guest">
+        <div class="support-page-brand-mark" aria-hidden="true">BG</div>
+        <span class="member-kicker">BLUEGATE SUPPORT</span>
+        <h2>پشتیبانی همراه توست</h2>
+        <p>برای ثبت درخواست، پیگیری پاسخ‌ها و ارسال فایل، وارد حساب کاربری‌ات شو.</p>
+        <div class="support-page-actions">
+          <button class="primary" id="miniSupportLogin">ورود / ثبت‌نام</button>
+          <a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener">ارتباط مستقیم در تلگرام</a>
+        </div>
+      </div>
+    </section>`;
     host.querySelector('#miniSupportLogin')?.addEventListener('click',openAuthModal);
     return;
   }
   const tickets=state?.support_tickets||[];
-  const fa={open:'باز',waiting_admin:'در انتظار پاسخ پشتیبانی',waiting_customer:'در انتظار پاسخ شما',resolved:'حل‌شده',closed:'بسته'};
-  host.innerHTML=`<section class="mini-support-page"><div class="support-page-hero"><div><span class="member-kicker">BLUEGATE SUPPORT</span><h2>تیکت‌های من</h2><p>درخواستت را ثبت کن و پاسخ تیم پشتیبانی را همین‌جا دنبال کن.</p></div><div class="support-page-actions"><button class="primary" data-support-ticket-new>＋ تیکت جدید</button><a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener">پشتیبانی تلگرام</a></div></div><div class="mini-support-list support-page-list">${tickets.length?tickets.map(t=>`<button class="account-menu-row" data-support-ticket="${t.id}"><span class="account-menu-icon">#</span><div><b>${esc(t.subject||'تیکت پشتیبانی')}</b><small>${fa[t.status]||esc(t.status||'باز')} · ${esc(t.last_message_at||t.created_at||'')}</small></div><em>‹</em></button>`).join(''):'<div class="u-empty"><div class="u-empty-icon">?</div><h3>هنوز تیکتی نداری</h3><p>اگر در خرید یا سرویس مشکلی داری، از همین‌جا پیام بده.</p><button class="primary" data-support-ticket-new>ثبت اولین تیکت</button></div>'}</div></section>`;
+  host.innerHTML=`<section class="mini-support-page">
+    <div class="support-page-hero">
+      <div class="support-page-intro">
+        <span class="member-kicker">BLUEGATE SUPPORT</span>
+        <h2>تیکت‌های من</h2>
+        <p>درخواست‌ها و پاسخ‌های تیم پشتیبانی را همین‌جا دنبال کن.</p>
+      </div>
+      <div class="support-page-actions">
+        <button class="primary support-new-ticket-btn" data-support-ticket-new><span aria-hidden="true">＋</span> تیکت جدید</button>
+        <a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener">پشتیبانی تلگرام</a>
+      </div>
+    </div>
+    <div class="support-list-heading"><b>درخواست‌های پشتیبانی</b><span>${tickets.length} تیکت</span></div>
+    <div class="mini-support-list support-page-list">${tickets.length?tickets.map(t=>`<button type="button" class="account-menu-row support-ticket-card" data-support-ticket="${Number(t.id)||0}">
+      <span class="account-menu-icon support-ticket-mark" aria-hidden="true">#${esc(String(t.id||''))}</span>
+      <span class="support-ticket-main"><b>${esc(t.subject||'تیکت پشتیبانی')}</b><small>${esc(t.last_message_at||t.created_at||'بدون پیام')}</small></span>
+      <span class="support-ticket-side"><span class="support-ticket-status ${miniSupportStatusClass(t.status)}">${esc(miniSupportStatusLabel(t.status))}</span><span class="support-ticket-chevron" aria-hidden="true">‹</span></span>
+    </button>`).join(''):'<div class="u-empty support-ticket-empty"><div class="u-empty-icon" aria-hidden="true">✉</div><h3>هنوز تیکتی نداری</h3><p>اگر در خرید یا سرویس مشکلی داری، درخواستت را ثبت کن تا تیم پشتیبانی پیگیری کند.</p><button class="primary" data-support-ticket-new>ثبت اولین تیکت</button></div>'}</div>
+  </section>`;
   host.querySelectorAll('[data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
   host.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
 }
 function openMiniSupport(){
   if(state?.is_guest){openAuthModal();return}
   const tickets=state.support_tickets||[];
-  const body=`<div class="mini-support-panel"><div class="mini-support-actions"><button class="primary" data-support-ticket-new>＋ تیکت جدید</button><button class="ghost" id="miniSupportTelegram">ارتباط مستقیم در تلگرام</button></div><div class="mini-support-list">${tickets.length?tickets.map(t=>`<button class="account-menu-row" data-support-ticket="${t.id}"><span class="account-menu-icon">#</span><div><b>${esc(t.subject||'تیکت پشتیبانی')}</b><small>${esc(t.status||'open')} · ${esc(t.last_message_at||t.created_at||'')}</small></div><em>‹</em></button>`).join(''):'<div class="u-empty"><div class="u-empty-icon">?</div><h3>هنوز تیکتی نداری</h3><p>اگر در خرید یا سرویس مشکلی داری، از همین‌جا پیام بده.</p></div>'}</div></div>`;
+  const body=`<div class="mini-support-panel"><div class="mini-support-actions"><button class="primary" data-support-ticket-new>＋ تیکت جدید</button><button class="ghost" id="miniSupportTelegram">ارتباط مستقیم در تلگرام</button></div><div class="mini-support-list">${tickets.length?tickets.map(t=>`<button class="account-menu-row" data-support-ticket="${t.id}"><span class="account-menu-icon">#</span><div><b>${esc(t.subject||'تیکت پشتیبانی')}</b><small>${esc(miniSupportStatusLabel(t.status))} · ${esc(t.last_message_at||t.created_at||'')}</small></div><em>‹</em></button>`).join(''):'<div class="u-empty"><div class="u-empty-icon">?</div><h3>هنوز تیکتی نداری</h3><p>اگر در خرید یا سرویس مشکلی داری، از همین‌جا پیام بده.</p></div>'}</div></div>`;
   BlueGateUI.openSheet({type:'fullscreen',eyebrow:'BLUEGATE SUPPORT',title:'پشتیبانی',subtitle:'ثبت و پیگیری درخواست‌ها',body,onOpen:(host)=>{
     host.querySelector('[data-support-ticket-new]')?.addEventListener('click',newMiniSupportTicket);
     host.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
@@ -1808,7 +1844,7 @@ function newMiniSupportTicket(){
   BlueGateUI.openSheet({
     type:'fullscreen',eyebrow:'BLUEGATE SUPPORT',title:'تیکت جدید',
     subtitle:'یک گفت‌وگوی مستقیم با پشتیبانی بساز.',
-    body:`<form class="support-compose-form mini-ticket-create"><label>موضوع<input name="subject" maxlength="255" required placeholder="مثلاً مشکل اتصال سرویس"></label><label>پیام<textarea name="message" maxlength="4000" rows="5" required placeholder="جزئیات را بنویس"></textarea></label><label class="support-file-label">📎 پیوست اختیاری<input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary" type="submit">شروع گفتگو</button></form>`,
+    body:`<form class="support-compose-form mini-ticket-create"><div class="support-compose-intro"><b>چطور می‌تونیم کمکت کنیم؟</b><small>موضوع و توضیحات رو بنویس؛ در صورت نیاز فایل هم پیوست کن.</small></div><label class="support-form-field"><span>موضوع درخواست</span><input name="subject" maxlength="255" required placeholder="مثلاً مشکل اتصال سرویس"></label><label class="support-form-field"><span>توضیحات</span><textarea name="message" maxlength="4000" rows="5" required placeholder="مشکل رو با جزئیات توضیح بده..."></textarea></label><label class="support-file-label"><span aria-hidden="true">📎</span><span class="support-file-copy"><b>پیوست اختیاری</b><small>تصویر، PDF یا فایل متنی · حداکثر ۵ مگابایت</small></span><input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary support-submit-ticket" type="submit">ثبت تیکت و شروع گفتگو</button></form>`,
     onOpen:host=>{
       host.querySelector('form')?.addEventListener('submit',async e=>{
         e.preventDefault();const f=new FormData(e.currentTarget);
@@ -1818,7 +1854,7 @@ function newMiniSupportTicket(){
     }
   });
 }
-async function openMiniSupportTicket(id){try{const r=await api('support_ticket_messages',{ticket_id:Number(id)});prepareMiniLayer('previewSheet');const pv=$('previewSheet');const t=r.ticket||{};pv.innerHTML=`<div class="preview-sheet-inner mini-chat-shell"><div class="preview-sheet-handle" data-close-preview></div><header class="support-chat-head"><div><span class="member-kicker">BLUEGATE SUPPORT</span><b>#${id} ${esc(t.subject||'تیکت')}</b><small>${esc(t.status||'open')}</small></div><button type="button" class="ghost" data-close-preview>بستن</button></header><div class="support-chat-messages" id="miniSupportMessages">${(r.messages||[]).map(supportMessageHtml).join('')||'<div class="u-empty">گفت‌وگو را شروع کنید.</div>'}</div><form class="support-chat-composer" id="miniSupportComposer"><textarea name="message" rows="1" maxlength="4000" placeholder="پیامت را بنویس..."></textarea><label class="attach-button">📎<input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary" type="submit">ارسال</button></form></div>`;pv.classList.add('open');pv.querySelectorAll('[data-close-preview]').forEach(x=>x.addEventListener('click',closePreviewSheet));bindSupportPreview(pv);const form=$('miniSupportComposer');form?.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(form),msg=String(f.get('message')||'').trim(),file=f.get('attachment');if(!msg&&!file?.size)return;try{const a=await supportFilePayload(file);await api('support_ticket_reply',{ticket_id:id,message:msg,...a});form.reset();await openMiniSupportTicket(id)}catch(e){showStatus(e.message||'ارسال پیام ناموفق بود','error')}});const box=$('miniSupportMessages');if(box)box.scrollTop=box.scrollHeight;window.clearInterval(window.__miniTicketPoll);window.__miniTicketPoll=window.setInterval(async()=>{if(!document.body.contains($('miniSupportComposer')))return window.clearInterval(window.__miniTicketPoll);try{const x=await api('support_ticket_messages',{ticket_id:id}),b=$('miniSupportMessages');if(b){b.innerHTML=(x.messages||[]).map(supportMessageHtml).join('');bindSupportPreview(b);b.scrollTop=b.scrollHeight}}catch(e){}},5000)}catch(e){showStatus(e.message||'باز کردن تیکت ممکن نشد','error')}}
+async function openMiniSupportTicket(id){try{const r=await api('support_ticket_messages',{ticket_id:Number(id)});prepareMiniLayer('previewSheet');const pv=$('previewSheet');const t=r.ticket||{};pv.innerHTML=`<div class="preview-sheet-inner mini-chat-shell"><div class="preview-sheet-handle" data-close-preview></div><header class="support-chat-head"><div><span class="member-kicker">BLUEGATE SUPPORT</span><b>#${id} ${esc(t.subject||'تیکت')}</b><small class="support-chat-status ${miniSupportStatusClass(t.status)}">${esc(miniSupportStatusLabel(t.status))}</small></div><button type="button" class="ghost support-chat-close" data-close-preview>بستن</button></header><div class="support-chat-messages" id="miniSupportMessages">${(r.messages||[]).map(supportMessageHtml).join('')||'<div class="u-empty">گفت‌وگو را شروع کنید.</div>'}</div><form class="support-chat-composer" id="miniSupportComposer"><textarea name="message" rows="1" maxlength="4000" placeholder="پیامت را بنویس..."></textarea><label class="attach-button">📎<input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary" type="submit">ارسال</button></form></div>`;pv.classList.add('open');pv.querySelectorAll('[data-close-preview]').forEach(x=>x.addEventListener('click',closePreviewSheet));bindSupportPreview(pv);const form=$('miniSupportComposer');form?.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(form),msg=String(f.get('message')||'').trim(),file=f.get('attachment');if(!msg&&!file?.size)return;try{const a=await supportFilePayload(file);await api('support_ticket_reply',{ticket_id:id,message:msg,...a});form.reset();await openMiniSupportTicket(id)}catch(e){showStatus(e.message||'ارسال پیام ناموفق بود','error')}});const box=$('miniSupportMessages');if(box)box.scrollTop=box.scrollHeight;window.clearInterval(window.__miniTicketPoll);window.__miniTicketPoll=window.setInterval(async()=>{if(!document.body.contains($('miniSupportComposer')))return window.clearInterval(window.__miniTicketPoll);try{const x=await api('support_ticket_messages',{ticket_id:id}),b=$('miniSupportMessages');if(b){b.innerHTML=(x.messages||[]).map(supportMessageHtml).join('');bindSupportPreview(b);b.scrollTop=b.scrollHeight}}catch(e){}},5000)}catch(e){showStatus(e.message||'باز کردن تیکت ممکن نشد','error')}}
 
 async function shareProductLegacy(pid){
   const p=(state.shop_products||[]).find(x=>Number(x.id)===Number(pid));
@@ -2032,7 +2068,7 @@ document.addEventListener('click',e=>{const target=e.target.closest?.('[data-adm
 function renderAdminSupport(){
   const rows=adminState.support_tickets||[];
   const fa={open:'باز',waiting_admin:'در انتظار پاسخ شما',waiting_customer:'در انتظار کاربر',resolved:'حل‌شده',closed:'بسته'};
-  return `<article class="admin-card"><div class="admin-card-head"><span class="admin-card-icon">?</span><div><h3>تیکت‌های پشتیبانی</h3><p class="muted">${nf(rows.filter(x=>['open','waiting_admin'].includes(x.status)).length)} مورد نیازمند پیگیری</p></div><button class="secondary" data-admin-action="reload">بروزرسانی</button></div><div class="admin-support-list">${rows.length?rows.map(t=>`<article class="admin-support-row"><div><b>#${nf(t.id)} · ${esc(t.subject||'بدون موضوع')}</b><small>${esc(t.first_name||t.username||String(t.telegram_id||'کاربر'))} · ${fa[t.status]||esc(t.status||'open')} · ${esc(t.last_message_at||t.created_at||'')}</small></div><button class="secondary" data-admin-support-ticket="${t.id}">مشاهده</button></article>`).join(''):'<div class="u-empty"><h3>تیکتی ثبت نشده</h3><p>درخواست‌های کاربران اینجا نمایش داده می‌شوند.</p></div>'}</div></article>`;
+  return `<article class="admin-card"><div class="admin-card-head"><span class="admin-card-icon">?</span><div><h3>تیکت‌های پشتیبانی</h3><p class="muted">${nf(rows.filter(x=>['open','waiting_admin'].includes(x.status)).length)} مورد نیازمند پیگیری</p></div><button class="secondary" data-admin-action="reload">بروزرسانی</button></div><div class="admin-support-list">${rows.length?rows.map(t=>`<article class="admin-support-row"><div><b>#${nf(t.id)} · ${esc(t.subject||'بدون موضوع')}</b><small>${esc(t.first_name||t.username||String(t.telegram_id||'کاربر'))} · ${fa[t.status]||esc(miniSupportStatusLabel(t.status))} · ${esc(t.last_message_at||t.created_at||'')}</small></div><button class="secondary" data-admin-support-ticket="${t.id}">مشاهده</button></article>`).join(''):'<div class="u-empty"><h3>تیکتی ثبت نشده</h3><p>درخواست‌های کاربران اینجا نمایش داده می‌شوند.</p></div>'}</div></article>`;
 }
 function infraPlanOptions(selected=''){const tree=adminState.catalog_admin?.tree||[];const out=[];for(const svc of tree)for(const g of (svc.groups||[]))for(const p of (g.plans||[]))out.push(`<option value="${p.id}" ${String(selected)===String(p.id)?'selected':''}>${esc(svc.name||'')} / ${esc(g.is_default?'پلن اصلی':g.name||'')} / ${esc(p.title||('پلن #'+p.id))}</option>`);return out.join('')}
 function infraProviderOptions(selected=''){return (adminState.infrastructure?.providers||[]).filter(p=>Number(p.is_active??1)).map(p=>`<option value="${p.id}" ${String(selected)===String(p.id)?'selected':''}>${esc(p.name||('پنل #'+p.id))} · ${p.driver==='xui'?'3x-ui':p.driver==='marzban'?'Marzban':p.driver==='remnawave'?'Remnawave':esc(p.driver||'')}</option>`).join('')}
