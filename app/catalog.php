@@ -108,6 +108,7 @@ function catalog_translate_existing_batch(int $limit=35): array {
         $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id DESC LIMIT ".(int)min(100,$budget*10);
         $rows=db()->query($sql)->fetchAll();
         foreach($rows as $row){
+            if($budget<=0)break;
             $source=(string)$row['source_text'];if(!preg_match('/[\\x{0600}-\\x{06FF}]/u',$source)){$skipped++;continue;}
             $budget--;
             $value=catalog_ensure_translation($t,(int)$row['id'],$src,$en,$source);
