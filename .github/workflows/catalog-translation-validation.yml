@@ -20,11 +20,16 @@ jobs:
       - name: Check PHP syntax
         run: |
           php -l app/catalog.php
+          php -l app/ai_translation.php
+          php -l app/bot_logic.php
           php -l app/bootstrap.php
           php -l public/api.php
       - name: Check JavaScript syntax
         run: |
           node --check public/miniapp/app.js
+          node --check public/miniapp/i18n.js
+          node --check public/translation.js
+          node --check public/web/js/app.js
           node --check public/web/js/admin.js
       - name: Check translation columns are unique per SQL table
         run: |
