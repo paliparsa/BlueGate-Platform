@@ -1,5 +1,13 @@
 # Changelog
 
+# BlueGate Platform v5.0.39 — Support composer spacing and admin controls
+
+- Add bottom clearance and a distinct composer surface for user/admin ticket chats so attachment and send controls no longer sit flush against the screen edge.
+- Keep ticket messages as the independently scrollable region and reorganize admin status actions into a consistent, touch-friendly two-column grid.
+- Improve wrapping of admin support page action buttons on narrow screens.
+
+---
+
 # BlueGate Platform v5.0.38 — Telegram ticket notifications
 
 - Add a direct Mini App ticket button to admin Telegram notifications, with customer name, username, internal user ID and Telegram ID where available.
