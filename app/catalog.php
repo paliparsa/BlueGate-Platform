@@ -15,33 +15,63 @@ function catalog_enabled(): bool {
  * Failures return an empty string so callers can safely fall back to the source text.
  */
 function catalog_translate_text(string $source): string {
-    $source=trim(preg_replace('/\\s+/u',' ',$source)??$source);
-    if($source==='' || !preg_match('/[\\x{0600}-\\x{06FF}]/u',$source))return '';
+    $source=trim(preg_replace('/\s+/u',' ',$source)??$source);
+    if($source==='' || !preg_match('/[\x{0600}-\x{06FF}]/u',$source))return '';
     $hash=hash('sha256',$source);
     try{
         $q=db()->prepare('SELECT translated_text FROM catalog_translation_cache WHERE source_hash=? LIMIT 1');$q->execute([$hash]);$cached=$q->fetchColumn();
         if(is_string($cached)&&trim($cached)!=='')return trim($cached);
     }catch(Throwable $e){}
     $translated='';
+    $deeplKey=trim((string)app_config('DEEPL_API_KEY',''));
+    $deeplBase=rtrim(trim((string)app_config('DEEPL_API_URL','https://api-free.deepl.com')),'/');
+    $googleKey=trim((string)app_config('GOOGLE_TRANSLATE_API_KEY',''));
     $base=rtrim(trim((string)app_config('LIBRETRANSLATE_URL','')),'/');
-    $key=trim((string)app_config('LIBRETRANSLATE_API_KEY',''));
-    if($base!=='' && function_exists('curl_init')){
+    $libreKey=trim((string)app_config('LIBRETRANSLATE_API_KEY',''));
+    if(function_exists('curl_init') && $deeplKey!==''){
         try{
-            $payload=['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'];if($key!=='')$payload['api_key']=$key;
-            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>3,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
+            $payload=http_build_query(['text'=>$source,'source_lang'=>'FA','target_lang'=>'EN']);
+            $ch=curl_init($deeplBase.'/v2/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_HTTPHEADER=>['Authorization: DeepL-Auth-Key '.$deeplKey,'Content-Type: application/x-www-form-urlencoded']]);
+            $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+            if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim((string)($json['translations'][0]['text']??''));}
+        }catch(Throwable $e){}
+    }
+    if($translated==='' && function_exists('curl_init') && $googleKey!==''){
+        try{
+            $url='https://translation.googleapis.com/language/translate/v2?key='.rawurlencode($googleKey);
+            $payload=json_encode(['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'],JSON_UNESCAPED_UNICODE);
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_HTTPHEADER=>['Content-Type: application/json']]);
+            $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+            if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim(html_entity_decode((string)($json['data']['translations'][0]['translatedText']??''),ENT_QUOTES|ENT_HTML5,'UTF-8'));}
+        }catch(Throwable $e){}
+    }
+    if($translated==='' && $base!=='' && function_exists('curl_init')){
+        try{
+            $payload=['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'];if($libreKey!=='')$payload['api_key']=$libreKey;
+            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim((string)($json['translatedText']??''));}
         }catch(Throwable $e){}
     }
-    if($translated===''&&function_exists('curl_init')){
+    // Google Translate's public web endpoint is a no-key fallback; keep it below configured providers.
+    if($translated==='' && function_exists('curl_init')){
+        try{
+            $url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=fa&tl=en&dt=t&q='.rawurlencode($source);
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_USERAGENT=>'Mozilla/5.0 BlueGateCatalog/5.0']);
+            $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+            if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$parts=$json[0]??[];if(is_array($parts)){foreach($parts as $part)if(is_array($part)&&isset($part[0])&&is_string($part[0]))$translated.=$part[0];$translated=trim($translated);}}
+        }catch(Throwable $e){}
+    }
+    if($translated==='' && function_exists('curl_init')){
         try{
             $url='https://api.mymemory.translated.net/get?q='.rawurlencode($source).'&langpair=fa|en';
-            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>3,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$candidate=trim((string)($json['responseData']['translatedText']??''));if(($json['responseStatus']??0)==200 && $candidate!=='')$translated=$candidate;}
         }catch(Throwable $e){}
     }
-    if($translated==='' || preg_match('/[\\x{0600}-\\x{06FF}]/u',$translated))return '';
+    $translated=trim($translated);
+    if($translated==='' || preg_match('/[\x{0600}-\x{06FF}]/u',$translated))return '';
     try{$q=db()->prepare('INSERT INTO catalog_translation_cache(source_hash,source_text,translated_text) VALUES(?,?,?) ON DUPLICATE KEY UPDATE source_text=VALUES(source_text),translated_text=VALUES(translated_text)');$q->execute([$hash,$source,$translated]);}catch(Throwable $e){}
     return $translated;
 }
@@ -98,18 +128,17 @@ function catalog_translation_targets(): array {
     ];
 }
 function catalog_translate_existing_batch(int $limit=35): array {
-    $limit=max(1,min(100,$limit));$translated=0;$skipped=0;$failed=0;$remaining=0;
-    $budget=$limit;
+    $limit=max(1,min(100,$limit));$translated=0;$skipped=0;$failed=0;$remaining=0;$budget=$limit;
     foreach(catalog_translation_targets() as $target){
         if($budget<=0)break;
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
-        // The actual language check is Unicode-aware in PHP; keep SQL portable.
-        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id DESC LIMIT ".(int)min(100,$budget*10);
+        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id DESC LIMIT ".(int)min(200,$budget*20);
         $rows=db()->query($sql)->fetchAll();
         foreach($rows as $row){
             if($budget<=0)break;
-            $source=(string)$row['source_text'];if(!preg_match('/[\\x{0600}-\\x{06FF}]/u',$source)){$skipped++;continue;}
+            $source=(string)$row['source_text'];
+            if(!preg_match('/[\x{0600}-\x{06FF}]/u',$source)){$skipped++;continue;}
             $budget--;
             $value=catalog_ensure_translation($t,(int)$row['id'],$src,$en,$source);
             if($value!=='')$translated++;else $failed++;
@@ -119,11 +148,15 @@ function catalog_translate_existing_batch(int $limit=35): array {
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
         $q=db()->query("SELECT {$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='')");
-        foreach($q->fetchAll() as $row)if(preg_match('/[\\x{0600}-\\x{06FF}]/u',(string)$row['source_text']))$remaining++;
+        foreach($q->fetchAll() as $row)if(preg_match('/[\x{0600}-\x{06FF}]/u',(string)$row['source_text']))$remaining++;
     }
     return ['translated'=>$translated,'skipped'=>$skipped,'failed'=>$failed,'remaining'=>$remaining,'batch_limit'=>$limit];
 }
 
+/** Translate a limited number of recently created or still-pending catalog entries. */
+function catalog_translate_pending_on_save(int $limit=4): array {
+    return catalog_translate_existing_batch(max(1,min(8,$limit)));
+}
 function catalog_slugify(string $value, string $fallback='item'): string {
     $value = trim(mb_strtolower($value));
     $value = preg_replace('/[^\p{L}\p{N}]+/u', '-', $value) ?: '';
