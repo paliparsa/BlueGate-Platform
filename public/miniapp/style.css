@@ -4723,3 +4723,41 @@ small{font-size:var(--bg-font-micro)!important;line-height:1.65}
 @media(max-width:620px){.admin-support-page{gap:11px;padding-inline:1px}.admin-support-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.admin-support-hero-actions,.admin-support-hero-actions button{width:100%}.admin-support-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.admin-support-stats>article{padding:11px;gap:8px;border-radius:14px}.admin-support-stat-icon{flex-basis:32px;width:32px;height:32px;border-radius:10px}.admin-support-stats b{font-size:18px}.admin-support-card{gap:9px;padding:10px;border-radius:15px}.admin-support-avatar{flex-basis:38px;width:38px;height:38px;border-radius:12px}.admin-support-card-title b{font-size:13px}.admin-support-card-meta{align-items:flex-start;flex-direction:column;gap:5px}.admin-support-card-meta>small{font-size:10px}.admin-support-status-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-mini-chat{gap:8px}}
 @media(max-width:360px){.admin-support-card{padding:9px}.admin-support-card-arrow{display:none}.admin-support-status-actions button{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.admin-support-card{transition:none}}
+
+
+/* Admin ticket sheet sizing: fit the viewport instead of inheriting content height */
+.admin-mini-chat{
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto auto;
+  width:100%;
+  max-width:760px;
+  height:calc(100dvh - var(--mini-overlay-top, 0px) - var(--mini-overlay-bottom, 0px));
+  max-height:calc(100dvh - var(--mini-overlay-top, 0px) - var(--mini-overlay-bottom, 0px));
+  min-height:0;
+  margin-inline:auto;
+  padding:0 14px max(10px,env(safe-area-inset-bottom));
+  box-sizing:border-box;
+  overflow:hidden;
+}
+.admin-mini-chat .support-chat-head,
+.admin-mini-chat .support-chat-composer,
+.admin-mini-chat .admin-support-status-actions{min-width:0}
+.admin-mini-chat .support-chat-messages{min-height:0;max-height:100%;overscroll-behavior:contain}
+.admin-mini-chat .admin-support-chat-head>div{min-width:0;overflow-wrap:anywhere}
+.admin-mini-chat .support-chat-composer textarea{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.admin-mini-chat .admin-support-status-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
+.admin-mini-chat .admin-support-status-actions button{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+@media(max-width:620px){
+ .admin-mini-chat{width:100%;max-width:none;height:calc(100dvh - var(--mini-overlay-top, 0px));max-height:calc(100dvh - var(--mini-overlay-top, 0px));padding:0 10px max(10px,env(safe-area-inset-bottom));gap:8px}
+ .admin-mini-chat .admin-support-chat-head{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:9px}
+ .admin-mini-chat .support-chat-messages{padding-inline:1px}
+ .admin-mini-chat .support-chat-composer{gap:6px;padding-top:8px;padding-bottom:max(7px,env(safe-area-inset-bottom))}
+ .admin-mini-chat .admin-support-status-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .admin-mini-chat .admin-support-status-actions button{min-height:38px;padding:8px 6px;font-size:12px}
+}
+@media(max-width:360px){
+ .admin-mini-chat{padding-inline:8px}
+ .admin-mini-chat .support-chat-composer{gap:5px}
+ .admin-mini-chat .support-chat-composer .primary{max-width:100%;padding-inline:8px;font-size:11px}
+ .admin-mini-chat .admin-support-status-actions button{font-size:11px}
+}
