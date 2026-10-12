@@ -1874,6 +1874,10 @@ function newMiniSupportTicket(){
           const r=await api('support_ticket_create',{subject:String(f.get('subject')||'').trim(),message:String(f.get('message')||'').trim(),category:'other',...a});
           state={...state,support_tickets:r.tickets||[r.ticket,...(state.support_tickets||[])]};
           showStatus(r.duplicate?'این درخواست قبلاً ثبت شده؛ همان تیکت باز شد.':'گفت‌وگو ایجاد شد','success');
+          // Close the creation sheet first, then open the newly created/reused conversation.
+          if(typeof BlueGateUI?.closeSheet==='function')BlueGateUI.closeSheet();
+          else if(typeof BlueGateUI?.closeTopSheet==='function')BlueGateUI.closeTopSheet();
+          else document.querySelectorAll('.bluegate-sheet.open,.ui-sheet.open,[data-sheet].open').forEach(x=>x.classList.remove('open'));
           await openMiniSupportTicket(Number(r.ticket_id));
         }catch(err){
           delete form.dataset.submitting;
