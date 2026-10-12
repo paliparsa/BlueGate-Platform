@@ -27,13 +27,14 @@ function bg_ai_translation_ensure_cache(): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $ready = true;
 }
-function bg_ai_set_telegram_language(int $telegramId, string $languageCode): void {
+function bg_ai_set_telegram_language(int $telegramId, string $languageCode, bool $overwrite=true): void {
     if ($telegramId <= 0) return;
     $raw = strtolower(trim($languageCode));
     $language = ($raw === 'fa' || str_starts_with($raw, 'fa-')) ? 'fa' : (($raw === '' || $raw === 'und') ? 'fa' : 'en');
     try {
         bg_ai_translation_ensure_cache();
-        db()->prepare('INSERT INTO ai_translation_user_languages(telegram_id,language_code) VALUES(?,?) ON DUPLICATE KEY UPDATE language_code=VALUES(language_code),updated_at=CURRENT_TIMESTAMP')->execute([$telegramId,$language]);
+        if ($overwrite) db()->prepare('INSERT INTO ai_translation_user_languages(telegram_id,language_code) VALUES(?,?) ON DUPLICATE KEY UPDATE language_code=VALUES(language_code),updated_at=CURRENT_TIMESTAMP')->execute([$telegramId,$language]);
+        else db()->prepare('INSERT IGNORE INTO ai_translation_user_languages(telegram_id,language_code) VALUES(?,?)')->execute([$telegramId,$language]);
     } catch (Throwable $e) { error_log('[BlueGate translation language] '.$e->getMessage()); }
 }
 function bg_ai_telegram_language(int $telegramId): string {
