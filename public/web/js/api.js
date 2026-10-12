@@ -8,7 +8,7 @@
     const t='';
     let opts={method,headers,cache:'no-store',credentials:'include'};
     if(method==='GET') Object.entries({action,...body}).forEach(([k,v])=>url.searchParams.set(k,String(v)));
-    else opts.body=JSON.stringify({action,...body,is_web:1});
+    else opts.body=JSON.stringify({action,...body,is_web:1,language:(localStorage.getItem('bluegate_language')||((navigator.language||'').toLowerCase().startsWith('fa')?'fa':'en'))});
     const r=await fetch(url,opts); let data={};
     try{data=await r.json()}catch(_){data={ok:false,message:'پاسخ نامعتبر از سرور'}}
     if(!r.ok||data.ok===false){const e=new Error(data.message||data.error||('HTTP '+r.status));e.code=data.error;e.data=data;throw e}
