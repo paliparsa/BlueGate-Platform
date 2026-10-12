@@ -9,6 +9,97 @@ function catalog_enabled(): bool {
     return setting_bool('catalog_v2_storefront_enabled', false) && table_exists('services') && table_exists('service_groups') && table_exists('service_plans');
 }
 
+/**
+ * Cached Persian-to-English catalog translation.
+ * Provider order: LibreTranslate (optional configured URL/key), then MyMemory.
+ * Failures return an empty string so callers can safely fall back to the source text.
+ */
+function catalog_translate_text(string $source): string {
+    $source=trim(preg_replace('/\\s+/u',' ',$source)??$source);
+    if($source==='' || !preg_match('/[\\x{0600}-\\x{06FF}]/u',$source))return '';
+    $hash=hash('sha256',$source);
+    try{
+        $q=db()->prepare('SELECT translated_text FROM catalog_translation_cache WHERE source_hash=? LIMIT 1');$q->execute([$hash]);$cached=$q->fetchColumn();
+        if(is_string($cached)&&trim($cached)!=='')return trim($cached);
+    }catch(Throwable $e){}
+    $translated='';
+    $base=rtrim(trim((string)app_config('LIBRETRANSLATE_URL','')),'/');
+    $key=trim((string)app_config('LIBRETRANSLATE_API_KEY',''));
+    if($base!=='' && function_exists('curl_init')){
+        try{
+            $payload=['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'];if($key!=='')$payload['api_key']=$key;
+            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>8,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
+            $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+            if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim((string)($json['translatedText']??''));}
+        }catch(Throwable $e){}
+    }
+    if($translated===''&&function_exists('curl_init')){
+        try{
+            $url='https://api.mymemory.translated.net/get?q='.rawurlencode($source).'&langpair=fa|en';
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>8,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
+            $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+            if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$candidate=trim((string)($json['responseData']['translatedText']??''));if(($json['responseStatus']??0)==200 && $candidate!=='')$translated=$candidate;}
+        }catch(Throwable $e){}
+    }
+    if($translated==='' || preg_match('/[\\x{0600}-\\x{06FF}]/u',$translated))return '';
+    try{$q=db()->prepare('INSERT INTO catalog_translation_cache(source_hash,source_text,translated_text) VALUES(?,?,?) ON DUPLICATE KEY UPDATE source_text=VALUES(source_text),translated_text=VALUES(translated_text)');$q->execute([$hash,$source,$translated]);}catch(Throwable $e){}
+    return $translated;
+}
+function catalog_ensure_translation(string $table,int $id,string $sourceColumn,string $englishColumn,string $source): string {
+    $allowed=['product_categories','products','product_variants','store_categories','services','service_groups','service_plans'];
+    if(!in_array($table,$allowed,true)||$id<=0)return '';
+    $source=trim($source);if($source==='')return '';
+    $q=db()->prepare("SELECT {$englishColumn} FROM {$table} WHERE id=?");$q->execute([$id]);$existing=$q->fetchColumn();
+    if(is_string($existing)&&trim($existing)!=='')return trim($existing);
+    $translated=catalog_translate_text($source);if($translated==='')return '';
+    db()->prepare("UPDATE {$table} SET {$englishColumn}=? WHERE id=? AND ({$englishColumn} IS NULL OR {$englishColumn}='')")->execute([$translated,$id]);
+    return $translated;
+}
+function catalog_english(string $table,array $row,string $idColumn,string $sourceColumn,string $englishColumn): string {
+    $source=(string)($row[$sourceColumn]??'');$existing=trim((string)($row[$englishColumn]??''));
+    if($existing!=='')return $existing;
+    return catalog_ensure_translation($table,(int)($row[$idColumn]??0),$sourceColumn,$englishColumn,$source)?:$source;
+}
+function catalog_translation_targets(): array {
+    return [
+      ['table'=>'product_categories','source'=>'title','english'=>'title_en','label'=>'دسته‌های قدیمی'],
+      ['table'=>'products','source'=>'name','english'=>'name_en','label'=>'محصولات'],
+      ['table'=>'products','source'=>'short_description','english'=>'short_description_en','label'=>'توضیحات کوتاه'],
+      ['table'=>'products','source'=>'full_description','english'=>'full_description_en','label'=>'توضیحات کامل'],
+      ['table'=>'product_variants','source'=>'title','english'=>'title_en','label'=>'پلن‌های قدیمی'],
+      ['table'=>'product_variants','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌های قدیمی'],
+      ['table'=>'store_categories','source'=>'title','english'=>'title_en','label'=>'دسته‌های فروشگاه'],
+      ['table'=>'services','source'=>'name','english'=>'name_en','label'=>'سرویس‌ها'],
+      ['table'=>'services','source'=>'description','english'=>'description_en','label'=>'توضیحات سرویس‌ها'],
+      ['table'=>'service_groups','source'=>'name','english'=>'name_en','label'=>'زیرسرویس‌ها'],
+      ['table'=>'service_groups','source'=>'description','english'=>'description_en','label'=>'توضیحات زیرسرویس‌ها'],
+      ['table'=>'service_plans','source'=>'title','english'=>'title_en','label'=>'پلن‌ها'],
+      ['table'=>'service_plans','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌ها']
+    ];
+}
+function catalog_translate_existing_batch(int $limit=35): array {
+    $limit=max(1,min(100,$limit));$translated=0;$skipped=0;$failed=0;$remaining=0;
+    foreach(catalog_translation_targets() as $target){
+        $t=$target['table'];$src=$target['source'];$en=$target['english'];
+        if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
+        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') AND {$src} REGEXP '[가-힣]' = 0 ORDER BY id ASC LIMIT ".(int)$limit;
+        // The actual language check is Unicode-aware in PHP; keep SQL portable.
+        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id ASC LIMIT ".(int)$limit;
+        $rows=db()->query($sql)->fetchAll();
+        foreach($rows as $row){
+            $source=(string)$row['source_text'];if(!preg_match('/[\\x{0600}-\\x{06FF}]/u',$source)){$skipped++;continue;}
+            $value=catalog_ensure_translation($t,(int)$row['id'],$src,$en,$source);
+            if($value!=='')$translated++;else $failed++;
+        }
+    }
+    foreach(catalog_translation_targets() as $target){
+        $t=$target['table'];$src=$target['source'];$en=$target['english'];
+        if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
+        $q=db()->query("SELECT COUNT(*) FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='')");$remaining+=(int)$q->fetchColumn();
+    }
+    return ['translated'=>$translated,'skipped'=>$skipped,'failed'=>$failed,'remaining'=>$remaining,'batch_limit'=>$limit];
+}
+
 function catalog_slugify(string $value, string $fallback='item'): string {
     $value = trim(mb_strtolower($value));
     $value = preg_replace('/[^\p{L}\p{N}]+/u', '-', $value) ?: '';
