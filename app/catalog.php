@@ -62,19 +62,19 @@ function catalog_english(string $table,array $row,string $idColumn,string $sourc
 }
 function catalog_translation_targets(): array {
     return [
-      ['table'=>'product_categories','source'=>'title','english'=>'title_en','label'=>'دسته‌های قدیمی'],
-      ['table'=>'products','source'=>'name','english'=>'name_en','label'=>'محصولات'],
-      ['table'=>'products','source'=>'short_description','english'=>'short_description_en','label'=>'توضیحات کوتاه'],
-      ['table'=>'products','source'=>'full_description','english'=>'full_description_en','label'=>'توضیحات کامل'],
-      ['table'=>'product_variants','source'=>'title','english'=>'title_en','label'=>'پلن‌های قدیمی'],
-      ['table'=>'product_variants','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌های قدیمی'],
       ['table'=>'store_categories','source'=>'title','english'=>'title_en','label'=>'دسته‌های فروشگاه'],
       ['table'=>'services','source'=>'name','english'=>'name_en','label'=>'سرویس‌ها'],
       ['table'=>'services','source'=>'description','english'=>'description_en','label'=>'توضیحات سرویس‌ها'],
       ['table'=>'service_groups','source'=>'name','english'=>'name_en','label'=>'زیرسرویس‌ها'],
       ['table'=>'service_groups','source'=>'description','english'=>'description_en','label'=>'توضیحات زیرسرویس‌ها'],
       ['table'=>'service_plans','source'=>'title','english'=>'title_en','label'=>'پلن‌ها'],
-      ['table'=>'service_plans','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌ها']
+      ['table'=>'service_plans','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌ها'],
+      ['table'=>'product_categories','source'=>'title','english'=>'title_en','label'=>'دسته‌های قدیمی'],
+      ['table'=>'products','source'=>'name','english'=>'name_en','label'=>'محصولات'],
+      ['table'=>'products','source'=>'short_description','english'=>'short_description_en','label'=>'توضیحات کوتاه'],
+      ['table'=>'products','source'=>'full_description','english'=>'full_description_en','label'=>'توضیحات کامل'],
+      ['table'=>'product_variants','source'=>'title','english'=>'title_en','label'=>'پلن‌های قدیمی'],
+      ['table'=>'product_variants','source'=>'description','english'=>'description_en','label'=>'توضیحات پلن‌های قدیمی']
     ];
 }
 function catalog_translate_existing_batch(int $limit=35): array {
@@ -85,7 +85,7 @@ function catalog_translate_existing_batch(int $limit=35): array {
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
         // The actual language check is Unicode-aware in PHP; keep SQL portable.
-        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id ASC LIMIT ".(int)$budget;
+        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id DESC LIMIT ".(int)$budget;
         $rows=db()->query($sql)->fetchAll();
         foreach($rows as $row){
             $budget--;
