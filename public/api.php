@@ -1088,7 +1088,7 @@ if ($action === 'admin_catalog_move_plan') {
 }
 if ($action === 'admin_catalog_translate_batch') {
     require_admin($user);
-    try { $r=catalog_translate_existing_batch(max(1,min(8,(int)($input['limit']??5)))); log_admin_action((int)$user['telegram_id'],'catalog_translate_batch','catalog',0,'translated '.$r['translated']); api_out(['ok'=>true,'translation'=>$r,'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)$user['telegram_id'])]]); }
+    try { $r=catalog_translate_existing_batch(max(1,min(8,(int)($input['limit']??5)))); log_admin_action((int)$user['telegram_id'],'catalog_translate_batch','catalog',0,'translated '.$r['translated']); api_out(['ok'=>true,'translation'=>$r,'catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)$user['telegram_id'])],'products'=>array_map(fn($p)=>product_payload($p,false),shop_products(null,false)),'categories'=>array_map('category_payload',shop_categories(false))]); }
     catch(Throwable $e){api_out(['ok'=>false,'error'=>'CATALOG_TRANSLATION_FAILED','message'=>'ترجمه خودکار در حال حاضر در دسترس نیست. تنظیمات سرویس ترجمه و اتصال سرور را بررسی کن.'],502);}
 }
 if ($action === 'admin_catalog_translation_save') {
@@ -1106,7 +1106,7 @@ if ($action === 'admin_catalog_translation_save') {
     if($id<=0||!isset($map[$entity]['fields'][$field]))api_out(['ok'=>false,'error'=>'INVALID_TRANSLATION_FIELD','message'=>'فیلد ترجمه معتبر نیست.'],400);
     $table=$map[$entity]['table'];$column=$map[$entity]['fields'][$field];$q=db()->prepare("UPDATE {$table} SET {$column}=? WHERE id=?");$q->execute([$value,$id]);
     log_admin_action((int)$user['telegram_id'],'catalog_translation_save',$entity,$id,$field);
-    api_out(['ok'=>true,'message'=>'ترجمه انگلیسی ذخیره شد.','catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)$user['telegram_id'])]]);
+    api_out(['ok'=>true,'message'=>'ترجمه انگلیسی ذخیره شد.','catalog_admin'=>['tree'=>catalog_tree(false),'categories'=>catalog_store_categories(false),'preview'=>catalog_scan_legacy(),'public'=>catalog_public_payload(),'undo'=>catalog_undo_meta((int)$user['telegram_id'])],'products'=>array_map(fn($p)=>product_payload($p,false),shop_products(null,false)),'categories'=>array_map('category_payload',shop_categories(false))]);
 }
 if ($action === 'admin_catalog_save_category') {
     require_admin($user); try{$id=catalog_save_category($input);log_admin_action((int)$user['telegram_id'],'catalog_save_category','store_category',$id,(string)($input['title']??''));api_out(admin_payload());}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ذخیره دسته فروشگاه ناموفق بود.'],400);}
