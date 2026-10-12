@@ -57,10 +57,25 @@ function bluegate_create_ticket(int $uid,array $in): array {
     $sid=max(0,(int)($in['service_id']??0));if($sid&&!bluegate_service_record($sid,$uid))throw new RuntimeException('SERVICE_NOT_FOUND');
     $oid=max(0,(int)($in['order_id']??0));if($oid){$q=db()->prepare('SELECT id FROM orders WHERE id=? AND user_id=?');$q->execute([$oid,$uid]);if(!$q->fetchColumn())throw new RuntimeException('ORDER_NOT_FOUND');}
     $category=substr((string)($in['category']??'other'),0,64);$priority=in_array(($in['priority']??'normal'),['low','normal','high','urgent'],true)?(string)$in['priority']:'normal';
-    db()->prepare('INSERT INTO support_tickets (user_id,user_service_id,order_id,category,priority,status,subject,last_message_at) VALUES (?,?,?,?,?,"open",?,NOW())')->execute([$uid,$sid?:null,$oid?:null,$category,$priority,mb_substr($sub,0,255)]);
-    $id=(int)db()->lastInsertId();$a=bluegate_ticket_attachment($in['attachment_data']??null,$in['attachment_name']??'');db()->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,delivered_at) VALUES (?,"user",?,?,?,?,?,NOW())')->execute([$id,$uid,$body,$a['url'],$a['name'],$a['mime']]);
+    $pdo=db();$ownsTransaction=!$pdo->inTransaction();
+    if($ownsTransaction)$pdo->beginTransaction();
+    try{
+        // Serialize ticket creation for this user so near-simultaneous duplicate POSTs cannot race.
+        $lock=$pdo->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');$lock->execute([$uid]);
+        if(!$lock->fetchColumn())throw new RuntimeException('USER_NOT_FOUND');
+        // Deduplicate identical initial submissions in a short window as a server-side idempotency fallback.
+        $dupe=$pdo->prepare('SELECT t.id FROM support_tickets t JOIN support_messages m ON m.ticket_id=t.id AND m.sender_type="user" AND m.sender_id=? AND m.body=? WHERE t.user_id=? AND t.subject=? AND t.category=? AND t.priority=? AND COALESCE(t.user_service_id,0)=? AND COALESCE(t.order_id,0)=? AND t.created_at>=DATE_SUB(NOW(),INTERVAL 20 SECOND) AND NOT EXISTS (SELECT 1 FROM support_messages first_m WHERE first_m.ticket_id=t.id AND first_m.id<m.id) ORDER BY t.id DESC LIMIT 1');
+        $dupe->execute([$uid,$body,$uid,mb_substr($sub,0,255),$category,$priority,$sid,$oid]);
+        $existingId=(int)($dupe->fetchColumn()?:0);
+        if($existingId>0){if($ownsTransaction)$pdo->commit();return ['ticket_id'=>$existingId,'ticket'=>bluegate_ticket_record($existingId,$uid),'duplicate'=>true];}
+        $pdo->prepare('INSERT INTO support_tickets (user_id,user_service_id,order_id,category,priority,status,subject,last_message_at) VALUES (?,?,?,?,?,"open",?,NOW())')->execute([$uid,$sid?:null,$oid?:null,$category,$priority,mb_substr($sub,0,255)]);
+        $id=(int)$pdo->lastInsertId();
+        $a=bluegate_ticket_attachment($in['attachment_data']??null,$in['attachment_name']??'');
+        $pdo->prepare('INSERT INTO support_messages (ticket_id,sender_type,sender_id,body,attachment_url,attachment_name,attachment_mime,delivered_at) VALUES (?,"user",?,?,?,?,?,NOW())')->execute([$id,$uid,$body,$a['url'],$a['name'],$a['mime']]);
+        if($ownsTransaction)$pdo->commit();
+    }catch(Throwable $e){if($ownsTransaction&&$pdo->inTransaction())$pdo->rollBack();throw $e;}
     if(function_exists('notify_admins'))notify_admins("🎫 <b>تیکت جدید #{$id}</b>\n".h($sub));
-    return ['ticket_id'=>$id,'ticket'=>bluegate_ticket_record($id,$uid)];
+    return ['ticket_id'=>$id,'ticket'=>bluegate_ticket_record($id,$uid),'duplicate'=>false];
 }
 function bluegate_reply_ticket(int $ticketId,string $senderType,int $senderId,string $body,?string $attachmentData=null,?string $attachmentName=null): void {
     $body=trim($body);$hasAttachment=trim((string)$attachmentData)!=='';if($body===''&&!$hasAttachment)throw new RuntimeException('EMPTY_MESSAGE');if(mb_strlen($body)>4000)throw new RuntimeException('TICKET_MESSAGE_TOO_LONG');
