@@ -1,3 +1,13 @@
+# BlueGate Platform v5.0.50 — Visual admin settings controls
+
+- Convert legacy card-account and manual crypto-rate line editors into structured visual forms while preserving existing storage/API formats.
+- Convert Stars quantity presets into add/remove visual controls.
+- Convert crypto rate-provider priority into ordered selectors backed by the existing comma-separated setting.
+- Align the pro-web admin wheel reward cards and VIP tier threshold/multiplier controls with the main web admin.
+- Preserve existing setting keys and API payload compatibility; bump web admin JavaScript cache keys.
+
+---
+
 # Changelog
 
 # BlueGate Platform v5.0.49 — Web visual wheel and VIP editors
