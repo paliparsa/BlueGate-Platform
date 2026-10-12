@@ -28,7 +28,7 @@ function catalog_translate_text(string $source): string {
     if($base!=='' && function_exists('curl_init')){
         try{
             $payload=['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'];if($key!=='')$payload['api_key']=$key;
-            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>8,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
+            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>3,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim((string)($json['translatedText']??''));}
         }catch(Throwable $e){}
@@ -36,7 +36,7 @@ function catalog_translate_text(string $source): string {
     if($translated===''&&function_exists('curl_init')){
         try{
             $url='https://api.mymemory.translated.net/get?q='.rawurlencode($source).'&langpair=fa|en';
-            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>8,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>3,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$candidate=trim((string)($json['responseData']['translatedText']??''));if(($json['responseStatus']??0)==200 && $candidate!=='')$translated=$candidate;}
         }catch(Throwable $e){}
@@ -82,7 +82,6 @@ function catalog_translate_existing_batch(int $limit=35): array {
     foreach(catalog_translation_targets() as $target){
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
-        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') AND {$src} REGEXP '[가-힣]' = 0 ORDER BY id ASC LIMIT ".(int)$limit;
         // The actual language check is Unicode-aware in PHP; keep SQL portable.
         $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id ASC LIMIT ".(int)$limit;
         $rows=db()->query($sql)->fetchAll();
@@ -656,8 +655,6 @@ function catalog_save_blueprint(array $d): array {
         catalog_sync_service_legacy_visibility($serviceId);
         set_setting('catalog_v2_storefront_enabled','1');if(!setting('catalog_v2_applied_at',''))set_setting('catalog_v2_applied_at',date('Y-m-d H:i:s'));
         db()->commit();
-        // Translation is deliberately post-commit: a remote translator outage must never roll back catalog edits.
-        try{catalog_translate_service_tree($serviceId);}catch(Throwable $translationError){error_log('[BlueGate catalog translation] '.$translationError->getMessage());}
         if(!$skipUndo){
             $undo=$undoBefore?['type'=>'restore','service_id'=>$serviceId,'service_name'=>$undoBefore['name']??($bp['name']??'سرویس'),'blueprint'=>$undoBefore,'at'=>date('Y-m-d H:i:s')]:['type'=>'deactivate','service_id'=>$serviceId,'service_name'=>$bp['name']??'سرویس','at'=>date('Y-m-d H:i:s')];
             set_setting(catalog_undo_key($adminTid),json_encode($undo,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
