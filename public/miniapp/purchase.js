@@ -5,7 +5,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const fmt=v=>Number(v||0).toLocaleString('en-US');
 const isEnglish=()=>window.BlueGateI18n?.language==='en';
 const usdRate=()=>Math.max(1,Number(window.__bluegateState?.storefront_rates?.usdt_toman||192000));
-const priceText=(toman,usd)=>isEnglish()?'
+const priceText=(toman,usd)=>isEnglish()?'$'+Number(usd!=null&&usd!==''?usd:Number(toman||0)/usdRate()).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):fmt(toman);
 const couponCode=v=>String(v||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
 function normalize(data){
   const variants=(data.variants||[]).map(v=>({
