@@ -462,7 +462,7 @@ function showStatus(text,type='success'){
 }
 async function api(action,payload={}){
   refreshTelegramContext();
-  const body = JSON.stringify({action,initData,...payload});
+  const body = JSON.stringify({action,initData,language:(localStorage.getItem('bluegate_language')||((navigator.language||'').toLowerCase().startsWith('fa')?'fa':'en')),...payload});
   const headers = {'Content-Type':'application/json'};
 
   // Resolve API path robustly. Mini App lives under /miniapp/, so relative
@@ -516,6 +516,7 @@ async function api(action,payload={}){
     if (data) Object.assign(err, data);
     throw err;
   }
+  if(action==='me'&&data&&typeof data==='object')window.__bluegateState=data;
   return data;
 }
 /* ===== Batch 1 utilities: haptic, chime, confetti, pull-to-refresh, charts, lightbox, stepper ===== */
@@ -878,6 +879,7 @@ function priceLabel(p){
   }
   return esc(p.price_label || fmt(p.price));
 }
+function miniIntlPrice(value,usd=null){if(window.BlueGateI18n?.language!=='en')return fmt(value);const rate=Math.max(1,Number(state?.storefront_rates?.usdt_toman||192000));const amount=usd!==null&&usd!==''?Number(usd):Number(value||0)/rate;return '$'+amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function productMinPriceNumber(p){
   const variantPrices=(p?.variants||[]).map(v=>Number(v.price||0)).filter(n=>n>0);
   if(variantPrices.length) return Math.min(...variantPrices);
@@ -889,12 +891,12 @@ function productCardPriceLine(p){
   if(discount?.kind==='variant'&&discount.variantId){
     const v=(p?.variants||[]).find(x=>Number(x.id)===Number(discount.variantId));
     const sale=Number(v?.price||0);
-    if(sale>0) return `<span>از</span><strong>${fmt(sale)}</strong>`;
+    if(sale>0) return `<span>${window.BlueGateI18n?.language==='en'?'From':'از'}</span><strong>${miniIntlPrice(sale,v?.price_usd)}</strong>`;
   }
   const directDiscount=Number(p?.discount_percent||0)>0&&Number(p?.price||0)>0?Number(p.price):0;
-  if(directDiscount>0) return `<span>از</span><strong>${fmt(directDiscount)}</strong>`;
+  if(directDiscount>0) return `<span>${window.BlueGateI18n?.language==='en'?'From':'از'}</span><strong>${miniIntlPrice(directDiscount,p?.price_usd)}</strong>`;
   const min=productMinPriceNumber(p);
-  if(min>0) return `<span>از</span><strong>${fmt(min)}</strong>`;
+  if(min>0) return `<span>${window.BlueGateI18n?.language==='en'?'From':'از'}</span><strong>${miniIntlPrice(min,p?.price_usd)}</strong>`;
   const raw=String(p?.price_label||'مشاهده پلن‌ها').trim();
   return `<strong>${esc(raw)}</strong>`;
 }
@@ -1711,7 +1713,7 @@ function openShareSheet(pid){prepareMiniLayer('shareSheet');
   }
   if(typeof haptic === 'function') haptic('light');
 
-  const pPriceText = p.price ? `${fmt(p.price)}` : '';
+  const pPriceText = p.price ? miniIntlPrice(p.price,p.price_usd) : '';
   const shareText = `🛍 ${p.name}\n💰 قیمت: ${pPriceText}\n\nبرای مشاهده و خرید محصول در ربات روی لینک زیر بزنید:`;
   const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(_shareUrl)}&text=${encodeURIComponent(shareText)}`;
 

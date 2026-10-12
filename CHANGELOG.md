@@ -1,3 +1,13 @@
+# BlueGate Platform v5.0.51 — Bilingual international Mini App
+
+- Add a persistent Persian/English language toggle with automatic browser/Telegram locale selection and RTL/LTR layout switching.
+- Add an offline translation dictionary and dynamic DOM translation for common storefront, account, order, checkout, wallet, support, and authentication UI labels.
+- Display product-card and purchase-sheet prices in USD for English storefront users using explicit product USD prices where available, otherwise an approximate conversion from the current USDT/Toman rate (with a documented fallback).
+- Hide card-to-card payment choices in the English storefront and reject card payment-method selection and card top-ups server-side when the request is in English mode.
+- Preserve Persian mode and existing order amount/checkout calculations; USD display is a presentation conversion, not a new settlement currency.
+
+---
+
 # BlueGate Platform v5.0.50 — Visual admin settings controls
 
 - Convert legacy card-account and manual crypto-rate line editors into structured visual forms while preserving existing storage/API formats.

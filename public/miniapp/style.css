@@ -4877,3 +4877,14 @@ small{font-size:var(--bg-font-micro)!important;line-height:1.65}
 .referral-reward-setting input{width:100%;min-width:0;box-sizing:border-box}
 .referral-reward-setting small,.referral-reward-settings-note{font-size:12px;line-height:1.6;color:var(--muted)}
 @media(max-width:700px){.referral-reward-settings-grid{grid-template-columns:1fr}.referral-reward-setting{padding:11px}}
+
+/* International storefront: language toggle and LTR layout */
+.bluegate-language-toggle{flex:0 0 auto;align-self:center;margin-inline-start:8px;border:1px solid rgba(125,211,252,.35);border-radius:12px;padding:8px 11px;background:rgba(29,155,240,.13);color:var(--text,#f4f7fb);font-weight:850;font-size:12px;cursor:pointer;white-space:nowrap}
+html[dir="ltr"] body{direction:ltr}
+html[dir="ltr"] .topbar,html[dir="ltr"] .brand-box,html[dir="ltr"] .section-title,html[dir="ltr"] .shop-page-intro{text-align:left}
+html[dir="ltr"] .topbar{flex-direction:row}
+html[dir="ltr"] .payment-grid,html[dir="ltr"] .product-grid-wrap{direction:ltr}
+html[dir="ltr"] input,html[dir="ltr"] textarea,html[dir="ltr"] select{text-align:left}
+html[dir="ltr"] .bluegate-language-toggle{margin-inline-start:8px;margin-inline-end:0}
+html[dir="ltr"] [data-select-card],html[dir="ltr"] [data-mini-topup-method="card"]{display:none!important}
+body.bluegate-lang-en [data-select-card],body.bluegate-lang-en [data-mini-topup-method="card"]{display:none!important}
