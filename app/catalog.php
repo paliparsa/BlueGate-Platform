@@ -79,13 +79,16 @@ function catalog_translation_targets(): array {
 }
 function catalog_translate_existing_batch(int $limit=35): array {
     $limit=max(1,min(100,$limit));$translated=0;$skipped=0;$failed=0;$remaining=0;
+    $budget=$limit;
     foreach(catalog_translation_targets() as $target){
+        if($budget<=0)break;
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
         // The actual language check is Unicode-aware in PHP; keep SQL portable.
-        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id ASC LIMIT ".(int)$limit;
+        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id ASC LIMIT ".(int)$budget;
         $rows=db()->query($sql)->fetchAll();
         foreach($rows as $row){
+            $budget--;
             $source=(string)$row['source_text'];if(!preg_match('/[\\x{0600}-\\x{06FF}]/u',$source)){$skipped++;continue;}
             $value=catalog_ensure_translation($t,(int)$row['id'],$src,$en,$source);
             if($value!=='')$translated++;else $failed++;
