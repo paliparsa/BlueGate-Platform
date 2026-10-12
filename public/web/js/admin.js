@@ -142,7 +142,7 @@ function kickCatalogTranslation(){
  (async()=>{let loops=0;try{
   while(catalogTranslationRequested&&loops++<120){
    catalogTranslationRequested=false;
-   const r=await C.api('admin_catalog_translate_batch',{limit:5});
+   const r=await C.api('admin_catalog_translate_batch',{limit:2});
    if(r.catalog_admin)S.catalog_admin=r.catalog_admin;if(r.products)S.products=r.products;if(r.categories)S.categories=r.categories;
    const progress=r.translation||{},remaining=Number(progress.remaining||0),translated=Number(progress.translated||0),failed=Number(progress.failed||0);
    if(remaining<=0)break;
