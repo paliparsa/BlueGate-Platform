@@ -1,5 +1,13 @@
 # Changelog
 
+# BlueGate Platform v5.0.47 — Referral reward settings UI
+
+- Add visible settings in Mini App and web admin for valid-invite reward, referred-purchase base reward, custom referral-code threshold and wheel chances.
+- Keep wheel prize editing as visual cards in Mini App and explain the supported line format in web admin.
+- Persist these values through the shared admin API and return them in admin settings payload.
+
+---
+
 # BlueGate Platform v5.0.46 — Admin mobile ticket navigation
 
 - Add a visible “تیکت‌های پشتیبانی” entry to the admin mobile “بیشتر” menu so the support tab is reachable on phones when the desktop sidebar is hidden.
