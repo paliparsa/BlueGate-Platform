@@ -122,7 +122,10 @@ function bg_ai_translate_batch(array $texts, string $target='en', string $contex
     // Keep the existing catalog provider chain as a graceful Persian-to-English fallback.
     if ($target === 'en' && function_exists('catalog_translate_text')) {
         foreach ($missing as $source) {
-            if (!empty($out[$source])) continue;
+            // The legacy provider chain is safe only for plain, single-line labels.
+            // Never send HTML, placeholders, or multiline Telegram messages through it.
+            if (!empty($out[$source]) || str_contains($source, '<') || str_contains($source, '>') || str_contains($source, "\n") || str_contains($source, "\r")) continue;
+            if (!in_array($context, ['ui','telegram-button','telegram-alert','catalog'], true)) continue;
             try { $fallback = catalog_translate_text($source); if ($fallback !== '') $out[$source] = $fallback; } catch (Throwable $e) {}
         }
     }
