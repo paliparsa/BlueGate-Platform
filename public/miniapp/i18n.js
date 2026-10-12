@@ -44,17 +44,19 @@ function apply(){
  language=localStorage.getItem(KEY)||language;
  document.documentElement.lang=language;document.documentElement.dir=language==='fa'?'rtl':'ltr';
  document.body.classList.toggle('bluegate-lang-en',language==='en');
- const b=document.getElementById('bluegateLanguageToggle');if(b){b.textContent=language==='fa'?'🇬🇧 EN':'🇮🇷 فارسی';b.setAttribute('aria-label',language==='fa'?'Switch to English':'تغییر به فارسی');}
+ document.querySelectorAll('[data-language-toggle],#bluegateLanguageToggle').forEach(b=>{b.textContent=language==='fa'?'🇬🇧 EN':'🇮🇷 فارسی';b.setAttribute('aria-label',language==='fa'?'Switch to English':'تغییر به فارسی');b.title=language==='fa'?'Switch to English':'تغییر زبان';});
  if(language==='en')translateElement(document.body);
  else location.reload();
 }
 function setLanguage(next){if(next!=='fa'&&next!=='en')return;localStorage.setItem(KEY,next);language=next;location.reload();}
 function init(){
  if(!document.body)return;
- const top=document.querySelector('.topbar');
- if(top&&!document.getElementById('bluegateLanguageToggle')){
-  const b=document.createElement('button');b.id='bluegateLanguageToggle';b.type='button';b.className='bluegate-language-toggle';b.textContent=language==='fa'?'🇬🇧 EN':'🇮🇷 فارسی';b.title='Change language';b.onclick=()=>setLanguage(language==='fa'?'en':'fa');top.appendChild(b);
+ let toggles=Array.from(document.querySelectorAll('[data-language-toggle],#bluegateLanguageToggle'));
+ if(!toggles.length){
+  const top=document.querySelector('#adminApp .topbar')||document.querySelector('#userApp .topbar')||document.querySelector('.topbar');
+  if(top){const b=document.createElement('button');b.type='button';b.className='icon-btn bluegate-language-toggle';b.setAttribute('data-language-toggle','');b.title='Change language';b.style.cssText='min-width:58px;font-weight:700;z-index:20';top.appendChild(b);toggles=[b];}
  }
+ toggles.forEach(b=>{if(b.dataset.languageBound!=='1'){b.dataset.languageBound='1';b.addEventListener('click',()=>setLanguage(language==='fa'?'en':'fa'));}});
  document.documentElement.lang=language;document.documentElement.dir=language==='fa'?'rtl':'ltr';document.body.classList.toggle('bluegate-lang-en',language==='en');
  if(language==='en')translateElement(document.body);
  const mo=new MutationObserver(records=>{if(language!=='en')return;for(const r of records){if(r.type==='childList'){r.addedNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE){const v=translateString(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;}else if(n.nodeType===Node.ELEMENT_NODE)translateElement(n);});}else if(r.type==='characterData'){const v=translateString(r.target.nodeValue);if(v!==r.target.nodeValue)r.target.nodeValue=v;}}});
