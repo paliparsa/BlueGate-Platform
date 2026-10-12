@@ -51,7 +51,7 @@ function bg_ai_translation_cache_key(string $source, string $target, string $con
 }
 function bg_ai_translation_protect(string $text): array {
     $tokens = [];
-    $pattern = '~</?[a-zA-Z][^>]*>|https?://[^\s<>]+|www\.[^\s<>]+|\{[^{}]{1,100}\}|\$[A-Za-z_][A-Za-z0-9_]*|%[sdif]|@[A-Za-z0-9_]{4,}|[0-9][0-9,.:/%-]*~u';
+    $pattern = '~</?[a-zA-Z][^>]*>|\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b|https?://[^\s<>]+|www\.[^\s<>]+|\{[^{}]{1,100}\}|\$[A-Za-z_][A-Za-z0-9_]*|%[sdif]|@[A-Za-z0-9_]{4,}|[0-9][0-9,.:/%-]*~u';
     $safe = preg_replace_callback($pattern, function($m) use (&$tokens) {
         $token = 'BGPH'.count($tokens).'X';
         $tokens[$token] = $m[0];
@@ -126,7 +126,7 @@ function bg_ai_translate_batch(array $texts, string $target='en', string $contex
             // The legacy provider chain is safe only for plain, single-line labels.
             // Never send HTML, placeholders, or multiline Telegram messages through it.
             if (!empty($out[$source]) || str_contains($source, '<') || str_contains($source, '>') || str_contains($source, "\n") || str_contains($source, "\r")) continue;
-            if (!in_array($context, ['ui','telegram-button','telegram-alert','telegram-message','catalog'], true)) continue;
+            if ($context !== 'catalog') continue;
             try { $fallback = catalog_translate_text($source); if ($fallback !== '') $out[$source] = $fallback; } catch (Throwable $e) {}
         }
     }
