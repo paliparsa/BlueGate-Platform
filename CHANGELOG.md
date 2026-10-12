@@ -1,5 +1,14 @@
 # Changelog
 
+# BlueGate Platform v5.0.41 — Closed ticket restrictions and status colors
+
+- Prevent user replies and re-opening for resolved/closed tickets in the backend.
+- Show a read-only closed-ticket notice instead of the reply composer while preserving access to the conversation history.
+- Color ticket statuses consistently: open green, waiting for a reply yellow, and resolved/closed red.
+- Keep message polling active for read-only closed conversations.
+
+---
+
 # BlueGate Platform v5.0.40 — Ticket WebApp buttons
 
 - Use Telegram inline WebApp buttons for ticket notifications and target the configured Mini App URL with the exact ticket ID, avoiding browser launches without Telegram `initData`.
