@@ -97,7 +97,8 @@ function catalog_translate_existing_batch(int $limit=35): array {
     foreach(catalog_translation_targets() as $target){
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
-        $q=db()->query("SELECT COUNT(*) FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='')");$remaining+=(int)$q->fetchColumn();
+        $q=db()->query("SELECT {$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='')");
+        foreach($q->fetchAll() as $row)if(preg_match('/[\\x{0600}-\\x{06FF}]/u',(string)$row['source_text']))$remaining++;
     }
     return ['translated'=>$translated,'skipped'=>$skipped,'failed'=>$failed,'remaining'=>$remaining,'batch_limit'=>$limit];
 }
