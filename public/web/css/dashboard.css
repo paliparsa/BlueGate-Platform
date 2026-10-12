@@ -84,3 +84,38 @@
 .support-admin-status-actions button[disabled]{opacity:.45;cursor:default}
 .web-ticket-admin-preview-image{display:block;max-width:100%;max-height:75vh;object-fit:contain;margin:auto}
 @media(max-width:680px){.support-ticket-row-actions{justify-content:flex-start}.support-ticket-row{align-items:flex-start}.support-admin-ticket-heading{flex-direction:column}.support-admin-status-actions button{flex:1 1 42%;min-width:120px}.support-web-stats>span{flex:1 1 42%;justify-content:space-between}}
+
+/* Mobile fix: keep the new-ticket sheet fully usable on small phone viewports */
+@media(max-width:760px){
+  .profile-action-overlay{position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden}
+  .profile-action-sheet{
+    top:auto!important;bottom:0!important;left:0!important;right:0!important;
+    transform:none!important;width:100%!important;max-width:none!important;
+    max-height:calc(100dvh - env(safe-area-inset-top,0px) - 8px)!important;
+    height:auto;overflow-y:auto;overscroll-behavior:contain;
+    border-radius:22px 22px 0 0;padding-bottom:env(safe-area-inset-bottom,0px);
+    box-sizing:border-box;
+  }
+  .profile-action-sheet>header{position:sticky;top:0;z-index:2;background:#0e2034;padding:13px 15px;align-items:center}
+  .profile-action-sheet>header h3{font-size:18px}
+  .profile-action-sheet>header p{font-size:12px;line-height:1.5}
+  .profile-action-body{padding:14px 15px calc(16px + env(safe-area-inset-bottom,0px));min-width:0}
+  .profile-action-body .support-compose-form{gap:12px}
+  .profile-action-body .support-compose-form>label{display:grid;gap:7px;min-width:0;font-size:13px}
+  .profile-action-body .support-compose-form input:not([type=file]),
+  .profile-action-body .support-compose-form textarea,
+  .profile-action-body .support-compose-form select{width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-size:16px}
+  .profile-action-body .support-compose-form textarea{min-height:105px;max-height:28dvh;resize:vertical}
+  .profile-action-body .support-file-label{display:flex;flex-wrap:wrap;align-items:center;gap:8px;overflow-wrap:anywhere}
+  .profile-action-body .support-file-label input{width:100%;max-width:100%;min-width:0;font-size:12px}
+  .profile-action-body .support-compose-form [type=submit]{width:100%;min-height:46px;white-space:normal}
+}
+@media(max-width:390px){
+  .profile-action-sheet{max-height:calc(100dvh - 4px - env(safe-area-inset-top,0px))!important;border-radius:18px 18px 0 0}
+  .profile-action-sheet>header{padding:11px 12px}
+  .profile-action-body{padding:12px 12px calc(14px + env(safe-area-inset-bottom,0px))}
+  .profile-action-body .support-compose-form textarea{min-height:90px}
+}
+@supports not (height:100dvh){
+  @media(max-width:760px){.profile-action-overlay{height:100vh}.profile-action-sheet{max-height:calc(100vh - 8px)!important}}
+}

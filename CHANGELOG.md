@@ -1,5 +1,12 @@
 # Changelog
 
+# BlueGate Platform v5.0.44 — Mobile web ticket creation sheet
+
+- Fix the new-ticket popup on phones with a bottom-aligned, viewport-bounded sheet, internal scrolling, safe-area padding, sticky header and responsive fields/file input.
+- Use dynamic viewport units with a `100vh` fallback to avoid browser chrome/keyboard viewport sizing issues.
+
+---
+
 # BlueGate Platform v5.0.43 — Web/Mini App ticketing parity
 
 - Match web user/admin ticket statuses to Mini App with consistent green/yellow/red badges and summary counts.
