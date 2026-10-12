@@ -1,5 +1,14 @@
 # Changelog
 
+# BlueGate Platform v5.0.35 — Mini App ticketing UI
+
+- Redesigned the Mini App support ticket list with clearer ticket cards, localized status labels, and an improved empty state.
+- Improved the new-ticket form and support chat header.
+- Refined chat bubbles, message composer, status badges, and responsive layouts for small mobile screens.
+- Added responsive and reduced-motion styling for the ticketing experience.
+
+---
+
 # BlueGate Platform v5.0.32 — Support chat fixes
 
 - چت Mini App در موبایل به پنل تمام‌قد با ارتفاع و اسکرول داخلی پایدار تبدیل شد.
