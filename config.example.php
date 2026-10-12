@@ -94,3 +94,9 @@ $DEEPL_API_URL = 'https://api-free.deepl.com'; // use https://api.deepl.com for 
 $GOOGLE_TRANSLATE_API_KEY = ''; // optional Google Cloud Translation API key
 $LIBRETRANSLATE_URL = ''; // optional trusted LibreTranslate endpoint, e.g. https://translate.example.com
 $LIBRETRANSLATE_API_KEY = ''; // keep private; never expose in frontend
+
+// Optional shared AI live translation provider (OpenAI-compatible Chat Completions API).
+// Leave the key empty to use the existing catalog translation providers as fallback.
+$TRANSLATION_AI_API_KEY = ''; // server-side only; never expose to the browser
+$TRANSLATION_AI_BASE_URL = 'https://api.openai.com/v1';
+$TRANSLATION_AI_MODEL = 'gpt-4o-mini';
