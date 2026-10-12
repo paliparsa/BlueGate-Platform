@@ -82,7 +82,7 @@ function handle_message(array $message): void {
     $chat_id = (int)($message['chat']['id'] ?? 0);
     $from = $message['from'] ?? [];
     if (!$chat_id || !$from) return;
-    bg_ai_set_telegram_language($chat_id, (string)($from['language_code'] ?? 'fa'));
+    bg_ai_set_telegram_language($chat_id, (string)($from['language_code'] ?? 'fa'), false);
     if (!empty($message['successful_payment']) && is_array($message['successful_payment'])) {
         handle_successful_payment($chat_id, $message['successful_payment']);
         return;
@@ -224,7 +224,7 @@ function handle_callback(array $cb): void {
     $chat_id = (int)($cb['message']['chat']['id'] ?? $from['id'] ?? 0);
     $message_id = $cb['message']['message_id'] ?? null;
     if (!$chat_id || !$from) return;
-    bg_ai_set_telegram_language($chat_id, (string)($from['language_code'] ?? 'fa'));
+    bg_ai_set_telegram_language($chat_id, (string)($from['language_code'] ?? 'fa'), false);
     $GLOBALS['BG_TRANSLATION_CALLBACK_CHAT_ID'] = $chat_id;
     answer_cb($id);
     $user=create_or_update_user($from,null);
