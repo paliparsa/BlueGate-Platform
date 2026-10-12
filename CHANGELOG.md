@@ -1,5 +1,11 @@
 # Changelog
 
+# BlueGate Platform v5.0.40 — Ticket WebApp buttons
+
+- Use Telegram inline WebApp buttons for ticket notifications and target the configured Mini App URL with the exact ticket ID, avoiding browser launches without Telegram `initData`.
+
+---
+
 # BlueGate Platform v5.0.39 — Support composer spacing and admin controls
 
 - Add bottom clearance and a distinct composer surface for user/admin ticket chats so attachment and send controls no longer sit flush against the screen edge.
