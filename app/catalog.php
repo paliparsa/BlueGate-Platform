@@ -128,7 +128,7 @@ function catalog_store_categories(bool $activeOnly=false): array {
 function catalog_tree(bool $activeOnly=false): array {
     if (!table_exists('services') || !table_exists('service_groups') || !table_exists('service_plans')) return [];
     $where=$activeOnly?' WHERE s.is_active=1 AND (c.id IS NULL OR c.is_active=1)':'';
-    $services=db()->query('SELECT s.*,c.title category_title,c.emoji category_emoji,c.legacy_category_id FROM services s LEFT JOIN store_categories c ON c.id=s.category_id'.$where.' ORDER BY s.sort_order ASC,s.id ASC')->fetchAll();
+    $services=db()->query('SELECT s.*,c.title category_title,c.title_en category_title_en,c.emoji category_emoji,c.legacy_category_id FROM services s LEFT JOIN store_categories c ON c.id=s.category_id'.$where.' ORDER BY s.sort_order ASC,s.id ASC')->fetchAll();
     $gq=db()->query('SELECT * FROM service_groups'.($activeOnly?' WHERE is_active=1 AND is_archived=0':' WHERE is_archived=0').' ORDER BY sort_order ASC,id ASC')->fetchAll();
     $pq=db()->query('SELECT * FROM service_plans'.($activeOnly?' WHERE is_active=1 AND is_archived=0':' WHERE is_archived=0').' ORDER BY sort_order ASC,id ASC')->fetchAll();
     $groupsBy=[];$plansBy=[];
@@ -146,7 +146,7 @@ function catalog_public_payload(): array {
             $plans=[];
             foreach($g['plans'] as $p){
                 $plans[]=[
-                    'id'=>(int)$p['id'],'title'=>$p['title'],'price'=>(int)$p['price'],'price_currency'=>$p['price_currency'],
+                    'id'=>(int)$p['id'],'title'=>$p['title'],'title_en'=>$p['title_en']??'','description_en'=>$p['description_en']??'','price'=>(int)$p['price'],'price_currency'=>$p['price_currency'],
                     'price_usd'=>$p['price_usd']!==null?(float)$p['price_usd']:null,'duration_days'=>(int)$p['duration_days'],
                     'discount_percent'=>(float)$p['discount_percent'],'description'=>$p['description']??'','image_url'=>$p['image_url']??null,
                     'delivery_type'=>$p['delivery_type'],'commission_type'=>$p['commission_type'],'commission_value'=>(int)$p['commission_value'],
@@ -155,9 +155,9 @@ function catalog_public_payload(): array {
                     'sort_order'=>(int)$p['sort_order']
                 ];
             }
-            $groups[]=['id'=>(int)$g['id'],'name'=>$g['name'],'slug'=>$g['slug'],'description'=>$g['description']??'','image_url'=>$g['image_url']??null,'is_default'=>(int)$g['is_default'],'legacy_product_id'=>$g['legacy_product_id']!==null?(int)$g['legacy_product_id']:null,'sort_order'=>(int)$g['sort_order'],'plans'=>$plans];
+            $groups[]=['id'=>(int)$g['id'],'name'=>$g['name'],'name_en'=>$g['name_en']??'','slug'=>$g['slug'],'description'=>$g['description']??'','description_en'=>$g['description_en']??'','image_url'=>$g['image_url']??null,'is_default'=>(int)$g['is_default'],'legacy_product_id'=>$g['legacy_product_id']!==null?(int)$g['legacy_product_id']:null,'sort_order'=>(int)$g['sort_order'],'plans'=>$plans];
         }
-        $out[]=['id'=>(int)$s['id'],'name'=>$s['name'],'slug'=>$s['slug'],'description'=>$s['description']??'','image_url'=>$s['image_url']??null,'theme'=>$s['theme']??null,'badge'=>$s['badge']??null,'is_featured'=>(int)$s['is_featured'],'legacy_product_id'=>$s['legacy_product_id']!==null?(int)$s['legacy_product_id']:null,'category'=>['id'=>$s['category_id']!==null?(int)$s['category_id']:null,'title'=>$s['category_title']??null,'emoji'=>$s['category_emoji']??null,'legacy_category_id'=>$s['legacy_category_id']!==null?(int)$s['legacy_category_id']:null],'groups'=>$groups];
+        $out[]=['id'=>(int)$s['id'],'name'=>$s['name'],'name_en'=>$s['name_en']??'','slug'=>$s['slug'],'description'=>$s['description']??'','description_en'=>$s['description_en']??'','image_url'=>$s['image_url']??null,'theme'=>$s['theme']??null,'badge'=>$s['badge']??null,'is_featured'=>(int)$s['is_featured'],'legacy_product_id'=>$s['legacy_product_id']!==null?(int)$s['legacy_product_id']:null,'category'=>['id'=>$s['category_id']!==null?(int)$s['category_id']:null,'title'=>$s['category_title']??null,'title_en'=>$s['category_title_en']??null,'emoji'=>$s['category_emoji']??null,'legacy_category_id'=>$s['legacy_category_id']!==null?(int)$s['legacy_category_id']:null],'groups'=>$groups];
     }
     return ['enabled'=>catalog_enabled(),'applied_at'=>setting('catalog_v2_applied_at',''),'services'=>$out];
 }
