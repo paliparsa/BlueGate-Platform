@@ -204,6 +204,7 @@ function product_payload(array $p, bool $activeVariants=true): array {
         'child_count' => (int)($p['child_count'] ?? 0),
         'parent_name' => $p['parent_name'] ?? null,
         'category_title' => $p['category_title'] ?? null,
+        'category_title_en' => $p['category_title_en'] ?? '',
         'category_emoji' => $p['category_emoji'] ?? null,
         'name' => $p['name'],
         'name_en' => $p['name_en'] ?? '',
