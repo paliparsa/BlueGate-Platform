@@ -1,5 +1,11 @@
 # Changelog
 
+# BlueGate Platform v5.0.37 — Admin ticket sheet sizing
+
+- Fix admin ticket conversation sizing to fit the available viewport, keep the message area scrollable, respect device safe areas, and prevent composer/status controls from overflowing on narrow screens.
+
+---
+
 # BlueGate Platform v5.0.36 — Admin ticketing and duplicate prevention
 
 - Redesigned the admin Mini App ticket list and conversation view to match the customer support UI, with ticket stats, status badges, mobile layouts, attachment previews, and clearer reply/status controls.
