@@ -34,7 +34,7 @@ register_shutdown_function(function(){
     }
 });
 function request_json(): array { $raw = file_get_contents('php://input'); $data = json_decode($raw ?: '{}', true); return is_array($data) ? $data : []; }
-function api_rate_limit(string $bucket,string $identity,int $max,int $window,int $block=0): void {$failClosed=in_array($bucket,['register','login','verify_email_otp','resend_email_otp','forgot_password','reset_password','telegram_login','telegram_link'],true)||str_starts_with($bucket,'email_change_');$r=security_rate_limit($bucket,security_client_ip().'|'.$identity,$max,$window,$block,$failClosed);if(empty($r['allowed'])){header('Retry-After: '.(int)$r['retry_after']);api_out(['ok'=>false,'error'=>'RATE_LIMITED','message'=>'تعداد تلاش‌ها بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.','retry_after'=>(int)$r['retry_after']],429);}}
+function api_rate_limit(string $bucket,string $identity,int $max,int $window,int $block=0): void {$failClosed=in_array($bucket,['register','login','verify_email_otp','resend_email_otp','forgot_password','reset_password','telegram_login','telegram_link','ai_translate_public'],true)||str_starts_with($bucket,'email_change_');$r=security_rate_limit($bucket,security_client_ip().'|'.$identity,$max,$window,$block,$failClosed);if(empty($r['allowed'])){header('Retry-After: '.(int)$r['retry_after']);api_out(['ok'=>false,'error'=>'RATE_LIMITED','message'=>'تعداد تلاش‌ها بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.','retry_after'=>(int)$r['retry_after']],429);}}
 function api_exception_code(Throwable $e,string $fallback='REQUEST_FAILED'): string {
     $raw=trim((string)$e->getMessage());
     if(preg_match('/^[A-Z][A-Z0-9_]{2,80}$/',$raw))return $raw;
@@ -347,6 +347,23 @@ function bool_input($v): int { return in_array(strtolower((string)$v), ['1','tru
 $method=strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET'));$input=$method==='GET'?$_GET:array_merge($_POST,request_json());$action=(string)($input['action']??'me');$initData=(string)($input['initData']??'');$authToken=api_cookie_token();if($authToken==='')$authToken=trim((string)($_SERVER['HTTP_X_WEB_TOKEN']??''));
 if($method==='POST'&&api_cookie_token()!==''&&$initData===''&&trim((string)($_SERVER['HTTP_X_WEB_TOKEN']??''))===''){$origin=trim((string)($_SERVER['HTTP_ORIGIN']??''));$originHost=strtolower((string)(parse_url($origin,PHP_URL_HOST)?:''));$host=strtolower(preg_replace('/:\d+$/','',(string)($_SERVER['HTTP_HOST']??'')));$allowed=trim((string)app_config('WEB_ALLOWED_ORIGIN',''));$originOk=$origin!==''&&(($allowed!==''&&rtrim($origin,'/')===rtrim($allowed,'/'))||($originHost!==''&&$originHost===$host));$ct=strtolower((string)($_SERVER['CONTENT_TYPE']??''));if(!$originOk||!str_starts_with($ct,'application/json'))api_out(['ok'=>false,'error'=>'CSRF_CHECK_FAILED','message'=>'درخواست امنیتی معتبر نیست.'],403);}
 
+if ($action === 'translate_text') {
+    api_rate_limit('ai_translate_public', security_client_ip(), 30, 60, 60);
+    $target = strtolower(trim((string)($input['target'] ?? 'en')));
+    if (!in_array($target, ['en','fa'], true)) api_out(['ok'=>false,'error'=>'INVALID_LANGUAGE'],400);
+    $texts = is_array($input['texts'] ?? null) ? $input['texts'] : [];
+    if (!$texts && isset($input['text'])) $texts = [(string)$input['text']];
+    if (count($texts) > 20) api_out(['ok'=>false,'error'=>'TRANSLATION_BATCH_TOO_LARGE'],400);
+    foreach ($texts as $text) if (!is_string($text) || mb_strlen($text) > 500) api_out(['ok'=>false,'error'=>'INVALID_TRANSLATION_TEXT'],400);
+    try {
+        $translations = bg_ai_translate_batch($texts, $target, (string)($input['context'] ?? 'ui'));
+        api_out(['ok'=>true,'translations'=>$translations,'provider_configured'=>bg_ai_translation_enabled()]);
+    } catch (Throwable $e) {
+        error_log('[BlueGate translate endpoint] '.$e->getMessage());
+        api_out(['ok'=>false,'error'=>'TRANSLATION_UNAVAILABLE','translations'=>new stdClass()],503);
+    }
+}
+
 if ($action === 'register') {
     api_rate_limit('register','ip',5,900,900);
     $username = trim((string)($input['username'] ?? ''));
@@ -482,6 +499,9 @@ if ($action === 'telegram_boot') {
 }
 
 $user = get_authenticated_user((string)$initData, (string)$authToken);
+if (is_array($user ?? null) && !empty($user['telegram_id']) && in_array(strtolower((string)($input['language'] ?? '')), ['fa','en'], true)) {
+    bg_ai_set_telegram_language((int)$user['telegram_id'], (string)$input['language'], true);
+}
 
 if ($action === 'telegram_link') {
     if (!$user) api_out(['ok'=>false,'error'=>'AUTH_REQUIRED','message'=>'ابتدا وارد حساب BlueGate شوید.'],401);

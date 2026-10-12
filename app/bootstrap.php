@@ -2471,6 +2471,11 @@ function try_reward_referrer(array $user): void {
 }
 
 function send_msg($chat_id, string $text, ?string $replyMarkup = null, array $extra = []): void {
+    $targetLanguage = bg_ai_telegram_language((int)$chat_id);
+    if ($targetLanguage === 'en') {
+        $text = bg_ai_translate_text($text, 'en', 'telegram-message');
+        $replyMarkup = bg_ai_translate_telegram_markup($replyMarkup, 'en');
+    }
     $data = array_merge([
         'chat_id' => $chat_id,
         'text' => $text,
@@ -2481,6 +2486,11 @@ function send_msg($chat_id, string $text, ?string $replyMarkup = null, array $ex
     tg('sendMessage', $data);
 }
 function edit_msg($chat_id, $message_id, string $text, ?string $replyMarkup = null): void {
+    $targetLanguage = bg_ai_telegram_language((int)$chat_id);
+    if ($targetLanguage === 'en') {
+        $text = bg_ai_translate_text($text, 'en', 'telegram-message');
+        $replyMarkup = bg_ai_translate_telegram_markup($replyMarkup, 'en');
+    }
     $data = [
         'chat_id' => $chat_id,
         'message_id' => $message_id,
@@ -2492,6 +2502,8 @@ function edit_msg($chat_id, $message_id, string $text, ?string $replyMarkup = nu
     tg('editMessageText', $data);
 }
 function answer_cb($callback_id, string $text = ''): void {
+    $chatId = (int)($GLOBALS['BG_TRANSLATION_CALLBACK_CHAT_ID'] ?? 0);
+    if ($text !== '' && $chatId > 0 && bg_ai_telegram_language($chatId) === 'en') $text = bg_ai_translate_text($text, 'en', 'telegram-alert');
     tg('answerCallbackQuery', ['callback_query_id'=>$callback_id, 'text'=>$text, 'show_alert'=>false]);
 }
 function json_markup(array $data): string { return json_encode($data, JSON_UNESCAPED_UNICODE); }
@@ -4725,6 +4737,7 @@ function verify_webapp_init_data(string $initData): array|false {
 }
 
 require_once __DIR__ . '/catalog.php';
+require_once __DIR__ . '/ai_translation.php';
 require_once __DIR__ . '/license.php';
 require_once __DIR__ . '/storefront.php';
 require_once __DIR__ . '/module_loader.php';
