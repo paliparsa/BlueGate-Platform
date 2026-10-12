@@ -173,6 +173,24 @@ function migrate(): void {
 
     // v3.0.2 catalog editor parity: allow an optional image on every purchasable plan.
     add_column_if_missing('service_plans', 'image_url', 'VARCHAR(1000) NULL AFTER description');
+    // v5.0.52 bilingual catalog translations; safe additive migration for existing installations.
+    add_column_if_missing('product_categories', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('products', 'name_en', 'VARCHAR(255) NULL AFTER name');
+    add_column_if_missing('products', 'short_description_en', 'VARCHAR(500) NULL AFTER short_description');
+    add_column_if_missing('products', 'full_description_en', 'TEXT NULL AFTER full_description');
+    add_column_if_missing('product_variants', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('product_variants', 'description_en', 'TEXT NULL AFTER description');
+    add_column_if_missing('store_categories', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('services', 'name_en', 'VARCHAR(255) NULL AFTER name');
+    add_column_if_missing('services', 'description_en', 'TEXT NULL AFTER description');
+    add_column_if_missing('service_groups', 'name_en', 'VARCHAR(255) NULL AFTER name');
+    add_column_if_missing('service_groups', 'description_en', 'TEXT NULL AFTER description');
+    add_column_if_missing('service_plans', 'title_en', 'VARCHAR(255) NULL AFTER title');
+    add_column_if_missing('service_plans', 'description_en', 'TEXT NULL AFTER description');
+    db()->exec('CREATE TABLE IF NOT EXISTS catalog_translation_cache (
+        source_hash CHAR(64) PRIMARY KEY, source_text TEXT NOT NULL, translated_text TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     add_column_if_missing('support_messages', 'attachment_name', 'VARCHAR(255) NULL AFTER attachment_url');
     add_column_if_missing('support_messages', 'attachment_mime', 'VARCHAR(100) NULL AFTER attachment_name');
     add_column_if_missing('support_messages', 'delivered_at', 'DATETIME NULL AFTER attachment_mime');
