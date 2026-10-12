@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const KEY='bluegate_language';
-const isMini=!!window.BlueGateI18n;
+const isMini=!!document.getElementById('userApp')||!!document.getElementById('adminApp')||!!window.BlueGateI18n;
 const browser=(navigator.language||'').toLowerCase();
 function getLang(){
   if(isMini)return window.BlueGateI18n.language;
