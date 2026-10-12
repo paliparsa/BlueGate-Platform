@@ -1,3 +1,11 @@
+# BlueGate Platform v5.0.52 — Editable automatic English catalog translations
+
+- Add persisted English translation fields for categories, products, variants, services, service groups, and plans, including descriptions.
+- Add cached Persian-to-English translation using optional configured LibreTranslate and a MyMemory fallback; translation failures safely fall back to Persian.
+- Add a bounded batch translation endpoint and a web-admin translation editor for manual overrides and backfilling existing catalog entries.
+- Return saved English fields in API catalog payloads and display them in English Mini App category/product/service/plan views.
+- Add additive migrations for existing installations; no existing Persian source text or identifiers are overwritten.
+
 # BlueGate Platform v5.0.51 — Bilingual international Mini App
 
 - Add a persistent Persian/English language toggle with automatic browser/Telegram locale selection and RTL/LTR layout switching.
