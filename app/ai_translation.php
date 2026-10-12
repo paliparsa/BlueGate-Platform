@@ -20,7 +20,30 @@ function bg_ai_translation_ensure_cache(): void {
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         KEY idx_ai_translation_target (target_language)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    db()->exec("CREATE TABLE IF NOT EXISTS ai_translation_user_languages (
+        telegram_id BIGINT NOT NULL PRIMARY KEY,
+        language_code VARCHAR(16) NOT NULL DEFAULT 'fa',
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $ready = true;
+}
+function bg_ai_set_telegram_language(int $telegramId, string $languageCode): void {
+    if ($telegramId <= 0) return;
+    $raw = strtolower(trim($languageCode));
+    $language = ($raw === 'fa' || str_starts_with($raw, 'fa-')) ? 'fa' : (($raw === '' || $raw === 'und') ? 'fa' : 'en');
+    try {
+        bg_ai_translation_ensure_cache();
+        db()->prepare('INSERT INTO ai_translation_user_languages(telegram_id,language_code) VALUES(?,?) ON DUPLICATE KEY UPDATE language_code=VALUES(language_code),updated_at=CURRENT_TIMESTAMP')->execute([$telegramId,$language]);
+    } catch (Throwable $e) { error_log('[BlueGate translation language] '.$e->getMessage()); }
+}
+function bg_ai_telegram_language(int $telegramId): string {
+    if ($telegramId <= 0) return 'fa';
+    try {
+        bg_ai_translation_ensure_cache();
+        $q=db()->prepare('SELECT language_code FROM ai_translation_user_languages WHERE telegram_id=? LIMIT 1');
+        $q->execute([$telegramId]); $v=strtolower(trim((string)$q->fetchColumn()));
+        return $v === 'en' ? 'en' : 'fa';
+    } catch (Throwable $e) { return 'fa'; }
 }
 function bg_ai_translation_cache_key(string $source, string $target, string $context): string {
     return hash('sha256', strtolower($target)."\0".$context."\0".trim(preg_replace('/\s+/u', ' ', $source) ?? $source));
