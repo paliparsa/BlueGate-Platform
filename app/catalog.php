@@ -128,18 +128,17 @@ function catalog_translation_targets(): array {
     ];
 }
 function catalog_translate_existing_batch(int $limit=35): array {
-    $limit=max(1,min(100,$limit));$translated=0;$skipped=0;$failed=0;$remaining=0;
-    $budget=$limit;
+    $limit=max(1,min(100,$limit));$translated=0;$skipped=0;$failed=0;$remaining=0;$budget=$limit;
     foreach(catalog_translation_targets() as $target){
         if($budget<=0)break;
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
-        // The actual language check is Unicode-aware in PHP; keep SQL portable.
-        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id DESC LIMIT ".(int)min(100,$budget*10);
+        $sql="SELECT id,{$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='') ORDER BY id DESC LIMIT ".(int)min(200,$budget*20);
         $rows=db()->query($sql)->fetchAll();
         foreach($rows as $row){
             if($budget<=0)break;
-            $source=(string)$row['source_text'];if(!preg_match('/[\\x{0600}-\\x{06FF}]/u',$source)){$skipped++;continue;}
+            $source=(string)$row['source_text'];
+            if(!preg_match('/[\x{0600}-\x{06FF}]/u',$source)){$skipped++;continue;}
             $budget--;
             $value=catalog_ensure_translation($t,(int)$row['id'],$src,$en,$source);
             if($value!=='')$translated++;else $failed++;
@@ -149,11 +148,15 @@ function catalog_translate_existing_batch(int $limit=35): array {
         $t=$target['table'];$src=$target['source'];$en=$target['english'];
         if(!table_exists($t)||!column_exists($t,$en)||!column_exists($t,$src))continue;
         $q=db()->query("SELECT {$src} source_text FROM {$t} WHERE {$src} IS NOT NULL AND {$src}<>'' AND ({$en} IS NULL OR {$en}='')");
-        foreach($q->fetchAll() as $row)if(preg_match('/[\\x{0600}-\\x{06FF}]/u',(string)$row['source_text']))$remaining++;
+        foreach($q->fetchAll() as $row)if(preg_match('/[\x{0600}-\x{06FF}]/u',(string)$row['source_text']))$remaining++;
     }
     return ['translated'=>$translated,'skipped'=>$skipped,'failed'=>$failed,'remaining'=>$remaining,'batch_limit'=>$limit];
 }
 
+/** Translate a limited number of recently created or still-pending catalog entries. */
+function catalog_translate_pending_on_save(int $limit=4): array {
+    return catalog_translate_existing_batch(max(1,min(8,$limit)));
+}
 function catalog_slugify(string $value, string $fallback='item'): string {
     $value = trim(mb_strtolower($value));
     $value = preg_replace('/[^\p{L}\p{N}]+/u', '-', $value) ?: '';
