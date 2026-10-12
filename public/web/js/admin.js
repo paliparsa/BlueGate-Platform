@@ -408,4 +408,25 @@ document.addEventListener('input',e=>{if(e.target.matches?.('[data-wallet-raw]')
   if(window.MutationObserver&&root){new MutationObserver(function(){enhance()}).observe(root,{childList:true,subtree:true})}
 })();
 
+
+/* Provider priority: ordered selectors backed by the existing CSV setting. */
+(function(){
+ function enhanceProviderPriority(){
+  var input=document.querySelector('#bgAdminSettingsForm [name="crypto_rate_provider_priority"]');
+  if(!input||input.dataset.visualPriority)return;
+  input.dataset.visualPriority='1';input.hidden=true;
+  var providers=['wallex','ramzinex','nobitex'];
+  var current=String(input.value||'wallex,ramzinex,nobitex').split(',').map(function(x){return x.trim().toLowerCase()}).filter(function(x,i,a){return providers.includes(x)&&a.indexOf(x)===i});
+  providers.forEach(function(x){if(!current.includes(x))current.push(x)});
+  var box=document.createElement('div');box.className='bg-admin-form cols2 bg-web-provider-priority';
+  var title=document.createElement('p');title.className='bg-admin-muted';title.textContent='اولویت بررسی منبع نرخ (از بالا به پایین)';
+  var selects=[];
+  function sync(){var order=selects.map(function(x){return x.value});input.value=order.join(',')}
+  function render(){box.innerHTML='';box.appendChild(title);selects=[];current.forEach(function(value,index){var label=document.createElement('label');label.textContent='اولویت '+(index+1);var select=document.createElement('select');providers.forEach(function(provider){var opt=document.createElement('option');opt.value=provider;opt.textContent=provider;select.appendChild(opt)});select.value=value;select.addEventListener('change',function(){var old=current[index],other=current.indexOf(select.value);current[index]=select.value;if(other>=0&&other!==index)current[other]=old;render()});label.appendChild(select);box.appendChild(label);selects.push(select)});sync()}
+  input.parentNode.insertBefore(box,input.nextSibling);render();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceProviderPriority);else enhanceProviderPriority();
+ var root=document.body;if(window.MutationObserver&&root)new MutationObserver(enhanceProviderPriority).observe(root,{childList:true,subtree:true});
+})();
+
 })();
