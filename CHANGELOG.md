@@ -1,5 +1,12 @@
 # Changelog
 
+# BlueGate Platform v5.0.46 — Admin mobile ticket navigation
+
+- Add a visible “تیکت‌های پشتیبانی” entry to the admin mobile “بیشتر” menu so the support tab is reachable on phones when the desktop sidebar is hidden.
+- Refresh admin JavaScript cache keys for web and pro-web.
+
+---
+
 # BlueGate Platform v5.0.45 — Center mobile login/register dialog
 
 - Center the home-page login/register dialog on phone screens instead of using a bottom sheet.
