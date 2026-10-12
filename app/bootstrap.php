@@ -3207,7 +3207,7 @@ function shop_products(?int $categoryId=null, bool $activeOnly=true): array {
     $where=[]; $params=[];
     if ($activeOnly) $where[]='p.is_active=1';
     if ($categoryId) { $where[]='p.category_id=?'; $params[]=$categoryId; }
-    $sql='SELECT p.*, c.title category_title, c.emoji category_emoji,
+    $sql='SELECT p.*, c.title category_title, c.title_en category_title_en, c.emoji category_emoji,
         (SELECT COUNT(*) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) variant_count,
         (SELECT COUNT(*) FROM products ch WHERE ch.parent_id=p.id AND ch.is_active=1) child_count,
         (SELECT name FROM products pp WHERE pp.id=p.parent_id LIMIT 1) parent_name,
@@ -3219,7 +3219,7 @@ function shop_products(?int $categoryId=null, bool $activeOnly=true): array {
     $q=db()->prepare($sql); $q->execute($params); return $q->fetchAll();
 }
 function shop_product(int $id) {
-    $q=db()->prepare('SELECT p.*, c.title category_title, c.emoji category_emoji,
+    $q=db()->prepare('SELECT p.*, c.title category_title, c.title_en category_title_en, c.emoji category_emoji,
         (SELECT COUNT(*) FROM product_variants v WHERE v.product_id=p.id AND v.is_active=1) variant_count,
         (SELECT COUNT(*) FROM products ch WHERE ch.parent_id=p.id AND ch.is_active=1) child_count,
         (SELECT name FROM products pp WHERE pp.id=p.parent_id LIMIT 1) parent_name,
