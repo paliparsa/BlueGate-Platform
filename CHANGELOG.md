@@ -1,5 +1,13 @@
 # Changelog
 
+# BlueGate Platform v5.0.38 — Telegram ticket notifications
+
+- Add a direct Mini App ticket button to admin Telegram notifications, with customer name, username, internal user ID and Telegram ID where available.
+- Notify the ticket owner when support replies or the ticket status changes, including the current status and a direct button back to that exact ticket.
+- Support `ticket_<id>` Mini App deep links for both customer and authenticated admin views.
+
+---
+
 # BlueGate Platform v5.0.37 — Admin ticket sheet sizing
 
 - Fix admin ticket conversation sizing to fit the available viewport, keep the message area scrollable, respect device safe areas, and prevent composer/status controls from overflowing on narrow screens.

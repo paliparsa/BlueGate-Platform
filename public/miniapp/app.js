@@ -1404,8 +1404,23 @@ function render(data){
   if($('helloText')) $('helloText').textContent=data.brand||'BLUEGATE';
   $('userApp').classList.toggle('hidden',isAdminMode);
   $('adminApp').classList.toggle('hidden',!isAdminMode);
-  if(isAdminMode){loadAdmin();return}
-  renderUser();checkAndCelebrate();handleDeepLink();scheduleAvatarSync();
+  if(isAdminMode){loadAdmin().then(()=>handleTicketDeepLink());return}
+  renderUser();handleTicketDeepLink();checkAndCelebrate();handleDeepLink();scheduleAvatarSync();
+}
+let _ticketDeepLinkHandled=false;
+async function handleTicketDeepLink(){
+  if(_ticketDeepLinkHandled)return;
+  const startParam=String(tg?.initDataUnsafe?.start_param||getUrlFlag('startapp')||'');
+  const rawId=(startParam.match(/^ticket_(\d+)$/i)||[])[1]||getUrlFlag('ticket');
+  const id=Number(rawId||0);if(!Number.isSafeInteger(id)||id<=0)return;
+  _ticketDeepLinkHandled=true;
+  if(isAdminMode){
+    currentAdminTab='support';renderAdmin();
+    await openMiniAdminSupportTicket(id);
+    return;
+  }
+  if(state?.is_guest){currentTab='support';renderUser();openAuthModal();showStatus('برای مشاهده‌ی تیکت، ابتدا وارد حساب خودت شو.','info');return;}
+  currentTab='support';renderUser();await openMiniSupportTicket(id);
 }
 let _deepLinkHandled=false;
 function handleDeepLink(){
