@@ -347,4 +347,32 @@ window.NXWebAdmin={mount(opts){C=opts;S=opts.state;root=opts.container;tab=ADMIN
 function ADMIN_ROUTE_TAB(v){return ['overview','orders','catalog','inventory','customers','infrastructure','advanced','notifications','support','coupons','settings','activity','roles','backups'].includes(v)?v:'overview'}
 
 document.addEventListener('input',e=>{if(e.target.matches?.('[data-wallet-raw]')){const ta=document.querySelector('[name="crypto_wallets_text"]');if(ta){ta.value=e.target.value;refreshWebWalletManager()}}});
+
+/* Visual editors for legacy line/comma settings; keep existing API field names. */
+(function(){
+ function escH(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+ function visualRows(name,labels,splitter,joiner,empty){
+  var ta=document.querySelector('#bgAdminSettingsForm [name="'+name+'"]');if(!ta||ta.dataset.visualEnhanced)return;ta.dataset.visualEnhanced='1';ta.hidden=true;
+  var box=document.createElement('div'),list=document.createElement('div'),add=document.createElement('button');box.className='bg-web-visual-editor';list.className='bg-admin-grid two';add.type='button';add.textContent='＋ افزودن مورد';
+  function read(){return String(ta.value||'').split(/\r?\n/).map(splitter).filter(function(x){return x&&x.some(Boolean)})}
+  function sync(){ta.value=Array.from(list.querySelectorAll('[data-visual-row]')).map(function(card){return joiner(labels.map(function(_,i){return card.querySelector('[data-visual-field="'+i+'"]').value.trim()}))}).filter(Boolean).join('\n')}
+  function render(rows){list.innerHTML='';if(!rows.length){var p=document.createElement('p');p.className='bg-admin-muted';p.textContent=empty;list.appendChild(p)}
+   rows.forEach(function(row){var card=document.createElement('section');card.className='bg-admin-card';card.dataset.visualRow='1';var head=document.createElement('div');head.className='bg-card-head';var h=document.createElement('h4');h.textContent=labels[0];var del=document.createElement('button');del.type='button';del.textContent='حذف';del.addEventListener('click',function(){card.remove();sync();if(!list.querySelector('[data-visual-row]'))render([])});head.append(h,del);card.appendChild(head);
+    labels.forEach(function(label,i){var l=document.createElement('label');l.textContent=label;var inp=document.createElement('input');inp.dataset.visualField=String(i);inp.value=row[i]||'';inp.addEventListener('input',sync);l.appendChild(inp);card.appendChild(l)});list.appendChild(card)});sync()}
+  add.addEventListener('click',function(){var rows=Array.from(list.querySelectorAll('[data-visual-row]')).map(function(card){return labels.map(function(_,i){return card.querySelector('[data-visual-field="'+i+'"]').value})});rows.push(labels.map(function(){return''}));render(rows)});
+  box.append(list,add);ta.parentNode.insertBefore(box,ta.nextSibling);render(read())
+ }
+ function enhance(){
+  visualRows('card_accounts_text',['عنوان حساب','شماره کارت','صاحب حساب','شماره شبا'],function(line){var p=line.split('|').map(function(x){return x.trim()});return [p[0]||'',p[1]||'',p[2]||'',p[3]||'']},function(v){return v.every(function(x){return !x})?'':v.join(' | ')},'حسابی ثبت نشده است.');
+  visualRows('crypto_manual_rates_text',['نماد ارز','نرخ به تومان'],function(line){var p=line.split('|').map(function(x){return x.trim()});return [p[0]||'',p[1]||'']},function(v){return v[0]?v[0].toUpperCase()+'|'+v[1]:''},'نرخ دستی ثبت نشده است.');
+  var p=document.querySelector('#bgAdminSettingsForm [name="storefront_stars_presets"]');if(p&&!p.dataset.visualEnhanced){p.dataset.visualEnhanced='1';p.hidden=true;var box=document.createElement('div'),list=document.createElement('div'),add=document.createElement('button');box.className='bg-web-visual-editor';list.className='bg-admin-form cols2';add.type='button';add.textContent='＋ افزودن مقدار Stars';
+   function sync(){p.value=Array.from(list.querySelectorAll('input')).map(function(i){return Number(i.value)}).filter(function(n){return Number.isFinite(n)&&n>0}).join(',')}
+   function render(values){list.innerHTML='';values.forEach(function(v){var l=document.createElement('label');l.textContent='تعداد Stars';var inp=document.createElement('input');inp.type='number';inp.min='1';inp.step='1';inp.value=String(v);inp.addEventListener('input',sync);var del=document.createElement('button');del.type='button';del.textContent='حذف';del.addEventListener('click',function(){l.remove();sync()});l.append(inp,del);list.appendChild(l)});sync()}
+   add.addEventListener('click',function(){var vals=Array.from(list.querySelectorAll('input')).map(function(i){return Number(i.value)});vals.push(100);render(vals)});box.append(list,add);p.parentNode.insertBefore(box,p.nextSibling);render(String(p.value||'').split(',').map(Number).filter(function(n){return n>0}))
+  }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance);else enhance();
+ var root=document.getElementById('bgAdminRoot')||document.body;if(window.MutationObserver&&root)new MutationObserver(enhance).observe(root,{childList:true,subtree:true});
+})();
+
 })();
