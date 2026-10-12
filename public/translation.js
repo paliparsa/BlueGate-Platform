@@ -27,22 +27,41 @@ function setupToggle(){
   const paint=()=>{b.textContent=getLang()==='en'?'🇮🇷 فارسی':'🇬🇧 EN';b.setAttribute('aria-label',getLang()==='en'?'Switch to Persian':'Switch to English');};
   paint();
 }
-const attempted=new WeakSet();
+const attempted=new WeakSet(), attemptedAttrs=new WeakMap();
 const skip='script,style,textarea,pre,code,input,select,option,[contenteditable="true"],[data-no-translate],#bluegateLanguageToggle,#bgAiLanguageToggle';
 const hasPersian=s=>/[\u0600-\u06FF]/.test(s||'');
 let queue=new Map(), timer=0, running=false;
 function addNode(node){
   if(!node||node.nodeType!==Node.TEXT_NODE||attempted.has(node))return;
-  const value=node.nodeValue||'';
-  if(!value.trim()||!hasPersian(value))return;
-  if(node.parentElement?.closest(skip))return;
-  attempted.add(node);queue.set(node,value);
+  const source=node.nodeValue||'';
+  if(!source.trim()||!hasPersian(source)||node.parentElement?.closest(skip))return;
+  attempted.add(node);
+  queue.set(node,{source,apply:translated=>{if(node.isConnected&&node.nodeValue===source)node.nodeValue=translated;}});
+}
+function addAttributes(root){
+  if(!root||root.nodeType!==Node.ELEMENT_NODE||root.closest?.(skip))return;
+  const nodes=[root,...root.querySelectorAll('[placeholder],[aria-label],[title],[alt],input[type="button"][value],input[type="submit"][value]')];
+  for(const el of nodes){
+    if(el.closest?.(skip))continue;
+    for(const attr of ['placeholder','aria-label','title','alt','value']){
+      if(!el.hasAttribute(attr))continue;
+      if(attr==='value'&&!/^(button|submit)$/i.test(el.getAttribute('type')||''))continue;
+      const source=el.getAttribute(attr)||'';
+      if(!source.trim()||!hasPersian(source))continue;
+      let seen=attemptedAttrs.get(el);if(!seen){seen=new Map();attemptedAttrs.set(el,seen);}
+      if(seen.get(attr)===source)continue;
+      seen.set(attr,source);
+      const task={source,apply:translated=>{if(el.isConnected&&el.getAttribute(attr)===source)el.setAttribute(attr,translated);}};
+      queue.set(task,task);
+    }
+  }
 }
 function scan(root){
   if(getLang()!=='en'||!root)return;
   if(root.nodeType===Node.TEXT_NODE){addNode(root);schedule();return;}
   if(root.nodeType!==Node.ELEMENT_NODE&&root!==document)return;
   if(root.nodeType===Node.ELEMENT_NODE&&root.closest?.(skip))return;
+  if(root.nodeType===Node.ELEMENT_NODE)addAttributes(root);
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
   while(walker.nextNode())addNode(walker.currentNode);
   schedule();
@@ -55,14 +74,14 @@ async function flush(){
     while(queue.size&&getLang()==='en'){
       const entries=Array.from(queue.entries()).slice(0,20);
       for(const [node] of entries)queue.delete(node);
-      const texts=Array.from(new Set(entries.map(x=>x[1])));
+      const texts=Array.from(new Set(entries.map(([,task])=>task.source)));
       try{
         const res=await fetch('/api.php',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action:'translate_text',target:'en',context:'ui',texts})});
         if(!res.ok)continue;
         const data=await res.json(), translations=data.translations||{};
-        for(const [node,source] of entries){
-          const translated=translations[source];
-          if(typeof translated==='string'&&translated.trim()&&translated!==source&&node.isConnected&&node.nodeValue===source)node.nodeValue=translated;
+        for(const [,task] of entries){
+          const translated=translations[task.source];
+          if(typeof translated==='string'&&translated.trim()&&translated!==task.source)task.apply(translated);
         }
       }catch(_){/* Keep source text if translation is unavailable. */}
     }
