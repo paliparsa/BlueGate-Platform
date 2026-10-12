@@ -516,6 +516,7 @@ async function api(action,payload={}){
     if (data) Object.assign(err, data);
     throw err;
   }
+  if(action==='me'&&data&&typeof data==='object')window.__bluegateState=data;
   return data;
 }
 /* ===== Batch 1 utilities: haptic, chime, confetti, pull-to-refresh, charts, lightbox, stepper ===== */
