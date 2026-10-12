@@ -1,5 +1,12 @@
 # Changelog
 
+# BlueGate Platform v5.0.36 — Admin ticketing and duplicate prevention
+
+- Redesigned the admin Mini App ticket list and conversation view to match the customer support UI, with ticket stats, status badges, mobile layouts, attachment previews, and clearer reply/status controls.
+- Prevented repeat submissions in the ticket form and added server-side short-window idempotency for identical ticket creation requests, including concurrent requests.
+
+---
+
 # BlueGate Platform v5.0.35 — Mini App ticketing UI
 
 - Redesigned the Mini App support ticket list with clearer ticket cards, localized status labels, and an improved empty state.
