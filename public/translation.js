@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const KEY='bluegate_language';
-const isMini=!!window.BlueGateI18n;
+const isMini=!!document.getElementById('userApp')||!!document.getElementById('adminApp')||!!window.BlueGateI18n;
 const browser=(navigator.language||'').toLowerCase();
 function getLang(){
   if(isMini)return window.BlueGateI18n.language;
@@ -16,19 +16,18 @@ function setLang(next){
   localStorage.setItem(KEY,next);location.reload();
 }
 function setupToggle(){
-  if(isMini||document.getElementById('bgAiLanguageToggle'))return;
-  const host=document.querySelector('.header-actions');
-  if(!host)return;
-  const b=document.createElement('button');
-  b.id='bgAiLanguageToggle';b.type='button';b.className='bg-account-btn';
-  b.style.whiteSpace='nowrap';b.style.minHeight='38px';
-  b.addEventListener('click',()=>setLang(getLang()==='en'?'fa':'en'));
-  host.prepend(b);
-  const paint=()=>{b.textContent=getLang()==='en'?'🇮🇷 فارسی':'🇬🇧 EN';b.setAttribute('aria-label',getLang()==='en'?'Switch to Persian':'Switch to English');};
-  paint();
+ if(isMini)return;
+ let b=document.getElementById('bgAiLanguageToggle');
+ const host=document.querySelector('.header-actions');
+ if(!b&&host){b=document.createElement('button');b.id='bgAiLanguageToggle';b.type='button';b.className='bg-account-btn';b.style.whiteSpace='nowrap';b.style.minHeight='38px';host.prepend(b);}
+ if(!b)return;
+ if(b.dataset.languageBound!=='1'){b.dataset.languageBound='1';b.addEventListener('click',()=>setLang(getLang()==='en'?'fa':'en'));}
+ b.textContent=getLang()==='en'?'🇮🇷 فارسی':'🇬🇧 EN';
+ b.setAttribute('aria-label',getLang()==='en'?'Switch to Persian':'Switch to English');
+ b.title=getLang()==='en'?'Switch to Persian':'Switch to English';
 }
 const attempted=new WeakSet(), attemptedAttrs=new WeakMap();
-const skip='script,style,textarea,pre,code,[contenteditable="true"],[data-no-translate],[data-private],[data-user-content],.support-message,.ticket-message,.chat-message,.user-message,.customer-message,.review-content,.review-text,.user-content,#bluegateLanguageToggle,#bgAiLanguageToggle';
+const skip='script,style,textarea,pre,code,[contenteditable="true"],[data-no-translate],[data-private],[data-user-content],.support-message,.ticket-message,.chat-message,.user-message,.customer-message,.review-content,.review-text,.user-content,#bluegateLanguageToggle,#bgAiLanguageToggle,[data-language-toggle]';
 const hasPersian=s=>/[\u0600-\u06FF]/.test(s||'');
 let queue=new Map(), timer=0, running=false;
 function addNode(node){
