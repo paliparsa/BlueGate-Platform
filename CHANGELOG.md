@@ -1,5 +1,13 @@
 # Changelog
 
+# BlueGate Platform v5.0.45 — Center mobile login/register dialog
+
+- Center the home-page login/register dialog on phone screens instead of using a bottom sheet.
+- Constrain the dialog to the visible viewport with internal scrolling, safe-area padding and a small-screen width limit.
+- Keep the dialog header visible while scrolling and refresh account CSS cache keys for both web and pro-web.
+
+---
+
 # BlueGate Platform v5.0.44 — Mobile web ticket creation sheet
 
 - Fix the new-ticket popup on phones with a bottom-aligned, viewport-bounded sheet, internal scrolling, safe-area padding, sticky header and responsive fields/file input.

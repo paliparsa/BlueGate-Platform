@@ -29,3 +29,39 @@
 
 /* v3.1.0 profile avatar */
 .member-avatar.has-photo,.account-avatar-xl.has-photo,.bg-popover-avatar.has-photo,#accountAvatar.has-photo{overflow:hidden;padding:0!important}.member-avatar img,.account-avatar-xl img,.bg-popover-avatar img,#accountAvatar img{width:100%;height:100%;object-fit:cover;display:block}.web-avatar-manager{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px;margin:0 0 14px;border:1px solid var(--member-line,#24354c);border-radius:18px;background:rgba(255,255,255,.025)}.web-avatar-manager>div:first-child{display:flex;align-items:center;gap:12px}.web-avatar-manager span b,.web-avatar-manager span small{display:block}.web-avatar-manager span small{color:var(--member-muted,#91a3b8);margin-top:3px}.web-avatar-actions{display:flex;gap:8px;flex-wrap:wrap}.web-avatar-actions label{cursor:pointer}@media(max-width:720px){.web-avatar-manager{align-items:stretch;flex-direction:column}.web-avatar-actions{display:grid;grid-template-columns:1fr}.web-avatar-actions>*{width:100%}}
+
+/* Mobile auth dialog: center it inside the visible viewport instead of letting the bottom sheet overflow */
+@media(max-width:680px){
+  .bg-drawer-backdrop{position:fixed;inset:0;min-height:100dvh}
+  .bg-account-drawer,
+  .bg-account-drawer.open{
+    position:fixed!important;
+    top:50%!important;right:auto!important;bottom:auto!important;left:50%!important;
+    width:calc(100% - 28px)!important;max-width:480px;
+    max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px)!important;
+    height:auto;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+    box-sizing:border-box;border:1px solid rgba(72,123,165,.35);
+    border-radius:22px;transform:translate(-50%,-50%)!important;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .bg-account-drawer.open{opacity:1;pointer-events:auto}
+  .bg-drawer-head{position:sticky;top:0;z-index:3;background:rgba(8,19,31,.96);backdrop-filter:blur(12px)}
+  .bg-account-content{min-width:0;padding:13px 14px 16px}
+  .bg-auth-wrap,.bg-auth-form,.bg-auth-hero{min-width:0}
+  .bg-auth-form input,.bg-auth-form button,.bg-auth-cols>*{min-width:0;max-width:100%;box-sizing:border-box}
+  .bg-auth-hero p{overflow-wrap:anywhere}
+}
+@media(max-width:390px){
+  .bg-account-drawer,.bg-account-drawer.open{
+    width:calc(100% - 20px)!important;
+    max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 16px)!important;
+    border-radius:18px;
+  }
+  .bg-account-content{padding:11px 11px 14px}
+}
+@supports not (height:100dvh){
+  @media(max-width:680px){
+    .bg-drawer-backdrop{min-height:100vh}
+    .bg-account-drawer,.bg-account-drawer.open{max-height:calc(100vh - 24px)!important}
+  }
+}
