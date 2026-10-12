@@ -31,7 +31,7 @@ function catalog_translate_text(string $source): string {
     if(function_exists('curl_init') && $deeplKey!==''){
         try{
             $payload=http_build_query(['text'=>$source,'source_lang'=>'FA','target_lang'=>'EN']);
-            $ch=curl_init($deeplBase.'/v2/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>5,CURLOPT_HTTPHEADER=>['Authorization: DeepL-Auth-Key '.$deeplKey,'Content-Type: application/x-www-form-urlencoded']]);
+            $ch=curl_init($deeplBase.'/v2/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_HTTPHEADER=>['Authorization: DeepL-Auth-Key '.$deeplKey,'Content-Type: application/x-www-form-urlencoded']]);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim((string)($json['translations'][0]['text']??''));}
         }catch(Throwable $e){}
@@ -40,7 +40,7 @@ function catalog_translate_text(string $source): string {
         try{
             $url='https://translation.googleapis.com/language/translate/v2?key='.rawurlencode($googleKey);
             $payload=json_encode(['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'],JSON_UNESCAPED_UNICODE);
-            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>5,CURLOPT_HTTPHEADER=>['Content-Type: application/json']]);
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_HTTPHEADER=>['Content-Type: application/json']]);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim(html_entity_decode((string)($json['data']['translations'][0]['translatedText']??''),ENT_QUOTES|ENT_HTML5,'UTF-8'));}
         }catch(Throwable $e){}
@@ -48,7 +48,7 @@ function catalog_translate_text(string $source): string {
     if($translated==='' && $base!=='' && function_exists('curl_init')){
         try{
             $payload=['q'=>$source,'source'=>'fa','target'=>'en','format'=>'text'];if($libreKey!=='')$payload['api_key']=$libreKey;
-            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
+            $ch=curl_init($base.'/translate');curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>http_build_query($payload),CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_HTTPHEADER=>['Content-Type: application/x-www-form-urlencoded']]);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$translated=trim((string)($json['translatedText']??''));}
         }catch(Throwable $e){}
@@ -57,7 +57,7 @@ function catalog_translate_text(string $source): string {
     if($translated==='' && function_exists('curl_init')){
         try{
             $url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=fa&tl=en&dt=t&q='.rawurlencode($source);
-            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_USERAGENT=>'Mozilla/5.0 BlueGateCatalog/5.0']);
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_USERAGENT=>'Mozilla/5.0 BlueGateCatalog/5.0']);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$parts=$json[0]??[];if(is_array($parts)){foreach($parts as $part)if(is_array($part)&&isset($part[0])&&is_string($part[0]))$translated.=$part[0];$translated=trim($translated);}}
         }catch(Throwable $e){}
@@ -65,7 +65,7 @@ function catalog_translate_text(string $source): string {
     if($translated==='' && function_exists('curl_init')){
         try{
             $url='https://api.mymemory.translated.net/get?q='.rawurlencode($source).'&langpair=fa|en';
-            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
+            $ch=curl_init($url);curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>1,CURLOPT_TIMEOUT=>2,CURLOPT_USERAGENT=>'BlueGateCatalog/5.0']);
             $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
             if($raw!==false&&$status>=200&&$status<300){$json=json_decode((string)$raw,true);$candidate=trim((string)($json['responseData']['translatedText']??''));if(($json['responseStatus']??0)==200 && $candidate!=='')$translated=$candidate;}
         }catch(Throwable $e){}
