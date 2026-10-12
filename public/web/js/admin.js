@@ -146,7 +146,7 @@ function kickCatalogTranslation(){
    if(r.catalog_admin)S.catalog_admin=r.catalog_admin;if(r.products)S.products=r.products;if(r.categories)S.categories=r.categories;
    const progress=r.translation||{},remaining=Number(progress.remaining||0),translated=Number(progress.translated||0),failed=Number(progress.failed||0);
    if(remaining<=0)break;
-   if(translated===0&&failed>0){toast('ترجمه خودکار متوقف شد؛ سرویس ترجمه پاسخ معتبر نداد. تنظیمات API یا اتصال خروجی سرور را بررسی کن.','error');break;}
+   if(translated===0){toast('ترجمه خودکار متوقف شد؛ سرویس ترجمه پاسخ معتبر نداد. تنظیمات API یا اتصال خروجی سرور را بررسی کن.','error');break;}
    catalogTranslationRequested=true;
    await new Promise(resolve=>setTimeout(resolve,450));
   }
