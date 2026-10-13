@@ -1,0 +1,197 @@
+/* BlueGate Mini App — unified black / white / blue / violet palette
+   v5.1.23. Visual-only layer: intentionally loaded last; no application logic changes. */
+:root {
+  color-scheme: dark !important;
+  --bgds-bg: #07080D !important;
+  --bgds-bg-2: #0A0C12 !important;
+  --bgds-surface-1: #10131B !important;
+  --bgds-surface-2: #151925 !important;
+  --bgds-surface-3: #1C2130 !important;
+  --bgds-text: #F5F7FC !important;
+  --bgds-muted: #A7AFBF !important;
+  --bgds-muted-2: #D0D5E0 !important;
+  --bgds-border: rgba(190, 200, 220, .12) !important;
+  --bgds-border-strong: rgba(74, 141, 255, .38) !important;
+  --bgds-primary: #4A8DFF !important;
+  --bgds-primary-soft: #86B5FF !important;
+  --bgds-purple: #8B5CF6 !important;
+  --bgds-success: #42D6A0 !important;
+  --bgds-warning: #F5C86A !important;
+  --bgds-danger: #FF718A !important;
+  --bgds-shadow-card: 0 14px 36px rgba(0,0,0,.22) !important;
+  --bgds-shadow-float: 0 24px 70px rgba(0,0,0,.44) !important;
+  --bgds-focus: 0 0 0 3px rgba(74,141,255,.20) !important;
+  --bg: #07080D !important;
+  --card: #10131B !important;
+  --card2: #151925 !important;
+  --surface: #10131B !important;
+  --surface2: #151925 !important;
+  --text: #F5F7FC !important;
+  --muted: #A7AFBF !important;
+  --line: rgba(190,200,220,.12) !important;
+  --border: rgba(190,200,220,.12) !important;
+  --accent: #4A8DFF !important;
+  --accent-2: #86B5FF !important;
+  --primary: #4A8DFF !important;
+  --secondary: #1C2130 !important;
+  --u-accent: #4A8DFF !important;
+  --u-accent-2: #86B5FF !important;
+  --u-surface: rgba(16,19,27,.96) !important;
+  --u-surface-2: rgba(21,25,37,.96) !important;
+  --u-border: rgba(190,200,220,.12) !important;
+  --shadow: 0 14px 36px rgba(0,0,0,.22) !important;
+}
+html, body {
+  background: #07080D !important;
+  color: #F5F7FC !important;
+}
+body {
+  background:
+    radial-gradient(ellipse at 92% -8%, rgba(74,141,255,.075), transparent 34%),
+    radial-gradient(ellipse at 5% 28%, rgba(139,92,246,.045), transparent 30%),
+    #07080D !important;
+}
+#userApp, #adminApp, .app-shell, .page { color: #F5F7FC; }
+h1,h2,h3,h4,h5,h6,.section-title h2,.brand-box h1,.product-title,
+.product-name,.wallet-card-main strong,.order-card-total { color: #F5F7FC !important; }
+p, small, .muted, .tile-desc, .section-title>small { color: #A7AFBF; }
+.glass, .topbar, .bottom-nav, .admin-tabs,
+.wallet-card,.detail-card,.order-card,.admin-card,.admin-item,
+.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,
+.vpn-subscription-card,.vpn-sub-targets,.presentation-sheet,
+.dialog-card,.auth-modal-content,.quick-card,.mini-stat,
+.product-tile,.glowing-flash-card,.detail-card,.cart-sheet,
+.cust-drawer,.preview-sheet,.qr-sheet,.share-sheet,.onboarding,
+.palette-popup,.cmd-inner,.app-sheet,.app-sheet-panel,
+.shop-filter-sheet,.filter-sheet,.filter-sheet-panel {
+  background-color: #10131B !important;
+  border-color: rgba(190,200,220,.12) !important;
+  box-shadow: 0 14px 36px rgba(0,0,0,.22) !important;
+}
+.topbar.glass {
+  background: rgba(10,12,18,.96) !important;
+  border-color: rgba(190,200,220,.10) !important;
+}
+.bottom-nav.glass,.bottom-nav {
+  background: rgba(9,10,15,.97) !important;
+  border-color: rgba(190,200,220,.13) !important;
+  box-shadow: 0 -10px 34px rgba(0,0,0,.32) !important;
+}
+.product-tile,.glowing-flash-card,.detail-card,.wallet-card,.admin-card,.admin-item,
+.account-hub-card,.mission-card,.order-row,.quick-card,.mini-stat {
+  background: linear-gradient(155deg, #12151E, #0D0F16) !important;
+  border-color: rgba(190,200,220,.11) !important;
+}
+.tile-img,.detail-hero,.product-image-wrap,.product-card-image {
+  background: linear-gradient(135deg, rgba(74,141,255,.11), rgba(139,92,246,.055), #10131B) !important;
+}
+.primary,.btn-primary,button.primary,.purchase-confirm-submit,
+.mini-credit-primary,.credit-primary-action {
+  background: linear-gradient(135deg,#4A8DFF,#3477EE) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 22px rgba(74,141,255,.18) !important;
+}
+.secondary,button.secondary {
+  background: #1A1E2A !important;
+  color: #E7EBF4 !important;
+  border: 1px solid rgba(190,200,220,.14) !important;
+  box-shadow: none !important;
+}
+.ghost,button.ghost,.icon-btn,.app-sheet-close,.purchase-confirm-cancel {
+  background: rgba(255,255,255,.035) !important;
+  color: #D8DEEA !important;
+  border: 1px solid rgba(190,200,220,.14) !important;
+  box-shadow: none !important;
+}
+button:active,.primary:active,.secondary:active { filter: brightness(1.08); }
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #4A8DFF !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 3px rgba(74,141,255,.16) !important;
+}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+textarea,select,.field input,.field textarea,.field select,
+.searchbar,.searchbar-modern,.mini-account-field input {
+  background-color: #0B0D14 !important;
+  color: #F5F7FC !important;
+  border-color: rgba(190,200,220,.15) !important;
+}
+input::placeholder,textarea::placeholder,.searchbar input::placeholder {
+  color: #7F899C !important;
+}
+.cat-pill,.filter-chip,.filter-choice-grid button,.variant-btn,
+.purchase-plan-option,.shop-filter-trigger,.credit-launch,
+.account-menu-row,.mini-settings-actions button {
+  background: #141722 !important;
+  color: #DCE2EE !important;
+  border-color: rgba(190,200,220,.12) !important;
+}
+.cat-pill.active,.filter-chip.active,.filter-choice-grid button.active,
+.variant-btn.active,.purchase-plan-option.active,.purchase-plan-option.selected,
+.orders-filter-option.active,.admin-tabs button.active,.bottom-nav button.active,
+.topbar-desktop-nav button.active {
+  background: linear-gradient(135deg,rgba(74,141,255,.17),rgba(139,92,246,.10)) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(74,141,255,.48) !important;
+  box-shadow: inset 0 0 0 1px rgba(74,141,255,.06) !important;
+}
+.price-pill,.flash-card-cur-price,.product-price,.price,.wallet-card-main strong {
+  color: #F5F7FC !important;
+}
+.brand-box small,.app-sheet-heading small,.shop-active-filters span.on,
+.account-menu-row .accent,.vpn-sub-micro,.vpn-sub-panel header small {
+  color: #86B5FF !important;
+}
+.hero,.shop-page-intro,.account-center-mini-hero,.mini-credit-hero-v27 {
+  background: linear-gradient(145deg,rgba(74,141,255,.12),rgba(139,92,246,.065) 58%,#10131B) !important;
+  border-color: rgba(74,141,255,.17) !important;
+}
+.hero:after,.hero-glow { background: rgba(139,92,246,.10) !important; }
+.account-menu-icon,.u-empty .u-empty-icon,.orders-filter-option-icon {
+  background: rgba(139,92,246,.11) !important;
+  color: #B8A1FF !important;
+}
+.status-badge.success,.status-badge.active,.status-badge.ok,.vpn-sub-status.ok,
+.status-badge.warning,.status-badge.pending,.status-badge.danger,.status-badge.failed {
+  box-shadow: none !important;
+}
+.order-more-popup-backdrop,.mini-credit-topup-backdrop,.purchase-confirm-overlay,
+.app-sheet-backdrop,.modal-backdrop,.dialog-backdrop {
+  background: rgba(2,3,8,.70) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(108%) !important;
+  backdrop-filter: blur(4px) saturate(108%) !important;
+}
+.order-more-popup-card,.mini-credit-topup-panel,.purchase-confirm-card,
+.dialog-card,.auth-modal-content,.app-sheet-panel,.app-sheet .app-sheet-content {
+  background: linear-gradient(160deg,#151925,#0C0E15) !important;
+  color: #F5F7FC !important;
+  border-color: rgba(190,200,220,.15) !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,.48) !important;
+}
+.order-more-popup-option,.purchase-confirm-desc,.purchase-confirm-specs,
+.mini-topup-balance,.mini-topup-after,.mini-topup-method-list>button,
+.purchase-confirm-price-primary,.bg-centered-confirm-message {
+  background-color: rgba(255,255,255,.035) !important;
+  border-color: rgba(190,200,220,.11) !important;
+  color: #F5F7FC !important;
+}
+.order-more-popup-option.active,.mini-topup-method-list>button.active {
+  border-color: rgba(139,92,246,.52) !important;
+  background: linear-gradient(135deg,rgba(74,141,255,.10),rgba(139,92,246,.10)) !important;
+}
+.order-more-popup-title,.purchase-confirm-brand h3,.mini-credit-topup-panel h2 {
+  color: #F5F7FC !important;
+}
+.order-more-popup-option small,.purchase-confirm-desc p,.mini-credit-topup-panel p {
+  color: #A7AFBF !important;
+}
+.price-pill,.badge { border-color: rgba(74,141,255,.20) !important; background: rgba(74,141,255,.10) !important; }
+.primary .bg-ico,.btn-primary .bg-ico { color: #FFFFFF !important; }
+a { color: #86B5FF; }
+hr,.divider { border-color: rgba(190,200,220,.10) !important; }
+::selection { background: rgba(74,141,255,.30); color: #FFFFFF; }
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
+}
