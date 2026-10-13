@@ -44,7 +44,7 @@ function apply(){
  language=localStorage.getItem(KEY)||language;
  document.documentElement.lang=language;document.documentElement.dir=language==='fa'?'rtl':'ltr';
  document.body.classList.toggle('bluegate-lang-en',language==='en');
- document.querySelectorAll('[data-language-toggle],#bluegateLanguageToggle').forEach(b=>{b.innerHTML=language==='fa'?'<span class="bg-lang-flag-us" role="img" aria-label="United States flag">🇺🇸</span>':'<img class="bg-lang-flag-ir" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Lion_and_Sun_flag_%28emoji%29.svg/960px-Lion_and_Sun_flag_%28emoji%29.svg.png" width="24" height="24" alt="Iran Lion and Sun flag" style="display:block;object-fit:contain" />';b.setAttribute('aria-label',language==='fa'?'Switch to English':'تغییر به فارسی');b.title=language==='fa'?'Switch to English':'تغییر زبان';});
+ document.querySelectorAll('[data-language-toggle],#bluegateLanguageToggle').forEach(b=>{b.innerHTML=language==='fa'?'<span class="bg-lang-flag-us" role="img" aria-label="United States flag">🇺🇸</span>':'<img class="bg-lang-flag-ir" src="https://flagofiran.com/files/flag-of-iran-emoji-toss-face.svg" width="28" height="28" alt="Iran Lion and Sun flag" style="display:block;width:28px;height:28px;object-fit:contain" onerror="this.onerror=null;this.src=\'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Lion_and_Sun_flag_%28emoji%29.svg/960px-Lion_and_Sun_flag_%28emoji%29.svg.png\';this.onerror=function(){this.replaceWith(document.createTextNode(\'🦁☀️\'))}" />';b.setAttribute('aria-label',language==='fa'?'Switch to English':'تغییر به فارسی');b.title=language==='fa'?'Switch to English':'تغییر زبان';});
  if(language==='en')translateElement(document.body);
  else location.reload();
 }
