@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.13 — scoped, lightweight Mini App loader
+
+- Replace the loader's denylist with an explicit allowlist of deliberate mutating/long-running actions, preventing it from appearing on automatic refreshes, page navigation, and ordinary read-only requests.
+- Reduce mobile rendering cost by removing backdrop blur and glow filters, slowing the inner ring animation, and shrinking the spinner on small screens.
+- Bust Mini App CSS/JS cache keys.
+- Version bump: 5.1.12 → 5.1.13 (PATCH).
+
 # BlueGate Platform v5.1.12 — repeat renewal navigation fix
 
 - Resolve managed VPN service identity through prior renewal-order ancestry so renewals continue to deduplicate against the same service.
