@@ -126,7 +126,7 @@ function bg_ai_translate_batch(array $texts, string $target='en', string $contex
             // The legacy provider chain is safe only for plain, single-line labels.
             // Never send HTML, placeholders, or multiline Telegram messages through it.
             if (!empty($out[$source]) || str_contains($source, '<') || str_contains($source, '>') || str_contains($source, "\n") || str_contains($source, "\r")) continue;
-            if ($context !== 'catalog') continue;
+            if (!in_array($context, ['catalog', 'ui'], true)) continue;
             try { $fallback = catalog_translate_text($source); if ($fallback !== '') $out[$source] = $fallback; } catch (Throwable $e) {}
         }
     }
