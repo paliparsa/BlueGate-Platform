@@ -1,3 +1,11 @@
+# BlueGate Platform v5.1.3 — renewal checkout and duplicate job protection
+
+- Reuse the same active renewal order when a customer taps renew repeatedly; return them to the existing checkout instead of creating a second order.
+- Tell Telegram users when a renewal checkout already exists and show that same order invoice; expose reuse state to the web/Mini App API.
+- Serialize VPN service actions per order and service instance, and mark concurrent/duplicate jobs as ignored so the same purchase cannot extend service twice.
+- Replace language-toggle text with flag-only controls: Iran lion-and-sun style for Persian and the United States flag for English.
+- Version bump: 5.1.2 → 5.1.3 (PATCH).
+
 # BlueGate Platform v5.1.2 — x-ui allowedIPs renewal fix
 
 - Normalize the official x-ui Client.allowedIPs field to a JSON string array before sending update requests.
