@@ -100,7 +100,7 @@ async function flush(){
     try{const data=await requestTranslations(unique.slice(offset,offset+20));Object.assign(translations,data.translations||{});if(data.provider_configured===false)console.warn('[BlueGate translation] No AI provider is configured on the server.');}
     catch(err){failed=true;retryDelay=(err?.status===429||err?.status===503)?Math.min(5000,retryDelay*2):Math.max(retryDelay,1000);console.warn('[BlueGate translation] Request failed (HTTP '+(err?.status||'network')+').');break;}
    }
-   if(failed){tasks.forEach(({key,task})=>retryTask(task,key));continue;}
+   if(failed){tasks.forEach(({key,task})=>retryTask(task,key));if(queue.size)await new Promise(resolve=>setTimeout(resolve,retryDelay));continue;}
    const failedTasks=new Set();
    for(const {key,task} of tasks){
     const translatedParts=task.parts.map(part=>translations[part]);
