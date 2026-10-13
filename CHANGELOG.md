@@ -1,3 +1,10 @@
+## 5.1.22 - Product details popup redesign
+
+- Reworked the Mini App product/order popup into a centered modal on mobile and desktop.
+- Put the selected plan price directly after plan selection, followed by a clearer specification list.
+- Improved spacing, readable line-height, mobile sizing, and a scrollable long-description area.
+- Reduced the backdrop blur to a subtle 3px while keeping the existing order, coupon, share, and cart handlers intact.
+
 # BlueGate Platform v5.1.21 — modal spacing and lightweight blur
 
 - Normalize modal card padding, borders, and text/button spacing across centered confirmation, Stars/order popups, and credit top-up flows.
