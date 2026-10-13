@@ -22,3 +22,71 @@ html.purchase-confirm-open,body.purchase-confirm-open{overflow:hidden!important;
 
 /* v2.9.2 coupon apply control */
 .purchase-coupon-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.purchase-coupon-row button{min-height:46px;padding:0 15px;border-radius:var(--r-md);border:1px solid color-mix(in srgb,var(--accent,#45c8ff) 38%,transparent);background:color-mix(in srgb,var(--accent,#45c8ff) 13%,transparent);color:var(--accent,#45c8ff);font:inherit;font-size:14px;font-weight:900;white-space:nowrap}.purchase-coupon-row button:disabled{opacity:.65}.purchase-coupon-feedback{font-size:13px;line-height:1.65;color:#7f91a4}.purchase-coupon-feedback.success{color:var(--bgds-success)}.purchase-coupon-feedback.error{color:#fb7185}@media(max-width:390px){.purchase-coupon-row{grid-template-columns:1fr}.purchase-coupon-row button{width:100%}}
+
+
+/* v5.1.22 — product details popup redesign: centered, clear hierarchy, readable long descriptions */
+.purchase-confirm-overlay{
+  place-items:center!important;
+  padding:max(14px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;
+  background:rgba(2,8,20,.66)!important;
+  -webkit-backdrop-filter:blur(3px) saturate(108%)!important;
+  backdrop-filter:blur(3px) saturate(108%)!important;
+}
+.purchase-confirm-card{
+  width:min(460px,100%)!important;
+  max-height:calc(100dvh - 28px)!important;
+  padding:clamp(19px,4.8vw,25px)!important;
+  gap:16px!important;
+  border:1px solid color-mix(in srgb,var(--accent,#45c8ff) 28%,rgba(255,255,255,.14))!important;
+  border-radius:26px!important;
+  background:linear-gradient(165deg,rgba(15,27,47,.99),rgba(6,13,25,.99))!important;
+  box-shadow:0 26px 78px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.045)!important;
+}
+.purchase-confirm-header{gap:14px!important;padding-bottom:16px!important}
+.purchase-confirm-brand{gap:13px!important}
+.purchase-confirm-brand h3{font-size:clamp(17px,4.5vw,20px)!important;line-height:1.5!important}
+.purchase-confirm-brand p{font-size:12px!important;line-height:1.6!important;overflow-wrap:anywhere}
+.purchase-confirm-close{width:40px!important;height:40px!important}
+.purchase-confirm-avatar{width:54px!important;height:54px!important;flex-basis:54px!important;border-radius:17px!important}
+.purchase-plan-step{padding:15px!important;border-radius:19px!important;background:rgba(255,255,255,.035)!important}
+.purchase-step-head{gap:10px!important;margin-bottom:13px!important}
+.purchase-plan-grid{gap:9px!important}
+.purchase-plan-option{min-height:94px!important;padding:12px!important;border-radius:15px!important}
+.purchase-confirm-price-primary{order:0!important;gap:10px!important;padding:15px 16px!important;border-style:solid!important;border-color:color-mix(in srgb,var(--accent,#45c8ff) 26%,rgba(255,255,255,.08))!important;border-radius:18px!important;background:linear-gradient(120deg,color-mix(in srgb,var(--accent,#45c8ff) 10%,rgba(255,255,255,.02)),rgba(255,255,255,.025))!important}
+.purchase-confirm-price-primary>span{font-size:13px!important;line-height:1.6!important}
+.purchase-confirm-price-primary strong{font-size:clamp(20px,5.2vw,24px)!important;line-height:1.3!important}
+.purchase-confirm-specs{gap:0!important;padding:5px 0!important;border:1px solid rgba(255,255,255,.075)!important;border-radius:17px!important;background:rgba(255,255,255,.022)!important;overflow:hidden}
+.purchase-confirm-specs>div{padding:11px 13px!important;gap:14px!important;line-height:1.55!important}
+.purchase-confirm-specs>div+div{border-top:1px solid rgba(255,255,255,.055)!important}
+.purchase-confirm-specs span{flex:0 0 auto!important;font-size:12px!important}
+.purchase-confirm-specs b{max-width:64%!important;font-size:13px!important;line-height:1.6!important}
+.purchase-confirm-desc{padding:15px!important;border-radius:17px!important;background:rgba(255,255,255,.035)!important;border-color:rgba(255,255,255,.09)!important}
+.purchase-confirm-desc>b{margin-bottom:9px!important;font-size:13px!important}
+.purchase-confirm-desc p{max-height:min(24dvh,210px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;padding-inline-end:3px!important;font-size:13px!important;line-height:1.95!important;white-space:pre-line!important}
+.purchase-confirm-guarantee{padding:11px 13px!important;border-radius:14px!important;font-size:12px!important}
+.purchase-confirm-coupon{gap:9px!important}
+.purchase-confirm-coupon>span{line-height:1.6!important}
+.purchase-coupon-row{gap:9px!important}
+.purchase-confirm-actions{position:sticky!important;bottom:-25px!important;margin:0 -5px -5px!important;padding:12px 5px 5px!important;gap:9px!important;background:linear-gradient(180deg,rgba(7,13,24,0),#070d18 24%)!important}
+.purchase-confirm-submit{min-height:52px!important;border-radius:15px!important;line-height:1.55!important;white-space:normal!important;padding:12px 14px!important}
+.purchase-confirm-cancel{min-height:45px!important;border-radius:14px!important}
+@media(max-width:520px){
+  .purchase-confirm-overlay{place-items:center!important;padding:max(12px,env(safe-area-inset-top)) 10px max(12px,env(safe-area-inset-bottom))!important}
+  .purchase-confirm-card{width:100%!important;max-height:calc(100dvh - 24px)!important;border-radius:24px!important;padding:20px 15px calc(16px + env(safe-area-inset-bottom))!important;gap:14px!important}
+  .mini-purchase-grabber{display:none!important}
+  .purchase-confirm-brand h3{font-size:17px!important}
+  .purchase-confirm-avatar{width:48px!important;height:48px!important;flex-basis:48px!important}
+  .purchase-plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .purchase-plan-option{min-height:88px!important;padding:10px!important}
+  .purchase-plan-title{font-size:13px!important}
+  .purchase-confirm-specs>div{padding:10px 11px!important}
+  .purchase-confirm-specs b{max-width:62%!important;font-size:12px!important}
+  .purchase-confirm-actions{bottom:-18px!important;margin-bottom:-18px!important;padding-bottom:5px!important}
+}
+@media(max-width:370px){
+  .purchase-confirm-overlay{padding-inline:7px!important}
+  .purchase-confirm-card{padding-inline:12px!important}
+  .purchase-plan-grid{grid-template-columns:1fr!important}
+  .purchase-confirm-price-primary{padding:13px!important}
+}
+@media(prefers-reduced-motion:reduce){.purchase-confirm-overlay,.purchase-confirm-card{transition:none!important}}
