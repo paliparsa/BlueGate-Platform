@@ -23,7 +23,7 @@ function setupToggle(){
  b.classList.add('bg-language-toggle');b.type='button';
  if(b.dataset.languageBound!=='1'){b.dataset.languageBound='1';b.addEventListener('click',()=>setLang(getLang()==='en'?'fa':'en'));}
  const lang=getLang();
- const iranLionSun='<img class="bg-lang-flag-ir" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Lion_and_Sun_flag_%28emoji%29.svg/960px-Lion_and_Sun_flag_%28emoji%29.svg.png" width="24" height="24" alt="Iran Lion and Sun flag" style="display:block;object-fit:contain" />'
+ const iranLionSun='<img class="bg-lang-flag-ir" src="https://flagofiran.com/files/flag-of-iran-emoji-toss-face.svg" width="28" height="28" alt="Iran Lion and Sun flag" style="display:block;width:28px;height:28px;object-fit:contain" onerror="this.onerror=null;this.src=\'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Lion_and_Sun_flag_%28emoji%29.svg/960px-Lion_and_Sun_flag_%28emoji%29.svg.png\';this.onerror=function(){this.replaceWith(document.createTextNode(\'🦁☀️\'))}" />'
  b.innerHTML=lang==='en'?iranLionSun:'<span class="bg-lang-flag-us" role="img" aria-label="United States flag">🇺🇸</span>';
  b.style.minWidth='46px';b.style.width='46px';b.style.justifyContent='center';b.style.paddingInline='6px';
  b.setAttribute('aria-label',lang==='en'?'Switch to Persian':'Switch to English');
