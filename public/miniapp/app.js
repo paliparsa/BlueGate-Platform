@@ -463,7 +463,7 @@ function showStatus(text,type='success'){
 /* BlueGate premium command loader + page transitions */
 const BlueGateCommandLoader=(()=>{
   const quiet=new Set(['me','license_status','admin_summary','admin_dashboard','admin_orders','admin_customers','admin_activity','admin_notifications','admin_support_tickets','my_services','service_details','service_sync','order_status','orders','products','catalog','shop_data','rates','notifications','support_tickets','support_ticket_messages']);
-  let active=0,hideTimer=0,rotateTimer=0,root=null,textNode=null,startedAt=0,sequence=0;
+  let active=0,rotateTimer=0,root=null,textNode=null,sequence=0;
   const messages=['در حال آماده‌سازی…','در حال ارتباط امن با سرور…','داریم اطلاعات را بررسی می‌کنیم…','تقریباً آماده است…','لطفاً چند لحظه صبر کن…'];
   function ensure(){
     if(root)return root;
@@ -473,11 +473,11 @@ const BlueGateCommandLoader=(()=>{
   }
   function show(action){
     if(quiet.has(String(action||'')))return ()=>{};
-    clearTimeout(hideTimer);active++;sequence++;
+    active++;sequence++;
     const el=ensure();el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');el.classList.add('visible');document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
-    if(active===1){startedAt=Date.now();textNode.textContent=messages[sequence%messages.length];rotateTimer=window.setInterval(()=>{if(textNode){textNode.classList.remove('swap');void textNode.offsetWidth;textNode.textContent=messages[(++sequence)%messages.length];textNode.classList.add('swap')}},1450);}
+    if(active===1){textNode.textContent=messages[sequence%messages.length];rotateTimer=window.setInterval(()=>{if(textNode){textNode.classList.remove('swap');void textNode.offsetWidth;textNode.textContent=messages[(++sequence)%messages.length];textNode.classList.add('swap')}},1450);}
     let released=false;
-    return ()=>{if(released)return;released=true;active=Math.max(0,active-1);if(active===0){clearInterval(rotateTimer);const wait=Math.max(180,520-(Date.now()-startedAt));hideTimer=window.setTimeout(()=>{if(active)return;el.classList.remove('visible');el.setAttribute('aria-hidden','true');document.documentElement.classList.remove('bg-command-busy');document.body.classList.remove('bg-command-busy')},wait)}};
+    return ()=>{if(released)return;released=true;active=Math.max(0,active-1);if(active===0){clearInterval(rotateTimer);el.classList.remove('visible');el.setAttribute('aria-hidden','true');document.documentElement.classList.remove('bg-command-busy');document.body.classList.remove('bg-command-busy')}};
   }
   return {show};
 })();
