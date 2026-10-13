@@ -1,3 +1,11 @@
+# BlueGate Platform v5.1.7 — Mini App loading and transitions
+
+- Add a reusable full-screen animated command loader with a circular orbit, rotating status messages, glass panel, backdrop blur, and interaction blocking while meaningful API commands run.
+- Keep routine background/read-only polling quiet to avoid flashing the loader during automatic refreshes.
+- Add subtle page-entry transitions and respect reduced-motion preferences.
+- Bust Mini App CSS and JavaScript cache keys so deployed clients load the new UI.
+- Version bump: 5.1.6 → 5.1.7 (PATCH).
+
 # BlueGate Platform v5.1.6 — atomic renewal deduplication
 
 - Acquire a MySQL advisory lock per user and managed VPN service before checking or creating a renewal checkout.
