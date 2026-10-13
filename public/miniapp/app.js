@@ -465,8 +465,8 @@ const BlueGateCommandLoader=(()=>{
   // Opt in only for deliberate user actions that mutate data or take noticeable time.
   // A denylist accidentally showed the overlay for every newly-added read/refresh action.
   const tracked=new Set(['create_order','create_cart_orders','renew_order','service_renew','service_add_days','service_add_traffic','create_credit_topup','credit_topup_start_stars','credit_topup_submit_crypto_hash','credit_topup_submit_receipt','apply_coupon','login','register','telegram_login','change_my_password','email_change_start','email_change_set_new','email_change_verify_current','email_change_verify_new','update_my_profile','update_my_avatar','reset_my_avatar','support_ticket_create','support_ticket_reply','admin_broadcast','admin_notification_broadcast','admin_order_provision_now','admin_provider_save','admin_provider_test','admin_provider_client_create','admin_provider_client_update','admin_provider_client_delete','admin_catalog_upload_image','admin_crypto_wallet_save','admin_crypto_wallet_delete','admin_plan_provider_map_save','spin','initial_boot','select_payment_method','select_crypto_wallet','select_crypto_tab','start_stars_invoice','submit_crypto_hash','check_crypto_payment','credit_topup_set_method','credit_topup_change_method','cancel_credit_topup','cancel_order','hide_order','clear_canceled_orders','service_sync','service_usage_history','service_event_history']);
-  let active=0,rotateTimer=0,root=null,textNode=null,sequence=0;
-  const messages=['در حال آماده‌سازی…','در حال ارتباط امن با سرور…','داریم اطلاعات را بررسی می‌کنیم…','تقریباً آماده است…','لطفاً چند لحظه صبر کن…'];
+  let active=0,root=null,textNode=null;
+  const loadingMessage='در حال انجام درخواست…';
   function ensure(){
     if(root)return root;
     root=document.createElement('div');root.id='bgCommandLoader';root.className='bg-command-loader';root.setAttribute('role','status');root.setAttribute('aria-live','polite');root.setAttribute('aria-hidden','true');
@@ -475,11 +475,15 @@ const BlueGateCommandLoader=(()=>{
   }
   function show(action){
     if(!tracked.has(String(action||'')))return ()=>{};
-    active++;sequence++;
-    const el=ensure();el.classList.remove('is-idle');el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');el.classList.add('visible');document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
-    if(active===1){textNode.textContent=messages[sequence%messages.length];rotateTimer=window.setInterval(()=>{if(textNode){textNode.classList.remove('swap');void textNode.offsetWidth;textNode.textContent=messages[(++sequence)%messages.length];textNode.classList.add('swap')}},1450);}
+    active++;
+    const el=ensure();el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');
+    if(active===1){
+      textNode.textContent=loadingMessage;
+      el.classList.remove('is-idle');el.classList.add('visible');
+      document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
+    }
     let released=false;
-    return ()=>{if(released)return;released=true;active=Math.max(0,active-1);if(active===0){clearInterval(rotateTimer);rotateTimer=0;el.classList.remove('visible');el.setAttribute('aria-hidden','true');document.documentElement.classList.remove('bg-command-busy');document.body.classList.remove('bg-command-busy');el.classList.add('is-idle')}};
+    return ()=>{if(released)return;released=true;active=Math.max(0,active-1);if(active===0){el.classList.remove('visible');el.setAttribute('aria-hidden','true');document.documentElement.classList.remove('bg-command-busy');document.body.classList.remove('bg-command-busy');el.classList.add('is-idle')}};
   }
   return {show};
 })();
