@@ -5043,3 +5043,38 @@ body.order-more-popup-open{overflow:hidden}
   .od-sticky-actions .btn-v2{padding:9px 7px!important;min-height:44px!important;font-size:12px!important;gap:5px!important}
 }
 @media(prefers-reduced-motion:reduce){.od-sticky-actions .btn-v2{transition:none!important}}
+
+/* Crypto payment flow — match the centered modal and payment action bar language. */
+.payment-box:has(.crypto-v2-wallet-list),.payment-box:has(.crypto-v2-card){
+  border:1px solid var(--border,rgba(148,163,184,.2))!important;
+  border-radius:22px!important;
+  padding:16px!important;
+  background:var(--card,rgba(15,23,42,.72))!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.12)!important;
+}
+.crypto-v2-topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin-bottom:14px!important}
+.crypto-v2-title{display:flex!important;align-items:center!important;gap:10px!important}
+.crypto-v2-title-text{font-size:16px!important;font-weight:850!important;letter-spacing:-.02em!important}
+.crypto-v2-coin-icon{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;border-radius:14px!important;background:rgba(245,158,11,.12)!important;border:1px solid rgba(245,158,11,.2)!important}
+.crypto-v2-subtitle{margin:0 0 12px!important;font-size:13px!important;line-height:1.8!important;color:var(--muted,#94a3b8)!important}
+.crypto-v2-wallet-list{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+.crypto-v2-wallet-card{position:relative!important;min-width:0!important;box-sizing:border-box!important;gap:12px!important;padding:14px!important;border:1px solid var(--border,rgba(148,163,184,.2))!important;border-radius:17px!important;background:rgba(148,163,184,.045)!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;transition:border-color .16s ease,background .16s ease,transform .16s ease!important}
+.crypto-v2-wallet-card:hover,.crypto-v2-wallet-card:active{border-color:var(--primary,#5794ff)!important;background:rgba(87,148,255,.07)!important;transform:translateY(-1px)!important}
+.crypto-v2-rate-pill{display:inline-flex!important;align-items:center!important;justify-content:center!important;max-width:100%!important;white-space:normal!important;padding:7px 9px!important;border-radius:10px!important;background:rgba(87,148,255,.1)!important;color:var(--primary,#8dbdff)!important;font-size:12px!important;font-weight:800!important}
+.crypto-v2-wallet-name{font-size:14px!important;font-weight:850!important;overflow-wrap:anywhere!important}
+.crypto-v2-wallet-network{font-size:12px!important;margin-top:4px!important;padding:3px 8px!important;border-radius:8px!important;background:rgba(148,163,184,.09)!important;display:inline-flex!important;align-self:flex-end!important}
+.crypto-v2-coin-badge{width:40px!important;height:40px!important;border-radius:13px!important;background:rgba(245,158,11,.12)!important;border:1px solid rgba(245,158,11,.2)!important;box-shadow:none!important}
+.crypto-v2-card{gap:14px!important;padding:15px!important;border:1px solid var(--border,rgba(148,163,184,.2))!important;border-radius:20px!important;background:rgba(148,163,184,.035)!important}
+.crypto-v2-amount-bar{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;padding:13px!important;border:1px solid rgba(87,148,255,.2)!important;border-radius:15px!important;background:rgba(87,148,255,.07)!important}
+.crypto-v2-amount-bar>span{font-size:12px!important;color:var(--muted,#94a3b8)!important}
+.crypto-v2-amount-val{direction:ltr!important;text-align:right!important;overflow-wrap:anywhere!important;font-size:20px!important;font-weight:900!important;color:var(--text,#f8fafc)!important}
+.crypto-v2-label{display:block!important;font-size:13px!important;font-weight:800!important;margin-bottom:7px!important;color:var(--text,#f8fafc)!important}
+.crypto-v2-address-box{padding:12px!important;border:1px solid var(--border,rgba(148,163,184,.2))!important;border-radius:14px!important;background:rgba(0,0,0,.12)!important}
+.crypto-v2-address-code{display:block!important;direction:ltr!important;text-align:left!important;overflow-wrap:anywhere!important;word-break:break-all!important;font-size:12px!important;line-height:1.8!important;color:var(--text,#f8fafc)!important}
+.crypto-v2-copy-btn,.crypto-v2-submit-btn{min-height:44px!important;border-radius:13px!important;font-weight:800!important;transition:transform .15s ease,opacity .15s ease!important}
+.crypto-v2-copy-btn{border:1px solid var(--border,rgba(148,163,184,.2))!important;background:rgba(148,163,184,.07)!important;color:var(--text,#f8fafc)!important}
+.crypto-v2-submit-btn{box-shadow:0 5px 15px rgba(37,99,235,.16)!important}
+.crypto-v2-input{box-sizing:border-box!important;width:100%!important;min-height:46px!important;border-radius:13px!important;border:1px solid var(--border,rgba(148,163,184,.22))!important;background:var(--input,rgba(148,163,184,.06))!important;padding:12px!important;direction:ltr!important;text-align:left!important}
+.crypto-v2-status{border-radius:12px!important;padding:10px 12px!important;font-size:12px!important;line-height:1.8!important}
+@media(max-width:430px){.crypto-v2-wallet-card{padding:12px!important;gap:8px!important}.crypto-v2-rate-pill{font-size:11px!important;padding:6px 7px!important}.crypto-v2-wallet-right{gap:8px!important}.crypto-v2-wallet-name{font-size:13px!important}.crypto-v2-amount-val{font-size:18px!important}}
+@media(prefers-reduced-motion:reduce){.crypto-v2-wallet-card,.crypto-v2-copy-btn,.crypto-v2-submit-btn{transition:none!important}}
