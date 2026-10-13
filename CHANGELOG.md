@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.20 — credit top-up modal polish
+
+- Redesign the add-credit and payment-method steps as centered, scrollable dialogs with consistent hierarchy and mobile sizing.
+- Improve pending top-up rows and their change-method/cancel controls.
+- Use the centered confirmation modal for changing payment method and cancelling a top-up, with clearer actions and warning copy.
+- Preserve existing top-up API and payment processing flows; refresh stylesheet cache key.
+
 # BlueGate Platform v5.1.19 — order payment action bar redesign
 
 - Redesign the order payment bottom action rail with a compact glass surface, clearer primary/secondary actions, a dedicated More control, and mobile/safe-area spacing.
