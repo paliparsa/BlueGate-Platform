@@ -62,18 +62,28 @@ function api_set_session_cookie(string $token, bool $remember=true): void {$secu
 function api_clear_session_cookie(): void { setcookie('nx_session','',['expires'=>time()-3600,'path'=>'/','secure'=>!empty($_SERVER['HTTPS']),'httponly'=>true,'samesite'=>'Lax']); }
 function api_issue_session(int $userId, bool $remember=true): void {$t=issue_user_auth_token($userId);api_set_session_cookie($t,$remember);}
 
-function get_authenticated_user(string $initData, ?string $authToken = null): array|false {
+function get_authenticated_user(string $initData, ?string $authToken = null, ?string &$failureReason = null): array|false {
+    $failureReason = null;
     if (!empty($initData)) {
-        $validated = verify_webapp_init_data($initData);
-        if ($validated && !empty($validated['user'])) {
+        $verifyReason = null;
+        $validated = verify_webapp_init_data($initData, $verifyReason);
+        if (!$validated) {
+            $failureReason = 'INVALID_INIT_DATA:' . ($verifyReason ?: 'unknown');
+        } elseif (empty($validated['user'])) {
+            $failureReason = 'INIT_DATA_USER_MISSING';
+        } else {
             $tgUser = json_decode($validated['user'], true);
-            if ($tgUser && !empty($tgUser['id'])) {
+            if (!$tgUser || empty($tgUser['id'])) {
+                $failureReason = 'INIT_DATA_USER_INVALID';
+            } else {
+                // Do not log initData, user payloads, hashes, or bot tokens.
                 $user = create_or_update_user($tgUser, null);
                 // Never block Mini App authentication on a Telegram Bot API network call.
                 // Referral reward / force-join housekeeping is handled by the bot flow and can
                 // be retried independently; authentication itself must remain local and fast.
                 $fullUser = get_user_by_tid((int)$tgUser['id']);
                 if ($fullUser && !user_is_blocked($fullUser)) return $fullUser;
+                $failureReason = $fullUser ? 'ACCOUNT_BLOCKED' : 'USER_RESOLUTION_FAILED';
             }
         }
     }
@@ -81,18 +91,31 @@ function get_authenticated_user(string $initData, ?string $authToken = null): ar
         $user = get_user_by_token($authToken);
         if ($user && !user_is_blocked($user)) {
             if (setting_bool('require_email_verification', true) && !empty($user['email']) && empty($user['email_verified_at'])) {
+                $failureReason = 'EMAIL_VERIFICATION_REQUIRED';
                 return false;
             }
             return $user;
         }
+        $failureReason = 'WEB_SESSION_INVALID';
         api_clear_session_cookie();
         return false;
     }
     return false;
 }
 function webapp_auth_user(string $initData): array {
-    $u = get_authenticated_user($initData, null);
-    if (!$u) api_out(['ok'=>false, 'error'=>'INVALID_TELEGRAM_WEBAPP_DATA', 'message'=>'Mini App باید داخل تلگرام باز شود.'], 401);
+    $failureReason = null;
+    $u = get_authenticated_user($initData, null, $failureReason);
+    if (!$u) {
+        $reason = $failureReason ?: 'AUTHENTICATION_FAILED';
+        error_log('[BlueGate Mini App auth] ' . $reason);
+        if (str_starts_with($reason, 'INVALID_INIT_DATA:')) {
+            api_out(['ok'=>false, 'error'=>'INVALID_TELEGRAM_WEBAPP_DATA', 'message'=>'اطلاعات ورود تلگرام معتبر نیست یا منقضی شده است. Mini App را از دکمه داخل ربات دوباره باز کنید.'], 401);
+        }
+        if ($reason === 'ACCOUNT_BLOCKED') {
+            api_out(['ok'=>false, 'error'=>'ACCOUNT_BLOCKED', 'message'=>'دسترسی این حساب مسدود شده است.'], 403);
+        }
+        api_out(['ok'=>false, 'error'=>'TELEGRAM_ACCOUNT_RESOLUTION_FAILED', 'message'=>'ورود تلگرام انجام نشد. یک بار ربات را ببندید و دوباره باز کنید؛ اگر ادامه داشت، با پشتیبانی تماس بگیرید.'], 401);
+    }
     return $u;
 }
 function guest_dashboard_payload(): array {

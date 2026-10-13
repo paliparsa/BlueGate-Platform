@@ -4717,22 +4717,34 @@ function telegram_download_file(string $fileId, string $dest): bool {
 }
 
 
-function verify_webapp_init_data(string $initData): array|false {
+function verify_webapp_init_data(string $initData, ?string &$failureReason = null): array|false {
+    $failureReason = null;
+    $fail = static function(string $reason) use (&$failureReason): bool {
+        $failureReason = $reason;
+        return false;
+    };
     $token = trim((string)app_config('BOT_TOKEN', ''));
-    if ($token === '' || $initData === '' || strlen($initData) > 8192) return false;
+    if ($token === '') return $fail('BOT_TOKEN_NOT_CONFIGURED');
+    if ($initData === '') return $fail('INIT_DATA_EMPTY');
+    if (strlen($initData) > 8192) return $fail('INIT_DATA_TOO_LARGE');
     parse_str($initData, $data);
-    if (empty($data['hash']) || !is_string($data['hash'])) return false;
+    if (empty($data['hash']) || !is_string($data['hash'])) return $fail('HASH_MISSING');
     $hash = $data['hash'];
     unset($data['hash']);
     ksort($data);
     $pairs = [];
-    foreach ($data as $k => $v) { if (!is_string($v)) return false; $pairs[] = $k . '=' . $v; }
+    foreach ($data as $k => $v) {
+        if (!is_string($v)) return $fail('NON_STRING_FIELD');
+        $pairs[] = $k . '=' . $v;
+    }
     $checkString = implode("\n", $pairs);
     $secretKey = hash_hmac('sha256', $token, 'WebAppData', true);
     $calculated = hash_hmac('sha256', $checkString, $secretKey);
-    if (!hash_equals($calculated, $hash)) return false;
+    if (!hash_equals($calculated, $hash)) return $fail('HASH_MISMATCH');
     $authDate = (int)($data['auth_date'] ?? 0);
-    if ($authDate <= 0 || $authDate > time() + 300 || time() - $authDate > 86400) return false;
+    if ($authDate <= 0) return $fail('AUTH_DATE_MISSING');
+    if ($authDate > time() + 300) return $fail('AUTH_DATE_IN_FUTURE');
+    if (time() - $authDate > 86400) return $fail('AUTH_DATA_EXPIRED');
     return $data;
 }
 
