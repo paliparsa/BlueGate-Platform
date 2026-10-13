@@ -930,7 +930,7 @@ function openWalletConfirmSheet(orderId){
         <h3 style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">${en?'Pay with BlueGate balance':'کسر از موجودی اعتبار BlueGate'}</h3>
         <p class="muted" style="font-size:14.5px;line-height:1.6;margin-bottom:14px">
           ${en?'Pay for order':'آیا از پرداخت سفارش'} <b>#${nf(o.id)}</b> ${en?'for':'به مبلغ'} <b>${money(o.final_amount)}</b> ${en?'?':'اطمینان دارید؟'}<br>
-          ${en?'Available balance:':'موجودی قابل پرداخت شما:'} <b style="color:#4ade80;font-size:15px">${en?'
+          ${en?'Available balance:':'موجودی قابل پرداخت شما:'} <b style="color:#4ade80;font-size:15px">${en?'$'+bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4}):fmt(bal)}</b>
         </p>
       </div>
       <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);padding:12px;border-radius:16px;font-size:14px;color:#fde68a;line-height:1.6;margin-bottom:18px;text-align:right">
