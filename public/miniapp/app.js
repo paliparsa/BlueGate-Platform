@@ -462,7 +462,9 @@ function showStatus(text,type='success'){
 }
 /* BlueGate premium command loader + page transitions */
 const BlueGateCommandLoader=(()=>{
-  const quiet=new Set(['me','license_status','admin_summary','admin_dashboard','admin_orders','admin_customers','admin_activity','admin_notifications','admin_support_tickets','my_services','service_details','service_sync','order_status','orders','products','catalog','shop_data','rates','notifications','support_tickets','support_ticket_messages']);
+  // Opt in only for deliberate user actions that mutate data or take noticeable time.
+  // A denylist accidentally showed the overlay for every newly-added read/refresh action.
+  const tracked=new Set(['create_order','create_cart_orders','renew_order','service_renew','service_add_days','service_add_traffic','create_credit_topup','credit_topup_start_stars','credit_topup_submit_crypto_hash','credit_topup_submit_receipt','apply_coupon','login','register','telegram_login','change_my_password','email_change_start','email_change_set_new','email_change_verify_current','email_change_verify_new','update_my_profile','update_my_avatar','reset_my_avatar','support_ticket_create','support_ticket_reply','admin_broadcast','admin_notification_broadcast','admin_order_provision_now','admin_provider_save','admin_provider_test','admin_provider_client_create','admin_provider_client_update','admin_provider_client_delete','admin_catalog_upload_image','admin_crypto_wallet_save','admin_crypto_wallet_delete','admin_plan_provider_map_save','spin']);
   let active=0,rotateTimer=0,root=null,textNode=null,sequence=0;
   const messages=['در حال آماده‌سازی…','در حال ارتباط امن با سرور…','داریم اطلاعات را بررسی می‌کنیم…','تقریباً آماده است…','لطفاً چند لحظه صبر کن…'];
   function ensure(){
@@ -472,7 +474,7 @@ const BlueGateCommandLoader=(()=>{
     document.body.appendChild(root);textNode=root.querySelector('.bg-loader-message');return root;
   }
   function show(action){
-    if(quiet.has(String(action||'')))return ()=>{};
+    if(!tracked.has(String(action||'')))return ()=>{};
     active++;sequence++;
     const el=ensure();el.classList.remove('is-idle');el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');el.classList.add('visible');document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
     if(active===1){textNode.textContent=messages[sequence%messages.length];rotateTimer=window.setInterval(()=>{if(textNode){textNode.classList.remove('swap');void textNode.offsetWidth;textNode.textContent=messages[(++sequence)%messages.length];textNode.classList.add('swap')}},1450);}
