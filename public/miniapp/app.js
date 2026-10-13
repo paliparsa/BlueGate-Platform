@@ -3207,8 +3207,10 @@ function applyTheme(data={}){
   // A device-local choice intentionally overrides the global accent and primary button color.
   const accent = local || configuredAccent;
   const primary = local || ((data && data.button_colors_enabled===false) ? configuredAccent : (configuredPrimary || configuredAccent));
-  document.documentElement.style.setProperty('--accent', accent);
-  document.documentElement.style.setProperty('--primary', primary);
+  // Inline important tokens also win against stale cached legacy CSS during rollout.
+  document.documentElement.style.setProperty('--accent', accent, 'important');
+  document.documentElement.style.setProperty('--primary', primary, 'important');
+  document.documentElement.style.setProperty('--u-accent', accent, 'important');
   document.documentElement.style.setProperty('--secondary', data && (data.button_colors?.secondary || (data.settings && data.settings.button_colors?.secondary)) || '#2563eb');
   document.documentElement.style.setProperty('--danger', data && (data.button_colors?.danger || (data.settings && data.settings.button_colors?.danger)) || '#ef4444');
   document.documentElement.style.setProperty('--success', data && (data.button_colors?.success || (data.settings && data.settings.button_colors?.success)) || '#22c55e');
