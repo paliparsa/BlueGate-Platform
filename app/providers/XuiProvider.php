@@ -230,6 +230,17 @@ final class BlueGateXuiProvider extends BlueGateAbstractProvider {
         if(!isset($src['tgId']))$src['tgId']=0;
         if(!isset($src['enable']))$src['enable']=true;
         if(empty($src['subId']))$src['subId']=trim((string)($request['sub_id']??''))?:bin2hex(random_bytes(8));
+        // The official API schema requires allowedIPs to be []string. Some panel builds
+        // return this field as a scalar string; normalize it before update to avoid JSON unmarshal failures.
+        if(array_key_exists('allowedIPs',$src)){
+            $allowed=$src['allowedIPs'];
+            if(is_string($allowed)){
+                $decoded=json_decode($allowed,true);
+                if(is_array($decoded))$allowed=$decoded;
+                else $allowed=trim($allowed)===''?[]:preg_split('/\\s*,\\s*/',trim($allowed),-1,PREG_SPLIT_NO_EMPTY);
+            }
+            $src['allowedIPs']=is_array($allowed)?array_values(array_filter(array_map('strval',$allowed),static fn($ip)=>trim($ip)!=='')):[];
+        }
         // Remove response-only / BlueGate-only fields before sending the official client schema.
         foreach(['inbound_ids','inboundIds','traffic','up','down','total','uuid','createdAt','updatedAt','lastOnline','externalLinks','tunnelAllowedIPs'] as $k)unset($src[$k]);
         return $src;
