@@ -4021,6 +4021,10 @@ function set_order_service_delivery(int $orderId, string $url, string $title='',
 function create_renewal_order_from_order(int $userId, int $oldOrderId): array {
     $old=order_by_id($oldOrderId);
     if(!$old || (int)$old['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
+    // Reuse the previous renewal checkout for this source order. Never create a second paid renewal.
+    $existingQ=db()->prepare("SELECT * FROM orders WHERE user_id=? AND renewal_of_order_id=? AND is_renewal=1 AND status NOT IN ('cancelled','canceled','failed','refunded') ORDER BY id DESC LIMIT 1");
+    $existingQ->execute([$userId,$oldOrderId]);$existing=$existingQ->fetch(PDO::FETCH_ASSOC);
+    if($existing){$existing['_reused_existing_renewal']=true;return $existing;}
     if(normalize_order_status((string)$old['status']) !== 'delivered') throw new RuntimeException('ORDER_NOT_RENEWABLE');
     $order=create_storefront_order($userId,(int)$old['product_id'],!empty($old['variant_id'])?(int)$old['variant_id']:null,null);
     $carryUrl=null;$carryTitle=null;
