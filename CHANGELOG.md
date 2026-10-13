@@ -1,3 +1,10 @@
+## 5.1.24 - User-customizable Mini App accent and primary buttons
+
+- Make the device-local palette choice drive both accent styling and primary button backgrounds, including focus and selected-state accents.
+- Remove `!important` from runtime-controlled accent/primary CSS tokens so `applyTheme()` can update them reliably.
+- Keep the black/white base and semantic status colors intact; preserve admin-configured defaults when no local preference exists.
+- Replace the duplicate purple swatch with the intended blue default and refresh app/palette cache keys.
+
 ## 5.1.23 - Unified Mini App palette redesign
 
 - Introduce a centralized black-first, white-text palette with restrained blue actions and violet accents.
