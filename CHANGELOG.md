@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.2 — x-ui allowedIPs renewal fix
+
+- Normalize the official x-ui Client.allowedIPs field to a JSON string array before sending update requests.
+- Accept array values and JSON/comma-separated string representations from existing panel client data.
+- Fixes renewal/update failures caused by Go JSON decoding a string into []string.
+- Version bump: 5.1.1 → 5.1.2 (PATCH).
+
 # BlueGate Platform v5.1.1 — VPN renewal and payment reliability
 
 - Notify Telegram admins when an order is fully paid using the wallet in the bot.
