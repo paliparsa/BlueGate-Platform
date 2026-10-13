@@ -16,10 +16,10 @@ function detectInternational(){
  return !(lang==='fa'||lang.startsWith('fa-')||lang==='fa_ir');
 }
 function getLanguage(){
- const saved=localStorage.getItem(KEY);if(saved==='fa'||saved==='en')return saved;
- const tgLang=String(window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code||'').toLowerCase();
- const browser=String(navigator.language||'').toLowerCase();
- return (tgLang==='fa'||tgLang.startsWith('fa-')||browser==='fa'||browser.startsWith('fa-'))?'fa':'en';
+ const saved=localStorage.getItem(KEY);
+ if(saved==='fa'||saved==='en')return saved;
+ // Persian is the product default; do not infer new users' language from device locale.
+ return 'fa';
 }
 let language=getLanguage(), translating=false;
 function translateString(value){
