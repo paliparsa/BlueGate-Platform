@@ -5078,3 +5078,71 @@ body.order-more-popup-open{overflow:hidden}
 .crypto-v2-status{border-radius:12px!important;padding:10px 12px!important;font-size:12px!important;line-height:1.8!important}
 @media(max-width:430px){.crypto-v2-wallet-card{padding:12px!important;gap:8px!important}.crypto-v2-rate-pill{font-size:11px!important;padding:6px 7px!important}.crypto-v2-wallet-right{gap:8px!important}.crypto-v2-wallet-name{font-size:13px!important}.crypto-v2-amount-val{font-size:18px!important}}
 @media(prefers-reduced-motion:reduce){.crypto-v2-wallet-card,.crypto-v2-copy-btn,.crypto-v2-submit-btn{transition:none!important}}
+
+
+/* v5.1.19 — refined order payment bottom action rail */
+.od-sticky-actions{
+  position:sticky!important;
+  bottom:calc(82px + env(safe-area-inset-bottom))!important;
+  z-index:18!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto!important;
+  align-items:stretch!important;
+  gap:9px!important;
+  margin:18px -2px 6px!important;
+  padding:9px!important;
+  border:1px solid rgba(148,163,184,.17)!important;
+  border-radius:22px!important;
+  background:rgba(10,17,30,.88)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(145%)!important;
+  backdrop-filter:blur(22px) saturate(145%)!important;
+}
+.od-sticky-actions .btn-v2{
+  min-width:0!important;
+  min-height:48px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex-direction:row!important;
+  gap:8px!important;
+  padding:10px 12px!important;
+  border-radius:15px!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  line-height:1.35!important;
+  white-space:nowrap!important;
+  box-shadow:none!important;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease!important;
+}
+.od-sticky-actions .od-note-btn,
+.od-sticky-actions .od-more-btn,
+.od-sticky-actions .mini-service-copy-btn{
+  border:1px solid rgba(148,163,184,.2)!important;
+  background:rgba(148,163,184,.075)!important;
+  color:var(--text,#f8fafc)!important;
+}
+.od-sticky-actions .od-note-btn:active,
+.od-sticky-actions .od-more-btn:active,
+.od-sticky-actions .btn-v2:active{transform:scale(.975)!important}
+.od-sticky-actions .od-note-btn .od-action-icon,
+.od-sticky-actions .mini-service-open-btn .od-action-icon,
+.od-sticky-actions .mini-service-copy-btn .od-action-icon,
+.od-sticky-actions .od-renew-btn .od-action-icon{font-size:17px!important;line-height:1!important;flex:0 0 auto}
+.od-sticky-actions .od-more-btn{min-width:58px!important;flex-direction:column!important;gap:5px!important;padding:7px 11px!important}
+.od-sticky-actions .od-more-dots{display:inline-flex!important;gap:3px!important;align-items:center!important;justify-content:center!important}
+.od-sticky-actions .od-more-dots i{width:4px!important;height:4px!important;border-radius:50%!important;background:currentColor!important}
+.od-sticky-actions .od-more-label{font-size:11px!important;line-height:1.1!important}
+.od-sticky-actions .mini-service-open-btn{background:linear-gradient(135deg,var(--primary,#1d9bf0),#2459d3)!important;border:1px solid rgba(125,180,255,.3)!important;color:#fff!important}
+.od-sticky-actions .od-renew-btn{border:1px solid rgba(59,130,246,.25)!important;background:rgba(37,99,235,.13)!important;color:#dbeafe!important}
+@media(max-width:520px){
+  .od-sticky-actions{bottom:calc(78px + env(safe-area-inset-bottom))!important;gap:7px!important;padding:8px!important;border-radius:19px!important}
+  .od-sticky-actions .btn-v2{min-height:45px!important;padding:9px 7px!important;font-size:12px!important;gap:6px!important}
+  .od-sticky-actions .od-more-btn{min-width:52px!important;padding:6px 8px!important}
+  .od-sticky-actions .od-action-icon{font-size:16px!important}
+}
+@media(max-width:360px){
+  .od-sticky-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto!important;gap:5px!important;padding:7px!important}
+  .od-sticky-actions .btn-v2{font-size:11px!important;padding:8px 5px!important}
+}
+@media(prefers-reduced-motion:reduce){.od-sticky-actions .btn-v2{transition:none!important}}
