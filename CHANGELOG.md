@@ -1,3 +1,19 @@
+# BlueGate Platform v5.0.55 — Translation reliability and admin refresh fix
+
+- Stop automatically starting the catalog translation batch every time the web admin mounts or refreshes; keep explicit translation actions and catalog-related flows available.
+- Respect provider retry-after hints and use bounded backoff for HTTP 429/503 translation errors.
+- Retain failed UI translation tasks for up to eight attempts instead of dropping them after three failures.
+- Validation: PHP syntax, JavaScript syntax, and SQL translation-column uniqueness checks passed in GitHub Actions.
+
+## Versioning policy
+
+BlueGate Platform uses Semantic Versioning for the core release: `MAJOR.MINOR.PATCH`.
+- **MAJOR**: incompatible changes, breaking migrations, or major architectural changes.
+- **MINOR**: backward-compatible features and functionality.
+- **PATCH**: backward-compatible bug fixes, reliability improvements, and small corrections.
+- The core version is recorded in `VERSION`; the Pro modules have their own version and are not automatically bumped with core releases.
+- Every release must update `VERSION` and add a dated/numbered entry at the top of this changelog. Git tags should use the `v` prefix (for example, `v5.0.55`) when a formal release is published.
+
 # BlueGate Platform v5.0.54 — Shared AI Live Translation
 
 - Add a shared OpenAI-compatible AI translation service with server-side cache and protected placeholders, links, numbers, and markup.
