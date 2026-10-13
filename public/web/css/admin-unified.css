@@ -133,3 +133,13 @@ body.member-route-active #stickyCheckout{display:none!important}
 
 /* v5.0.52 editable catalog translation editor */
 .catalog-translation-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px;max-height:62vh;overflow:auto;padding:2px}.catalog-translation-field{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;background:rgba(120,140,180,.055);border:1px solid var(--admin-border,rgba(140,160,190,.16));border-radius:12px;padding:10px}.catalog-translation-field label{display:block;min-width:0}.catalog-translation-field label small{opacity:.65;font-size:10px}.catalog-translation-field input,.catalog-translation-field textarea{display:block;width:100%;margin-top:5px;min-width:0}.catalog-translation-field textarea{resize:vertical}.catalog-translation-field button{white-space:nowrap;min-height:38px}.catalog-translation-list .catalog-translation-field:nth-child(odd){border-color:rgba(90,130,220,.2)}@media(max-width:760px){.catalog-translation-list{grid-template-columns:1fr;max-height:65vh}.catalog-translation-field{grid-template-columns:minmax(0,1fr)}.catalog-translation-field button{width:100%}}
+
+/* Translation editor v2: clear status, progress and touch-friendly controls. */
+.catalog-translation-status{display:grid;gap:8px;margin-top:12px;padding:11px 12px;border:1px solid rgba(90,170,240,.2);border-radius:12px;background:rgba(30,70,120,.12);color:#b9cce4;font-size:12px;line-height:1.65}
+.catalog-translation-progress{height:5px;border-radius:99px;background:rgba(148,163,184,.18);overflow:hidden}
+.catalog-translation-progress i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#38bdf8,#818cf8);transition:width .2s ease}
+.catalog-translation-field{min-width:0}
+.catalog-translation-field label{overflow-wrap:anywhere}
+.catalog-translation-field button:disabled{opacity:.55;cursor:wait}
+.catalog-translation-field input,.catalog-translation-field textarea{direction:ltr;text-align:left;unicode-bidi:plaintext}
+@media(max-width:760px){.catalog-translation-status{font-size:12px;padding:10px}.catalog-translation-field label small{display:inline-block;margin-inline-start:4px}}
