@@ -23,6 +23,14 @@ function catalog_translate_text(string $source): string {
         if(is_string($cached)&&trim($cached)!=='')return trim($cached);
     }catch(Throwable $e){}
     $translated='';
+    // Prefer the shared AI translation engine for the admin catalog editor when configured.
+    // Use a distinct context to avoid recursing through the legacy catalog fallback.
+    if(function_exists('bg_ai_translate_batch') && function_exists('bg_ai_translation_enabled') && bg_ai_translation_enabled()){
+        try{
+            $ai=bg_ai_translate_batch([$source],'en','catalog-ai');
+            $translated=trim((string)($ai[$source]??''));
+        }catch(Throwable $e){error_log('[BlueGate catalog AI translation] '.$e->getMessage());}
+    }
     $deeplKey=trim((string)app_config('DEEPL_API_KEY',''));
     $deeplBase=rtrim(trim((string)app_config('DEEPL_API_URL','https://api-free.deepl.com')),'/');
     $googleKey=trim((string)app_config('GOOGLE_TRANSLATE_API_KEY',''));
