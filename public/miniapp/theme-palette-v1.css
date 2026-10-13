@@ -30,9 +30,10 @@
   --muted: #A7AFBF !important;
   --line: rgba(190,200,220,.12) !important;
   --border: rgba(190,200,220,.12) !important;
-  --accent: #4A8DFF !important;
-  --accent-2: #86B5FF !important;
-  --primary: #4A8DFF !important;
+  /* Runtime-adjustable by applyTheme() and the local palette picker. */
+  --accent: #4A8DFF;
+  --accent-2: #86B5FF;
+  --primary: #4A8DFF;
   --secondary: #1C2130 !important;
   --u-accent: #4A8DFF !important;
   --u-accent-2: #86B5FF !important;
@@ -89,7 +90,7 @@ p, small, .muted, .tile-desc, .section-title>small { color: #A7AFBF; }
 }
 .primary,.btn-primary,button.primary,.purchase-confirm-submit,
 .mini-credit-primary,.credit-primary-action {
-  background: linear-gradient(135deg,#4A8DFF,#3477EE) !important;
+  background: var(--primary, #4A8DFF) !important;
   color: #FFFFFF !important;
   border-color: transparent !important;
   box-shadow: 0 8px 22px rgba(74,141,255,.18) !important;
@@ -109,9 +110,9 @@ p, small, .muted, .tile-desc, .section-title>small { color: #A7AFBF; }
 button:active,.primary:active,.secondary:active { filter: brightness(1.08); }
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
 [role="button"]:focus-visible {
-  outline: 2px solid #4A8DFF !important;
+  outline: 2px solid var(--accent, #4A8DFF) !important;
   outline-offset: 3px !important;
-  box-shadow: 0 0 0 3px rgba(74,141,255,.16) !important;
+  box-shadow: var(--bgds-focus, 0 0 0 3px rgba(74,141,255,.16)) !important;
 }
 input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
 textarea,select,.field input,.field textarea,.field select,
@@ -136,7 +137,7 @@ input::placeholder,textarea::placeholder,.searchbar input::placeholder {
 .topbar-desktop-nav button.active {
   background: linear-gradient(135deg,rgba(74,141,255,.17),rgba(139,92,246,.10)) !important;
   color: #FFFFFF !important;
-  border-color: rgba(74,141,255,.48) !important;
+  border-color: var(--accent, #4A8DFF) !important;
   box-shadow: inset 0 0 0 1px rgba(74,141,255,.06) !important;
 }
 .price-pill,.flash-card-cur-price,.product-price,.price,.wallet-card-main strong {
