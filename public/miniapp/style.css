@@ -5216,3 +5216,84 @@ body.order-more-popup-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
  .mini-credit-topup-sheet,.mini-credit-topup-panel,.mini-topup-presets button,.mini-topup-method-list>button{transition:none!important}
 }
+
+
+/* v5.1.21 — consistent modal spacing, borders and lightweight backdrop blur */
+.order-more-popup{
+  padding:clamp(16px,4.5vw,24px)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.order-more-popup-backdrop{
+  background:rgba(3,8,20,.60)!important;
+  -webkit-backdrop-filter:blur(3px) saturate(108%)!important;
+  backdrop-filter:blur(3px) saturate(108%)!important;
+}
+.order-more-popup-card{
+  box-sizing:border-box!important;
+  width:min(100%,440px)!important;
+  padding:clamp(22px,5vw,28px)!important;
+  border:1px solid color-mix(in srgb,var(--border,rgba(148,163,184,.22)) 75%,rgba(125,180,255,.22))!important;
+  border-radius:26px!important;
+  box-shadow:0 24px 72px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+.order-more-popup-head{gap:16px!important;margin-bottom:22px!important}
+.order-more-popup-head>div{min-width:0!important;flex:1!important}
+.order-more-popup-title{line-height:1.55!important;overflow-wrap:anywhere!important}
+.order-more-popup-close{margin-inline-start:2px!important}
+.order-more-popup-option{gap:14px!important;padding:14px!important;min-height:74px!important}
+.order-more-popup-option>span:nth-child(2){gap:6px!important}
+.order-more-popup-option b{line-height:1.55!important}
+.order-more-popup-option small{line-height:1.65!important}
+.bg-centered-confirm-message{
+  display:flex!important;align-items:flex-start!important;gap:13px!important;
+  margin:0!important;padding:17px!important;
+  border:1px solid rgba(148,163,184,.13)!important;border-radius:17px!important;
+  background:rgba(148,163,184,.045)!important;
+}
+.bg-centered-confirm-message p{margin:0!important;line-height:1.9!important;overflow-wrap:anywhere!important}
+.bg-centered-confirm-icon{flex:0 0 36px!important;width:36px!important;height:36px!important;display:grid!important;place-items:center!important;border-radius:12px!important}
+.bg-centered-confirm-actions{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:11px!important;margin-top:22px!important;padding-top:2px!important;
+}
+.bg-centered-confirm-actions button{
+  box-sizing:border-box!important;min-width:0!important;min-height:48px!important;
+  padding:11px 14px!important;border-radius:14px!important;
+  font-size:13px!important;font-weight:850!important;line-height:1.5!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+}
+.mini-credit-topup-sheet{
+  padding:clamp(14px,4vw,22px) 14px calc(18px + env(safe-area-inset-bottom))!important;
+}
+.mini-credit-topup-backdrop{
+  background:rgba(2,8,23,.68)!important;
+  -webkit-backdrop-filter:blur(3px) saturate(108%)!important;
+  backdrop-filter:blur(3px) saturate(108%)!important;
+}
+.mini-credit-topup-panel{
+  padding:24px 22px calc(22px + env(safe-area-inset-bottom))!important;
+  border-radius:26px!important;
+  border-width:1px!important;
+}
+.mini-credit-topup-panel>header{gap:16px!important;margin-bottom:22px!important}
+.mini-credit-topup-body{gap:15px!important}
+.mini-topup-balance,.mini-topup-after{padding:15px 16px!important}
+.mini-topup-presets{gap:10px!important}
+.mini-topup-presets button{padding:11px 8px!important}
+.mini-topup-method-list{gap:12px!important}
+.mini-topup-method-list>button{padding:14px!important;gap:13px!important}
+.mini-topup-open-row{padding:15px 0!important;gap:10px 14px!important}
+.mini-topup-open-actions{gap:10px!important;margin-top:4px!important}
+.mini-topup-open-actions button{padding:10px 12px!important;line-height:1.5!important}
+@media(max-width:380px){
+  .order-more-popup-card{padding:19px 16px!important;border-radius:22px!important}
+  .order-more-popup-head{margin-bottom:18px!important}
+  .bg-centered-confirm-message{padding:14px!important;gap:10px!important}
+  .bg-centered-confirm-actions{gap:8px!important;margin-top:18px!important}
+  .bg-centered-confirm-actions button{padding:10px 8px!important;font-size:12px!important}
+  .mini-credit-topup-panel{padding:20px 15px calc(18px + env(safe-area-inset-bottom))!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .order-more-popup,.order-more-popup-card,.mini-credit-topup-sheet,.mini-credit-topup-panel{transition:none!important}
+}
