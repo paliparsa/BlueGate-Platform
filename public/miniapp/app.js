@@ -965,41 +965,6 @@ function openWalletConfirmSheet(orderId){
     if(e.target === sheet) closeSheet();
   });
 }
-+bal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4}):fmt(bal)}</b>
-        </p>
-      </div>
-      <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);padding:12px;border-radius:16px;font-size:14px;color:#fde68a;line-height:1.6;margin-bottom:18px;text-align:right">
-        ⚠️ <b>توجه مهم:</b> موجودی کسرشده تنها در صورت لغو سفارش به اعتبار BlueGate شما بازگردانده می‌شود.
-        ${supportUser ? `<br>💬 قبل از تایید، حتماً موجودی محصول را با پشتیبانی <a href="https://t.me/${esc(supportUser)}" target="_blank" style="color:#60a5fa;text-decoration:underline">@${esc(supportUser)}</a> چک کنید.` : ''}
-      </div>
-      <div style="display:flex;gap:10px">
-        <button class="primary" id="doWalletPayBtn" style="flex:1;padding:12px;font-size:14px;border-radius:14px">تایید و کسر از موجودی</button>
-        <button class="ghost" id="cancelWalletPaySheet" style="flex:1;padding:12px;font-size:14px;border-radius:14px">انصراف</button>
-      </div>
-    </div>
-  `;
-  
-  sheet.classList.add('open');
-  
-  const closeSheet = () => {
-    sheet.classList.remove('open');
-  };
-  
-  sheet.querySelector('#doWalletPayBtn')?.addEventListener('click', async(e) => {
-    e.preventDefault();
-    closeSheet();
-    await loadAfterAction('apply_wallet',{order_id:orderId});
-    currentTab='orders';
-    currentOrderId=orderId;
-    renderUser();
-    showStatus('پرداخت از اعتبار BlueGate با موفقیت انجام شد');
-  });
-  
-  sheet.querySelector('#cancelWalletPaySheet')?.addEventListener('click', closeSheet);
-  sheet.addEventListener('click', (e) => {
-    if(e.target === sheet) closeSheet();
-  });
-}
 
 function paymentMethodsHtml(o){
   const en=window.BlueGateI18n?.language==='en',rate=Math.max(1,Number(state.storefront_rates?.usdt_toman||192000)),irtBal=Number(state.user?.balance||0),usdBal=Number(state.user?.usd_balance||0),bal=en?usdBal+irtBal/rate:irtBal,money=v=>en?miniIntlPrice(v):fmt(v);
