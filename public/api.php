@@ -380,7 +380,8 @@ if ($action === 'translate_text') {
     foreach ($texts as $text) if (!is_string($text) || mb_strlen($text) > 500) api_out(['ok'=>false,'error'=>'INVALID_TRANSLATION_TEXT'],400);
     try {
         $translations = bg_ai_translate_batch($texts, $target, (string)($input['context'] ?? 'ui'));
-        api_out(['ok'=>true,'translations'=>$translations,'provider_configured'=>bg_ai_translation_enabled()]);
+        $cooldown = bg_ai_translation_cooldown_remaining();
+        api_out(['ok'=>true,'translations'=>$translations,'provider_configured'=>bg_ai_translation_enabled(),'retry_after'=>$cooldown]);
     } catch (Throwable $e) {
         error_log('[BlueGate translate endpoint] '.$e->getMessage());
         api_out(['ok'=>false,'error'=>'TRANSLATION_UNAVAILABLE','translations'=>new stdClass()],503);
