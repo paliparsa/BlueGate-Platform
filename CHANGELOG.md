@@ -12,7 +12,9 @@ BlueGate Platform uses Semantic Versioning for the core release: `MAJOR.MINOR.PA
 - **MINOR**: backward-compatible features and functionality.
 - **PATCH**: backward-compatible bug fixes, reliability improvements, and small corrections.
 - The core version is recorded in `VERSION`; the Pro modules have their own version and are not automatically bumped with core releases.
-- Every release must update `VERSION` and add a dated/numbered entry at the top of this changelog. Git tags should use the `v` prefix (for example, `v5.0.55`) when a formal release is published.
+- Every release must update `VERSION` and add a new entry at the top of this changelog. Formal release tags use the `v` prefix (for example, `v5.0.55`).
+
+---
 
 # BlueGate Platform v5.0.54 — Shared AI Live Translation
 
