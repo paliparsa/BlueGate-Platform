@@ -1,3 +1,9 @@
+# BlueGate Platform v5.1.10 — request-synchronized loader timing
+
+- Remove the artificial minimum loader display delay; the overlay now hides as soon as the final tracked API request settles, while CSS keeps only its short visual fade.
+- Keep the loader active across overlapping tracked requests and stop only after the last one finishes.
+- Version bump: 5.1.9 → 5.1.10 (PATCH).
+
 # BlueGate Platform v5.1.9 — robust completed-job detection
 
 - Detect completed provisioning jobs using parsed JSON `order_id`, avoiding fragile string-pattern matching when deciding whether a prior renewal checkout can be reused.
