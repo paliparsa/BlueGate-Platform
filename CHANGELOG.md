@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.8 — allow subsequent VPN renewals
+
+- Do not reuse an old renewal checkout when its provisioning job is already completed, even if a legacy order status is stale.
+- Continue reusing active unpaid/in-progress renewal orders, while allowing a new order after the previous renewal has actually completed.
+- The Mini App service renewal API passes the managed service ID into the renewal factory.
+- Version bump: 5.1.7 → 5.1.8 (PATCH).
+
 # BlueGate Platform v5.1.7 — Mini App loading and transitions
 
 - Add a reusable full-screen animated command loader with a circular orbit, rotating status messages, glass panel, backdrop blur, and interaction blocking while meaningful API commands run.
