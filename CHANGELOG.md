@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.14 — centered order actions popup
+
+- Replace the old order-more sheet and separate legacy dialogs with one centered modal for order note, coupon code, and order cancellation.
+- Keep each action's form/confirmation inside the same popup instead of dismissing it and opening the old dialog UI.
+- Refresh Mini App asset cache keys for the new UI.
+- Version bump: 5.1.13 → 5.1.14 (PATCH).
+
 # BlueGate Platform v5.1.13 — scoped, lightweight Mini App loader
 
 - Replace the loader's denylist with an explicit allowlist of deliberate mutating/long-running actions, preventing it from appearing on automatic refreshes, page navigation, and ordinary read-only requests.
