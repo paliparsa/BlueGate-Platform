@@ -4035,14 +4035,17 @@ function create_renewal_order_from_order(int $userId, int $oldOrderId, int $serv
 
     try {
         $activeStatuses="'pending_payment','payment_confirmed','preparing','receipt_submitted','reviewing','pending_review','awaiting_payment'";
-        // A legacy checkout can retain a paid/preparing status after its provisioning job
-        // has already completed. Completed jobs are authoritative and must not be reused.
+        // Resolve service identity from both the source order and its ancestry. A service's
+        // current order can itself be a renewal order, so looking up only oldOrderId misses
+        // the original user_services.order_id and breaks repeat-renewal deduplication.
+        if($managedServiceId<=0 && !empty($old['user_service_id']))$managedServiceId=(int)$old['user_service_id'];
+        if($managedServiceId<=0 && !empty($old['renewal_of_order_id']) && function_exists('bluegate_service_by_order')){try{$svc=bluegate_service_by_order((int)$old['renewal_of_order_id'],$userId);$managedServiceId=$svc?(int)$svc['id']:0;}catch(Throwable $e){$managedServiceId=0;}}
         $completedJobGuard="NOT EXISTS (SELECT 1 FROM provisioning_jobs pj WHERE pj.status='completed' AND JSON_UNQUOTE(JSON_EXTRACT(pj.request_json,'$.order_id'))=CAST(o.id AS CHAR))";
         if($managedServiceId>0){
-            $existingQ=db()->prepare("SELECT o.* FROM orders o WHERE o.user_id=? AND o.is_renewal=1 AND o.status IN ($activeStatuses) AND (o.renewal_of_order_id=? OR o.user_service_id=?) AND $completedJobGuard ORDER BY o.id DESC LIMIT 1");
-            $existingQ->execute([$userId,$oldOrderId,$managedServiceId]);
+            $existingQ=db()->prepare("SELECT o.* FROM orders o WHERE o.user_id=? AND o.is_renewal=1 AND o.status IN ($activeStatuses) AND o.user_service_id=? AND $completedJobGuard ORDER BY o.id DESC LIMIT 1");
+            $existingQ->execute([$userId,$managedServiceId]);
         }else{
-            $existingQ=db()->prepare("SELECT o.* FROM orders o WHERE o.user_id=? AND o.renewal_of_order_id=? AND o.is_renewal=1 AND o.status IN ($activeStatuses) AND $completedJobGuard ORDER BY o.id DESC LIMIT 1");
+            $existingQ=db()->prepare("SELECT o.* FROM orders o WHERE o.user_id=? AND o.is_renewal=1 AND o.status IN ($activeStatuses) AND o.renewal_of_order_id=? AND $completedJobGuard ORDER BY o.id DESC LIMIT 1");
             $existingQ->execute([$userId,$oldOrderId]);
         }
         $existing=$existingQ->fetch(PDO::FETCH_ASSOC);
