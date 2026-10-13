@@ -1,3 +1,9 @@
+## 5.1.25 - Fix legacy palette override and stale asset cache
+
+- Remove legacy `!important` locks from accent tokens in `bluegate-theme.css` that blocked the Mini App's runtime palette.
+- Apply runtime accent, primary, and user-accent variables with inline priority as a rollout safeguard against stale cached styles.
+- Refresh cache keys for the legacy theme, centralized palette, and Mini App JavaScript so clients fetch the corrected assets.
+
 ## 5.1.24 - User-customizable Mini App accent and primary buttons
 
 - Make the device-local palette choice drive both accent styling and primary button backgrounds, including focus and selected-state accents.
