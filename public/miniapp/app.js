@@ -464,7 +464,7 @@ function showStatus(text,type='success'){
 const BlueGateCommandLoader=(()=>{
   // Opt in only for deliberate user actions that mutate data or take noticeable time.
   // A denylist accidentally showed the overlay for every newly-added read/refresh action.
-  const tracked=new Set(['create_order','create_cart_orders','renew_order','service_renew','service_add_days','service_add_traffic','create_credit_topup','credit_topup_start_stars','credit_topup_submit_crypto_hash','credit_topup_submit_receipt','apply_coupon','login','register','telegram_login','change_my_password','email_change_start','email_change_set_new','email_change_verify_current','email_change_verify_new','update_my_profile','update_my_avatar','reset_my_avatar','support_ticket_create','support_ticket_reply','admin_broadcast','admin_notification_broadcast','admin_order_provision_now','admin_provider_save','admin_provider_test','admin_provider_client_create','admin_provider_client_update','admin_provider_client_delete','admin_catalog_upload_image','admin_crypto_wallet_save','admin_crypto_wallet_delete','admin_plan_provider_map_save','spin']);
+  const tracked=new Set(['create_order','create_cart_orders','renew_order','service_renew','service_add_days','service_add_traffic','create_credit_topup','credit_topup_start_stars','credit_topup_submit_crypto_hash','credit_topup_submit_receipt','apply_coupon','login','register','telegram_login','change_my_password','email_change_start','email_change_set_new','email_change_verify_current','email_change_verify_new','update_my_profile','update_my_avatar','reset_my_avatar','support_ticket_create','support_ticket_reply','admin_broadcast','admin_notification_broadcast','admin_order_provision_now','admin_provider_save','admin_provider_test','admin_provider_client_create','admin_provider_client_update','admin_provider_client_delete','admin_catalog_upload_image','admin_crypto_wallet_save','admin_crypto_wallet_delete','admin_plan_provider_map_save','spin','initial_boot','select_payment_method']);
   let active=0,rotateTimer=0,root=null,textNode=null,sequence=0;
   const messages=['در حال آماده‌سازی…','در حال ارتباط امن با سرور…','داریم اطلاعات را بررسی می‌کنیم…','تقریباً آماده است…','لطفاً چند لحظه صبر کن…'];
   function ensure(){
@@ -605,9 +605,14 @@ function syncMiniAuthChrome(){
   const loggedIn=Boolean(state?.user&&!state?.is_guest&&!state?.user?.is_guest);
   if(authBtn) authBtn.classList.toggle('hidden', loggedIn);
 }
+let _initialLoaderShown=false;
 async function load({force=false}={}){
   if(_bootPromise&&!force)return _bootPromise;
   _bootPromise=(async()=>{
+    // Show the full-screen loader only for the first boot attempt in this page session.
+    // Forced refreshes/reloads must not retrigger it.
+    const finishInitialLoader=(!_initialLoaderShown)?( _initialLoaderShown=true, BlueGateCommandLoader.show('initial_boot') ):(()=>{});
+    try {
     const ctx=miniBootContext();
     console.info('[BlueGate MiniApp boot]',ctx);
     setMiniBootState('loading');
@@ -675,6 +680,7 @@ async function load({force=false}={}){
       setMiniBootState('error',e?.message||'اتصال به BlueGate برقرار نشد.');
       throw e;
     }
+    } finally { finishInitialLoader(); }
   })();
   try{return await _bootPromise}finally{if(document.documentElement.dataset.bootState==='error')_bootPromise=null}
 }
