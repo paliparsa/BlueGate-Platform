@@ -54,12 +54,23 @@ function bg_ai_translation_reserve_request_slot(): bool {
         $allowed = max($now, (int)($row['next_allowed_at'] ?? 0));
         $pdo->prepare('UPDATE ai_translation_provider_state SET next_allowed_at=? WHERE id=1')->execute([$allowed + 4]);
         $pdo->commit();
-        if ($allowed > $now) usleep(min(4, $allowed - $now) * 1000000);
+        $wait = $allowed - $now;
+        if ($wait > 4) return false;
+        if ($wait > 0) usleep($wait * 1000000);
         return true;
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         error_log('[BlueGate AI translation] Rate limiter unavailable; request skipped.');
         return false;
+    }
+}
+function bg_ai_translation_cooldown_remaining(): int {
+    try {
+        bg_ai_translation_ensure_cache();
+        $until = (int)db()->query('SELECT cooldown_until FROM ai_translation_provider_state WHERE id=1')->fetchColumn();
+        return max(0, $until - time());
+    } catch (Throwable $e) {
+        return 0;
     }
 }
 function bg_ai_translation_record_provider_result(int $status, int $retryAfterSeconds=0): void {
