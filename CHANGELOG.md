@@ -1,3 +1,8 @@
+# BlueGate Platform v5.1.9 — robust completed-job detection
+
+- Detect completed provisioning jobs using parsed JSON `order_id`, avoiding fragile string-pattern matching when deciding whether a prior renewal checkout can be reused.
+- Version bump: 5.1.8 → 5.1.9 (PATCH).
+
 # BlueGate Platform v5.1.8 — allow subsequent VPN renewals
 
 - Do not reuse an old renewal checkout when its provisioning job is already completed, even if a legacy order status is stale.
