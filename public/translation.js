@@ -23,7 +23,8 @@ function setupToggle(){
  b.classList.add('bg-language-toggle');b.type='button';
  if(b.dataset.languageBound!=='1'){b.dataset.languageBound='1';b.addEventListener('click',()=>setLang(getLang()==='en'?'fa':'en'));}
  const lang=getLang();
- b.textContent=lang==='en'?'🇮🇷 فارسی':'🇬🇧 EN';
+ const iranLionSun='<svg class="bg-lang-flag-ir" viewBox="0 0 36 24" role="img" aria-label="Iran lion and sun flag"><rect width="36" height="24" rx="2" fill="#fff"/><path fill="#239f40" d="M0 0h36v7H0z"/><path fill="#da0000" d="M0 17h36v7H0z"/><g fill="#da0000" stroke="#da0000" stroke-width=".65" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="8.8" r="3.1" fill="none" stroke-width="1.1"/><path d="M17.7 11.3l-2.2 4.2 2.1-.7 1.6 1.4.7-4.5-1.1-1.2z"/><path d="M16.3 13.1l-3.1-.2 1.6 1.4-1 1.8 3.3-1.3z"/><path d="M19.1 13l2.4-.8-1 2.2 1.5 1.1-3.1-.2z"/><path d="M20.5 10.6l2.8 1.1-2.7.4z"/><path d="M15.4 9.7l-2.2 1.6 2.8-.2z"/><path d="M17.8 6.3l.8-1.4.8 1.4z"/></g><path d="M23 7.2l-1.3 8.6" stroke="#da0000" stroke-width=".8"/></svg>';
+ b.innerHTML=lang==='en'?iranLionSun:'<span class="bg-lang-flag-us" role="img" aria-label="United States flag">🇺🇸</span>';
  b.setAttribute('aria-label',lang==='en'?'Switch to Persian':'Switch to English');
  b.title=lang==='en'?'Switch to Persian':'Switch to English';
 }
