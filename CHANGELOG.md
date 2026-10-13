@@ -1,3 +1,9 @@
+# BlueGate Platform v5.1.18 — centered language popup and stable loading overlay
+
+- Use the same centered order-more style confirmation modal for language switching.
+- Keep the shared loading overlay visible from the first tracked request until all overlapping requests finish; stop cycling status copy and avoid restarting the overlay during overlapping requests.
+- Refresh Mini App asset cache keys.
+
 # BlueGate Platform v5.1.17 — Stars invoice confirmation and crypto payment polish
 
 - Add a confirmation dialog before creating/sending a Telegram Stars invoice; canceling leaves the invoice uncreated.
