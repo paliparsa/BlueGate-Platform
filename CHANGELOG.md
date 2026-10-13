@@ -1,3 +1,11 @@
+# BlueGate Platform v5.1.15 — initial boot and payment-method loader
+
+- Show the command loader during the initial Mini App boot sequence exactly once per page load, and release it when boot completes or fails.
+- Include payment-method selection/reset in the explicit loader allowlist.
+- Keep read-only refreshes, navigation, and background polling excluded from the loader.
+- Bust Mini App JavaScript cache key.
+- Version bump: 5.1.14 → 5.1.15 (PATCH).
+
 # BlueGate Platform v5.1.14 — centered order actions popup
 
 - Replace the old order-more sheet and separate legacy dialogs with one centered modal for order note, coupon code, and order cancellation.
