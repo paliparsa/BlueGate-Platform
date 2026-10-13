@@ -491,7 +491,15 @@ function bluegate_run_service_action_job(int $jobId): array {
         $q=db()->prepare('SELECT COUNT(*) FROM provisioning_jobs WHERE request_json LIKE ? AND status<>"completed"');$q->execute(['%"order_id":'.(int)$o['id'].',%']);if((int)$q->fetchColumn()===0){bluegate_sync_service((int)$s['id'],false);$fresh=bluegate_service_record((int)$s['id']);$sub=bluegate_service_public($fresh?:$s);db()->prepare('UPDATE orders SET delivery_url=?,delivery_title=? WHERE id=?')->execute([$sub['subscription_url']??null,'مدیریت سرویس',(int)$o['id']]);update_order_status((int)$o['id'],'delivered','سرویس بروزرسانی شد',$action==='renew'?'تمدید روی همان سرویس اعمال شد.':'افزونه روی همان سرویس اعمال شد.',true);}return $res;
     }catch(Throwable $e){$attempt=(int)$j['attempt_count'];$max=(int)$j['max_attempts'];$final=$attempt>=$max;$delay=min(900,30*(2**max(0,$attempt-1)));$delay=max(1,(int)$delay);db()->prepare('UPDATE provisioning_jobs SET status=?,available_at=DATE_ADD(NOW(),INTERVAL '.$delay.' SECOND),last_error_code=?,last_error_message=?,locked_at=NULL,locked_by=NULL WHERE id=?')->execute([$final?'failed':'retry',substr($e->getMessage(),0,128),mb_substr($e->getMessage(),0,1000),$jobId]);if($final)db()->prepare('UPDATE user_services SET status="degraded" WHERE id=?')->execute([(int)$j['user_service_id']]);throw $e;}
 }
-function bluegate_after_order_paid_phase4(int $orderId): bool {$o=order_by_id($orderId);if(!$o)return false;if(!empty($o['user_service_id'])&&in_array((string)($o['service_action']??''),['renew','add_traffic','add_days'],true)){bluegate_queue_service_action($orderId,true);return true;}return false;}
+function bluegate_after_order_paid_phase4(int $orderId): bool {
+    $o=order_by_id($orderId);if(!$o)return false;
+    if(empty($o['user_service_id'])||!in_array((string)($o['service_action']??''),['renew','add_traffic','add_days'],true))return false;
+    // Do not silently report success when the service action could not be queued.
+    $result=bluegate_queue_service_action($orderId,true);
+    if(empty($result['eligible']))throw new RuntimeException((string)($result['reason']??'SERVICE_ACTION_NOT_QUEUED'));
+    notify_admin_order($orderId,'تمدید/تغییر سرویس در حال اجرا','BlueGate Service Engine','⚙️ عملیات '.h((string)$o['service_action']).' به صف پنل VPN ارسال شد. Jobها: <code>'.h(implode(',',array_map('strval',(array)($result['jobs']??[])))).'</code>');
+    return true;
+}
 
 /* ---------------- Phase 6: routing + failover dashboard ---------------- */
 /* Phase 8 keeps Phase 7 multi-target behavior and extends target IDs to UUID/string provider targets. */
