@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.16 — language confirmation and payment bar polish
+
+- Ask users to confirm before switching Mini App language; cancel leaves the current language unchanged.
+- Restyle the sticky order/payment action bar with the centered popup's rounded card, spacing, restrained border/shadow, and mobile-safe sizing.
+- Refresh CSS and language script cache keys.
+- Version bump: 5.1.15 → 5.1.16 (PATCH).
+
 # BlueGate Platform v5.1.15 — initial boot and payment-method loader
 
 - Show the command loader during the initial Mini App boot sequence exactly once per page load, and release it when boot completes or fails.
