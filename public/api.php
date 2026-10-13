@@ -322,7 +322,7 @@ function active_services_from_order_payloads(array $orders, int $limit=12): arra
 function dashboard_payload(array $user): array {
     $missions = []; $today = date('Y-m-d'); $todayCount = today_referrals((int)$user['id']);
     foreach (mission_rows() as $m) $missions[] = ['target'=>(int)$m['target'], 'reward'=>(int)$m['reward'], 'done'=>$todayCount >= (int)$m['target'], 'claimed'=>is_mission_claimed((int)$user['id'], $today, (int)$m['target'])];
-    $tx = db()->prepare('SELECT type, amount, description, created_at FROM transactions WHERE user_id=? ORDER BY id DESC LIMIT 15'); $tx->execute([$user['id']]);
+    $tx = db()->prepare('SELECT type, amount, currency, amount_usd, rate_toman, description, created_at FROM transactions WHERE user_id=? ORDER BY id DESC LIMIT 15'); $tx->execute([$user['id']]);
     $products = array_map(fn($p)=>product_payload($p, true), storefront_shop_products());
     // Keep authentication/bootstrap deliberately small. Mini App enhancements are hydrated after first paint.
     $orders = array_map('order_public_payload', user_orders((int)$user['id'], 20));
