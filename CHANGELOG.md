@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.11 — stop idle loader animation
+
+- Stop the status-message timer and all loader activity when the last tracked API request settles.
+- Hide the idle overlay explicitly and prevent decorative spinner/progress animations from continuing while hidden.
+- Bust Mini App CSS and JavaScript cache keys so clients receive the fix.
+- Version bump: 5.1.10 → 5.1.11 (PATCH).
+
 # BlueGate Platform v5.1.10 — request-synchronized loader timing
 
 - Remove the artificial minimum loader display delay; the overlay now hides as soon as the final tracked API request settles, while CSS keeps only its short visual fade.
