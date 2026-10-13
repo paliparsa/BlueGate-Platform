@@ -1,3 +1,9 @@
+# BlueGate Platform v5.1.5 — reliable Iran flag display
+
+- Use the requested Toss Face Lion and Sun SVG for Persian language toggles on web and Mini App.
+- Add an image fallback to the Wikimedia Lion and Sun PNG, then a visible lion/sun glyph fallback if external image loading fails.
+- Version bump: 5.1.4 → 5.1.5 (PATCH).
+
 # BlueGate Platform v5.1.4 — language flag image fix
 
 - Replace the hand-drawn Persian lion-and-sun toggle icon with the user-provided Wikimedia image URL in the web and Mini App language switchers.
