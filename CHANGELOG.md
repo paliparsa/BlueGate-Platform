@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.1 — VPN renewal and payment reliability
+
+- Notify Telegram admins when an order is fully paid using the wallet in the bot.
+- Surface VPN service-action queue failures and provider execution errors to admins with job identifiers and diagnostic details.
+- Report the start of paid service renewal/add-on operations instead of silently leaving failures in logs.
+- Version bump: 5.1.0 → 5.1.1 (PATCH; backward-compatible bug fixes).
+
 # BlueGate Platform v5.1.0 — Dual-currency wallet (IRT + USD)
 
 - Add an independent USD wallet balance without rewriting existing IRT balances.
