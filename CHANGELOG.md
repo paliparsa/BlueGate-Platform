@@ -1,3 +1,9 @@
+# BlueGate Platform v5.1.19 — order payment action bar redesign
+
+- Redesign the order payment bottom action rail with a compact glass surface, clearer primary/secondary actions, a dedicated More control, and mobile/safe-area spacing.
+- Keep existing order note, more-options, service, and renewal handlers unchanged.
+- Refresh Mini App stylesheet cache key.
+
 # BlueGate Platform v5.1.18 — centered language popup and stable loading overlay
 
 - Use the same centered order-more style confirmation modal for language switching.
