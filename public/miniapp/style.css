@@ -5146,3 +5146,73 @@ body.order-more-popup-open{overflow:hidden}
   .od-sticky-actions .btn-v2{font-size:11px!important;padding:8px 5px!important}
 }
 @media(prefers-reduced-motion:reduce){.od-sticky-actions .btn-v2{transition:none!important}}
+
+
+/* v5.1.20 — credit top-up flow and pending request actions */
+.mini-credit-topup-sheet{
+  display:grid!important;place-items:center!important;
+  padding:20px 14px calc(20px + env(safe-area-inset-bottom))!important;
+  box-sizing:border-box!important;opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .18s ease,visibility .18s ease!important;
+}
+.mini-credit-topup-sheet.open{opacity:1;visibility:visible;pointer-events:auto}
+.mini-credit-topup-backdrop{background:rgba(2,8,23,.76)!important;backdrop-filter:blur(12px) saturate(125%)!important}
+.mini-credit-topup-panel{
+  position:relative!important;inset:auto!important;margin:0 auto!important;
+  width:min(100%,480px)!important;max-height:min(82dvh,720px)!important;
+  overflow:auto!important;overscroll-behavior:contain!important;
+  border:1px solid color-mix(in srgb,var(--primary) 22%,var(--border))!important;
+  border-radius:26px!important;
+  padding:20px 18px calc(18px + env(safe-area-inset-bottom))!important;
+  background:var(--card,#0f172a)!important;
+  box-shadow:0 28px 90px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.045)!important;
+  transform:translateY(10px) scale(.985);transition:transform .2s ease!important;
+}
+.mini-credit-topup-sheet.open .mini-credit-topup-panel{transform:translateY(0) scale(1)}
+.mini-credit-sheet-handle{display:none!important}
+.mini-credit-topup-panel>header{align-items:flex-start!important;gap:14px!important;margin-bottom:18px!important}
+.mini-credit-topup-panel>header small{display:inline-flex!important;padding:5px 9px!important;border-radius:999px!important;background:color-mix(in srgb,var(--primary) 12%,transparent)!important;letter-spacing:.04em!important;font-size:10px!important}
+.mini-credit-topup-panel>header h3{font-size:21px!important;font-weight:900!important;letter-spacing:-.025em!important;margin:7px 0 4px!important}
+.mini-credit-topup-panel>header p{font-size:13px!important;line-height:1.75!important}
+.mini-credit-topup-panel>header [data-mini-topup-close]{flex:0 0 38px!important;width:38px!important;height:38px!important;border-radius:13px!important;background:var(--input)!important;border:1px solid var(--border)!important}
+.mini-credit-topup-body{gap:13px!important}
+.mini-topup-balance,.mini-topup-after{gap:12px!important;padding:14px!important;border-radius:17px!important;background:color-mix(in srgb,var(--input) 58%,transparent)!important}
+.mini-topup-balance b,.mini-topup-after b{font-size:16px!important;font-weight:900!important;font-variant-numeric:tabular-nums}
+.mini-topup-after{border-color:color-mix(in srgb,var(--primary) 28%,var(--border))!important;background:color-mix(in srgb,var(--primary) 7%,var(--card))!important}
+.mini-topup-presets{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.mini-topup-presets button{min-height:48px!important;border-radius:14px!important;font-size:14px!important;transition:background .16s ease,border-color .16s ease,transform .16s ease!important}
+.mini-topup-presets button.active{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 35%,transparent)!important}
+.mini-topup-presets button:active,.mini-topup-method-list>button:active,.mini-topup-bank:active{transform:scale(.985)}
+.mini-topup-custom{gap:8px!important;font-weight:750!important;color:var(--text)!important}
+.mini-topup-custom input,.mini-topup-custom textarea,.mini-topup-file input{box-sizing:border-box!important;border-radius:14px!important;min-height:46px!important;padding:11px 13px!important;background:var(--input)!important;border:1px solid var(--border)!important;color:var(--text)!important}
+#miniTopupContinue,#miniTopupReceiptSubmit{min-height:49px!important;border-radius:15px!important;font-size:15px!important;font-weight:900!important;box-shadow:0 8px 22px color-mix(in srgb,var(--primary) 20%,transparent)!important}
+.mini-topup-limit{line-height:1.7!important;margin:0!important}
+.mini-topup-method-list{gap:10px!important}
+.mini-topup-method-list>button{min-height:72px!important;border-radius:17px!important;padding:13px!important;border-color:color-mix(in srgb,var(--border) 90%,transparent)!important;transition:border-color .16s ease,background .16s ease,transform .16s ease!important}
+.mini-topup-method-list>button>span{width:44px!important;height:44px!important;border-radius:14px!important;background:color-mix(in srgb,var(--primary) 10%,var(--input))!important}
+.mini-topup-method-list>button b{font-size:14px!important;font-weight:850!important}
+.mini-topup-method-list>button small{line-height:1.6!important}
+#miniTopupBackAmount{min-height:44px!important;border-radius:14px!important}
+.mini-credit-pending{padding:16px!important;border-color:color-mix(in srgb,var(--primary) 18%,var(--border))!important}
+.mini-credit-pending>.section-title{margin-bottom:8px!important}
+.mini-topup-open-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;
+  gap:8px 12px!important;padding:13px 0!important;border-bottom:1px solid var(--border)!important;
+}
+.mini-topup-open-row:last-child{border-bottom:0!important}
+.mini-topup-open-main{min-width:0!important;display:grid!important;gap:4px!important}
+.mini-topup-open-main>span{font-size:14px!important;font-weight:850!important;overflow-wrap:anywhere}
+.mini-topup-open-main>small{font-size:12px!important;color:var(--muted)!important}
+.mini-topup-open-row>em{justify-self:end!important;align-self:start!important;padding:5px 8px!important;border-radius:999px!important;background:var(--input)!important;font-size:11px!important;white-space:nowrap!important}
+.mini-topup-open-actions{grid-column:1/-1!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:2px!important}
+.mini-topup-open-actions button{min-height:40px!important;border-radius:12px!important;font-size:12px!important;font-weight:850!important;border:1px solid var(--border)!important;background:var(--input)!important;color:var(--text)!important}
+.mini-topup-open-actions button.danger{background:rgba(239,68,68,.08)!important;border-color:rgba(239,68,68,.22)!important;color:#fb7185!important}
+@media(max-width:380px){
+ .mini-credit-topup-sheet{padding-inline:9px!important}
+ .mini-credit-topup-panel{padding:17px 13px calc(14px + env(safe-area-inset-bottom))!important;border-radius:22px!important}
+ .mini-topup-presets{gap:6px!important}
+ .mini-topup-presets button{font-size:12px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .mini-credit-topup-sheet,.mini-credit-topup-panel,.mini-topup-presets button,.mini-topup-method-list>button{transition:none!important}
+}
