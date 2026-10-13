@@ -4021,23 +4021,37 @@ function set_order_service_delivery(int $orderId, string $url, string $title='',
 function create_renewal_order_from_order(int $userId, int $oldOrderId): array {
     $old=order_by_id($oldOrderId);
     if(!$old || (int)$old['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
-    // Reuse the previous renewal checkout for this source order. Never create a second paid renewal.
-    $existingQ=db()->prepare("SELECT * FROM orders WHERE user_id=? AND renewal_of_order_id=? AND is_renewal=1 AND status IN ('pending_payment','payment_confirmed','preparing','pending_review','awaiting_payment') ORDER BY id DESC LIMIT 1");
-    $existingQ->execute([$userId,$oldOrderId]);$existing=$existingQ->fetch(PDO::FETCH_ASSOC);
-    if($existing){$existing['_reused_existing_renewal']=true;return $existing;}
-    if(normalize_order_status((string)$old['status']) !== 'delivered') throw new RuntimeException('ORDER_NOT_RENEWABLE');
-    $order=create_storefront_order($userId,(int)$old['product_id'],!empty($old['variant_id'])?(int)$old['variant_id']:null,null);
-    $carryUrl=null;$carryTitle=null;
-    if(normalize_delivery_type((string)($old['delivery_type']??'manual'))==='vpn' && !empty($old['delivery_url'])){
-        try{$carryUrl=validate_service_delivery_url((string)$old['delivery_url']);}catch(Throwable $e){$carryUrl=null;}
-        $carryTitle=trim((string)($old['delivery_title']??'')) ?: 'مدیریت سرویس';
+
+    // Serialize renewal-order creation for this exact customer + source order. The lock is
+    // acquired before checking for an existing checkout, so rapid parallel clicks cannot
+    // both observe "no renewal" and create two orders.
+    $lockName='bg_renew_'.$userId.'_'.$oldOrderId;
+    $lockQ=db()->prepare('SELECT GET_LOCK(?,8)');
+    $lockQ->execute([$lockName]);
+    if((int)$lockQ->fetchColumn()!==1) throw new RuntimeException('RENEWAL_REQUEST_IN_PROGRESS');
+
+    try {
+        $existingQ=db()->prepare("SELECT * FROM orders WHERE user_id=? AND renewal_of_order_id=? AND is_renewal=1 AND status IN ('pending_payment','payment_confirmed','preparing','pending_review','awaiting_payment') ORDER BY id DESC LIMIT 1");
+        $existingQ->execute([$userId,$oldOrderId]);
+        $existing=$existingQ->fetch(PDO::FETCH_ASSOC);
+        if($existing){$existing['_reused_existing_renewal']=true;return $existing;}
+
+        if(normalize_order_status((string)$old['status']) !== 'delivered') throw new RuntimeException('ORDER_NOT_RENEWABLE');
+        $order=create_storefront_order($userId,(int)$old['product_id'],!empty($old['variant_id'])?(int)$old['variant_id']:null,null);
+        $carryUrl=null;$carryTitle=null;
+        if(normalize_delivery_type((string)($old['delivery_type']??'manual'))==='vpn' && !empty($old['delivery_url'])){
+            try{$carryUrl=validate_service_delivery_url((string)$old['delivery_url']);}catch(Throwable $e){$carryUrl=null;}
+            $carryTitle=trim((string)($old['delivery_title']??'')) ?: 'مدیریت سرویس';
+        }
+        $managedServiceId=null;
+        if(function_exists('bluegate_service_by_order')){try{$svc=bluegate_service_by_order($oldOrderId,$userId);$managedServiceId=$svc?(int)$svc['id']:null;}catch(Throwable $e){$managedServiceId=null;}}
+        db()->prepare('UPDATE orders SET is_renewal=1, renewal_of_order_id=?, user_service_id=?, service_action=?, service_action_json=?, delivery_url=COALESCE(?,delivery_url), delivery_title=COALESCE(?,delivery_title) WHERE id=?')
+            ->execute([$oldOrderId,$managedServiceId,$managedServiceId?'renew':null,$managedServiceId?json_encode(['source'=>'renew_order'],JSON_UNESCAPED_SLASHES):null,$carryUrl,$carryTitle,(int)$order['id']]);
+        add_order_event((int)$order['id'],'pending_payment','سفارش تمدید ثبت شد','تمدید سفارش #'.$oldOrderId,true);
+        return order_by_id((int)$order['id']);
+    } finally {
+        try{$release=db()->prepare('SELECT RELEASE_LOCK(?)');$release->execute([$lockName]);}catch(Throwable $ignored){}
     }
-    $managedServiceId=null;
-    if(function_exists('bluegate_service_by_order')){try{$svc=bluegate_service_by_order($oldOrderId,$userId);$managedServiceId=$svc?(int)$svc['id']:null;}catch(Throwable $e){$managedServiceId=null;}}
-    db()->prepare('UPDATE orders SET is_renewal=1, renewal_of_order_id=?, user_service_id=?, service_action=?, service_action_json=?, delivery_url=COALESCE(?,delivery_url), delivery_title=COALESCE(?,delivery_title) WHERE id=?')
-        ->execute([$oldOrderId,$managedServiceId,$managedServiceId?'renew':null,$managedServiceId?json_encode(['source'=>'renew_order'],JSON_UNESCAPED_SLASHES):null,$carryUrl,$carryTitle,(int)$order['id']]);
-    add_order_event((int)$order['id'],'pending_payment','سفارش تمدید ثبت شد','تمدید سفارش #'.$oldOrderId,true);
-    return order_by_id((int)$order['id']);
 }
 
 function wishlist_product_ids(int $userId): array {
