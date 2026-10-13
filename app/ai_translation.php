@@ -52,10 +52,13 @@ function bg_ai_translation_reserve_request_slot(): bool {
             return false;
         }
         $allowed = max($now, (int)($row['next_allowed_at'] ?? 0));
+        $wait = $allowed - $now;
+        if ($wait > 4) {
+            $pdo->commit();
+            return false;
+        }
         $pdo->prepare('UPDATE ai_translation_provider_state SET next_allowed_at=? WHERE id=1')->execute([$allowed + 4]);
         $pdo->commit();
-        $wait = $allowed - $now;
-        if ($wait > 4) return false;
         if ($wait > 0) usleep($wait * 1000000);
         return true;
     } catch (Throwable $e) {
@@ -67,7 +70,8 @@ function bg_ai_translation_reserve_request_slot(): bool {
 function bg_ai_translation_cooldown_remaining(): int {
     try {
         bg_ai_translation_ensure_cache();
-        $until = (int)db()->query('SELECT cooldown_until FROM ai_translation_provider_state WHERE id=1')->fetchColumn();
+        $row = db()->query('SELECT cooldown_until,next_allowed_at FROM ai_translation_provider_state WHERE id=1')->fetch(PDO::FETCH_ASSOC) ?: [];
+        $until = max((int)($row['cooldown_until'] ?? 0), (int)($row['next_allowed_at'] ?? 0));
         return max(0, $until - time());
     } catch (Throwable $e) {
         return 0;
