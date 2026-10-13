@@ -4035,11 +4035,14 @@ function create_renewal_order_from_order(int $userId, int $oldOrderId, int $serv
 
     try {
         $activeStatuses="'pending_payment','payment_confirmed','preparing','receipt_submitted','reviewing','pending_review','awaiting_payment'";
+        // A legacy checkout can retain a paid/preparing status after its provisioning job
+        // has already completed. Completed jobs are authoritative and must not be reused.
+        $completedJobGuard="NOT EXISTS (SELECT 1 FROM provisioning_jobs pj WHERE pj.status='completed' AND pj.request_json LIKE CONCAT('%\\\"order_id\\\":',o.id,',%'))";
         if($managedServiceId>0){
-            $existingQ=db()->prepare("SELECT * FROM orders WHERE user_id=? AND is_renewal=1 AND status IN ($activeStatuses) AND (renewal_of_order_id=? OR user_service_id=?) ORDER BY id DESC LIMIT 1");
+            $existingQ=db()->prepare("SELECT o.* FROM orders o WHERE o.user_id=? AND o.is_renewal=1 AND o.status IN ($activeStatuses) AND (o.renewal_of_order_id=? OR o.user_service_id=?) AND $completedJobGuard ORDER BY o.id DESC LIMIT 1");
             $existingQ->execute([$userId,$oldOrderId,$managedServiceId]);
         }else{
-            $existingQ=db()->prepare("SELECT * FROM orders WHERE user_id=? AND renewal_of_order_id=? AND is_renewal=1 AND status IN ($activeStatuses) ORDER BY id DESC LIMIT 1");
+            $existingQ=db()->prepare("SELECT o.* FROM orders o WHERE o.user_id=? AND o.renewal_of_order_id=? AND o.is_renewal=1 AND o.status IN ($activeStatuses) AND $completedJobGuard ORDER BY o.id DESC LIMIT 1");
             $existingQ->execute([$userId,$oldOrderId]);
         }
         $existing=$existingQ->fetch(PDO::FETCH_ASSOC);
