@@ -4936,3 +4936,9 @@ html.bg-command-busy .topbar,html.bg-command-busy #status{pointer-events:none!im
 @keyframes bgLoaderProgress{0%{transform:translateX(-140%)}100%{transform:translateX(380%)}}
 @keyframes bgPageEnter{from{opacity:.5;transform:translateY(9px) scale(.996);filter:blur(2px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.bg-command-loader,.bg-loader-glass,.page{transition:none!important}.bg-loader-orbit,.bg-loader-orbit:before,.bg-loader-orbit:after,.bg-loader-track i,.bgm-enter,.page.bg-page-enter{animation:none!important}.bg-command-loader.visible .bg-loader-glass{transform:none;opacity:1}}
+
+/* Hard-stop decorative animations when the command overlay is not active. */
+.bg-command-loader:not(.visible),.bg-command-loader.is-idle{visibility:hidden!important;pointer-events:none!important}
+.bg-command-loader:not(.visible) .bg-loader-orbit,.bg-command-loader:not(.visible) .bg-loader-orbit:before,.bg-command-loader:not(.visible) .bg-loader-orbit:after,.bg-command-loader:not(.visible) .bg-loader-track i,.bg-command-loader:not(.visible) .bg-loader-message{animation:none!important}
+.bg-command-loader:not(.visible) .bg-loader-track i{transform:translateX(-140%)!important}
+.bg-command-loader:not(.visible) .bg-loader-glass{opacity:0!important;transform:translateY(6px) scale(.98)!important}
