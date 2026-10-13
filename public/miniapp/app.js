@@ -1302,7 +1302,56 @@ async function openDirectServiceViewer(orderId,directUrl='',title='مدیریت 
   }catch(e){showStatus(e.message||'باز کردن سرویس ممکن نشد','error')}
 }
 
-function openOrderMoreActions(id){const o=orderById(id);if(!o)return;const st=String(o.status||'').toLowerCase(),pending=['pending_payment','pending'].includes(st);const body=`<div class="order-more-actions"><button data-customer-note="${o.id}">یادداشت سفارش</button>${pending?`<button data-coupon="${o.id}">کد تخفیف</button>`:''}${o.receipt_file_id?`<button data-view-receipt="${o.id}">دیدن رسید</button>`:''}${pending?`<button class="danger" data-cancel="${o.id}">لغو سفارش</button>`:''}${canHideOrder(o)?`<button class="danger" data-hide-order="${o.id}">حذف از لیست من</button>`:''}</div>`;BlueGateUI.openSheet({type:'action',eyebrow:`سفارش #${nf(o.id)}`,title:'گزینه‌های بیشتر',body})}
+let _orderMorePopupOrderId=0;
+function closeOrderMorePopup(){const el=document.getElementById('orderMorePopup');if(el){el.classList.remove('open');document.body.classList.remove('order-more-popup-open');setTimeout(()=>el.remove(),180)}_orderMorePopupOrderId=0}
+function renderOrderMorePopup(view='menu',message=''){
+  const id=_orderMorePopupOrderId,o=orderById(id);if(!o){closeOrderMorePopup();return}
+  const st=String(o.status||'').toLowerCase(),pending=['pending_payment','pending','awaiting_payment','receipt_submitted','reviewing','pending_review'].includes(st);
+  let title='گزینه‌های بیشتر',content='';
+  if(view==='menu'){
+    content=`<div class="order-more-popup-options">
+      <button class="order-more-popup-option" data-omp-view="note"><span class="omp-icon">✎</span><span><b>یادداشت سفارش</b><small>اطلاعات و توضیحات سفارش</small></span><i>‹</i></button>
+      ${pending?`<button class="order-more-popup-option" data-omp-view="coupon"><span class="omp-icon coupon">٪</span><span><b>کد تخفیف</b><small>اعمال کد روی همین سفارش</small></span><i>‹</i></button>`:''}
+      ${pending?`<button class="order-more-popup-option danger" data-omp-view="cancel"><span class="omp-icon">×</span><span><b>لغو سفارش</b><small>لغو خرید و آزادسازی رزرو</small></span><i>‹</i></button>`:''}
+    </div>`;
+  }else if(view==='note'){
+    title='یادداشت سفارش';
+    content=`<form class="order-more-popup-form" data-omp-form="note"><label for="ompNote">ایمیل، یوزرنیم، اطلاعات تحویل یا توضیح موردنیاز</label><textarea id="ompNote" rows="5" maxlength="2000" placeholder="یادداشتت رو اینجا بنویس…">${esc(o.customer_note||'')}</textarea><p class="omp-help">این یادداشت همراه همین سفارش ذخیره می‌شود.</p><div class="omp-actions"><button type="button" class="secondary" data-omp-view="menu">بازگشت</button><button class="primary" type="submit">ذخیره یادداشت</button></div></form>`;
+  }else if(view==='coupon'){
+    title='کد تخفیف';
+    content=`<form class="order-more-popup-form" data-omp-form="coupon"><label for="ompCoupon">کد تخفیف سفارش #${nf(id)}</label><input id="ompCoupon" type="text" maxlength="80" autocomplete="off" autocapitalize="characters" placeholder="مثلاً BLUE10"><p class="omp-help">کد روی همین سفارش اعمال می‌شود.</p><div class="omp-actions"><button type="button" class="secondary" data-omp-view="menu">بازگشت</button><button class="primary" type="submit">اعمال کد</button></div></form>`;
+  }else if(view==='cancel'){
+    title='لغو سفارش';
+    content=`<div class="order-more-popup-cancel"><div class="omp-warning-icon">!</div><h3>از لغو این سفارش مطمئنی؟</h3><p>این عملیات وضعیت سفارش را لغو می‌کند و ممکن است رزرو آیتم انبار آزاد شود.</p><div class="omp-actions"><button type="button" class="secondary" data-omp-view="menu">نه، برگشت</button><button type="button" class="danger" data-omp-confirm-cancel="${id}">بله، لغو سفارش</button></div></div>`;
+  }
+  const el=document.getElementById('orderMorePopup');if(!el)return;
+  el.querySelector('.order-more-popup-title').textContent=title;
+  el.querySelector('.order-more-popup-content').innerHTML=content;
+  const err=el.querySelector('.order-more-popup-message');err.textContent=message;err.classList.toggle('show',!!message);
+  if(view==='note')setTimeout(()=>el.querySelector('#ompNote')?.focus(),60);
+  if(view==='coupon')setTimeout(()=>el.querySelector('#ompCoupon')?.focus(),60);
+}
+function openOrderMoreActions(id){
+  const o=orderById(id);if(!o)return;
+  closeOrderMorePopup();_orderMorePopupOrderId=Number(id);
+  const el=document.createElement('div');el.id='orderMorePopup';el.className='order-more-popup';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','گزینه‌های سفارش');
+  el.innerHTML=`<div class="order-more-popup-backdrop" data-omp-close></div><section class="order-more-popup-card"><header class="order-more-popup-head"><div><span>سفارش #${nf(id)}</span><h2 class="order-more-popup-title">گزینه‌های بیشتر</h2></div><button class="order-more-popup-close" type="button" aria-label="بستن" data-omp-close>×</button></header><div class="order-more-popup-message" role="status"></div><div class="order-more-popup-content"></div></section>`;
+  document.body.appendChild(el);document.body.classList.add('order-more-popup-open');requestAnimationFrame(()=>el.classList.add('open'));renderOrderMorePopup();
+}
+document.addEventListener('click',async e=>{
+ const close=e.target.closest('[data-omp-close]');if(close){closeOrderMorePopup();return}
+ const view=e.target.closest('[data-omp-view]');if(view){renderOrderMorePopup(view.dataset.ompView);return}
+ const cancel=e.target.closest('[data-omp-confirm-cancel]');if(cancel){const id=Number(cancel.dataset.ompConfirmCancel),btn=cancel;btn.disabled=true;btn.textContent='در حال لغو…';try{await api('cancel_order',{order_id:id});state=await api('me');currentTab='orders';currentOrderId=null;renderUser();closeOrderMorePopup();showStatus('سفارش با موفقیت لغو شد','success')}catch(err){btn.disabled=false;btn.textContent='بله، لغو سفارش';renderOrderMorePopup('cancel',err.message||'لغو سفارش انجام نشد')}return}
+},{capture:true});
+document.addEventListener('submit',async e=>{
+ const form=e.target.closest('#orderMorePopup [data-omp-form]');if(!form)return;e.preventDefault();
+ const id=_orderMorePopupOrderId,kind=form.dataset.ompForm,submit=form.querySelector('[type=submit]');if(!id)return;
+ submit.disabled=true;const old=submit.textContent;submit.textContent='در حال ثبت…';
+ try{
+   if(kind==='note'){const note=form.querySelector('#ompNote')?.value||'';await api('customer_order_note',{order_id:id,note});state=await api('me');currentTab='orders';currentOrderId=id;renderUser();renderOrderMorePopup('note','یادداشت سفارش ذخیره شد.');showStatus('یادداشت سفارش ذخیره شد','success');}
+   else if(kind==='coupon'){const code=form.querySelector('#ompCoupon')?.value.trim()||'';if(!code)throw new Error('کد تخفیف را وارد کن.');await api('apply_coupon',{order_id:id,code});state=await api('me');currentTab='orders';currentOrderId=id;renderUser();renderOrderMorePopup('coupon','کد تخفیف با موفقیت اعمال شد.');showStatus('کد تخفیف با موفقیت روی سفارش اعمال شد','success');}
+ }catch(err){submit.disabled=false;submit.textContent=old;renderOrderMorePopup(kind,err.message||'عملیات انجام نشد')}
+},{capture:true});
 
 function orderDetailHtml(o){
   const en=window.BlueGateI18n?.language==='en',rate=Math.max(1,Number(state.storefront_rates?.usdt_toman||192000)),irtBal=Number(state.user?.balance||0),usdBal=Number(state.user?.usd_balance||0),bal=en?usdBal+irtBal/rate:irtBal,money=v=>en?miniIntlPrice(v):fmt(v);
