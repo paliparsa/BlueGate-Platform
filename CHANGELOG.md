@@ -1,3 +1,10 @@
+## 5.1.23 - Unified Mini App palette redesign
+
+- Introduce a centralized black-first, white-text palette with restrained blue actions and violet accents.
+- Apply a final visual-only theme layer across user and admin screens, catalog cards, navigation, forms, wallet, orders, and modal surfaces.
+- Keep success, warning, and error colors semantically distinct; preserve application behavior and data flows.
+- Refresh design-system and palette stylesheet cache keys.
+
 ## 5.1.22 - Product details popup redesign
 
 - Reworked the Mini App product/order popup into a centered modal on mobile and desktop.
