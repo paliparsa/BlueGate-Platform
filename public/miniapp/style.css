@@ -4888,3 +4888,7 @@ html[dir="ltr"] input,html[dir="ltr"] textarea,html[dir="ltr"] select{text-align
 html[dir="ltr"] .bluegate-language-toggle{margin-inline-start:8px;margin-inline-end:0}
 html[dir="ltr"] [data-select-card],html[dir="ltr"] [data-mini-topup-method="card"]{display:none!important}
 body.bluegate-lang-en [data-select-card],body.bluegate-lang-en [data-mini-topup-method="card"]{display:none!important}
+
+/* Language toggle fit: keep the control compact in narrow Telegram webviews. */
+#userApp .topbar .bluegate-language-toggle,#adminApp .topbar .bluegate-language-toggle,.topbar .bluegate-language-toggle{min-width:0!important;max-width:100%;flex:0 1 auto;padding:7px 9px;font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:380px){#userApp .topbar .bluegate-language-toggle,#adminApp .topbar .bluegate-language-toggle,.topbar .bluegate-language-toggle{margin-inline-start:5px;padding:6px 7px;font-size:10px;border-radius:10px}.topbar{gap:7px;padding-inline:10px}.topbar h1{font-size:clamp(16px,5vw,21px)}}
