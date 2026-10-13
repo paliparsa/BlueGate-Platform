@@ -78,6 +78,8 @@ async function requestTranslations(texts){
  const res=await fetch('/api.php',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action:'translate_text',target:'en',context:'ui',texts})});
  let data={};try{data=await res.json();}catch(_){}
  if(!res.ok){const err=new Error('translation_http_'+res.status);err.status=res.status;throw err;}
+ if(typeof data.retry_after==='number'&&data.retry_after>0)requestTranslations.lastRetryAfter=data.retry_after;
+ else requestTranslations.lastRetryAfter=0;
  return data;
 }
 function retryTask(task,key){
@@ -109,7 +111,11 @@ async function flush(){
     if(translated.trim()&&translated!==task.source)task.apply(translated);
    }
    for(const {key,task} of tasks)if(failedTasks.has(key))retryTask(task,key);
-   if(failedTasks.size)retryDelay=Math.max(retryDelay,900);
+   if(failedTasks.size){
+    retryDelay=Math.max(retryDelay,900);
+    if(requestTranslations.lastRetryAfter>0)retryDelay=Math.min(1800000,Math.max(retryDelay,requestTranslations.lastRetryAfter*1000));
+    await new Promise(resolve=>setTimeout(resolve,retryDelay));
+   }
   }
  }finally{running=false;if(queue.size)schedule(retryDelay);}
 }
