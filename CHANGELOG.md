@@ -1,3 +1,12 @@
+# BlueGate Platform v5.1.0 — Dual-currency wallet (IRT + USD)
+
+- Add an independent USD wallet balance without rewriting existing IRT balances.
+- Use the existing USDT/Toman provider to snapshot USD top-up quotes and USD wallet checkout conversions.
+- Keep USD principal fixed as rates move; only its IRT display equivalent changes.
+- Record currency and exchange-rate metadata for wallet transactions, top-ups, and orders; old ledger rows remain IRT.
+- Add safe additive migrations and English Mini App wallet/top-up display support.
+- USD top-ups use existing payment methods and settle at the quoted Toman equivalent; card-to-card remains unavailable in English mode.
+
 # BlueGate Platform v5.0.55 — Translation reliability and admin refresh fix
 
 - Stop automatically starting the catalog translation batch every time the web admin mounts or refreshes; keep explicit translation actions and catalog-related flows available.
