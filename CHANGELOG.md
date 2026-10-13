@@ -1,3 +1,9 @@
+# BlueGate Platform v5.1.4 — language flag image fix
+
+- Replace the hand-drawn Persian lion-and-sun toggle icon with the user-provided Wikimedia image URL in the web and Mini App language switchers.
+- Keep the US flag for English.
+- Version bump: 5.1.3 → 5.1.4 (PATCH).
+
 # BlueGate Platform v5.1.3 — renewal checkout and duplicate job protection
 
 - Reuse the same active renewal order when a customer taps renew repeatedly; return them to the existing checkout instead of creating a second order.
