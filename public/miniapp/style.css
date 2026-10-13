@@ -4942,3 +4942,16 @@ html.bg-command-busy .topbar,html.bg-command-busy #status{pointer-events:none!im
 .bg-command-loader:not(.visible) .bg-loader-orbit,.bg-command-loader:not(.visible) .bg-loader-orbit:before,.bg-command-loader:not(.visible) .bg-loader-orbit:after,.bg-command-loader:not(.visible) .bg-loader-track i,.bg-command-loader:not(.visible) .bg-loader-message{animation:none!important}
 .bg-command-loader:not(.visible) .bg-loader-track i{transform:translateX(-140%)!important}
 .bg-command-loader:not(.visible) .bg-loader-glass{opacity:0!important;transform:translateY(6px) scale(.98)!important}
+
+/* Lightweight loader: avoid expensive backdrop filters and layered glow effects on mobile. */
+.bg-command-loader{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;transition:opacity .16s ease,visibility .16s ease!important}
+.bg-command-loader.visible{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.bg-command-loader.visible .bg-loader-glass{will-change:transform,opacity}
+.bg-loader-orbit{animation:none!important;border-color:rgba(85,170,255,.2)!important}
+.bg-loader-orbit:before,.bg-loader-orbit:after{filter:none!important;animation:bgLoaderSpin 1.8s linear infinite!important}
+.bg-loader-orbit:after{animation-duration:2.5s!important}
+.bg-loader-orbit-dot{box-shadow:none!important}
+.bg-loader-orbit-dot.second{box-shadow:none!important}
+.bg-command-loader.visible .bg-loader-glass{animation:none!important}
+@media(max-width:600px){.bg-command-loader{padding:16px;background:rgba(4,9,19,.56)!important}.bg-loader-orbit{width:68px!important;height:68px!important;margin-bottom:14px!important}.bg-loader-orbit:before{inset:5px!important}.bg-loader-orbit:after{inset:11px!important}}
+@media(prefers-reduced-motion:reduce){.bg-loader-orbit:before,.bg-loader-orbit:after{animation:none!important}}
