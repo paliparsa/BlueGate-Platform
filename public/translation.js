@@ -77,14 +77,14 @@ function schedule(delay=140){if(timer||running||!queue.size)return;timer=window.
 async function requestTranslations(texts){
  const res=await fetch('/api.php',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action:'translate_text',target:'en',context:'ui',texts})});
  let data={};try{data=await res.json();}catch(_){}
- if(!res.ok){const err=new Error('translation_http_'+res.status);err.status=res.status;throw err;}
- if(typeof data.retry_after==='number'&&data.retry_after>0)requestTranslations.lastRetryAfter=data.retry_after;
- else requestTranslations.lastRetryAfter=0;
+ const retryAfter=Math.max(0,Number(data.retry_after||res.headers.get('Retry-After')||0)||0);
+ if(!res.ok){const err=new Error('translation_http_'+res.status);err.status=res.status;err.retryAfter=retryAfter;requestTranslations.lastRetryAfter=retryAfter;throw err;}
+ requestTranslations.lastRetryAfter=retryAfter;
  return data;
 }
 function retryTask(task,key){
  task.retries=(task.retries||0)+1;
- if(task.retries>3){console.warn('[BlueGate translation] Translation skipped after repeated failures.');return;}
+ if(task.retries>8){console.warn('[BlueGate translation] Translation skipped after 8 attempts; switch language or reload to retry.');return;}
  queue.set(key,task);
 }
 async function flush(){
@@ -100,7 +100,7 @@ async function flush(){
    const translations={};let failed=false;
    for(let offset=0;offset<unique.length;offset+=20){
     try{const data=await requestTranslations(unique.slice(offset,offset+20));Object.assign(translations,data.translations||{});if(data.provider_configured===false)console.warn('[BlueGate translation] No AI provider is configured on the server.');}
-    catch(err){failed=true;retryDelay=(err?.status===429||err?.status===503)?Math.min(5000,retryDelay*2):Math.max(retryDelay,1000);console.warn('[BlueGate translation] Request failed (HTTP '+(err?.status||'network')+').');break;}
+    catch(err){failed=true;retryDelay=err?.retryAfter>0?Math.min(1800000,err.retryAfter*1000):((err?.status===429||err?.status===503)?Math.min(60000,Math.max(5000,retryDelay*2)):Math.min(30000,Math.max(retryDelay,1500)));console.warn('[BlueGate translation] Request failed (HTTP '+(err?.status||'network')+'); retry scheduled.');break;}
    }
    if(failed){tasks.forEach(({key,task})=>retryTask(task,key));if(queue.size)await new Promise(resolve=>setTimeout(resolve,retryDelay));continue;}
    const failedTasks=new Set();
