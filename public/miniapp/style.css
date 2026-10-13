@@ -4994,3 +4994,52 @@ html.bg-command-busy .topbar,html.bg-command-busy #status{pointer-events:none!im
 body.order-more-popup-open{overflow:hidden}
 @media(max-width:420px){.order-more-popup{padding:14px}.order-more-popup-card{padding:17px;border-radius:21px;max-height:86dvh}.order-more-popup-title{font-size:18px}.order-more-popup-option{min-height:64px;padding:10px}.order-more-popup-option .omp-icon{width:38px;height:38px;flex-basis:38px}}
 @media(prefers-reduced-motion:reduce){.order-more-popup,.order-more-popup-card{transition:none!important}}
+
+/* Payment action bar aligned with the new centered popup design. */
+.od-sticky-actions{
+  position:sticky!important;
+  bottom:calc(76px + env(safe-area-inset-bottom))!important;
+  z-index:8!important;
+  display:flex!important;
+  align-items:stretch!important;
+  gap:9px!important;
+  margin:24px -2px 0!important;
+  padding:12px!important;
+  border:1px solid rgba(148,163,184,.18)!important;
+  border-radius:22px!important;
+  background:rgba(12,20,34,.94)!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+}
+.od-sticky-actions .btn-v2{
+  min-width:0!important;
+  min-height:46px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  padding:10px 12px!important;
+  border-radius:15px!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  line-height:1.3!important;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease!important;
+}
+.od-sticky-actions .btn-v2:active{transform:scale(.975)}
+.od-sticky-actions .od-note-btn,.od-sticky-actions .od-more-btn{
+  border:1px solid rgba(148,163,184,.2)!important;
+  background:rgba(148,163,184,.08)!important;
+  color:var(--text,#f8fafc)!important;
+}
+.od-sticky-actions .mini-service-open-btn,.od-sticky-actions .od-renew-btn{
+  box-shadow:0 5px 15px rgba(37,99,235,.18)!important;
+}
+.od-sticky-actions .od-action-icon{font-size:17px;line-height:1}
+.od-sticky-actions .od-more-dots{display:inline-flex;gap:3px}
+.od-sticky-actions .od-more-dots i{width:4px;height:4px;border-radius:50%;background:currentColor}
+@media(max-width:520px){
+  .od-sticky-actions{gap:7px!important;padding:9px!important;border-radius:19px!important;bottom:calc(72px + env(safe-area-inset-bottom))!important}
+  .od-sticky-actions .btn-v2{padding:9px 7px!important;min-height:44px!important;font-size:12px!important;gap:5px!important}
+}
+@media(prefers-reduced-motion:reduce){.od-sticky-actions .btn-v2{transition:none!important}}
