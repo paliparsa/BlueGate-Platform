@@ -435,7 +435,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'svc_view_')) { show_bot_service($chat_id,$message_id,(int)$user['id'],(int)substr($data,9)); return; }
     if (str_starts_with($data, 'svc_renew_')) {
         $oldId=(int)substr($data,10);
-        try{$order=create_renewal_order_from_order((int)$user['id'],$oldId);show_order_invoice($chat_id,$message_id,$order);notify_admin_order((int)$order['id'],'سفارش تمدید','Telegram Bot','🔄 تمدید سفارش <code>#'.$oldId.'</code>');}
+        try{$order=create_renewal_order_from_order((int)$user['id'],$oldId);if(!empty($order['_reused_existing_renewal'])){send_msg($chat_id,'⚠️ برای این سرویس از قبل سفارش تمدید ثبت شده است. امکان ساخت سفارش تمدید دوم وجود ندارد؛ پرداخت همان سفارش قبلی را ادامه بده.');}else{notify_admin_order((int)$order['id'],'سفارش تمدید','Telegram Bot','🔄 تمدید سفارش <code>#'.$oldId.'</code>');}show_order_invoice($chat_id,$message_id,$order);}
         catch(Throwable $e){send_or_edit($chat_id,$message_id,'این سرویس در حال حاضر قابل تمدید نیست.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 سرویس‌های من','callback_data'=>'u_services']]]]));}
         return;
     }
