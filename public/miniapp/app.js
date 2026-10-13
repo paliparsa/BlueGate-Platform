@@ -460,7 +460,31 @@ function showStatus(text,type='success'){
   clearTimeout(_statusTimer);
   _statusTimer=setTimeout(()=>el.classList.add('hidden'),3500);
 }
+/* BlueGate premium command loader + page transitions */
+const BlueGateCommandLoader=(()=>{
+  const quiet=new Set(['me','license_status','admin_summary','admin_dashboard','admin_orders','admin_customers','admin_activity','admin_notifications','admin_support_tickets','my_services','service_details','service_sync','order_status','orders','products','catalog','shop_data','rates','notifications','support_tickets','support_ticket_messages']);
+  let active=0,hideTimer=0,rotateTimer=0,root=null,textNode=null,startedAt=0,sequence=0;
+  const messages=['در حال آماده‌سازی…','در حال ارتباط امن با سرور…','داریم اطلاعات را بررسی می‌کنیم…','تقریباً آماده است…','لطفاً چند لحظه صبر کن…'];
+  function ensure(){
+    if(root)return root;
+    root=document.createElement('div');root.id='bgCommandLoader';root.className='bg-command-loader';root.setAttribute('role','status');root.setAttribute('aria-live','polite');root.setAttribute('aria-hidden','true');
+    root.innerHTML='<div class="bg-loader-glass"><div class="bg-loader-orbit"><span class="bg-loader-orbit-dot"></span><span class="bg-loader-orbit-dot second"></span><div class="bg-loader-core"><span class="bg-loader-mark">B</span></div></div><div class="bg-loader-title">در حال انجام درخواست</div><div class="bg-loader-message"></div><div class="bg-loader-track"><i></i></div><div class="bg-loader-foot">BlueGate <span>•</span> لطفاً صفحه را نبند</div></div>';
+    document.body.appendChild(root);textNode=root.querySelector('.bg-loader-message');return root;
+  }
+  function show(action){
+    if(quiet.has(String(action||'')))return ()=>{};
+    clearTimeout(hideTimer);active++;sequence++;
+    const el=ensure();el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');el.classList.add('visible');document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
+    if(active===1){startedAt=Date.now();textNode.textContent=messages[sequence%messages.length];rotateTimer=window.setInterval(()=>{if(textNode){textNode.classList.remove('swap');void textNode.offsetWidth;textNode.textContent=messages[(++sequence)%messages.length];textNode.classList.add('swap')}},1450);}
+    let released=false;
+    return ()=>{if(released)return;released=true;active=Math.max(0,active-1);if(active===0){clearInterval(rotateTimer);const wait=Math.max(180,520-(Date.now()-startedAt));hideTimer=window.setTimeout(()=>{if(active)return;el.classList.remove('visible');el.setAttribute('aria-hidden','true');document.documentElement.classList.remove('bg-command-busy');document.body.classList.remove('bg-command-busy')},wait)}};
+  }
+  return {show};
+})();
+
 async function api(action,payload={}){
+  const finishCommandLoader=BlueGateCommandLoader.show(action);
+  try{
   refreshTelegramContext();
   const body = JSON.stringify({action,initData,language:(localStorage.getItem('bluegate_language')||((navigator.language||'').toLowerCase().startsWith('fa')?'fa':'en')),...payload});
   const headers = {'Content-Type':'application/json'};
@@ -518,6 +542,7 @@ async function api(action,payload={}){
   }
   if(action==='me'&&data&&typeof data==='object')window.__bluegateState=data;
   return data;
+  } finally { finishCommandLoader(); }
 }
 /* ===== Batch 1 utilities: haptic, chime, confetti, pull-to-refresh, charts, lightbox, stepper ===== */
 function haptic(t='light'){try{tg?.HapticFeedback?.impactOccurred?.(t)}catch(e){}}
@@ -1470,6 +1495,16 @@ function renderUser(){
   else if(currentTab==='support'){ $('supportPage').classList.remove('hidden'); renderMiniSupportPage(); }
   else { currentTab='shop'; $('shopPage').classList.remove('hidden'); renderShop(); }
   updateMiniHeader();
+  // Animate only real page changes; repeated data refreshes on the same page stay still.
+  const activePage=document.querySelector('.page:not(.hidden)');
+  if(activePage){
+    const pageKey=currentTab+(currentOrderId?':order:'+currentOrderId:'')+(currentServiceOrderId?':service:'+currentServiceOrderId:'');
+    if(document.documentElement.dataset.bgCurrentPage!==pageKey){
+      document.documentElement.dataset.bgCurrentPage=pageKey;
+      activePage.classList.remove('bg-page-enter');void activePage.offsetWidth;activePage.classList.add('bg-page-enter');
+      activePage.addEventListener('animationend',()=>activePage.classList.remove('bg-page-enter'),{once:true});
+    }
+  }
 }
 function myServiceById(id){
   const n=Number(id||0);
