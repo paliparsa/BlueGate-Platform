@@ -1,3 +1,11 @@
+# BlueGate Platform v5.1.12 — repeat renewal navigation fix
+
+- Resolve managed VPN service identity through prior renewal-order ancestry so renewals continue to deduplicate against the same service.
+- Return the exact fresh/reused renewal order explicitly from both service-page and order-page renewal APIs.
+- Remove UI fallback to the first order in the list; if the API fails to provide an order ID, do not navigate to a stale checkout.
+- Bust Mini App asset cache keys.
+- Version bump: 5.1.11 → 5.1.12 (PATCH).
+
 # BlueGate Platform v5.1.11 — stop idle loader animation
 
 - Stop the status-message timer and all loader activity when the last tracked API request settles.
