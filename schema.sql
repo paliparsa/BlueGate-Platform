@@ -281,6 +281,7 @@ CREATE TABLE IF NOT EXISTS orders (
   discount_amount BIGINT NOT NULL DEFAULT 0,
   wallet_amount BIGINT NOT NULL DEFAULT 0,
   wallet_amount_usd DECIMAL(18,4) NOT NULL DEFAULT 0.0000,
+  wallet_amount_irt BIGINT NOT NULL DEFAULT 0,
   wallet_rate_toman DECIMAL(24,6) NULL,
   final_amount BIGINT NOT NULL DEFAULT 0,
   price_currency VARCHAR(8) NOT NULL DEFAULT 'IRT',
