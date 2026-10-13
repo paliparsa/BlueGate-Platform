@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.21 — modal spacing and lightweight blur
+
+- Normalize modal card padding, borders, and text/button spacing across centered confirmation, Stars/order popups, and credit top-up flows.
+- Add a subtle 3px backdrop blur with modest saturation to modal overlays, avoiding heavy blur.
+- Improve narrow-screen wrapping and action-button spacing.
+- Refresh Mini App stylesheet cache key.
+
 # BlueGate Platform v5.1.20 — credit top-up modal polish
 
 - Redesign the add-credit and payment-method steps as centered, scrollable dialogs with consistent hierarchy and mobile sizing.
