@@ -1,3 +1,11 @@
+# BlueGate Platform v5.1.6 — atomic renewal deduplication
+
+- Acquire a MySQL advisory lock per user and managed VPN service before checking or creating a renewal checkout.
+- Reuse active renewal orders by both source order and managed service ID, covering service renewal flows where the source order ID can differ.
+- Treat receipt-submitted and review states as active renewal checkouts, preventing a second order while payment is being reviewed.
+- Pass the managed service ID into the backend renewal factory from the service renewal API.
+- Version bump: 5.1.5 → 5.1.6 (PATCH).
+
 # BlueGate Platform v5.1.5 — reliable Iran flag display
 
 - Use the requested Toss Face Lion and Sun SVG for Persian language toggles on web and Mini App.
