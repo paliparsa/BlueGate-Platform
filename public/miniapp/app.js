@@ -474,10 +474,10 @@ const BlueGateCommandLoader=(()=>{
   function show(action){
     if(quiet.has(String(action||'')))return ()=>{};
     active++;sequence++;
-    const el=ensure();el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');el.classList.add('visible');document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
+    const el=ensure();el.classList.remove('is-idle');el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');el.classList.add('visible');document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
     if(active===1){textNode.textContent=messages[sequence%messages.length];rotateTimer=window.setInterval(()=>{if(textNode){textNode.classList.remove('swap');void textNode.offsetWidth;textNode.textContent=messages[(++sequence)%messages.length];textNode.classList.add('swap')}},1450);}
     let released=false;
-    return ()=>{if(released)return;released=true;active=Math.max(0,active-1);if(active===0){clearInterval(rotateTimer);el.classList.remove('visible');el.setAttribute('aria-hidden','true');document.documentElement.classList.remove('bg-command-busy');document.body.classList.remove('bg-command-busy')}};
+    return ()=>{if(released)return;released=true;active=Math.max(0,active-1);if(active===0){clearInterval(rotateTimer);rotateTimer=0;el.classList.remove('visible');el.setAttribute('aria-hidden','true');document.documentElement.classList.remove('bg-command-busy');document.body.classList.remove('bg-command-busy');el.classList.add('is-idle')}};
   }
   return {show};
 })();
