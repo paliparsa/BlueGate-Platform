@@ -74,5 +74,37 @@
   }
 
 
-  window.BlueGateUI = { openSheet, closeSheet, confirm: confirmSheet, beforeOpen };
+  function centeredConfirm(opts={}) {
+    beforeOpen('centeredConfirm');
+    return new Promise(resolve => {
+      let settled=false;
+      const layer=document.createElement('div');
+      layer.className='order-more-popup bg-centered-confirm';
+      layer.setAttribute('role','presentation');
+      layer.setAttribute('aria-hidden','false');
+      layer.innerHTML=`
+        <div class="order-more-popup-backdrop" data-centered-cancel></div>
+        <section class="order-more-popup-card bg-centered-confirm-card" role="alertdialog" aria-modal="true" aria-label="${esc(opts.title||'تأیید عملیات')}">
+          <header class="order-more-popup-head">
+            <div>${opts.eyebrow?`<span>${esc(opts.eyebrow)}</span>`:''}<h2 class="order-more-popup-title">${esc(opts.title||'تأیید عملیات')}</h2></div>
+            <button class="order-more-popup-close" type="button" data-centered-cancel aria-label="بستن">×</button>
+          </header>
+          <div class="bg-centered-confirm-message">${opts.icon?`<span class="bg-centered-confirm-icon">${esc(opts.icon)}</span>`:''}<p>${esc(opts.message||'آیا مطمئن هستید؟')}</p></div>
+          <footer class="bg-centered-confirm-actions">
+            <button type="button" class="secondary" data-centered-cancel>${esc(opts.cancelText||'لغو')}</button>
+            <button type="button" class="${opts.danger?'danger':'primary'}" data-centered-ok>${esc(opts.confirmText||'تأیید')}</button>
+          </footer>
+        </section>`;
+      document.body.appendChild(layer);
+      document.body.classList.add('order-more-popup-open');
+      const finish=v=>{if(settled)return;settled=true;layer.classList.remove('open');document.body.classList.remove('order-more-popup-open');setTimeout(()=>layer.remove(),190);document.removeEventListener('keydown',onKey);resolve(v)};
+      const onKey=e=>{if(e.key==='Escape')finish(false)};
+      layer.querySelectorAll('[data-centered-cancel]').forEach(el=>el.addEventListener('click',()=>finish(false)));
+      layer.querySelector('[data-centered-ok]')?.addEventListener('click',()=>finish(true));
+      document.addEventListener('keydown',onKey);
+      requestAnimationFrame(()=>layer.classList.add('open'));
+      requestAnimationFrame(()=>layer.querySelector('[data-centered-ok]')?.focus({preventScroll:true}));
+    });
+  }
+  window.BlueGateUI = { openSheet, closeSheet, confirm: confirmSheet, confirmCentered: centeredConfirm, beforeOpen };
 })();
