@@ -1,3 +1,11 @@
+# BlueGate Platform v5.1.17 — Stars invoice confirmation and crypto payment polish
+
+- Add a confirmation dialog before creating/sending a Telegram Stars invoice; canceling leaves the invoice uncreated.
+- Restyle crypto wallet selection and invoice details to align with the centered popup and refreshed payment action-bar design.
+- Reduce heavy crypto card blur/shadows and improve address, amount, network, and TXID readability on mobile.
+- Refresh Mini App CSS/JS cache keys.
+- Version bump: 5.1.16 → 5.1.17 (PATCH).
+
 # BlueGate Platform v5.1.16 — language confirmation and payment bar polish
 
 - Ask users to confirm before switching Mini App language; cancel leaves the current language unchanged.
