@@ -99,4 +99,4 @@ $LIBRETRANSLATE_API_KEY = ''; // keep private; never expose in frontend
 // Leave the key empty to use the existing catalog translation providers as fallback.
 $TRANSLATION_AI_API_KEY = ''; // server-side only; never expose to the browser
 $TRANSLATION_AI_BASE_URL = 'https://api.openai.com/v1';
-$TRANSLATION_AI_MODEL = 'gpt-4o-mini';
+$TRANSLATION_AI_MODEL = 'gemini-3.1-flash-lite';
