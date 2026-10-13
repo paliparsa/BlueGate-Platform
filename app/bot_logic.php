@@ -472,8 +472,8 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     }
     if (str_starts_with($data, 'order_pay_wallet_')) {
         $oid=(int)substr($data, 17);
-        try { $order=apply_wallet_to_order($oid, (int)$user['id']); show_order_invoice($chat_id, $message_id, $order); }
-        catch (Throwable $e) { send_msg($chat_id, 'امکان پرداخت از کیف پول برای این سفارش نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
+        try { $order=apply_wallet_to_order($oid, (int)$user['id']); if (normalize_order_status((string)($order['status'] ?? '')) === 'payment_confirmed') { notify_admin_order((int)$order['id'], 'پرداخت کامل با اعتبار کیف پول', 'Telegram Bot', '💙 پرداخت سفارش از اعتبار کیف پول انجام شد.'); } show_order_invoice($chat_id, $message_id, $order); }
+        catch (Throwable $e) { error_log('[BlueGate wallet payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'امکان پرداخت از کیف پول برای این سفارش نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_pay_card_')) {
