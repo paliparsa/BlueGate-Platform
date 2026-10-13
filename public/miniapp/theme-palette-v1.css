@@ -51,7 +51,9 @@ body {
     radial-gradient(ellipse at 5% 28%, rgba(139,92,246,.045), transparent 30%),
     #07080D !important;
 }
-#userApp, #adminApp, .app-shell, .page { color: #F5F7FC; }
+#userApp, #adminApp, .app-shell, .page,
+#homePage, #shopPage, #ordersPage, #walletPage, #supportPage,
+#adminContent, #adminStats { color: #F5F7FC; }
 h1,h2,h3,h4,h5,h6,.section-title h2,.brand-box h1,.product-title,
 .product-name,.wallet-card-main strong,.order-card-total { color: #F5F7FC !important; }
 p, small, .muted, .tile-desc, .section-title>small { color: #A7AFBF; }
