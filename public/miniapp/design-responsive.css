@@ -1,0 +1,8 @@
+/* BlueGate Mini App responsive and reduced-motion guardrails */
+@media(max-width:520px){
+  :where(.card,.product-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-panel,.admin-section){border-radius:var(--r-md)}
+  :where(.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer){max-width:100vw}
+}
+@media(prefers-reduced-motion:reduce){
+  :where(button,.btn,.card,.product-card,.order-card,.modal,.popup,.sheet){transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
