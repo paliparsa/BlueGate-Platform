@@ -2593,8 +2593,8 @@ function admin_shop_keyboard(): string {
         [['text'=>'🎟 کدهای تخفیف', 'callback_data'=>'adm_coupons'], ['text'=>'📊 گزارش فروش', 'callback_data'=>'adm_sales_report']],
         [['text'=>'💳 متن پرداخت', 'callback_data'=>'adm_payment']],
     ];
-    if ($mini) $rows[] = [['text'=>'🧑‍💼 Mini Panel ادمین', 'web_app'=>['url'=>$mini.'?admin=1']]];
-    $rows[] = [['text'=>'🔙 پنل ادمین', 'callback_data'=>'adm_home']];
+    if ($mini) $rows[] = [['text'=>'🧑‍💼 باز کردن پنل مدیریت', 'web_app'=>['url'=>$mini.'?admin=1']]];
+    $rows[] = [['text'=>'🔙 کنترل سنتر ادمین', 'callback_data'=>'adm_home']];
     return json_markup(['inline_keyboard'=>$rows]);
 }
 function admin_order_keyboard(int $orderId): string {
@@ -3045,9 +3045,9 @@ function admin_keyboard(): string {
         if(table_exists('credit_topups')) $pendingTopups=(int)db()->query("SELECT COUNT(*) FROM credit_topups WHERE status IN ('receipt_submitted','reviewing')")->fetchColumn();
     } catch (Throwable $e) { error_log('[BlueGate Bot admin_keyboard/topups] '.$e->getMessage()); }
     $rows=[
-        [['text'=>'📣 Broadcast Center','callback_data'=>'adm_bc'],['text'=>'🔔 اعلان Mini App','callback_data'=>'adm_ntf']],
+        [['text'=>'📣 پیام همگانی','callback_data'=>'adm_bc'],['text'=>'🔔 اعلان Mini App','callback_data'=>'adm_ntf']],
         [['text'=>'📦 سفارش‌های منتظر · '.$pendingOrders,'callback_data'=>'adm_ops_orders'],['text'=>'💳 شارژها · '.$pendingTopups,'callback_data'=>'adm_ops_topups']],
-        [['text'=>'👤 مشتری / Customer 360','callback_data'=>'adm_cust'],['text'=>'⏳ انقضا ۷ روز · '.$expiring,'callback_data'=>'adm_exp']],
+        [['text'=>'👤 نمایه مشتری','callback_data'=>'adm_cust'],['text'=>'⏳ انقضا ۷ روز · '.$expiring,'callback_data'=>'adm_exp']],
         [['text'=>'📊 داشبورد سریع','callback_data'=>'adm_ops_dash'],['text'=>'🛒 مدیریت فروشگاه','callback_data'=>'adm_shop']],
         [['text'=>'⚙️ ابزارهای بیشتر','callback_data'=>'adm_more'],['text'=>'🏠 منوی کاربر','callback_data'=>'main']],
     ];
@@ -3082,7 +3082,7 @@ function admin_broadcast_home(int $chat_id,$message_id,string $forcedChannel='')
         $rows[]=[['text'=>$a[1].' · '.$count,'callback_data'=>'adm_bc_a_'.$channel.'_'.$a[0]]];
     }
     $rows[]=[['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']];
-    send_or_edit($chat_id,$message_id,"📣 <b>Broadcast Center</b>\n\nکانال: <b>{$channelLabel}</b>\nمخاطب رو با دکمه انتخاب کن.",json_markup(['inline_keyboard'=>$rows]));
+    send_or_edit($chat_id,$message_id,"📣 <b>پیام همگانی</b>\n\nکانال: <b>{$channelLabel}</b>\nمخاطب رو با دکمه انتخاب کن.",json_markup(['inline_keyboard'=>$rows]));
 }
 function admin_broadcast_preview_keyboard(): string {return json_markup(['inline_keyboard'=>[[['text'=>'✅ ارسال نهایی','callback_data'=>'adm_bc_send'],['text'=>'✏️ تغییر پیام','callback_data'=>'adm_bc_edit']],[['text'=>'❌ لغو','callback_data'=>'adm_home']]]]);}
 function admin_send_telegram_broadcast(array $ids,string $text): array {
@@ -3136,7 +3136,7 @@ function admin_customer_search_results(int $chat_id,string $query): void {
     if(!$rows)$txt.='کاربری پیدا نشد.';$kb[]=[['text'=>'🔎 جستجوی دوباره','callback_data'=>'adm_cust'],['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']];send_msg($chat_id,$txt,json_markup(['inline_keyboard'=>$kb]));
 }
 function admin_customer_360_bot(int $chat_id,$message_id,int $uid): void {
-    $u=get_user_by_id($uid);if(!$u){send_or_edit($chat_id,$message_id,'کاربر پیدا نشد.',admin_keyboard());return;}$c=customer_stats($uid);$orders=user_orders($uid,5,true);$txt="👤 <b>Customer 360</b>\n\n<b>".h(display_name($u))."</b>\n🆔 <code>".h((string)$u['telegram_id'])."</code>".(!empty($u['username'])?"\n@".h($u['username']):'')."\n💰 اعتبار: <b>".money((int)$u['balance'])."</b>\n🧾 خرید موفق: <b>".(int)($c['orders_count']??0)."</b>\n💵 مجموع خرید: <b>".money((int)($c['total_spent']??0))."</b>\n\n<b>سفارش‌های اخیر</b>\n";foreach($orders as $o)$txt.='• #'.$o['id'].' · '.h(order_catalog_display_name($o)).' · '.h(order_status_fa((string)$o['status']))."\n";if(!$orders)$txt.='—';
+    $u=get_user_by_id($uid);if(!$u){send_or_edit($chat_id,$message_id,'کاربر پیدا نشد.',admin_keyboard());return;}$c=customer_stats($uid);$orders=user_orders($uid,5,true);$txt="👤 <b>نمایه مشتری</b>\n\n<b>".h(display_name($u))."</b>\n🆔 <code>".h((string)$u['telegram_id'])."</code>".(!empty($u['username'])?"\n@".h($u['username']):'')."\n💰 اعتبار: <b>".money((int)$u['balance'])."</b>\n🧾 خرید موفق: <b>".(int)($c['orders_count']??0)."</b>\n💵 مجموع خرید: <b>".money((int)($c['total_spent']??0))."</b>\n\n<b>سفارش‌های اخیر</b>\n";foreach($orders as $o)$txt.='• #'.$o['id'].' · '.h(order_catalog_display_name($o)).' · '.h(order_status_fa((string)$o['status']))."\n";if(!$orders)$txt.='—';
     $kb=[[['text'=>'➕ 50K','callback_data'=>'adm_cadj_'.$uid.'_50000'],['text'=>'➕ 100K','callback_data'=>'adm_cadj_'.$uid.'_100000']],[['text'=>'➖ 50K','callback_data'=>'adm_cadj_'.$uid.'_-50000'],['text'=>'➖ 100K','callback_data'=>'adm_cadj_'.$uid.'_-100000']],[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_corders_'.$uid],['text'=>'✉️ پیام مستقیم','callback_data'=>'adm_cmsg_'.$uid]],[['text'=>'🔎 مشتری دیگر','callback_data'=>'adm_cust'],['text'=>'🔙 کنترل سنتر','callback_data'=>'adm_home']]];send_or_edit($chat_id,$message_id,$txt,json_markup(['inline_keyboard'=>$kb]));
 }
 function admin_expiring_center(int $chat_id,$message_id,int $days=7): void {
