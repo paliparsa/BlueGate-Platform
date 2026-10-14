@@ -1,11 +1,4 @@
-/* BlueGate Mini App v2.8.1 — boot recovery + unified UI
-   One visual language for user + admin surfaces. */
-:root{
-  --u-space-1:4px;--u-space-2:8px;--u-space-3:12px;--u-space-4:16px;--u-space-5:20px;--u-space-6:24px;--u-space-8:32px;
-  --u-r-sm:8px;--u-r-md:12px;--u-r-lg:16px;--u-r-xl:20px;
-  --u-fast:160ms;--u-standard:220ms;--u-sheet:280ms;
-  --u-surface:#101217;--u-surface-2:#151922;--u-border:rgba(255,255,255,.085);
-}
+/* Unified UI component rules; shared tokens are defined in design-tokens.css. */
 html.sheet-open,html.sheet-open body{overflow:hidden!important}
 body{letter-spacing:0;}
 .app-shell{max-width:980px!important;padding-bottom:104px!important}
