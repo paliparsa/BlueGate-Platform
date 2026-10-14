@@ -2602,7 +2602,7 @@ function admin_order_keyboard(int $orderId): string {
     if(!$o)return json_markup(['inline_keyboard'=>[[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_orders'],['text'=>'🛒 فروشگاه ادمین','callback_data'=>'adm_shop']]]]);
     $status=normalize_order_status((string)$o['status']);$caps=function_exists('bluegate_order_capabilities')?bluegate_order_capabilities($o):[];
     $managedVpn=!empty($caps['is_managed_vpn']);$canProvision=!empty($caps['can_provision']);
-    $activeStatuses=['pending_payment','receipt_submitted','reviewing','payment_confirmed','preparing'];$cleanup=is_cleanup_order_status($status);
+    $activeStatuses=['pending_payment','receipt_submitted','reviewing'];$cleanup=is_cleanup_order_status($status);
     if(in_array($status,['pending_payment','receipt_submitted','reviewing'],true))$rows[]=[['text'=>'👀 شروع بررسی','callback_data'=>'ord_review_'.$orderId],['text'=>'✅ تایید پرداخت','callback_data'=>'ord_paid_'.$orderId]];
     if(in_array($status,['payment_confirmed','preparing'],true)){
         if($canProvision)$rows[]=[['text'=>'⚡ ساخت و ارسال از پنل','callback_data'=>'ord_provision_'.$orderId],['text'=>'📡 وضعیت سرویس','callback_data'=>'ord_service_status_'.$orderId]];
