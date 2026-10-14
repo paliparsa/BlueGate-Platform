@@ -1,0 +1,62 @@
+/* v5.1.66 — referral center and invite sheet parity */
+.referral-center-mini-v2{display:grid;gap:14px;min-width:0;color:var(--text)}
+.referral-center-mini-v2 .referral-wallet-hero-v2{display:grid;gap:10px}
+.referral-center-mini-v2 .wallet-card-main{position:relative;overflow:hidden;padding:19px;border:1px solid color-mix(in srgb,var(--primary) 35%,var(--border));border-radius:20px;background:linear-gradient(140deg,color-mix(in srgb,var(--primary) 20%,var(--card)),var(--card) 70%);box-shadow:0 14px 34px rgba(0,0,0,.12)}
+.referral-center-mini-v2 .wallet-card-main:after{content:"";position:absolute;width:116px;height:116px;left:-36px;top:-48px;border-radius:50%;border:1px solid color-mix(in srgb,var(--primary) 24%,transparent);pointer-events:none}
+.referral-center-mini-v2 .wallet-card-main>small{display:block;color:var(--muted);font-size:11px;font-weight:700}
+.referral-center-mini-v2 .wallet-card-main>strong{display:block;margin:7px 0;font-size:clamp(23px,6vw,31px);font-weight:900;letter-spacing:-.04em;line-height:1.35;font-variant-numeric:tabular-nums}
+.referral-center-mini-v2 .wallet-card-main>p{max-width:40ch;margin:0;color:var(--muted);font-size:12px;line-height:1.85}
+.referral-center-mini-v2 .referral-stats-mini-v2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.referral-center-mini-v2 .referral-stats-mini-v2>div{display:grid;gap:5px;min-width:0;padding:13px;border:1px solid var(--border);border-radius:15px;background:var(--card);box-shadow:0 5px 18px rgba(0,0,0,.06)}
+.referral-center-mini-v2 .referral-stats-mini-v2 b{font-size:17px;line-height:1.45;font-weight:900;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.referral-center-mini-v2 .referral-stats-mini-v2 span{color:var(--muted);font-size:11px;line-height:1.65}
+.referral-center-mini-v2 .ref-vip-card-v2,.referral-center-mini-v2 .referral-card-v2,.referral-center-mini-v2 .referral-tree-card{padding:15px;border:1px solid var(--border);border-radius:19px;background:var(--card);box-shadow:0 9px 26px rgba(0,0,0,.08)}
+.referral-center-mini-v2 .ref-vip-head-v2{display:flex;align-items:center;gap:12px;min-width:0}
+.referral-center-mini-v2 .ref-vip-emoji-v2{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border:1px solid var(--border);border-radius:14px;background:var(--surface,var(--bg));font-size:22px}
+.referral-center-mini-v2 .ref-vip-head-v2>div:last-child{min-width:0}
+.referral-center-mini-v2 .ref-vip-head-v2 small,.referral-center-mini-v2 .ref-vip-head-v2 p{font-size:11px;line-height:1.7;color:var(--muted)}
+.referral-center-mini-v2 .ref-vip-head-v2 h3{margin:2px 0;font-size:15px;font-weight:850}
+.referral-center-mini-v2 .ref-vip-track-v2{height:7px;margin-top:14px;overflow:hidden;border-radius:99px;background:var(--border)}
+.referral-center-mini-v2 .ref-vip-track-v2 i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--primary),color-mix(in srgb,var(--primary) 45%,#72d8c0))}
+.referral-center-mini-v2 .referral-card-head,.referral-center-mini-v2 .referral-tree-head{display:flex;align-items:center;gap:11px;min-width:0;margin-bottom:13px}
+.referral-center-mini-v2 .referral-card-head>div,.referral-center-mini-v2 .referral-tree-head>div{flex:1;min-width:0}
+.referral-center-mini-v2 .referral-card-head h3,.referral-center-mini-v2 .referral-tree-head h3{margin:0;font-size:14px;font-weight:850;line-height:1.6}
+.referral-center-mini-v2 .referral-card-head p,.referral-center-mini-v2 .referral-tree-head p{margin:3px 0 0;font-size:11px;line-height:1.75;color:var(--muted)}
+.referral-center-mini-v2 .referral-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border:1px solid var(--border);border-radius:14px;background:var(--surface,var(--bg));font-size:20px}
+.referral-center-mini-v2 .ref-link-mini-v2{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;width:100%;min-width:0;padding:13px;border:1px solid color-mix(in srgb,var(--primary) 28%,var(--border));border-radius:14px;background:var(--surface,var(--bg));color:var(--text);text-align:right}
+.referral-center-mini-v2 .ref-link-mini-v2 small{grid-column:1/-1;font-size:10px;color:var(--muted)}
+.referral-center-mini-v2 .ref-link-mini-v2 b{min-width:0;font-size:15px;letter-spacing:.035em;overflow-wrap:anywhere}
+.referral-center-mini-v2 .ref-link-mini-v2 span{font-size:11px;font-weight:800;color:var(--primary)}
+.referral-center-mini-v2 .ref-mini-actions-v2{display:grid;grid-template-columns:1.25fr 1fr .65fr;gap:8px;margin-top:10px}
+.referral-center-mini-v2 .ref-mini-actions-v2 button,.referral-center-mini-v2 .ref-custom-mini-v2 button{min-width:0;min-height:42px;padding:9px 10px;border-radius:12px;font-size:11px;font-weight:800}
+.referral-center-mini-v2 .ref-custom-mini-v2{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.referral-center-mini-v2 .ref-custom-mini-v2 summary{display:flex;justify-content:space-between;gap:8px;cursor:pointer;font-size:12px;font-weight:800}
+.referral-center-mini-v2 .ref-custom-mini-v2 summary span{color:var(--muted);font-size:10px;font-weight:600}
+.referral-center-mini-v2 .ref-custom-mini-v2 p{font-size:11px;line-height:1.8;color:var(--muted)}
+.referral-center-mini-v2 .referral-tree-head .admin-card-icon{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--border);border-radius:13px;background:var(--surface,var(--bg));font-size:18px}
+.referral-center-mini-v2 .referral-node{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--border);min-width:0}
+.referral-center-mini-v2 .referral-node-avatar{display:grid;place-items:center;width:35px;height:35px;border-radius:12px;background:var(--surface,var(--bg));border:1px solid var(--border);font-weight:850}
+.referral-center-mini-v2 .referral-node-info{display:grid;gap:3px;min-width:0}
+.referral-center-mini-v2 .referral-node-info b{font-size:12px;overflow-wrap:anywhere}
+.referral-center-mini-v2 .referral-node-info span,.referral-center-mini-v2 .referral-node-reward{font-size:10px;color:var(--muted);line-height:1.7}
+.referral-center-mini-v2 .referral-node-reward{font-weight:850;color:var(--success,#45bd96);white-space:nowrap}
+.referral-center-mini-v2 .ref-empty-mini{padding:18px 12px;text-align:center;border:1px dashed var(--border);border-radius:14px;background:var(--surface,var(--bg))}
+.referral-center-mini-v2 .ref-empty-mini>b{font-size:13px}
+.referral-center-mini-v2 .ref-empty-mini>p{font-size:11px;line-height:1.8;color:var(--muted)}
+/* The referral share popup uses the same rounded, dark surface language as other BlueGate sheets. */
+.referral-share-mini{max-width:520px;margin-inline:auto;padding:18px!important;border:1px solid var(--border)!important;border-radius:24px 24px 0 0!important;background:var(--card)!important;box-shadow:0 -18px 56px rgba(0,0,0,.25)}
+.referral-share-mini .share-sheet-handle{width:42px;height:4px;margin:0 auto 15px;border-radius:99px;background:var(--muted);opacity:.45}
+.referral-share-mini .share-sheet-head{display:flex;align-items:center;gap:11px;margin-bottom:15px}
+.referral-share-mini .share-product-thumb{flex:0 0 44px;width:44px;height:44px;border:1px solid var(--border);border-radius:14px;background:var(--surface,var(--bg));color:var(--primary)}
+.referral-share-mini .share-product-info{flex:1;min-width:0}
+.referral-share-mini .share-product-info h3{margin:0;font-size:15px;font-weight:850}
+.referral-share-mini .share-product-info p{margin:3px 0 0;font-size:11px;color:var(--muted)}
+.referral-share-mini .share-actions{display:grid;gap:8px}
+.referral-share-mini .share-btn{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:11px 12px;border:1px solid var(--border);border-radius:15px;background:var(--surface,var(--bg));color:var(--text);text-align:right}
+.referral-share-mini .share-btn-icon{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:1px solid var(--border);border-radius:11px;background:var(--card);font-size:16px}
+.referral-share-mini .share-btn>div:last-child{display:grid;gap:3px;min-width:0}
+.referral-share-mini .share-btn b{font-size:12px;font-weight:800}
+.referral-share-mini .share-btn small{font-size:10px;line-height:1.7;color:var(--muted);overflow-wrap:anywhere}
+.referral-share-mini .share-btn:focus-visible,.referral-center-mini-v2 button:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+@media(max-width:390px){.referral-center-mini-v2 .ref-mini-actions-v2{grid-template-columns:1fr 1fr}.referral-center-mini-v2 .ref-mini-actions-v2 button:last-child{grid-column:1/-1}.referral-center-mini-v2 .referral-stats-mini-v2 b{font-size:15px}.referral-share-mini{padding:14px!important;border-radius:21px 21px 0 0!important}}
+@media(prefers-reduced-motion:reduce){.referral-center-mini-v2 *,.referral-share-mini *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
