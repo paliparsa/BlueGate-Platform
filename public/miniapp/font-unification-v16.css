@@ -1,0 +1,25 @@
+/* v5.1.54 — enforce Yekan typography across all mini-app UI layers.
+   Dedicated icon fonts and monospace/code output are intentionally excluded. */
+:root{--mini-font-family:"Yekan","Yekan Bakh","Vazirmatn",Tahoma,Arial,sans-serif!important}
+html,body,#userApp,#adminApp,
+#userApp :not(i):not(svg):not(path):not(code):not(pre):not(kbd):not(samp):not(.fa):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-symbols-outlined):not(.iconfont):not([data-icon-font]),
+#adminApp :not(i):not(svg):not(path):not(code):not(pre):not(kbd):not(samp):not(.fa):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-symbols-outlined):not(.iconfont):not([data-icon-font]){
+  font-family:"Yekan","Yekan Bakh","Vazirmatn",Tahoma,Arial,sans-serif!important;
+}
+/* Explicitly cover dynamic catalog cards, detail/plan popups, cart and price values. */
+#userApp :is(.catalog-tile,.product-card-v2,.product-card-content,.tile-name,.product-card-price,
+  .product-card-price strong,.product-price,.price,.price-value,.discount-badge,.product-info,
+  .product-details,.product-popup,.product-popup *,.purchase-confirm-overlay,
+  .purchase-confirm-overlay *, .purchase-plan-price,.purchase-plan-price *,
+  .purchase-confirm-price-primary,.purchase-confirm-price-primary *, .cart-popup,.cart-popup *,
+  .cart-sheet,.cart-sheet *, .plan-picker,.plan-picker *, .modal,.modal *,
+  .cart-total,.cart-item-price,.plan-price,.amount,.currency-value),
+#adminApp :is(.price,.price-value,.amount,.currency-value,.stat-value){
+  font-family:"Yekan","Yekan Bakh","Vazirmatn",Tahoma,Arial,sans-serif!important;
+  font-variant-numeric:normal!important;
+}
+/* Keep actual code samples monospace as a deliberate exception. */
+#userApp :is(code,pre,kbd,samp,.mono,.monospace),
+#adminApp :is(code,pre,kbd,samp,.mono,.monospace){
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;
+}

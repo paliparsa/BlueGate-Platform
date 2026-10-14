@@ -1,3 +1,11 @@
+## 5.1.54 - Global Yekan typography enforcement
+
+- Enforced Yekan as the single UI font across the mini-app, including dynamically rendered catalog cards, product detail and plan popups, cart, forms, and admin UI.
+- Forced product prices, discount labels, and numeric price fields to use the same Yekan font as product information instead of switching to Inter.
+- Preserved dedicated icon fonts and monospace code output.
+- Registered a final stylesheet after feature layers so later component rules cannot silently override the font stack.
+- Source-level change; visual verification in Telegram WebView remains outstanding.
+
 ## 5.1.53 - Circular floating cart button
 
 - Reverted the floating cart action from a wide text pill to a compact circular icon button.
