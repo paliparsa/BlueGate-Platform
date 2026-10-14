@@ -1,3 +1,13 @@
+## 5.1.55 - My Orders account header and filter rail redesign
+
+- Redesigned the account/orders hero with a compact black-blue surface, clearer title hierarchy and three distinct order-count metrics.
+- Rebalanced the status-filter rail directly below the header into compact, evenly sized controls with a stronger active state and a dedicated advanced-filter affordance.
+- Improved narrow-screen spacing, long-label wrapping, focus visibility and reduced-motion behavior.
+- Preserved order data, status calculations, filter identifiers, event handlers, order cards, and order detail/navigation flows.
+- Added the stylesheet as the final Mini App visual layer and registered it for PHP filemtime cache-busting.
+- Two review loops: (1) hierarchy and balance between header and filter controls; (2) cascade order, small-width behavior, and preservation of existing interaction hooks.
+- Source-level validation only; live Telegram WebView screenshot and interaction testing remain outstanding.
+
 ## 5.1.54 - Global Yekan typography enforcement
 
 - Enforced Yekan as the single UI font across the mini-app, including dynamically rendered catalog cards, product detail and plan popups, cart, forms, and admin UI.
