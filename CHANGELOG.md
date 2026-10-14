@@ -1,3 +1,10 @@
+## 5.1.60 - Dedicated VPN order delivery redesign
+
+- Redesigned the VPN order-delivery detail view with a clearer order/status bar, service identity hero, traffic and expiry overview, compact service metadata, client identity, subscription link actions, locations, add-ons, and pending-payment section.
+- Added responsive layouts for desktop, mobile, and narrow screens, with focus-visible and reduced-motion support.
+- Scoped the new CSS to `.vpn-sub-page-order`; the separate VPN account/service-management page and non-VPN order/payment pages keep their existing styling.
+- Preserved existing delivery data, subscription actions, renewal/sync controls, and payment flow. Source-level regression checks only; live Telegram WebView and end-to-end VPN delivery tests remain outstanding.
+
 ## 5.1.59 - Unified order note popup
 
 - Changed the bottom-right “یادداشت سفارش” action on order details to open the same centered “بیشتر” popup note editor users prefer, instead of the older generic edit dialog.
