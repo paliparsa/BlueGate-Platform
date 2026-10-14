@@ -17,3 +17,7 @@
   --bgds-r-1:var(--r-sm);--bgds-r-2:var(--r-md);--bgds-r-3:var(--r-lg);--bgds-r-4:var(--r-lg);--bgds-r-5:var(--r-xl);--bgds-r-6:var(--r-xxl);
   --bgds-shadow-card:var(--elev-sm);--bgds-shadow-float:var(--elev-lg);--bgds-focus:var(--focus-ring);
 }
+
+
+/* Unified Mini App design ownership v1 */
+:root{--bg:#030303;--bg2:#050505;--surface:#090909;--surface2:#0d0d0d;--surface3:#121212;--card:#090909;--card2:#0d0d0d;--line:#1b1b1b;--line-strong:#292929;--text:#f5f5f5;--muted:#9b9b9b;--muted-2:#c6c6c6;--accent:#315efb;--primary:#315efb;--secondary:#315efb;--accent-soft:rgba(49,94,251,.14);--mini-font-family:"Yekan","Yekan Bakh","Vazirmatn",Tahoma,Arial,sans-serif;--bgds-bg:#030303;--bgds-bg-2:#050505;--bgds-surface-1:#090909;--bgds-surface-2:#0d0d0d;--bgds-surface-3:#121212;--bgds-text:#f5f5f5;--bgds-muted:#9b9b9b;--bgds-muted-2:#c6c6c6;--bgds-border:#1b1b1b;--bgds-border-strong:#292929;--bgds-primary:#315efb;--bgds-primary-soft:#7694ff;--bgds-purple:#315efb;--bgds-focus:0 0 0 3px rgba(49,94,251,.3)}
