@@ -5420,7 +5420,7 @@ body.bg-language-picker-open{overflow:hidden}
 #userApp #shopPage #shopResultCount{flex:0 0 auto}
 #userApp #shopPage .shop-active-filters{flex:1 1 auto;min-width:0}
 #userApp #shopPage .shop-category-picker-icon{display:grid;place-items:center;font-size:0}
-#userApp #shopPage .shop-category-picker-icon .shop-svg-icon{width:19px;height:19px}
+.shop-category-picker-icon .shop-svg-icon{width:19px;height:19px}
 .shop-category-picker-option{min-width:0;box-sizing:border-box}
 .shop-category-picker-copy{overflow:hidden}
 .shop-category-picker-copy strong,.shop-category-picker-copy small{overflow-wrap:anywhere}
