@@ -1,3 +1,11 @@
+## 5.1.27 - Deep-black Mini App palette
+
+- Set the global page background to deep black (#030303), with near-black cards, panels, inputs, and popup surfaces.
+- Remove decorative gradients and pseudo-element glows from product cards and key promotional surfaces; retain only a very subtle interaction glow on primary actions.
+- Standardize popup backdrops and panels across language, Telegram Stars, wallet/top-up, product, and confirmation flows with very subtle gray borders.
+- Preserve blue primary actions, violet only where existing semantic selection requires it, and existing success/warning/error colors.
+- Refresh local CSS/JS cache keys and the browser theme color. Visual-only changes; no business logic or application flow changes.
+
 ## 5.1.26 - Complete Mini App palette normalization
 
 - Standardize the home page, catalog/product cards, wallet/credit/payment methods, tabs, menu states, and order indicators around a near-black surface, white text, blue primary actions, and restrained violet selection accents.
