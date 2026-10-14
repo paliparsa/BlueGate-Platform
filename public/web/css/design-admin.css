@@ -8,3 +8,21 @@
 .bg-admin-shell :where(th){background:#0b0d12;color:#c1c7d1}
 .bg-admin-shell :where(.badge,.chip,.tag,.status-badge){border-radius:8px}
 @media(max-width:760px){.bg-admin-shell :where(.bg-admin-card,.admin-card,.stat-card,.panel,.card){border-radius:12px}}
+
+/* Legacy admin layout files retain geometry only; this layer owns their final visual treatment. */
+.bg-admin-shell .bg-admin-nav,.bg-admin-shell .bg-admin-mobile-tabs,.bg-admin-shell .bg-admin-more-menu,
+.bg-admin-shell .bg-admin-header,.bg-admin-shell .bg-admin-main,.bg-admin-shell .bg-admin-content{
+  background-color:#080a0e!important;background-image:none!important;border-color:rgba(255,255,255,.085)!important;box-shadow:none!important;color:#f5f7fb
+}
+.bg-admin-shell .bg-admin-nav-head>span{background:#315efb!important;background-image:none!important;color:#fff!important;border-radius:12px!important}
+.bg-admin-shell .bg-admin-nav button.active,.bg-admin-shell .bg-admin-mobile-tabs button.active,.bg-admin-shell .bg-admin-more-menu button.active{
+  background:rgba(49,94,251,.14)!important;background-image:none!important;border-color:rgba(49,94,251,.32)!important;box-shadow:inset 0 0 0 1px rgba(49,94,251,.08)!important;color:#fff!important
+}
+.bg-admin-shell .bg-admin-card,.bg-admin-shell .bg-admin-row,.bg-admin-shell .bg-order-card,.bg-admin-shell .bg-admin-stat{
+  background:#101217!important;background-image:none!important;border-color:rgba(255,255,255,.085)!important;border-radius:16px!important;box-shadow:none!important;color:#f5f7fb!important
+}
+.bg-admin-shell .bg-admin-form input,.bg-admin-shell .bg-admin-form select,.bg-admin-shell .bg-admin-form textarea,
+.bg-admin-shell .bg-settings-form input,.bg-admin-shell .bg-settings-form select,.bg-admin-shell .bg-settings-form textarea{
+  background:#0b0d12!important;background-image:none!important;color:#f5f7fb!important;border-color:rgba(255,255,255,.14)!important;border-radius:12px!important
+}
+.bg-admin-shell :is(.bg-admin-nav,.bg-admin-header,.bg-admin-card,.bg-admin-row,.bg-order-card,.bg-admin-stat) :is(a,button,.muted,small){text-shadow:none!important;filter:none}
