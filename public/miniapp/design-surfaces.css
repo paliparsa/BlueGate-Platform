@@ -1,0 +1,16 @@
+/* BlueGate Mini App design surfaces — shared by customer and in-app admin views */
+:where(.card,.product-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-stat-card,.admin-panel,.admin-section,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.catalog-tile,.product-tile,.service-card,.bg-card){
+  background:var(--surface);border-color:var(--line);box-shadow:none;color:var(--text);border-radius:var(--r-lg)
+}
+:where(.card,.product-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-stat-card,.admin-panel,.admin-section,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.service-card){
+  background-image:none
+}
+:where(.topbar,.app-header,.page-header,.admin-header,.admin-topbar,.bottom-nav,.admin-tabs,.nav-bar,.mobile-nav){
+  background:rgba(5,6,8,.94);border-color:var(--line);box-shadow:none;backdrop-filter:blur(16px)
+}
+:where(.bottom-nav,.admin-tabs,.nav-bar,.mobile-nav){border-top:1px solid var(--line)}
+:where(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active,[aria-current="page"]){
+  color:#fff;background:var(--accent-soft);border-color:rgba(49,94,251,.35);box-shadow:none
+}
+:where(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active) :where(svg,.bg-ico,.icon){color:var(--accent);filter:none}
+:where(.badge,.chip,.tag,.status-badge,.filter-chip){border-radius:var(--r-sm)}
