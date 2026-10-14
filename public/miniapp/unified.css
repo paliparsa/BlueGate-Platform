@@ -1,6 +1,6 @@
 /* Unified UI component rules; shared tokens are defined in design-tokens.css. */
 html.sheet-open,html.sheet-open body{overflow:hidden!important}
-body{letter-spacing:0;}
+
 .app-shell{max-width:980px!important;padding-bottom:104px!important}
 .topbar{min-height:68px!important;padding:10px 14px!important;border-radius:var(--r-lg)!important;gap:14px!important}
 .brand-box small{font-size:13px!important;letter-spacing:.09em;color:var(--accent)!important;font-weight:900!important;text-transform:uppercase}
