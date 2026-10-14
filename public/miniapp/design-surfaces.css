@@ -14,3 +14,7 @@
 #userApp :is(.nav-item.active,.nav-link.active,.bottom-nav button.active) :is(svg,.bg-ico,.icon),
 #adminApp :is(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active) :is(svg,.bg-ico,.icon){color:var(--accent)!important;filter:none!important}
 #userApp :is(.badge,.chip,.tag,.status-badge,.filter-chip),#adminApp :is(.badge,.chip,.tag,.status-badge,.filter-chip){border-radius:var(--r-sm)!important}
+
+
+/* Unified Mini App design ownership v1 — consistent near-black content cards */
+#userApp :is(.card,.panel,.section-card,.product-tile,.product-card,.product-card-modern,.product-item,.product-grid .product,.shop-product-card,.catalog-card,.catalog-tile,.detail-card,.product-info-card,.glowing-flash-card,.flash-card,.hero,.shop-page-intro,[data-product-card],[data-product-id],.product-list-item),#adminApp :is(.card,.panel,.section-card,.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile,.detail-card,.product-info-card,[data-product-card],[data-product-id]){background-color:var(--surface)!important;background-image:none!important;border-color:var(--line)!important;color:var(--text)!important;box-shadow:var(--elev-sm)!important}#userApp :is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::before,#userApp :is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::after{background-image:none!important;box-shadow:none!important}
