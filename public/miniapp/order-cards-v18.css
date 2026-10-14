@@ -1,0 +1,273 @@
+/* Orders v18 — order card redesign. Keeps existing markup and interaction hooks. */
+#ordersPage .order-list {
+  display: grid !important;
+  gap: 11px !important;
+}
+#ordersPage .order-row.parity-order-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.085) !important;
+  border-radius: 19px !important;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(29,155,240,.055), transparent 48%),
+    linear-gradient(145deg, #10151d 0%, #0b0f15 78%) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  transition: border-color .18s ease, transform .18s ease;
+}
+#ordersPage .order-row.parity-order-card::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset-block: 14px;
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, rgba(85,185,255,.7), rgba(85,185,255,.06));
+  pointer-events: none;
+}
+#ordersPage .order-row.parity-order-card:active { transform: scale(.995); }
+#ordersPage .order-row.parity-order-card:hover {
+  border-color: rgba(85,185,255,.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+#ordersPage .parity-order-main {
+  display: grid !important;
+  grid-template-columns: 46px minmax(0,1fr) auto !important;
+  align-items: start !important;
+  gap: 11px !important;
+  padding: 15px 14px 12px !important;
+}
+#ordersPage .parity-order-main .order-icon {
+  display: grid !important;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 14px !important;
+  background: rgba(255,255,255,.045) !important;
+  color: #b6dfff;
+  font-size: 21px;
+}
+#ordersPage .parity-order-main .order-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+#ordersPage .parity-order-main .order-icon > small { display: none !important; }
+#ordersPage .parity-order-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0 !important;
+  gap: 6px !important;
+  padding-top: 1px;
+}
+#ordersPage .parity-order-copy h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 7px;
+  min-width: 0;
+  margin: 0 !important;
+  color: #f2f6fc !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  line-height: 1.55 !important;
+  overflow-wrap: anywhere;
+}
+#ordersPage .parity-order-copy h3 small {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 6px;
+  background: rgba(255,255,255,.035);
+  color: #8997a9 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+  direction: ltr;
+}
+#ordersPage .parity-order-copy .order-original-name {
+  margin-top: -3px;
+  color: #8e9bad !important;
+  font-size: 10px !important;
+  line-height: 1.5;
+}
+#ordersPage .parity-order-copy .order-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 7px !important;
+  min-width: 0;
+  color: #8c98a9 !important;
+  font-size: 10px !important;
+  line-height: 1.5;
+}
+#ordersPage .parity-order-copy .order-card-meta > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+#ordersPage .parity-order-copy .order-card-meta > span:first-child::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: #65778c;
+}
+#ordersPage .parity-order-copy .payment-countdown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  padding: 2px 7px;
+  border: 1px solid rgba(245,158,11,.2);
+  border-radius: 7px;
+  background: rgba(245,158,11,.075);
+  color: #f5c36b;
+  font-size: 10px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+#ordersPage .parity-order-copy .order-card-total {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 6px !important;
+  min-width: 0;
+  margin-top: 1px;
+  color: #9caabd !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  line-height: 1.7 !important;
+  overflow-wrap: anywhere;
+}
+#ordersPage .parity-order-copy .order-card-total > span[style*="font-weight:600"] {
+  color: #f0f6ff !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  font-variant-numeric: tabular-nums;
+}
+#ordersPage .parity-order-copy .order-card-total s {
+  color: #7f8b9a !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+}
+#ordersPage .parity-order-copy .order-card-total .flash-pill {
+  padding: 1px 5px !important;
+  border: 1px solid rgba(248,113,113,.16);
+  border-radius: 6px;
+  background: rgba(248,113,113,.09);
+  color: #ff9d9d !important;
+  font-size: 9px !important;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+#ordersPage .parity-order-side {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  max-width: 118px !important;
+  padding-top: 1px;
+}
+#ordersPage .parity-order-side .status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 118px !important;
+  min-height: 27px;
+  padding: 5px 8px !important;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+#ordersPage .parity-order-side .chev {
+  display: none !important;
+}
+#ordersPage .parity-order-side .order-rename-btn {
+  width: 25px !important;
+  min-width: 25px !important;
+  height: 25px !important;
+  margin-top: auto;
+  border: 1px solid rgba(255,255,255,.07) !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,.025) !important;
+  color: #8492a4 !important;
+  font-size: 12px !important;
+}
+#ordersPage .parity-order-card .order-row-stepper {
+  margin: 0 !important;
+  padding: 10px 14px 12px !important;
+  border-top: 1px solid rgba(255,255,255,.055);
+  background: rgba(255,255,255,.012) !important;
+}
+#ordersPage .parity-order-card .order-row-stepper .order-stepper {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+#ordersPage .parity-order-card .order-stepper .step-label {
+  font-size: 9px !important;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+#ordersPage .parity-order-card .order-stepper .step-hint {
+  font-size: 8px !important;
+}
+@media (max-width: 420px) {
+  #ordersPage .parity-order-main {
+    grid-template-columns: 39px minmax(0,1fr) auto !important;
+    gap: 8px !important;
+    padding: 12px 11px 10px !important;
+  }
+  #ordersPage .parity-order-main .order-icon {
+    width: 39px !important;
+    height: 39px !important;
+    border-radius: 12px !important;
+    font-size: 18px;
+  }
+  #ordersPage .parity-order-side { max-width: 94px !important; gap: 5px !important; }
+  #ordersPage .parity-order-side .status-badge {
+    max-width: 94px !important;
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+  }
+  #ordersPage .parity-order-copy h3 { font-size: 12px !important; }
+  #ordersPage .parity-order-copy .order-card-total > span[style*="font-weight:600"] { font-size: 12px !important; }
+  #ordersPage .parity-order-card .order-row-stepper { padding: 9px 10px 10px !important; }
+}
+@media (max-width: 340px) {
+  #ordersPage .parity-order-main {
+    grid-template-columns: 34px minmax(0,1fr) !important;
+  }
+  #ordersPage .parity-order-main .order-icon { width: 34px !important; height: 34px !important; }
+  #ordersPage .parity-order-side {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    max-width: none !important;
+    margin-top: -2px;
+  }
+  #ordersPage .parity-order-side .status-badge { max-width: none !important; }
+  #ordersPage .parity-order-side .order-rename-btn { margin-inline-start: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #ordersPage .order-row.parity-order-card { transition: none !important; }
+}
