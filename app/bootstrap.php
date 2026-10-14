@@ -2612,7 +2612,7 @@ function admin_order_keyboard(int $orderId): string {
     if(!empty($o['receipt_file_id']))$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'ord_receipt_'.$orderId]];
     $rows[]=[['text'=>'🧾 تایم‌لاین','callback_data'=>'ord_timeline_'.$orderId]];
     if(in_array($status,$activeStatuses,true))$rows[]=[['text'=>'❌ رد سفارش','callback_data'=>'ord_reject_'.$orderId]];
-    if($status==='delivered'||$cleanup)$rows[]=[['text'=>'📦 آرشیو','callback_data'=>'ord_archive_'.$orderId]];
+    if(empty($o['archived_at'])&&($status==='delivered'||$cleanup))$rows[]=[['text'=>'📦 آرشیو','callback_data'=>'ord_archive_'.$orderId]];
     if($cleanup)$rows[]=[['text'=>'🗑 حذف کامل','callback_data'=>'ord_delete_'.$orderId]];
     $rows[]=[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_orders'],['text'=>'🛒 فروشگاه ادمین','callback_data'=>'adm_shop']];
     return json_markup(['inline_keyboard'=>$rows]);
