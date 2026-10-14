@@ -1,3 +1,9 @@
+## 5.1.73 - Referral and rewards visual repair
+
+- Added a scoped final stylesheet to restore consistent bordered surfaces, spacing, hierarchy, responsive metric grids, reward/mission cards, and tier-guide rows in the referral and rewards sheets.
+- Improved small-screen behavior for invite actions, balance and referral metrics, spin wheel, mission cards, and claim area without changing reward/referral API logic.
+- Registered a cache-busted stylesheet after existing Mini App layers so the fixes take precedence over legacy conflicting rules.
+
 ## 5.1.72 - Support ticket copy and UI redesign
 
 - Reworked customer ticket list copy, status summaries, search/filter labels, and empty states to be clearer and consistent.
