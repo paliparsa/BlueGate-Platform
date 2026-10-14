@@ -1,3 +1,13 @@
+## 5.1.81 - Bot messages and action consistency
+
+- Shortened the Telegram welcome message and unified the Mini App guidance shown by legacy shopping/order entry points.
+- Hide the bot’s “increase credit” button when credit top-ups are disabled.
+- Condensed admin order notifications to the operational essentials while preserving full order details in the admin order view.
+- Make order-management buttons status-aware and enforce the same restrictions server-side for stale reject/archive callbacks; full deletion remains restricted to cleanup statuses.
+- Condensed new-user signup notifications and moved raw backup/provisioning exceptions to server logs with clear admin-facing messages.
+- Standardized service-monitor Telegram alerts with a direct reference to the existing Mini App service view; in-app notifications remain enabled as a separate channel.
+- Validation planned: source-level assertions, PHP syntax checks where available, and workflow checks. Live Telegram testing remains necessary for final UI verification.
+
 ## 5.1.80 - Account email info flow and remove customer palette
 
 - Changed the account-page “ایمیل حساب” entry to open an information sheet first, showing the registered email and its verification status; changing/adding an email now requires an explicit button press.
