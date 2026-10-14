@@ -1,3 +1,9 @@
+## 5.1.34 - Component accent fallback cleanup
+
+- Removed the final legacy violet fallback values from shared Mini App component-parity rules.
+- Refreshed Mini App and web cache keys and bumped the release version.
+- No JavaScript or backend logic was changed. Static CSS checks are complete; interactive browser flow tests remain unavailable in this environment.
+
 ## 5.1.33 - Final accent normalization
 
 - Normalized remaining violet/purple accent values in the Mini App core, unified component, parity, and web-admin CSS to the royal-blue accent or neutral graphite borders.
