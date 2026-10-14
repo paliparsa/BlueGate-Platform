@@ -4523,7 +4523,7 @@ small{font-size:var(--bg-font-micro)!important;line-height:1.65}
 .vpn-action{min-width:0;border-radius:var(--r-lg);border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.035);padding:13px 9px 11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text);cursor:pointer;min-height:92px;transition:transform .15s ease,border-color .15s ease,background .15s ease}
 .vpn-action:active{transform:scale(.97)}.vpn-action-icon{font-size:22px;line-height:1;margin-bottom:3px}.vpn-action b{font-size:12px;white-space:nowrap}.vpn-action small{font-size:12px;color:var(--muted);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .vpn-action.vpn-open{background: var(--surface2);border-color:#35adf8;color:white;box-shadow:0 10px 28px rgba(29,155,240,.22)}.vpn-action.vpn-open small{color:rgba(255,255,255,.78)}
-.vpn-action.vpn-copy{background:rgba(40,100,148,.12);border-color:rgba(67,166,232,.2)}.vpn-action.vpn-renew{background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.2)}
+.vpn-action.vpn-copy{background:rgba(40,100,148,.12);border-color:rgba(67,166,232,.2)}.vpn-action.vpn-renew{background:rgba(49,94,251,.1);border-color:rgba(49,94,251,.2)}
 .my-service-main-actions{display:flex;gap:8px;margin:12px 0}.my-service-main-actions button{flex:1}
 .my-service-info-card,.vpn-link-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);padding:6px 15px;margin-top:10px}
 .my-service-info-card>div{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px 0;border-bottom:1px solid var(--line)}.my-service-info-card>div:last-child{border-bottom:0}.my-service-info-card span{font-size:12px;color:var(--muted)}.my-service-info-card b{font-size:12px;text-align:left;max-width:65%;overflow-wrap:anywhere}.my-service-info-card .service-ok{color:var(--bgds-success)}
@@ -4929,7 +4929,7 @@ html.bg-command-busy .topbar,html.bg-command-busy #status{pointer-events:none!im
 .order-more-popup-option{display:flex;align-items:center;gap:12px;width:100%;min-height:70px;padding:12px;border:1px solid var(--border,rgba(148,163,184,.2));border-radius:17px;background:rgba(148,163,184,.055);color:var(--text,#f8fafc);text-align:right;cursor:pointer}
 .order-more-popup-option:active{transform:scale(.99)}
 .order-more-popup-option .omp-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:rgba(59,130,246,.14);color:#7db4ff;font-size:23px;font-weight:800}
-.order-more-popup-option .omp-icon.coupon{background:rgba(168,85,247,.14);color:#c4a0ff}
+.order-more-popup-option .omp-icon.coupon{background:rgba(49,94,251,.14);color:#c4a0ff}
 .order-more-popup-option>span:nth-child(2){display:grid;gap:4px;flex:1;min-width:0}
 .order-more-popup-option b{font-size:14px;font-weight:800}
 .order-more-popup-option small{font-size:12px;color:var(--muted,#94a3b8)}
