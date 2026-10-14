@@ -1,3 +1,10 @@
+## 5.1.28 - Unified Yekan + Inter typography
+
+- Load Yekan as the preferred Persian typeface and Inter for Latin text/numerals, with Vazirmatn and system fallbacks.
+- Force the typography stack across user/admin screens, buttons, forms, dialogs, popups, placeholders, and inline-styled content; preserve dedicated legacy icon fonts.
+- Refresh Mini App local asset cache keys and add the final palette stylesheet to the PHP runtime cache-busting list.
+- Typography-only UI change; no business logic or purchase/auth flows changed.
+
 ## 5.1.27 - Deep-black Mini App palette
 
 - Set the global page background to deep black (#030303), with near-black cards, panels, inputs, and popup surfaces.
