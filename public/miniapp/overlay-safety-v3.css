@@ -2,13 +2,6 @@
  * Mini App overlay and safe-area contract.
  * All modal surfaces use dynamic viewport units and one scroll owner.
  */
-:root {
-  --mini-overlay-gutter: max(12px, env(safe-area-inset-left, 0px));
-  --mini-overlay-gutter-right: max(12px, env(safe-area-inset-right, 0px));
-  --mini-overlay-top: max(12px, env(safe-area-inset-top, 0px));
-  --mini-overlay-bottom: max(12px, env(safe-area-inset-bottom, 0px));
-}
-
 #onboarding.onboarding {
   z-index: calc(var(--mini-z-sheet) - 10000) !important;
 }
