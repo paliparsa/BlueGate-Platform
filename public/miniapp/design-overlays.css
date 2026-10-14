@@ -12,3 +12,6 @@ dialog::backdrop,.modal-backdrop,.popup-backdrop,.sheet-backdrop,.overlay-backdr
 #adminApp :is(.app-sheet-panel,.vy-admin-parity-sheet .app-sheet-panel,.app-confirm-layer .app-sheet-panel){background:#0c0e13!important;background-image:none!important;border-color:var(--line)!important;box-shadow:var(--elev-lg)!important}
 #adminApp .topbar,#adminApp .admin-tabs{background:#080a0e!important;background-image:none!important;border-color:var(--line)!important;box-shadow:none!important}
 #adminApp .admin-tabs button.active{background:var(--accent-soft)!important;background-image:none!important;border-color:rgba(49,94,251,.36)!important}
+
+/* Preserve the data-bearing subscription progress ring; it is not a decorative gradient. */
+#userApp .vpn-sub-orb,#adminApp .vpn-sub-orb{background:conic-gradient(var(--accent) calc(var(--p)*1%),rgba(255,255,255,.08) 0)!important}
