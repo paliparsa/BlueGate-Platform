@@ -5395,3 +5395,55 @@ body.bg-language-picker-open{overflow:hidden}
 .shop-category-picker-copy small{color:#8491a4;font-size:10px;line-height:1.5}
 .shop-category-picker-check{display:grid;place-items:center;width:23px;height:23px;flex:0 0 23px;border:1px solid rgba(255,255,255,.13);border-radius:8px;color:#8fc4ff;font-weight:900}
 .shop-category-picker-option.is-selected .shop-category-picker-check{border-color:rgba(101,177,255,.4);background:rgba(64,138,225,.16)}
+
+/* Storefront refinement loop — v5.1.39: iconography, layout integrity and filter-sheet system */
+#userApp #shopPage .shop-intro-mark{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border-radius:15px;background:rgba(52,121,210,.12);border:1px solid rgba(105,171,255,.22);color:#8fc4ff}
+#userApp #shopPage .shop-svg-icon{display:block;width:20px;height:20px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#userApp #shopPage .shop-intro-mark .shop-svg-icon{width:25px;height:25px}
+#userApp #shopPage .shop-discovery{width:100%;min-width:0;overflow:hidden;contain:layout paint}
+#userApp #shopPage .shop-discovery-search{display:flex;width:100%;min-width:0;max-width:100%;box-sizing:border-box;gap:10px;direction:rtl}
+#userApp #shopPage .shop-discovery-search .search-icon{display:grid;place-items:center;width:22px;height:22px;flex:0 0 22px}
+#userApp #shopPage .shop-discovery-search .search-icon .shop-svg-icon{width:19px;height:19px}
+#userApp #shopPage .shop-discovery-search input{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;flex:1 1 0}
+#userApp #shopPage .shop-discovery-actions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;align-items:stretch;gap:8px;width:100%;min-width:0}
+#userApp #shopPage .shop-discovery-control{display:grid;grid-template-columns:34px minmax(0,1fr) 14px;align-items:center;gap:8px;width:100%;min-width:0;max-width:100%;min-height:68px;box-sizing:border-box;padding:9px!important;overflow:hidden;text-align:start}
+#userApp #shopPage .shop-control-icon{display:grid;place-items:center;width:34px;height:34px;min-width:0;flex:0 0 34px;font-size:0}
+#userApp #shopPage .shop-control-icon .shop-svg-icon{width:18px;height:18px}
+#userApp #shopPage .shop-control-copy{display:grid;gap:4px;min-width:0;width:100%;overflow:hidden}
+#userApp #shopPage .shop-control-copy small{font-size:10px;line-height:1.4;color:#8795a8;white-space:nowrap}
+#userApp #shopPage .shop-control-copy strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.5}
+#userApp #shopPage .shop-control-chevron{display:grid;place-items:center;width:14px;min-width:14px;font-size:0;color:#8293a9}
+#userApp #shopPage .shop-control-chevron .shop-svg-icon{width:14px;height:14px}
+#userApp #shopPage .shop-filter-trigger{grid-template-columns:34px minmax(0,1fr) 7px}
+#userApp #shopPage .shop-filter-dot{width:7px;height:7px;justify-self:center}
+#userApp #shopPage .shop-discovery-meta{width:100%;min-width:0;box-sizing:border-box;align-items:flex-start}
+#userApp #shopPage #shopResultCount{flex:0 0 auto}
+#userApp #shopPage .shop-active-filters{flex:1 1 auto;min-width:0}
+#userApp #shopPage .shop-category-picker-icon{display:grid;place-items:center;font-size:0}
+#userApp #shopPage .shop-category-picker-icon .shop-svg-icon{width:19px;height:19px}
+.shop-category-picker-option{min-width:0;box-sizing:border-box}
+.shop-category-picker-copy{overflow:hidden}
+.shop-category-picker-copy strong,.shop-category-picker-copy small{overflow-wrap:anywhere}
+.shop-category-picker-check .shop-svg-icon{width:15px;height:15px}
+.shop-category-picker-check{font-size:0}
+#userApp #shopPage .catalog-section .section-title h2{display:flex;align-items:center;gap:8px;min-width:0}
+#userApp #shopPage .catalog-section .section-title h2 .shop-svg-icon{width:17px;height:17px;color:#83baff}
+#userApp #shopPage .shop-empty-state{display:grid;justify-items:center;gap:10px;margin:12px 0;padding:28px 18px!important;border:1px solid rgba(255,255,255,.07);border-radius:20px;background:linear-gradient(150deg,rgba(20,25,34,.86),rgba(9,11,16,.92));text-align:center}
+#userApp #shopPage .shop-empty-icon{display:grid;place-items:center;width:48px;height:48px;border:1px solid rgba(105,171,255,.18);border-radius:15px;background:rgba(54,119,205,.1);color:#8fc4ff}
+#userApp #shopPage .shop-empty-icon .shop-svg-icon{width:22px;height:22px}
+#userApp #shopPage .shop-empty-state p{max-width:260px;margin:0!important;font-size:12px!important;line-height:1.8}
+#userApp #shopPage .shop-empty-state button{margin-top:4px}
+/* Real filter sheet: grouped panels, selected sort cards, clearer switches. */
+#appSheet .filter-sheet-group{margin:0 0 12px;padding:13px;border:1px solid rgba(255,255,255,.075);border-radius:17px;background:linear-gradient(145deg,rgba(24,29,39,.9),rgba(13,16,22,.92))}
+#appSheet .filter-sheet-group>label{display:block;margin:0 0 11px;color:#eaf1fb;font-size:13px;font-weight:850}
+#appSheet .filter-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+#appSheet .filter-choice-grid button{display:grid;place-items:center;min-width:0;min-height:58px;padding:9px 5px!important;border:1px solid rgba(255,255,255,.085)!important;border-radius:12px!important;background:rgba(255,255,255,.025)!important;color:#c1cbd8!important;font-size:11px!important;font-weight:850}
+#appSheet .filter-choice-grid button.active{border-color:rgba(100,174,255,.6)!important;background:linear-gradient(145deg,rgba(41,111,196,.22),rgba(40,82,132,.1))!important;color:#f3f8ff!important;box-shadow:inset 0 0 0 1px rgba(100,174,255,.1)}
+#appSheet .filter-switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
+#appSheet .filter-switch-row>span{font-size:12px;font-weight:800;color:#e9eef6}
+#appSheet .filter-switch-row button{min-width:72px;padding:7px 10px!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:999px!important;background:#303846!important;color:#aab5c5!important;font-size:10px!important}
+#appSheet .filter-switch-row button.active{border-color:rgba(91,164,255,.5)!important;background:#225a99!important;color:#f0f7ff!important}
+#appSheet [data-u-filter-reset]{border:1px solid rgba(255,255,255,.1)!important;background:rgba(255,255,255,.045)!important;color:#b8c4d3!important}
+#appSheet [data-u-filter-apply]{box-shadow:0 7px 18px rgba(40,105,190,.22)}
+@media(max-width:380px){#userApp #shopPage .shop-discovery-actions{gap:6px}#userApp #shopPage .shop-discovery-control{grid-template-columns:29px minmax(0,1fr) 10px;gap:6px;padding:7px!important;min-height:64px}#userApp #shopPage .shop-control-icon{width:29px;height:29px;flex-basis:29px}#userApp #shopPage .shop-control-copy small{font-size:9px}#userApp #shopPage .shop-control-copy strong{font-size:11px}#appSheet .filter-sheet-group{padding:10px}#appSheet .filter-choice-grid{gap:5px}#appSheet .filter-choice-grid button{padding:7px 3px!important;font-size:10px!important}}
+@media(prefers-reduced-motion:reduce){#appSheet .filter-choice-grid button{transition:none!important}}
