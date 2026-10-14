@@ -1,0 +1,202 @@
+/* Orders v17 — account orders hero + view/filter rail redesign.
+   Visual-only layer: existing order IDs, status filters and click handlers stay intact. */
+#ordersPage .orders-header.parity-page-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  min-height: 0 !important;
+  margin: 8px 0 12px !important;
+  padding: 19px 18px !important;
+  overflow: hidden;
+  border: 1px solid rgba(92, 169, 255, .19) !important;
+  border-radius: 23px !important;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(29,155,240,.16), transparent 48%),
+    linear-gradient(135deg, #101722 0%, #080c12 72%) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+#ordersPage .orders-header.parity-page-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 18px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #55b9ff, rgba(29,155,240,.08));
+}
+#ordersPage .orders-header-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  width: 100%;
+}
+#ordersPage .orders-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 5px !important;
+  color: #78c5ff !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+#ordersPage .orders-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: #55b9ff;
+  box-shadow: 0 0 0 3px rgba(85,185,255,.12);
+}
+#ordersPage .orders-header h2 {
+  margin: 0 !important;
+  color: #f5f8fc !important;
+  font-size: clamp(22px, 5vw, 29px) !important;
+  font-weight: 900 !important;
+  letter-spacing: -.025em;
+  line-height: 1.4 !important;
+}
+#ordersPage .orders-header p {
+  margin: 4px 0 0 !important;
+  color: #929eaf !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+}
+#ordersPage .orders-header-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px !important;
+  margin-top: 15px !important;
+}
+#ordersPage .orders-header-stats > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px !important;
+  border: 1px solid rgba(255,255,255,.075) !important;
+  border-radius: 13px !important;
+  background: rgba(255,255,255,.035) !important;
+  color: #8995a6 !important;
+  font-size: 10px !important;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+#ordersPage .orders-header-stats b {
+  margin: 0 !important;
+  color: #f2f7ff !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+#ordersPage .orders-header-stats > span:nth-child(2) b { color: #80c8ff !important; }
+#ordersPage .orders-header-stats > span:nth-child(3) b { color: #75dfb0 !important; }
+#ordersPage .orders-header-icon { display: none !important; }
+
+/* Status selection becomes a compact, balanced control rail directly below the hero. */
+#ordersPage .order-filters {
+  margin: 0 0 13px !important;
+  padding: 11px !important;
+  border: 1px solid rgba(255,255,255,.075) !important;
+  border-radius: 18px !important;
+  background: #090d13 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+#ordersPage .order-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 2px 9px !important;
+  color: #aab5c4 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+#ordersPage .order-filter-label::before {
+  content: "";
+  width: 3px;
+  height: 13px;
+  border-radius: 4px;
+  background: var(--accent, #1d9bf0);
+}
+#ordersPage .order-filter-actions {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px !important;
+}
+#ordersPage .order-filter-actions .filter-chip {
+  display: flex !important;
+  min-width: 0;
+  min-height: 43px !important;
+  flex-direction: column;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 6px 4px !important;
+  border: 1px solid rgba(255,255,255,.075) !important;
+  border-radius: 12px !important;
+  background: #0d121a !important;
+  color: #9ba7b7 !important;
+  font-size: 10px !important;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#ordersPage .order-filter-actions .filter-chip b {
+  display: inline-grid;
+  min-width: 19px !important;
+  height: 18px !important;
+  padding: 0 5px;
+  place-items: center;
+  border-radius: 6px !important;
+  background: rgba(255,255,255,.065) !important;
+  color: #cbd5e1 !important;
+  font-size: 10px !important;
+  font-weight: 800;
+  line-height: 1;
+}
+#ordersPage .order-filter-actions .filter-chip.active {
+  border-color: rgba(76,173,255,.42) !important;
+  background: linear-gradient(180deg, rgba(29,155,240,.17), rgba(29,155,240,.075)) !important;
+  color: #f0f8ff !important;
+  box-shadow: inset 0 0 0 1px rgba(29,155,240,.045) !important;
+}
+#ordersPage .order-filter-actions .filter-chip.active b {
+  background: #239be8 !important;
+  color: #04111c !important;
+}
+#ordersPage .order-filter-actions .advanced-filter {
+  border-style: dashed !important;
+}
+#ordersPage .order-filter-actions .advanced-filter b {
+  display: grid;
+  min-width: 19px !important;
+  width: 19px;
+  height: 19px !important;
+  font-size: 12px !important;
+}
+#ordersPage .order-list { gap: 10px; }
+#ordersPage .order-row { border-color: rgba(255,255,255,.075) !important; }
+#ordersPage .order-row:focus-within {
+  outline: 2px solid rgba(85,185,255,.55);
+  outline-offset: 2px;
+}
+@media (max-width: 380px) {
+  #ordersPage .orders-header.parity-page-hero { padding: 16px 13px !important; border-radius: 20px !important; }
+  #ordersPage .orders-header-stats { gap: 5px !important; }
+  #ordersPage .orders-header-stats > span { padding: 7px 6px !important; font-size: 9px !important; }
+  #ordersPage .orders-header-stats b { font-size: 15px !important; }
+  #ordersPage .order-filters { padding: 9px !important; }
+  #ordersPage .order-filter-actions { gap: 4px !important; }
+  #ordersPage .order-filter-actions .filter-chip { font-size: 9px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #ordersPage .order-row { transition: none !important; }
+}
