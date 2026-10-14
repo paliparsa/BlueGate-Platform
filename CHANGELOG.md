@@ -1,3 +1,12 @@
+## 5.1.32 - Legacy visual ownership cleanup
+
+- Replaced decorative legacy gradients in the Mini App core, unified components, parity layers, order surfaces, and web-admin layers with semantic royal-blue/deep-black design tokens.
+- Removed duplicate decorative shadows from the migrated surface rules while preserving layout declarations, responsive breakpoints, modal stacking/positioning, and interaction selectors.
+- Kept semantic success/warning/danger treatments, discount badges, the segmented prize wheel, animated shine, and data-bearing progress rings; normalized the VPN subscription progress ring to the royal-blue accent.
+- Refreshed Mini App and web cache keys. PHP filemtime registration for all new design-system stylesheets remains present: verified.
+- Business logic and JavaScript files were not modified. Source checks covered CSS delimiter balance, stylesheet links, palette remnants, and the preservation of progress-ring gradients.
+- Automated end-to-end purchase/payment/wallet/login/admin tests and live-browser visual regression were not available; those flows still require a browser/device smoke test before claiming full release verification.
+
 ## 5.1.31 - Legacy palette conflict cleanup
 
 - Audited the actual loaded Mini App and web-admin CSS chains and identified old navy, cyan, and violet palette declarations in the legacy foundation, parity, and admin stylesheets.
