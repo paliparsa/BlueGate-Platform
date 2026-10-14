@@ -1655,6 +1655,19 @@ function vpnServiceDetailHtml(o,{context='service',order=null}={}){
     ${waitingPay?`<article class="vpn-sub-payment"><h3>تکمیل پرداخت</h3>${paymentMethodsHtml(order)}</article>`:''}
   </section>`;
 }
+function openAccountOrdersSummary(){
+  const orders=Array.isArray(state?.orders)?state.orders:[];
+  const accountName=String(state?.user?.first_name||state?.user?.username||state?.user?.web_username||'کلاینت شما').trim();
+  const rows=orders.map(o=>{
+    const linkedService=serviceForOrder(o);
+    const vpnClient=linkedService?miniVpnClientSummary(linkedService):'';
+    const client=String(vpnClient||o.client_username||o.client_name||o.external_username||accountName||'کلاینت شما').trim();
+    const product=String(o.display_name||o.product_name||o.service_title||o.product_title||o.title||'محصول خریداری‌شده').trim();
+    return {client,product};
+  });
+  const body=rows.length?'<div class="account-order-summary-list">'+rows.map((r,i)=>'<article class="account-order-summary-row"><span class="account-order-summary-index" aria-hidden="true">'+(i+1).toLocaleString('fa-IR')+'</span><div class="account-order-summary-copy"><small>نام کلاینت</small><b>'+esc(r.client)+'</b><span class="account-order-summary-product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10l2 2h5.5A2.5 2.5 0 0 1 20 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="M4.5 10h15"/></svg><span>'+esc(r.product)+'</span></span></div></article>').join('')+'</div>':'<div class="account-order-summary-empty"><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><b>هنوز سفارشی ثبت نشده</b><p>بعد از اولین خرید، نام کلاینت و محصول خریداری‌شده اینجا نمایش داده می‌شود.</p></div>';
+  BlueGateUI.openSheet({type:'action',eyebrow:'حساب · سفارش‌ها',title:'همه سفارش‌ها',subtitle:orders.length?rows.length.toLocaleString('fa-IR')+' سفارش ثبت‌شده':'فهرست خریدهای حساب',body:'<div class="account-order-summary">'+body+'</div>',footer:'<button type="button" class="secondary" data-account-orders-close>بستن</button>',onOpen:host=>host.querySelector('[data-account-orders-close]')?.addEventListener('click',()=>BlueGateUI.closeSheet())});
+}
 function renderMyServiceDetail(){
   const o=myServiceById(currentServiceOrderId);
   if(!o){currentServiceOrderId=null;renderHome();return}
@@ -1673,7 +1686,7 @@ function renderHome(){
       <div class="mini-profile-completion"><div><span>تکمیل حساب</span><b>${nf(completion)}٪</b></div><i><em style="width:${completion}%"></em></i></div>
       <div class="mini-account-stats"><button data-tab-jump="wallet"><span>اعتبار</span><b data-count-anim="${u.balance||0}">${fmt(u.balance||0)}</b></button><button data-tab-jump="orders"><span>سفارش فعال</span><b>${nf(activeOrders.length)}</b></button><button data-credit-view="referral"><span>دعوت موفق</span><b>${nf(u.referrals_count||0)}</b></button></div>
     </section>
-    <article class="account-hub-card"><div class="hub-card-head"><span>${bgFeatureIcon('lock',19)}</span><div><b>VPNهای من</b><small>${nf(activeServices.length)} VPN فعال</small></div><button data-tab-jump="orders">همه سفارش‌ها</button></div>${services}</article>
+    <article class="account-hub-card account-vpn-hub"><div class="hub-card-head"><span>${bgFeatureIcon('lock',19)}</span><div><b>VPNهای من</b><small>${nf(activeServices.length)} VPN فعال</small></div><button type="button" id="miniAllOrdersPopup" aria-haspopup="dialog"><svg class="bg-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span>همه سفارش‌ها</span></button></div>${services}</article>
     ${state?.trial?.eligible?`<article class="account-hub-card"><div class="hub-card-head"><span>${bgFeatureIcon('gift',19)}</span><div><b>تست رایگان BlueGate</b><small>${nf(Math.round(Number(state.trial?.settings?.traffic_limit_bytes||0)/1073741824))} GB · ${nf(state.trial?.settings?.duration_minutes||120)} دقیقه</small></div><button id="miniTrialBtn">فعال‌سازی</button></div></article>`:''}
     <article class="account-hub-card account-menu-card">
       <button class="account-menu-row" id="editMiniProfile2"><span class="account-menu-icon">${bgFeatureIcon('user',18)}</span><div><b>اطلاعات حساب</b><small>${esc(u.email||'ایمیل ثبت نشده')} · ${esc(u.phone_number||'شماره تماس ثبت نشده')}</small></div><em>‹</em></button>
@@ -1684,6 +1697,7 @@ function renderHome(){
       <button class="account-menu-row" id="paletteQuick"><span class="account-menu-icon">${bgFeatureIcon('gem',18)}</span><div><b>ظاهر برنامه</b><small>رنگ اصلی Mini App</small></div><em>‹</em></button>
       <button class="account-menu-row" id="miniSupportBtn"><span class="account-menu-icon">${bgFeatureIcon('headset',18)}</span><div><b>پشتیبانی</b><small>ارتباط با پشتیبانی BlueGate</small></div><em>‹</em></button>
     </article>`;
+  $('miniAllOrdersPopup')?.addEventListener('click',openAccountOrdersSummary);
   triggerBalanceAnims();
 }
 function openMiniProfileEditor(){
