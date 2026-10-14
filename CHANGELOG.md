@@ -1,3 +1,12 @@
+## 5.1.31 - Legacy palette conflict cleanup
+
+- Audited the actual loaded Mini App and web-admin CSS chains and identified old navy, cyan, and violet palette declarations in the legacy foundation, parity, and admin stylesheets.
+- Replaced the Mini App root palette and base canvas with deep black/graphite surfaces and royal blue; normalized legacy accent literals in the Mini App core stylesheet.
+- Updated in-app admin parity tokens and neutralized old sheet/tab visual treatments while preserving their layout and interaction rules.
+- Scoped the web-admin token contract to the admin shell and aligned admin-v18/admin-unified palette values and navigation accents with royal blue.
+- Refreshed Mini App and web-admin cache keys. Purchase, payment, wallet, authentication, API, and admin business logic were not changed.
+- Verification: re-read modified files from main; checked stylesheet references, CSS brace balance and palette-token remnants. Live browser regression and automated CI tests were not available.
+
 ## 5.1.30 - Root-level royal blue design system
 
 - Added a dedicated Mini App design architecture: semantic tokens, base typography/reset, surfaces, controls, overlays, and responsive/reduced-motion guardrails.
