@@ -7,3 +7,8 @@ dialog::backdrop,.modal-backdrop,.popup-backdrop,.sheet-backdrop,.overlay-backdr
 #userApp :is(.modal-header,.popup-header,.sheet-header,.dialog-header,.modal-footer,.popup-footer,.sheet-footer),
 #adminApp :is(.modal-header,.popup-header,.sheet-header,.dialog-header,.modal-footer,.popup-footer,.sheet-footer){border-color:var(--line)!important}
 #userApp :is(.toast,.toast-message,.notice,.inline-alert),#adminApp :is(.toast,.toast-message,.notice,.inline-alert){border-radius:var(--r-md)!important;box-shadow:var(--elev-sm)}
+
+#userApp :is(.app-sheet-panel,.vy-admin-parity-sheet .app-sheet-panel,.app-confirm-layer .app-sheet-panel),
+#adminApp :is(.app-sheet-panel,.vy-admin-parity-sheet .app-sheet-panel,.app-confirm-layer .app-sheet-panel){background:#0c0e13!important;background-image:none!important;border-color:var(--line)!important;box-shadow:var(--elev-lg)!important}
+#adminApp .topbar,#adminApp .admin-tabs{background:#080a0e!important;background-image:none!important;border-color:var(--line)!important;box-shadow:none!important}
+#adminApp .admin-tabs button.active{background:var(--accent-soft)!important;background-image:none!important;border-color:rgba(49,94,251,.36)!important}
