@@ -1,3 +1,11 @@
+## 5.1.44 - Product cards visual rebuild
+
+- Rebuilt product-card surfaces with a cleaner deep-navy treatment, quieter borders, clearer image framing, and stronger price hierarchy.
+- Preserved the existing image frame aspect ratio (`1 / 0.88`), responsive image padding, `object-fit: contain`, and card width behavior.
+- Kept the existing product-card DOM hooks and event-bearing controls intact, including discount/featured badges, wishlist, product preview, and price content.
+- Improved long-name and long-price wrapping, compact-screen spacing, focus-visible states, and reduced-motion behavior.
+- Loop 2 review checked responsive overrides and verified that card interaction markup was not changed; live browser screenshot/tap testing remains outstanding.
+
 ## 5.1.43 - Five-tab bottom navigation redesign
 
 - Rebalanced all five bottom tabs into equal-width touch targets with consistent icon and label alignment.
