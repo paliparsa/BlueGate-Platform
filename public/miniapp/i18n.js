@@ -56,12 +56,13 @@ function closeLanguagePicker(){
  modal.classList.remove('open');
  modal.setAttribute('aria-hidden','true');
  document.body.classList.remove('bg-language-picker-open');
+ if(modal._removeTimer)window.clearTimeout(modal._removeTimer);
  if(modal._returnFocus?.isConnected)modal._returnFocus.focus({preventScroll:true});
- window.setTimeout(()=>modal.remove(),190);
+ modal._removeTimer=window.setTimeout(()=>{if(!modal.classList.contains('open'))modal.remove();},220);
 }
 function openLanguagePicker(event){
  const existing=document.getElementById('bgLanguagePicker');
- if(existing){existing.classList.add('open');return;}
+ if(existing){if(existing._removeTimer)window.clearTimeout(existing._removeTimer);existing._removeTimer=0;existing.classList.add('open');existing.setAttribute('aria-hidden','false');document.body.classList.add('bg-language-picker-open');return;}
  const en=language==='en';
  const modal=document.createElement('div');
  modal.id='bgLanguagePicker';
