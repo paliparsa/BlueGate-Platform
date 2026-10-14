@@ -9,3 +9,7 @@ a{color:#8ba5ff;text-decoration-color:rgba(139,165,255,.35)}
 ::selection{background:rgba(49,94,251,.34);color:#fff}
 hr,.divider,.section-divider{border-color:var(--line)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
+
+
+/* Unified Mini App design ownership v1 */
+html{background:#030303;color-scheme:dark}body{margin:0;background:#030303;background-image:none;color:var(--text);font-family:var(--mini-font-family);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body::before,body::after{background-image:none}#userApp,#adminApp,.app-shell,.app-container,.app-root,main{background-color:#030303;background-image:none;border-color:var(--line)}#userApp,#adminApp,.app-shell{outline:0;box-shadow:none}html,body,body *:not(i):not(svg):not(path):not(.fa):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-symbols-outlined):not([data-icon-font]){font-family:var(--mini-font-family)}input,textarea,select,option,button,[role="button"],[role="dialog"],[role="alertdialog"]{font-family:var(--mini-font-family)}
