@@ -1,3 +1,11 @@
+## 5.1.39 - Storefront layout and filter refinement
+
+- Replaced decorative Unicode/emoji marks in the storefront discovery area and category picker with consistent inline SVG icons; localized category labels remain supported.
+- Redesigned the filter popup with grouped panels, selected sort controls, clearer featured/wishlist toggles, and explicit reset/apply actions.
+- Fixed the search-to-controls row with constrained grid columns, `min-width: 0`, text overflow handling, and narrow-screen sizing to prevent the controls card from overflowing or breaking.
+- Added a consistent empty-results state and refreshed storefront cache keys.
+- Source-level regression assertions performed; live Telegram/WebView visual testing remains outstanding.
+
 ## 5.1.38 - Storefront discovery and filters redesign
 
 - Reworked the space between the Mini App header and product cards into a compact storefront intro, focused search field, live result count, and category/filter controls.
