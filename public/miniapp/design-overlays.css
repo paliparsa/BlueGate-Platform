@@ -1,8 +1,9 @@
-/* BlueGate Mini App overlays — modal hierarchy and backdrop contract */
-:where(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.toast-panel,.confirm-dialog){
-  color:var(--text);border-color:var(--line);border-radius:var(--r-xl);box-shadow:var(--elev-lg)
+/* BlueGate Mini App overlays — visual skin only; z-index and positioning stay in behavior layers */
+#userApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog),
+#adminApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog){
+  color:var(--text)!important;background-color:#0c0e13!important;background-image:none!important;border-color:var(--line)!important;border-radius:var(--r-xl)!important;box-shadow:var(--elev-lg)!important
 }
-:where(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog){background:#0c0e13;background-image:none}
-:where(dialog)::backdrop,.modal-backdrop,.popup-backdrop,.sheet-backdrop,.overlay-backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
-:where(.modal-header,.popup-header,.sheet-header,.dialog-header,.modal-footer,.popup-footer,.sheet-footer){border-color:var(--line)}
-:where(.toast,.toast-message,.notice,.inline-alert){border-radius:var(--r-md);box-shadow:var(--elev-sm)}
+dialog::backdrop,.modal-backdrop,.popup-backdrop,.sheet-backdrop,.overlay-backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+#userApp :is(.modal-header,.popup-header,.sheet-header,.dialog-header,.modal-footer,.popup-footer,.sheet-footer),
+#adminApp :is(.modal-header,.popup-header,.sheet-header,.dialog-header,.modal-footer,.popup-footer,.sheet-footer){border-color:var(--line)!important}
+#userApp :is(.toast,.toast-message,.notice,.inline-alert),#adminApp :is(.toast,.toast-message,.notice,.inline-alert){border-radius:var(--r-md)!important;box-shadow:var(--elev-sm)}
