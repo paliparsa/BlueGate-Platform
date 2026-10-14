@@ -42,15 +42,14 @@
   flex: 0 0 156px !important;
 }
 
-#shopSections .catalog-tile .discount-badge {
+#shopSections .catalog-tile .discount-badge 
   max-width: calc(100% - 44px) !important;
   min-height: 28px !important;
-  padding: 5px 8px !important;
-  background: linear-gradient(135deg, #ef4444, #f97316) !important;
-  border: 1px solid rgba(255,255,255,.28) !important;
-  box-shadow: 0 6px 16px rgba(239,68,68,.28) !important;
+  padding: 5px 8px !important;background:var(--surface);
+  border: 1px solid rgba(255,255,255,.28) !important;box-shadow:none;
   font-size: 12px !important;
   font-weight: 900 !important;
+
 }
 
 #shopSections .catalog-tile .discount-badge .disc-val {
