@@ -1,0 +1,35 @@
+/* BlueGate Mini App v5.1.53 — compact circular floating cart action. */
+#cartFab.cart-fab{
+  display:grid!important;place-items:center!important;gap:0!important;
+  box-sizing:border-box!important;width:56px!important;min-width:56px!important;max-width:56px!important;
+  height:56px!important;min-height:56px!important;max-height:56px!important;
+  padding:0!important;border:1px solid #383838!important;border-radius:50%!important;
+  background:linear-gradient(155deg,#1b1b1b,#080808)!important;color:#f7f7f7!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.07)!important;
+  font-size:0!important;line-height:1!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+#cartFab.cart-fab::after{content:none!important;display:none!important}
+#cartFab.cart-fab>span:first-child{
+  display:grid!important;place-items:center!important;width:25px!important;height:25px!important;flex:0 0 25px!important;
+  margin:0!important;padding:0!important;
+}
+#cartFab.cart-fab>span:first-child svg{
+  display:block!important;width:25px!important;height:25px!important;fill:none!important;
+  stroke:#e2e7ff!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+}
+#cartFab.cart-fab .cart-fab-badge{
+  position:absolute!important;top:-5px!important;right:-5px!important;
+  display:grid!important;place-items:center!important;box-sizing:border-box!important;
+  min-width:22px!important;width:auto!important;height:22px!important;min-height:22px!important;
+  padding:0 5px!important;border:2px solid #080808!important;border-radius:999px!important;
+  background:#e0e5ff!important;color:#080808!important;font-size:10px!important;font-weight:950!important;
+  line-height:1!important;box-shadow:0 3px 10px #0008!important;
+}
+#cartFab.cart-fab:active{transform:scale(.94)!important}
+#cartFab.cart-fab:focus-visible{outline:2px solid #c6ceff!important;outline-offset:3px!important}
+#cartFab.cart-fab.hidden{display:none!important}
+@media(max-width:360px){
+  #cartFab.cart-fab{width:52px!important;min-width:52px!important;max-width:52px!important;height:52px!important;min-height:52px!important;max-height:52px!important}
+}
+@media(prefers-reduced-motion:reduce){#cartFab.cart-fab{transition:none!important}}

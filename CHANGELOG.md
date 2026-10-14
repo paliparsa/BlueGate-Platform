@@ -1,3 +1,11 @@
+## 5.1.53 - Circular floating cart button
+
+- Reverted the floating cart action from a wide text pill to a compact circular icon button.
+- Kept the cart item-count badge visible and legible, including multi-digit counts.
+- Preserved its position, hidden-state behavior, click target, cart sheet opening, and checkout flow.
+- Added a final scoped override stylesheet and registered it for HTML/PHP cache busting.
+- Source-level checks only; live Telegram WebView testing remains outstanding.
+
 ## 5.1.52 - Plan-group selection popup redesign
 
 - Redesigned the intermediate selector shown for products with multiple service groups (for example, choosing a VPN type before choosing its plan).
