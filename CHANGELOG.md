@@ -1,3 +1,12 @@
+## 5.1.29 - Mini App design system rebuild
+
+- Rebuilt the final Mini App visual layer as one source of truth for deep-black surfaces, graphite borders, typography, controls, cards, navigation and overlays.
+- Standardized the brand accent to blue; removed violet as a second decorative accent while retaining semantic success, warning and error colors.
+- Replaced the Mini App brand stylesheet's conflicting page gradients and button glow with structural-only helpers.
+- Unified radius, spacing and elevation tokens; retained responsive layouts, stacking, animations, and feature-specific CSS behavior.
+- Refreshed static Mini App cache keys and retained PHP filemtime cache-busting for the final design layer.
+- Visual-only refactor; no purchase, payment, wallet, authentication, API, or admin business logic changed.
+
 ## 5.1.28 - Unified Yekan + Inter typography
 
 - Load Yekan as the preferred Persian typeface and Inter for Latin text/numerals, with Vazirmatn and system fallbacks.
