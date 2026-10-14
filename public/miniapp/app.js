@@ -1965,7 +1965,7 @@ function renderMiniSupportPage(){
       <article class="support-center-stat"><span class="support-center-stat-icon waiting" aria-hidden="true">✓</span><span><small>در انتظار کاربر</small><b>${tickets.filter(waitingUser).length}</b></span></article>
     </div>
     <div class="support-center-toolbar">
-      <label class="support-ticket-search"><span aria-hidden="true">⌕</span><input type="search" id="supportTicketSearch" placeholder="جست‌وجوی موضوع یا شماره تیکت" autocomplete="off" aria-label="جست‌وجوی تیکت‌ها"><kbd>/</kbd></label>
+      <label class="support-ticket-search"><span aria-hidden="true">⌕</span><input type="search" id="supportTicketSearch" placeholder="جست‌وجوی موضوع یا شماره تیکت" autocomplete="off" aria-label="جست‌وجوی تیکت‌ها"></label>
       <div class="support-ticket-filters" role="group" aria-label="فیلتر وضعیت تیکت">
         <button type="button" class="support-ticket-filter is-active" data-support-filter="all" aria-pressed="true">همه</button>
         <button type="button" class="support-ticket-filter" data-support-filter="active" aria-pressed="false">باز</button>
@@ -1998,10 +1998,10 @@ function renderMiniSupportPage(){
     });
     updateList();
   }));
-  host.querySelectorAll('[data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
+  host.querySelectorAll('.support-page-hero [data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
   list?.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
   search?.addEventListener('keydown',e=>{if(e.key==='Escape'){search.value='';updateList();search.blur()}});
-  host.querySelector('.support-ticket-search kbd')?.addEventListener('click',()=>search?.focus());
+  
 }
 function openMiniSupport(){
   if(state?.is_guest){openAuthModal();return}
