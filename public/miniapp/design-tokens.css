@@ -1,0 +1,19 @@
+/* BlueGate Mini App design tokens — royal blue / deep black v1 */
+:root{
+  color-scheme:dark;
+  --bg:#050608;--bg2:#080a0e;--surface:#101217;--surface2:#151922;--surface3:#1b202b;
+  --card:#101217;--card2:#151922;--line:rgba(255,255,255,.085);--line-strong:rgba(255,255,255,.14);
+  --text:#f5f7fb;--muted:#9ba3b2;--muted-2:#c1c7d1;
+  --accent:#315efb;--primary:#315efb;--secondary:#315efb;--accent-soft:rgba(49,94,251,.14);
+  --success:#32c997;--warning:#f3bd4f;--danger:#ff647c;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-xxl:24px;--r-pill:999px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;
+  --elev-sm:0 4px 16px rgba(0,0,0,.22);--elev-md:0 12px 32px rgba(0,0,0,.34);--elev-lg:0 24px 64px rgba(0,0,0,.52);
+  --focus-ring:0 0 0 3px rgba(49,94,251,.3);
+  --mini-font-family:"Yekan","Inter","Vazirmatn",Tahoma,Arial,sans-serif;
+  --bgds-bg:var(--bg);--bgds-bg-2:var(--bg2);--bgds-surface-1:var(--surface);--bgds-surface-2:var(--surface2);--bgds-surface-3:var(--surface3);
+  --bgds-text:var(--text);--bgds-muted:var(--muted);--bgds-muted-2:var(--muted-2);--bgds-border:var(--line);--bgds-border-strong:var(--line-strong);
+  --bgds-primary:var(--accent);--bgds-primary-soft:#7694ff;--bgds-purple:var(--accent);
+  --bgds-r-1:var(--r-sm);--bgds-r-2:var(--r-md);--bgds-r-3:var(--r-lg);--bgds-r-4:var(--r-lg);--bgds-r-5:var(--r-xl);--bgds-r-6:var(--r-xxl);
+  --bgds-shadow-card:var(--elev-sm);--bgds-shadow-float:var(--elev-lg);--bgds-focus:var(--focus-ring);
+}
