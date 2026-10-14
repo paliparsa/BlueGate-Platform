@@ -368,11 +368,18 @@
 }
 #ordersPage .parity-order-side { align-self: stretch; }
 #ordersPage .status-badge { font-size: 11px; padding: 6px 8px; }
-#ordersPage .parity-order-card .order-row-stepper {
+#ordersPage .parity-order-card .order-row-stepper,
+#ordersPage .parity-order-card .order-row-stepper .order-stepper,
+#ordersPage .parity-order-card .order-row-stepper .stepper-cancel {
   padding: 11px 15px 13px !important;
-  /* Keep the progress area visually integrated with the order card. */
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-inline: 0 !important;
 }
+#ordersPage .parity-order-card .order-row-stepper .order-stepper { padding: 0 !important; margin: 0 0 2px !important; }
+#ordersPage .parity-order-card .order-row-stepper .stepper-cancel { padding: 4px !important; }
 
 @media (max-width: 620px) {
   #ordersPage .orders-header { min-height: 148px; padding: 18px !important; }
