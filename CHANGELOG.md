@@ -1,3 +1,10 @@
+## 5.1.80 - Account email info flow and remove customer palette
+
+- Changed the account-page “ایمیل حساب” entry to open an information sheet first, showing the registered email and its verification status; changing/adding an email now requires an explicit button press.
+- Kept the email-change OTP flow intact and retained the direct “تغییر ایمیل” action inside account information.
+- Removed the customer-side “ظاهر برنامه / رنگ اصلی Mini App” menu option and local custom-accent picker/override. The Mini App now consistently uses its configured BlueGate accent and primary-button colors; admin appearance settings remain untouched.
+- Validation: source-level checks for account routing, email OTP entry points, palette removal, cache key, and version consistency. Live Telegram WebView verification remains outstanding.
+
 ## 5.1.79 - Account VPN cards and concise order summary
 
 - Refined the account VPN section with the Mini App's shared dark surfaces, accent borders, tighter card hierarchy, responsive client/service metadata, and consistent action sizing.
