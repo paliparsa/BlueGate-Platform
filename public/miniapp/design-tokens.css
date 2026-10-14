@@ -16,6 +16,7 @@
   --bgds-primary:var(--accent);--bgds-primary-soft:#7694ff;--bgds-purple:var(--accent);
   --bgds-r-1:var(--r-sm);--bgds-r-2:var(--r-md);--bgds-r-3:var(--r-lg);--bgds-r-4:var(--r-lg);--bgds-r-5:var(--r-xl);--bgds-r-6:var(--r-xxl);
   --bgds-shadow-card:var(--elev-sm);--bgds-shadow-float:var(--elev-lg);--bgds-focus:var(--focus-ring);
+  --mini-canvas:#030303;--mini-surface:#090909;--mini-surface-raised:#0d0d0d;--mini-payment-surface:#0a0a0a;
 }
 
 
