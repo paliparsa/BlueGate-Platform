@@ -3,7 +3,7 @@
 
 /* Shared page hero language */
 .shop-page-intro,.orders-header,.account-center-mini-hero,.mini-credit-hero-v27{
-  position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent,#8b5cf6) 20%,rgba(255,255,255,.06));background: var(--bg2);box-shadow: none;
+  position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent,#315efb) 20%,rgba(255,255,255,.06));background: var(--bg2);box-shadow: none;
 }
 .shop-page-intro:after,.orders-header:after,.account-center-mini-hero:after,.mini-credit-hero-v27:after{
   content:"";position:absolute;inset:auto -15% -55% 40%;height:140px;background: var(--bg2);pointer-events:none;
@@ -65,7 +65,7 @@
 
 /* Product / purchase hierarchy */
 .product-tile.catalog-tile{border:1px solid rgba(255,255,255,.12)!important;border-radius:var(--r-lg)!important;overflow:hidden;transition:transform .16s ease,border-color .16s ease,background .16s ease}
-.product-tile.catalog-tile:active{transform:scale(.985);border-color:color-mix(in srgb,var(--accent,#8b5cf6) 40%,rgba(255,255,255,.12))!important}
+.product-tile.catalog-tile:active{transform:scale(.985);border-color:color-mix(in srgb,var(--accent,#315efb) 40%,rgba(255,255,255,.12))!important}
 .product-tile .tile-body{padding-top:9px}.product-tile .tile-name{line-height:1.55}
 .purchase-plan-step{border-color:rgba(255,255,255,.14)!important;background:rgba(58,159,255,.022)!important}
 .purchase-plan-option{border-radius:var(--r-md)!important}
@@ -93,7 +93,7 @@
 
 /* Touch & accessibility */
 button,.cat-pill,.product-tile,.order-row,.account-menu-row{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-button:focus-visible,[role="button"]:focus-visible{outline:2px solid color-mix(in srgb,var(--accent,#8b5cf6) 65%,white);outline-offset:2px}
+button:focus-visible,[role="button"]:focus-visible{outline:2px solid color-mix(in srgb,var(--accent,#315efb) 65%,white);outline-offset:2px}
 
 @media(max-width:430px){
   .parity-order-main{grid-template-columns:40px minmax(0,1fr) auto!important;padding:11px!important}
