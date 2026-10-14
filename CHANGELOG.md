@@ -1,3 +1,10 @@
+## 5.1.38 - Storefront discovery and filters redesign
+
+- Reworked the space between the Mini App header and product cards into a compact storefront intro, focused search field, live result count, and category/filter controls.
+- Moved category browsing into the existing action-sheet system with selected-state feedback; added clear-search and expanded filter toggles for featured items and wishlist.
+- Preserved product-card rendering and existing search/catalog filtering logic; refreshed Mini App asset cache keys.
+- Source-level checks performed; live Telegram/WebView visual and interaction testing remains outstanding.
+
 ## 5.1.37 - Mini App language picker redesign
 
 - Replaced the one-tap language confirmation with a centered, accessible language-selection modal matching BlueGate's graphite surfaces and blue accents.
