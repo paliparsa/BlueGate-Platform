@@ -370,7 +370,8 @@
 #ordersPage .status-badge { font-size: 11px; padding: 6px 8px; }
 #ordersPage .parity-order-card .order-row-stepper {
   padding: 11px 15px 13px !important;
-  background: rgba(0,0,0,.1);
+  /* Keep the progress area visually integrated with the order card. */
+  background: transparent !important;
 }
 
 @media (max-width: 620px) {
