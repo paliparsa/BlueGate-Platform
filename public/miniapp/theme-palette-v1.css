@@ -517,3 +517,25 @@ input:focus, textarea:focus, select:focus {
   box-shadow: none !important;
 }
 ::selection { background: rgba(74,141,255,.22); color: #FFFFFF; }
+
+
+/* v5.1.28 — enforce one typography system across the entire Mini App.
+   Yekan is the preferred Persian face; Inter fills Latin glyphs and numerals. */
+:root {
+  --mini-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+  --bgds-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+}
+html, body, body *,
+#userApp, #userApp *, #adminApp, #adminApp *,
+dialog, dialog *, [role="dialog"], [role="dialog"] *,
+input::placeholder, textarea::placeholder, input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder, button::before, button::after {
+  font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+  font-synthesis: weight style;
+  font-optical-sizing: auto;
+}
+/* Preserve dedicated icon fonts if a legacy component still uses them. */
+i[class^="fa"], i[class*=" fa"], .fa, [class^="fa-"], [class*=" fa-"],
+.material-icons, .material-symbols-outlined, .iconfont, [data-icon-font] {
+  font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", "Material Icons", "iconfont" !important;
+}
