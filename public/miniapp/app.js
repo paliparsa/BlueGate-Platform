@@ -3369,26 +3369,12 @@ if(t.dataset.clearCanceled!==undefined && await BlueGateUI.confirm({title:'پا�
   return;
 }
 if(t.dataset.customerNote){
+  // Keep both order-note entry points on the same centered popup and the same save/API flow.
   BlueGateUI?.closeSheet?.();
-  const oid = t.dataset.customerNote;
-  const o = orderById(oid);
-  openEdit(`یادداشت سفارش #${oid}`, [{
-    title: 'توضیحات و مشخصات سفارش',
-    fields: [{
-      id: 'cust_note_val',
-      label: 'ایمیل، پسورد، یوزرنیم یا توضیح لازم',
-      type: 'textarea',
-      placeholder: 'مثلاً: email@example.com / Password یا توضیح مورد نیاز...',
-      value: o?.customer_note || ''
-    }]
-  }], async () => {
-    const txt = val('cust_note_val');
-    await loadAfterAction('customer_order_note', { order_id: oid, note: txt });
-    currentTab = 'orders';
-    currentOrderId = oid;
-    renderUser();
-    showStatus('یادداشت سفارش ذخیره شد');
-  });
+  const oid = Number(t.dataset.customerNote);
+  if(!orderById(oid)) return;
+  openOrderMoreActions(oid);
+  renderOrderMorePopup('note');
   return;
 }
 // BUG-4: Removed duplicate [data-coupon] handler — the dedicated standalone listener below handles it correctly via openDialog(). Having both caused two dialogs to open on one click.
