@@ -27,3 +27,93 @@
 @media(min-width:640px){.referral-center-v29 .referral-stats-v29{grid-template-columns:repeat(4,minmax(0,1fr))}.rewards-center-v29 .missions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:390px){.referral-center-v29,.rewards-center-v29{gap:11px}.referral-center-v29 .referral-top-v29,.rewards-center-v29 .rewards-overview-v29{padding:14px;border-radius:18px}.referral-center-v29 .referral-top-icon-v27,.rewards-center-v29 .rewards-overview-icon-v27{flex-basis:40px;width:40px;height:40px}.referral-center-v29 .referral-top-copy-v27 h2,.rewards-center-v29 .rewards-overview-copy-v27 h2{font-size:19px}.referral-center-v29 .referral-stats-v29{gap:7px}.referral-center-v29 .referral-stats-v29>article{min-height:68px;padding:9px;gap:7px}.referral-center-v29 .referral-stat-icon-v27{flex-basis:30px;width:30px;height:30px}.referral-center-v29 .referral-stats-v29 b{font-size:13px}.referral-center-v29 .ref-mini-actions-v2{grid-template-columns:1fr 1fr}.referral-center-v29 .ref-mini-actions-v2 button:last-child{grid-column:1/-1}.referral-center-v29 .referral-code-row{grid-template-columns:minmax(0,1fr)}.referral-center-v29 .referral-code-row>button{width:100%}.referral-share-polished{padding:14px!important;border-radius:21px 21px 0 0!important}.rewards-center-v29 .rewards-stats-v29{gap:7px}.rewards-center-v29 .rewards-stats-v29>article{align-items:flex-start;gap:7px;padding:9px}.rewards-center-v29 .rewards-stat-icon-v27{flex-basis:30px;width:30px;height:30px}.rewards-center-v29 .rewards-stats-v29 b{font-size:17px}.rewards-center-v29 .spin-section-v2{padding:12px}.rewards-center-v29 .spin-chances-badge{min-width:62px;padding:6px 7px}.rewards-center-v29 .mission-foot{align-items:flex-start;flex-direction:column;gap:3px}}
 @media(prefers-reduced-motion:reduce){.referral-center-v29 *,.rewards-center-v29 *,.referral-share-polished *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+
+/* v5.1.71 — explicit reward/referral panel boundaries and tier guide */
+.referral-center-v29,.rewards-center-v29{width:100%;box-sizing:border-box;overflow:visible}
+.referral-center-v29>*,.rewards-center-v29>*{min-width:0;box-sizing:border-box}
+.referral-center-v29 .referral-top-v29,.rewards-center-v29 .rewards-overview-v29{display:flex;position:relative;justify-content:space-between;min-width:0;border:1px solid var(--border);background:var(--card);box-shadow:0 8px 24px #00000012}
+.referral-center-v29 .referral-top-copy-v27,.rewards-center-v29 .rewards-overview-copy-v27{min-width:0;flex:1}
+.referral-center-v29 .referral-balance-v29{border:1px solid color-mix(in srgb,var(--primary) 32%,var(--border));background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 11%,var(--card)),var(--card) 68%);box-shadow:0 8px 24px #00000012}
+.referral-center-v29 .referral-metrics-panel,.rewards-center-v29 .rewards-summary-panel{display:grid;gap:12px;min-width:0;padding:14px;border:1px solid var(--border);border-radius:20px;background:var(--surface,var(--bg))}
+.referral-center-v29 .referral-panel-heading,.rewards-center-v29 .rewards-summary-heading{display:flex;align-items:center;gap:10px;min-width:0}
+.referral-center-v29 .referral-panel-heading>span,.rewards-center-v29 .rewards-summary-heading>span{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:1px solid var(--border);border-radius:11px;background:var(--card);color:var(--primary)}
+.referral-center-v29 .referral-panel-heading h3,.rewards-center-v29 .rewards-summary-heading h3{margin:0;font-size:13px;line-height:1.7}
+.referral-center-v29 .referral-panel-heading p,.rewards-center-v29 .rewards-summary-heading p{margin:1px 0 0;color:var(--muted);font-size:10px;line-height:1.7}
+.referral-center-v29 .referral-stats-v29{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0}
+.referral-center-v29 .referral-stats-v29>article,.rewards-center-v29 .rewards-stats-v29>article{display:flex;min-width:0;border:1px solid var(--border);background:var(--card);box-shadow:0 3px 12px #0000000a}
+.referral-center-v29 .referral-stats-v29>article>div{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;flex:1}
+.referral-center-v29 .referral-stats-v29 b,.rewards-center-v29 .rewards-stats-v29 b{max-width:100%;overflow-wrap:anywhere}
+.referral-center-v29 .referral-stat-icon-v27,.rewards-center-v29 .rewards-stat-icon-v27{border:1px solid var(--border);border-radius:12px;background:var(--surface,var(--bg));color:var(--primary)}
+.referral-center-v29 .ref-vip-card-v2{display:grid;gap:13px;min-width:0;padding:16px;border:1px solid var(--border);border-radius:19px;background:var(--card);box-shadow:0 5px 18px #0000000b}
+.referral-center-v29 .ref-vip-head-v2{display:flex;align-items:center;gap:11px;min-width:0;flex-wrap:wrap}
+.referral-center-v29 .ref-vip-head-v2>div{flex:1;min-width:140px}
+.referral-center-v29 .ref-vip-copy h3{margin:2px 0;font-size:17px;line-height:1.6}
+.referral-center-v29 .ref-vip-copy p{margin:3px 0 0;font-size:11px;line-height:1.85}
+.referral-center-v29 .referral-tier-guide-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 10px;border:1px solid var(--border);border-radius:11px;font-size:10px;white-space:nowrap}
+.referral-center-v29 .ref-vip-track-v2{height:8px;overflow:hidden;border-radius:99px;background:color-mix(in srgb,var(--primary) 12%,var(--border))}
+.referral-center-v29 .ref-vip-track-v2 i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--primary),#56c7f3);transition:width .35s ease}
+.referral-center-v29 .ref-vip-progress-meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px}
+.referral-center-v29 .ref-vip-progress-meta small{font-size:10px;line-height:1.7}
+.referral-center-v29 .referral-inline-guide{padding:0;border:0;background:none;color:var(--primary);font-size:10px;font-weight:800;text-align:start;text-decoration:underline;text-underline-offset:3px}
+.referral-center-v29 .referral-invite-card-v29{display:grid;gap:12px;background:var(--card);box-shadow:0 5px 18px #0000000b}
+.referral-center-v29 .referral-url-v27{display:grid;gap:5px;min-width:0;border:1px solid var(--border);border-radius:13px;background:var(--surface,var(--bg))}
+.referral-center-v29 .referral-url-v27 small{color:var(--muted);font-size:10px}
+.referral-center-v29 .referral-url-v27 span{display:block;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.referral-center-v29 .ref-mini-actions-v2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.referral-center-v29 .ref-mini-actions-v2 button{min-width:0;white-space:normal;border-radius:12px}
+.referral-center-v29 .referral-tree-card{border:1px solid var(--border);border-radius:18px;background:var(--card)}
+.referral-center-v29 .ref-custom-mini-v2{padding:12px;border:1px solid var(--border);border-radius:13px;background:var(--surface,var(--bg))}
+.rewards-center-v29 .rewards-summary-panel{padding:14px}
+.rewards-center-v29 .rewards-stats-v29{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0}
+.rewards-center-v29 .rewards-stats-v29>article{border-radius:15px}
+.rewards-center-v29 .rewards-stats-v29 em{display:block;color:var(--muted);font-style:normal;overflow-wrap:anywhere}
+.rewards-center-v29 .rewards-wheel-wrap-v29{min-width:0;padding:0;border:0;background:transparent}
+.rewards-center-v29 .spin-section-v2{display:grid;gap:12px;min-width:0;border:1px solid var(--border);background:var(--card);box-shadow:0 8px 24px #00000012}
+.rewards-center-v29 .spin-head{display:flex;align-items:center;gap:11px;min-width:0}
+.rewards-center-v29 .spin-head-text{flex:1}
+.rewards-center-v29 .spin-chances-badge{flex-shrink:0;padding:8px 10px;border:1px solid var(--border);border-radius:13px;background:var(--surface,var(--bg))}
+.rewards-center-v29 .wheel-stage{max-width:100%;margin-inline:auto}
+.rewards-center-v29 .spin-btn-v2{width:100%;border-radius:13px}
+.rewards-center-v29 .wheel-prizes{display:flex;flex-wrap:wrap;gap:7px}
+.rewards-center-v29 .wheel-prizes>*{max-width:100%;overflow-wrap:anywhere}
+.rewards-center-v29 .rewards-missions-v29{display:grid;gap:14px;min-width:0;padding:15px;border:1px solid var(--border);border-radius:20px;background:var(--card);box-shadow:0 8px 24px #00000012}
+.rewards-center-v29 .rewards-missions-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.rewards-center-v29 .rewards-missions-heading>div{min-width:0}
+.rewards-center-v29 .rewards-missions-heading h2{margin:0;font-size:15px;line-height:1.7}
+.rewards-center-v29 .rewards-missions-heading small{display:block;margin-top:3px;font-size:10px;line-height:1.8;color:var(--muted)}
+.rewards-center-v29 .rewards-mission-count-v27{flex-shrink:0;padding:6px 9px;border:1px solid var(--border);border-radius:10px;background:var(--surface,var(--bg));font-size:10px}
+.rewards-center-v29 .missions-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.rewards-center-v29 .mission-card{display:grid;gap:11px;min-width:0;border:1px solid var(--border);background:var(--surface,var(--bg));box-shadow:0 3px 12px #0000000a}
+.rewards-center-v29 .mission-card.done{border-color:color-mix(in srgb,var(--success) 40%,var(--border));background:color-mix(in srgb,var(--success) 5%,var(--card))}
+.rewards-center-v29 .mission-card.claimed{border-color:color-mix(in srgb,var(--primary) 32%,var(--border))}
+.rewards-center-v29 .mission-copy p{margin:4px 0 0;overflow-wrap:anywhere}
+.rewards-center-v29 .mission-foot{padding-top:9px;border-top:1px solid var(--border)}
+.rewards-center-v29 .progress-track{height:7px;overflow:hidden;border-radius:99px;background:color-mix(in srgb,var(--primary) 10%,var(--border))}
+.rewards-center-v29 .progress-track>span{display:block;height:100%;border-radius:inherit;background:var(--primary)}
+.rewards-center-v29 .rewards-claim-area{display:grid;gap:10px;padding-top:12px;border-top:1px solid var(--border)}
+.rewards-center-v29 .rewards-claim-copy{display:flex;align-items:flex-start;gap:9px;min-width:0}
+.rewards-center-v29 .rewards-claim-copy>span{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border:1px solid var(--border);border-radius:10px;background:var(--surface,var(--bg));color:var(--primary)}
+.rewards-center-v29 .rewards-claim-copy>div{display:grid;gap:3px;min-width:0}
+.rewards-center-v29 .rewards-claim-copy b{font-size:12px;line-height:1.7}
+.rewards-center-v29 .rewards-claim-copy small{font-size:10px;line-height:1.8;color:var(--muted)}
+.rewards-center-v29 .rewards-claim-btn-v27{width:100%;margin:0!important}
+.ref-tier-guide{display:grid;gap:14px;min-width:0}
+.ref-tier-guide-intro{margin:0;font-size:12px;line-height:1.95;color:var(--muted)}
+.ref-tier-guide-list{display:grid;gap:9px}
+.ref-tier-row{display:flex;align-items:center;gap:11px;min-width:0;padding:12px;border:1px solid var(--border);border-radius:15px;background:var(--surface,var(--bg))}
+.ref-tier-row.is-current{border-color:color-mix(in srgb,var(--primary) 55%,var(--border));background:color-mix(in srgb,var(--primary) 8%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 12%,transparent)}
+.ref-tier-icon{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--primary)}
+.ref-tier-copy{flex:1;min-width:0}
+.ref-tier-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ref-tier-title>b{font-size:13px}
+.ref-tier-current{padding:3px 7px;border-radius:7px;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary);font-size:9px;font-weight:800}
+.ref-tier-copy p{margin:3px 0 0;color:var(--muted);font-size:10px;line-height:1.7}
+.ref-tier-benefit{display:grid;justify-items:end;gap:2px;flex-shrink:0}
+.ref-tier-benefit>b{font-size:14px;direction:ltr}
+.ref-tier-benefit>small{font-size:9px;color:var(--muted)}
+.ref-tier-guide-note{display:flex;align-items:flex-start;gap:9px;padding:11px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.ref-tier-guide-note>span{flex-shrink:0;color:var(--primary)}
+.ref-tier-guide-note p{margin:0;font-size:10px;line-height:1.9;color:var(--muted)}
+@media(min-width:640px){.referral-center-v29 .referral-stats-v29{grid-template-columns:repeat(4,minmax(0,1fr))}.rewards-center-v29 .rewards-stats-v29{grid-template-columns:repeat(4,minmax(0,1fr))}.rewards-center-v29 .missions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:390px){.referral-center-v29 .referral-metrics-panel,.rewards-center-v29 .rewards-summary-panel{padding:10px;border-radius:16px}.referral-center-v29 .ref-vip-head-v2{align-items:flex-start}.referral-center-v29 .referral-tier-guide-btn{width:100%}.referral-center-v29 .ref-mini-actions-v2{grid-template-columns:1fr 1fr}.referral-center-v29 .ref-mini-actions-v2 button:last-child{grid-column:1/-1}.rewards-center-v29 .rewards-missions-v29{padding:11px}.rewards-center-v29 .rewards-missions-heading{align-items:flex-start}.rewards-center-v29 .rewards-mission-count-v27{white-space:nowrap}.ref-tier-row{gap:8px;padding:10px}.ref-tier-icon{flex-basis:32px;width:32px;height:32px}}
