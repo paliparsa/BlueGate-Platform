@@ -2867,7 +2867,11 @@ function notify_admin_order(int $orderId,string $event='سفارش جدید',str
     $o=order_by_id($orderId);if(!$o)return ['sent'=>0,'failed'=>0,'fallback'=>0];$txt="🔔 <b>".h($event)."</b>\n\n".order_admin_notification_card($o,$source);if(trim($detail)!=='')$txt.="\n\n".$detail;return admin_notify($txt,admin_order_keyboard($orderId),$photo,'order:'.$orderId.':'.sha1(trim($event)));
 }
 function admin_topup_keyboard(int $id,bool $hasReceipt=false): string {
-    $rows=[[['text'=>'✅ تایید و شارژ','callback_data'=>'adm_tu_ok_'.$id],['text'=>'❌ رد','callback_data'=>'adm_tu_no_'.$id]]];if($hasReceipt)$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'adm_tu_rcpt_'.$id]];$t=credit_topup_by_id($id);if($t)$rows[]=[['text'=>'👤 مشتری','callback_data'=>'adm_cust_id_'.(int)$t['user_id']],['text'=>'💳 جزئیات','callback_data'=>'adm_tu_'.$id]];return json_markup(['inline_keyboard'=>$rows]);
+    $t=credit_topup_by_id($id);$rows=[];
+    if($t&&empty($t['credited_at'])&&in_array((string)$t['status'],['pending_payment','receipt_submitted','reviewing'],true))$rows[]=[['text'=>'✅ تایید و شارژ','callback_data'=>'adm_tu_ok_'.$id],['text'=>'❌ رد','callback_data'=>'adm_tu_no_'.$id]];
+    if($hasReceipt)$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'adm_tu_rcpt_'.$id]];
+    if($t)$rows[]=[['text'=>'👤 مشتری','callback_data'=>'adm_cust_id_'.(int)$t['user_id']],['text'=>'💳 جزئیات','callback_data'=>'adm_tu_'.$id]];
+    return json_markup(['inline_keyboard'=>$rows]);
 }
 function notify_admin_topup(int $id,string $event='درخواست شارژ',string $detail='',mixed $photo=null): array {
     $t=credit_topup_by_id($id);if(!$t)return ['sent'=>0,'failed'=>0,'fallback'=>0];$u=get_user_by_id((int)$t['user_id'])?:[];$d=json_decode((string)($t['payment_details']??''),true);if(!is_array($d))$d=[];$tid=real_telegram_chat_id($u);$name=trim((string)($u['first_name']??'').' '.(string)($u['last_name']??''));if($name==='')$name=$u['username']??$u['web_username']??'—';
