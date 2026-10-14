@@ -1,33 +1,8 @@
-/* BlueGate Platform — Mini App brand layer (aligned with design-system) */
-:root {
-  /* Keep runtime/user-selected accent tokens overridable by applyTheme(). */
-  --accent: var(--bgds-primary, #3b9fff);
-  --accent-2: var(--bgds-primary-soft, #77c9ff);
-  --u-accent: var(--bgds-primary, #3b9fff);
-  --u-accent-2: var(--bgds-primary-soft, #77c9ff);
-  --bg: var(--bgds-bg, #06101d) !important;
-  --card: var(--bgds-surface-1, #0b1828) !important;
-  --surface: var(--bgds-surface-1, #0b1828) !important;
-  --surface2: var(--bgds-surface-2, #102035) !important;
-  --border: var(--bgds-border, #1c3550) !important;
-}
-body {
-  background: radial-gradient(circle at 12% -8%, rgba(59,159,255,.16), transparent 32%),
-              radial-gradient(circle at 92% 2%, rgba(119,201,255,.10), transparent 27%),
-              linear-gradient(180deg, var(--bgds-bg, #06101d), var(--bgds-bg-2, #081522) 45%, var(--bgds-bg, #06101d)) !important;
-}
-.topbar, .bottom-nav, .glass {
-  border-color: rgba(59,159,255,.16) !important;
-}
-.primary, .btn-primary {
-  background: linear-gradient(135deg, var(--bgds-primary, #3b9fff), #2563eb) !important;
-  box-shadow: 0 12px 28px rgba(59,159,255,.24) !important;
-}
+/* BlueGate Mini App — structural brand helpers only.
+   Palette and component visuals are owned by theme-palette-v1.css. */
 .brand-box {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
 }
-.brand-box > div {
-  min-width: 0;
-}
+.brand-box > div { min-width: 0; }
