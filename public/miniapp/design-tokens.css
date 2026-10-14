@@ -17,6 +17,14 @@
   --bgds-r-1:var(--r-sm);--bgds-r-2:var(--r-md);--bgds-r-3:var(--r-lg);--bgds-r-4:var(--r-lg);--bgds-r-5:var(--r-xl);--bgds-r-6:var(--r-xxl);
   --bgds-shadow-card:var(--elev-sm);--bgds-shadow-float:var(--elev-lg);--bgds-focus:var(--focus-ring);
   --mini-canvas:#030303;--mini-surface:#090909;--mini-surface-raised:#0d0d0d;--mini-payment-surface:#0a0a0a;
+
+  /* Shared legacy aliases retained for existing feature rules during migration. */
+  --shadow:var(--elev-md);
+  --ease-ios:cubic-bezier(0.2,0.8,0.2,1);
+  --ease-spring:cubic-bezier(0.175,0.885,0.32,1.275);
+  /* Unified UI spacing, timing and surfaces: canonical definitions. */
+  --u-space-1:4px;--u-space-2:8px;--u-space-3:12px;--u-space-4:16px;--u-space-5:20px;--u-space-6:24px;--u-space-8:32px;
+  --u-r-sm:8px;--u-r-md:12px;--u-r-lg:16px;--u-r-xl:20px;
+  --u-fast:160ms;--u-standard:220ms;--u-sheet:280ms;
+  --u-surface:#101217;--u-surface-2:#151922;--u-border:rgba(255,255,255,.085);
 }
-
-
