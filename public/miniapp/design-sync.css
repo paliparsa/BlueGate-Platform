@@ -19,7 +19,7 @@
   --ease-ios:var(--bgds-ease);
 }
 
-html,body{background:radial-gradient(circle at 8% -4%,rgba(50,144,244,.18),transparent 28%),radial-gradient(circle at 94% 8%,rgba(61,177,255,.09),transparent 24%),linear-gradient(180deg,var(--bgds-bg),#071321 38%,var(--bgds-bg))!important;color:var(--bgds-text)}
+html,bodybackground:var(--bg);color:var(--bgds-text))}
 body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
 .muted{color:var(--bgds-muted)!important}
 
@@ -27,9 +27,8 @@ body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
 .glass,.wallet-card,.detail-card,.admin-card,.admin-item,.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,.vpn-subscription-card,.vpn-sub-targets,.presentation-sheet,.dialog-card,.auth-modal-content{
   border-color:rgba(119,201,255,.13)!important;
 }
-.wallet-card,.detail-card,.admin-card,.admin-item,.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,.vpn-sub-targets{
-  background:linear-gradient(180deg,rgba(16,32,53,.92),rgba(11,24,40,.92))!important;
-  box-shadow:0 14px 38px rgba(0,0,0,.13)!important;
+.wallet-card,.detail-card,.admin-card,.admin-item,.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,.vpn-sub-targetsbackground:var(--surface);box-shadow:none;
+
 }
 .quick-card,.mini-stat,.hub-ref-stats>div,.vpn-sub-metrics>div,.mini-account-stats button,.mini-settings-actions button{
   background:rgba(255,255,255,.026)!important;
@@ -37,16 +36,15 @@ body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
 }
 
 /* Web-style section hierarchy. */
-.shop-page-intro,.account-center-mini-hero,.mini-credit-hero-v27,.wallet-card-main,.vpn-sub-identity{
+.shop-page-intro,.account-center-mini-hero,.mini-credit-hero-v27,.wallet-card-main,.vpn-sub-identity
   position:relative;
   isolation:isolate;
   overflow:hidden;
-  border:1px solid rgba(119,201,255,.17)!important;
-  background:radial-gradient(circle at 88% -8%,rgba(59,159,255,.20),transparent 34%),linear-gradient(135deg,rgba(13,32,53,.97),rgba(7,17,30,.97))!important;
-  box-shadow:var(--bgds-shadow-card)!important;
+  border:1px solid rgba(119,201,255,.17)!important;background:var(--surface);box-shadow:none;
+
 }
 .shop-page-intro::after,.account-center-mini-hero::after,.mini-credit-hero-v27::after,.wallet-card-main::after,.vpn-sub-identity::after{
-  content:"";position:absolute;z-index:-1;width:190px;height:190px;border-radius:50%;left:-95px;bottom:-125px;background:rgba(59,159,255,.10);filter:blur(12px);pointer-events:none
+  content:"";position:absolute;z-index:-1;width:190px;height:190px;border-radius:50%;left:-95px;bottom:-125px;background:rgba(49,94,251,.10);filter:blur(12px);pointer-events:none
 }
 .shop-page-intro{border-radius:var(--bgds-r-5)!important;padding:18px 17px!important;margin-bottom:13px!important}
 .shop-page-intro h2,.account-center-mini-hero h2,.mini-credit-hero-v27 h2,.vpn-sub-identity h1{letter-spacing:-.025em!important;font-weight:900!important}
@@ -56,42 +54,41 @@ body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
 .section-title{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:12px!important;margin-bottom:12px!important;padding-inline:2px!important}
 .section-title h2{font-size:19px!important;line-height:1.3!important;font-weight:900!important;letter-spacing:-.02em!important;color:var(--bgds-text)!important}
 .section-title>small,.section-title p{color:var(--bgds-muted)!important;font-size:13px!important}
-.section-title button{min-height:36px!important;border-radius:var(--r-sm)!important;padding:7px 10px!important;color:var(--bgds-primary-soft)!important;background:rgba(59,159,255,.055)!important;border:1px solid rgba(119,201,255,.12)!important}
+.section-title button{min-height:36px!important;border-radius:var(--r-sm)!important;padding:7px 10px!important;color:var(--bgds-primary-soft)!important;background:rgba(49,94,251,.055)!important;border:1px solid rgba(119,201,255,.12)!important}
 
 /* Unified button hierarchy from Web. */
 button,.primary,.secondary,.danger,.success,.warning,.ghost{transition:transform var(--bgds-normal) var(--bgds-ease),border-color var(--bgds-normal),background var(--bgds-normal),box-shadow var(--bgds-normal)!important}
-.primary{background:linear-gradient(135deg,#1778e8,#43b6ff)!important;border:1px solid transparent!important;color:#fff!important;box-shadow:0 12px 26px rgba(39,142,240,.20)!important}
-.secondary{background:var(--bgds-surface-2)!important;border:1px solid var(--bgds-border)!important;color:var(--bgds-text)!important;box-shadow:none!important}
-.ghost,button.ghost{background:rgba(255,255,255,.024)!important;border:1px solid var(--bgds-border)!important;color:var(--bgds-muted-2)!important;box-shadow:none!important}
-.success{background:linear-gradient(135deg,#229f78,#4bd8a7)!important;border:1px solid rgba(75,216,167,.34)!important;color:#041c15!important}
-.warning{background:linear-gradient(135deg,#c79828,#ffd36e)!important;border:1px solid rgba(255,211,110,.35)!important;color:#221904!important}
-.danger{background:linear-gradient(135deg,#cf4c62,#ff758a)!important;border:1px solid rgba(255,117,138,.35)!important;color:#fff!important}
+.primarybackground:var(--accent);border:1px solid transparent!important;color:#fff!important;box-shadow:none;t}
+.secondarybackground:var(--bgds-surface-2)!important;border:1px solid var(--bgds-border)!important;color:var(--bgds-text)!important;box-shadow:none;t}
+.ghost,button.ghostbackground:rgba(255,255,255,.024)!important;border:1px solid var(--bgds-border)!important;color:var(--bgds-muted-2)!important;box-shadow:none;t}
+.successbackground:var(--surface2);border:1px solid rgba(75,216,167,.34)!important;color:#041c15!importantt}
+.warningbackground:var(--surface2);border:1px solid rgba(255,211,110,.35)!important;color:#221904!importantt}
+.dangerbackground:var(--surface2);border:1px solid rgba(255,117,138,.35)!important;color:#fff!importantt}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none!important;box-shadow:var(--bgds-focus)!important;border-color:var(--bgds-primary)!important}
 
 /* One status/badge language across the two surfaces. */
-.status-badge,.badge,.soon,.variant-badge,.valid-indicator,.vpn-sub-status,.vpn-sub-pills>span,.mini-connection,.oac-status{
-  display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:27px;padding:5px 9px!important;border-radius:999px!important;border:1px solid rgba(119,201,255,.14)!important;background:rgba(59,159,255,.07)!important;color:#9fd7ff!important;font-size:12px!important;font-weight:850!important;line-height:1.25!important;box-shadow:none!important
+.status-badge,.badge,.soon,.variant-badge,.valid-indicator,.vpn-sub-status,.vpn-sub-pills>span,.mini-connection,.oac-status
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:27px;padding:5px 9px!important;border-radius:999px!important;border:1px solid rgba(119,201,255,.14)!important;background:rgba(49,94,251,.07)!important;color:#9fd7ff!important;font-size:12px!important;font-weight:850!important;line-height:1.25!important;box-shadow:none;
 }
 .status-badge.success,.status-badge.active,.status-badge.ok,.vpn-sub-status.ok,.vpn-sub-pills>.ok,.mini-connection.on,.oac-status.success{border-color:rgba(75,216,167,.20)!important;background:rgba(75,216,167,.075)!important;color:#83e4b8!important}
 .status-badge.warning,.status-badge.pending,.vpn-sub-status.warn,.vpn-sub-pills>.warn{border-color:rgba(255,211,110,.20)!important;background:rgba(255,211,110,.065)!important;color:#f8d987!important}
 .status-badge.danger,.status-badge.failed,.vpn-sub-status.bad,.oac-status.danger{border-color:rgba(255,117,138,.20)!important;background:rgba(255,117,138,.07)!important;color:#ff9cac!important}
 
 /* Search/filter controls. */
-.searchbar,.searchbar-modern{min-height:50px!important;border-radius:var(--r-md)!important;border:1px solid rgba(119,201,255,.14)!important;background:linear-gradient(180deg,rgba(16,32,53,.78),rgba(11,24,40,.78))!important;box-shadow:none!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}
-.searchbar:focus-within,.searchbar-modern:focus-within{border-color:rgba(59,159,255,.48)!important;box-shadow:var(--bgds-focus)!important}
+.searchbar,.searchbar-modernmin-height:50px!important;border-radius:var(--r-md)!important;border:1px solid rgba(119,201,255,.14)!important;background:var(--surface2);box-shadow:none;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!importantt}
+.searchbar:focus-within,.searchbar-modern:focus-within{border-color:rgba(49,94,251,.48)!important;box-shadow:var(--bgds-focus)!important}
 .searchbar input,.searchbar-modern input{color:var(--bgds-text)!important;font-size:14px!important}
 .searchbar input::placeholder,.searchbar-modern input::placeholder{color:#829bb4!important}
 .shop-filter-trigger{width:42px!important;height:42px!important;border-radius:var(--r-md)!important;background:rgba(255,255,255,.035)!important;border-color:rgba(119,201,255,.11)!important}
 
 /* Product/card parity: crisp edges, controlled depth, no heavy neon. */
-.product-tile,.glowing-flash-card,.cat-pill{
-  border-color:rgba(119,201,255,.12)!important;
-  background:linear-gradient(160deg,rgba(15,31,51,.96),rgba(8,18,31,.96))!important;
-  box-shadow:0 13px 34px rgba(0,0,0,.12)!important;
+.product-tile,.glowing-flash-card,.cat-pill
+  border-color:rgba(119,201,255,.12)!important;background:var(--surface);box-shadow:none;
+
 }
 .product-tile,.glowing-flash-card{border-radius:var(--r-lg)!important}
 .cat-pill{border-radius:var(--r-md)!important}
-.cat-pill.active{border-color:rgba(59,159,255,.44)!important;background:linear-gradient(180deg,rgba(59,159,255,.11),rgba(11,24,40,.96))!important;outline:0!important}
+.cat-pill.activeborder-color:rgba(49,94,251,.44)!important;background:var(--accent-soft);outline:0!importantt}
 .price-pill,.flash-card-cur-price{color:var(--bgds-warning)!important}
 
 /* VPN identity now speaks the same visual language as Web without changing touch UX. */
@@ -102,8 +99,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .vpn-sub-panel,.vpn-subscription-card,.vpn-sub-targets{border-radius:var(--r-lg)!important}
 .vpn-sub-panel header small,.vpn-subscription-card header small,.vpn-sub-targets header small{color:var(--bgds-primary-soft)!important;letter-spacing:.11em!important;font-weight:900!important}
 .vpn-sub-progress,.mini-profile-completion>i{background:rgba(255,255,255,.06)!important}
-.vpn-sub-progress i,.mini-profile-completion>i>em{background:linear-gradient(90deg,var(--bgds-primary),#70e7ff)!important}
-.vpn-subscription-card.ready{background:linear-gradient(180deg,rgba(59,159,255,.065),rgba(11,24,40,.96))!important;border-color:rgba(119,201,255,.20)!important}
+.vpn-sub-progress i,.mini-profile-completion>i>embackground:var(--surface2);t}
+.vpn-subscription-card.readybackground:var(--surface);border-color:rgba(119,201,255,.20)!importantt}
 
 /* Wallet gets the same balance-card emphasis as Web. */
 .wallet-card-main{border-radius:var(--r-xl)!important;padding:20px!important}
@@ -121,25 +118,23 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 
 /* Skeleton/loading parity. */
 .sk,.rate-loading{position:relative!important;overflow:hidden!important;background:rgba(255,255,255,.045)!important}
-.sk::after,.rate-loading::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(119,201,255,.10),transparent)!important;transform:translateX(-100%);animation:bgds-shimmer 1.4s linear infinite}
+.sk::after,.rate-loading::aftercontent:"";position:absolute;inset:0;background:var(--surface2);transform:translateX(-100%);animation:bgds-shimmer 1.4s linear infinitee}
 @keyframes bgds-shimmer{to{transform:translateX(100%)}}
 
 /* Web-like feedback/toast. */
-#status.toast,.toast{border:1px solid rgba(119,201,255,.17)!important;border-radius:var(--r-md)!important;background:rgba(11,24,40,.96)!important;box-shadow:0 18px 46px rgba(0,0,0,.30)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;color:var(--bgds-text)!important}
+#status.toast,.toastborder:1px solid rgba(119,201,255,.17)!important;border-radius:var(--r-md)!important;background:rgba(11,24,40,.96)!important;box-shadow:none;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;color:var(--bgds-text)!importantt}
 #status.toast.success,.toast.success{border-color:rgba(75,216,167,.22)!important}
 #status.toast.error,.toast.error{border-color:rgba(255,117,138,.24)!important}
 #status.toast.warning,.toast.warning{border-color:rgba(255,211,110,.24)!important}
 
 /* Bottom navigation keeps the Mini App interaction model, only the visual language syncs. */
-.bottom-nav.glass,.bottom-nav{background:rgba(8,20,34,.94)!important;border:1px solid rgba(119,201,255,.14)!important;box-shadow:0 -10px 34px rgba(0,0,0,.22)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
+.bottom-nav.glass,.bottom-navbackground:rgba(8,20,34,.94)!important;border:1px solid rgba(119,201,255,.14)!important;box-shadow:none;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!importantt}
 .bottom-nav button{color:var(--bgds-muted)!important;background:transparent!important;border-color:transparent!important}
-.bottom-nav button.active{color:var(--bgds-text)!important;background:rgba(59,159,255,.10)!important;box-shadow:inset 0 0 0 1px rgba(119,201,255,.12)!important}
+.bottom-nav button.activecolor:var(--bgds-text)!important;background:rgba(49,94,251,.10)!important;box-shadow:none;t}
 
 /* Bottom sheets remain touch-first; their inner visual grammar matches Web modals. */
-.dialog-card,.bottom-sheet,.app-sheet,.cart-sheet-inner,.preview-sheet-inner,.qr-sheet-inner,.share-sheet-inner,.presentation-sheet{
-  background:linear-gradient(180deg,var(--bgds-surface-2),var(--bgds-surface-1))!important;
-  border-color:rgba(119,201,255,.14)!important;
-  box-shadow:var(--bgds-shadow-float)!important
+.dialog-card,.bottom-sheet,.app-sheet,.cart-sheet-inner,.preview-sheet-inner,.qr-sheet-inner,.share-sheet-inner,.presentation-sheetbackground:#0c0e13;
+  border-color:rgba(119,201,255,.14)!important;box-shadow:none;
 }
 .presentation-header,.cart-sheet-head{border-bottom-color:rgba(119,201,255,.10)!important}
 
