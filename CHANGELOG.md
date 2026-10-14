@@ -1,3 +1,13 @@
+## 5.1.51 - Cart button and cart popup redesign
+
+- Redesigned the floating cart button as a clear, compact pill with a vector cart icon, label and persistent item-count badge.
+- Rebuilt the cart sheet presentation as a centered dark modal aligned with the product details popup: blurred backdrop, rounded surface, restrained borders, compact header and responsive contained scrolling.
+- Refined cart item rows, image placeholders, quantity controls, remove actions, total summary, checkout/clear actions and the empty-cart state; replaced decorative emoji controls with inline SVG icons.
+- Kept local cart persistence, product/variant IDs, quantity changes, remove/clear behavior, checkout API and order creation flow intact.
+- Registered a dedicated stylesheet after the existing popup layers and enabled PHP filemtime cache-busting.
+- Two review loops completed: (1) structure and interaction preservation; (2) responsive layout, focus states, reduced motion, overflow and visual consistency.
+- Source-level checks only; live Telegram WebView visual and checkout interaction testing remain outstanding.
+
 ## 5.1.50 - Category picker popup visual parity
 
 - Restyled the category-selection popup used before browsing category-based products to match the redesigned product details popup.
