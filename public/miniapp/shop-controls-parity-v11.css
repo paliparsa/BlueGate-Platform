@@ -1,0 +1,109 @@
+/* BlueGate Platform v5.1.49 — make Shop Category and Filters controls a matched pair.
+   Presentation-only overrides; existing button IDs, labels, click handlers and filter state stay unchanged. */
+#shopPage .shop-discovery-actions{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:stretch!important;
+  gap:10px!important;
+  width:100%!important;
+}
+#shopPage .shop-discovery-actions>.shop-discovery-control,
+#shopPage .shop-discovery-actions>.shop-category-trigger,
+#shopPage .shop-discovery-actions>.shop-filter-trigger{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:38px minmax(0,1fr) 16px!important;
+  align-items:center!important;
+  gap:10px!important;
+  box-sizing:border-box!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  min-height:76px!important;height:76px!important;max-height:none!important;
+  margin:0!important;padding:11px 12px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+  border-radius:17px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025))!important;
+  color:#f4f5f8!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 5px 16px rgba(0,0,0,.14)!important;
+  text-align:start!important;
+  direction:rtl!important;
+  -webkit-backdrop-filter:blur(16px)!important;backdrop-filter:blur(16px)!important;
+  transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease!important;
+}
+#shopPage .shop-discovery-actions>.shop-discovery-control:focus-visible{
+  outline:2px solid rgba(130,157,255,.9)!important;outline-offset:2px!important;
+}
+#shopPage .shop-discovery-actions>.shop-discovery-control:active{
+  transform:scale(.985)!important;
+}
+#shopPage .shop-discovery-actions .shop-control-icon{
+  grid-column:1!important;grid-row:1!important;
+  display:grid!important;place-items:center!important;
+  box-sizing:border-box!important;width:38px!important;height:38px!important;
+  min-width:38px!important;min-height:38px!important;margin:0!important;padding:0!important;
+  border:1px solid rgba(255,255,255,.105)!important;border-radius:12px!important;
+  background:rgba(255,255,255,.055)!important;color:#d9e1ff!important;
+}
+#shopPage .shop-discovery-actions .shop-control-icon svg{
+  display:block!important;width:19px!important;height:19px!important;
+  max-width:19px!important;max-height:19px!important;stroke:currentColor!important;
+}
+#shopPage .shop-discovery-actions .shop-control-copy{
+  grid-column:2!important;grid-row:1!important;
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:center!important;gap:4px!important;
+  min-width:0!important;width:100%!important;margin:0!important;padding:0!important;
+  overflow:hidden!important;text-align:start!important;
+}
+#shopPage .shop-discovery-actions .shop-control-copy small{
+  display:block!important;max-width:100%!important;margin:0!important;padding:0!important;
+  color:#9da5b8!important;font-size:11px!important;font-weight:750!important;
+  line-height:1.35!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+#shopPage .shop-discovery-actions .shop-control-copy strong{
+  display:-webkit-box!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;padding:0!important;color:#f5f6fa!important;
+  font-size:13px!important;font-weight:900!important;line-height:1.45!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;
+  overflow:hidden!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+}
+#shopPage .shop-discovery-actions .shop-control-chevron,
+#shopPage .shop-discovery-actions .shop-filter-dot{
+  grid-column:3!important;grid-row:1!important;justify-self:center!important;align-self:center!important;
+  display:grid!important;place-items:center!important;
+  box-sizing:border-box!important;width:16px!important;height:20px!important;
+  min-width:16px!important;margin:0!important;padding:0!important;
+}
+#shopPage .shop-discovery-actions .shop-control-chevron{color:#8992a7!important}
+#shopPage .shop-discovery-actions .shop-control-chevron svg{
+  display:block!important;width:15px!important;height:15px!important;stroke:currentColor!important;
+}
+#shopPage .shop-discovery-actions .shop-filter-dot{
+  width:8px!important;height:8px!important;min-width:8px!important;
+  border:1px solid #555b68!important;border-radius:50%!important;
+  background:#555b68!important;
+}
+#shopPage .shop-discovery-actions .shop-filter-dot.is-active{
+  border-color:#aebdff!important;background:#aebdff!important;
+  box-shadow:0 0 0 3px rgba(130,157,255,.13)!important;
+}
+#shopPage .shop-discovery-actions .shop-category-trigger:active,
+#shopPage .shop-discovery-actions .shop-filter-trigger:active{
+  border-color:rgba(255,255,255,.22)!important;
+}
+@media(max-width:360px){
+  #shopPage .shop-discovery-actions{gap:8px!important}
+  #shopPage .shop-discovery-actions>.shop-discovery-control{
+    grid-template-columns:32px minmax(0,1fr) 12px!important;gap:7px!important;
+    min-height:70px!important;height:70px!important;padding:9px!important;border-radius:15px!important;
+  }
+  #shopPage .shop-discovery-actions .shop-control-icon{
+    width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;border-radius:10px!important;
+  }
+  #shopPage .shop-discovery-actions .shop-control-icon svg{width:17px!important;height:17px!important}
+  #shopPage .shop-discovery-actions .shop-control-copy small{font-size:10px!important}
+  #shopPage .shop-discovery-actions .shop-control-copy strong{font-size:12px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #shopPage .shop-discovery-actions>.shop-discovery-control{transition:none!important}
+}
