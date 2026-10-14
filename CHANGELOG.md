@@ -1,3 +1,10 @@
+## 5.1.41 - Premium product cards redesign
+
+- Rebuilt storefront product cards with a balanced media area, dark graphite/blue glass styling, clearer two-line titles, and a consistent price footer.
+- Replaced product-card wishlist and missing-image emoji with consistent inline SVG icons; wishlist state remains accessible and updates in place.
+- Refined discount badge placement, touch feedback, and narrow-screen sizing while preserving existing product preview, pricing, and wishlist behavior.
+- Refreshed Mini App asset cache keys. Source-level checks completed; visual testing in the live Telegram WebView remains outstanding.
+
 ## 5.1.40 - Balanced storefront controls
 
 - Matched category and filter control widths and heights to restore symmetry under the search field.
