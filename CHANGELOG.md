@@ -1,3 +1,10 @@
+## 5.1.79 - Account VPN cards and concise order summary
+
+- Refined the account VPN section with the Mini App's shared dark surfaces, accent borders, tighter card hierarchy, responsive client/service metadata, and consistent action sizing.
+- Changed the account "همه سفارش‌ها" action to open a shared BlueGateUI sheet instead of navigating away. The list includes every order currently provided in account state and shows only client name and purchased product/service name.
+- Used existing order/service data and the shared VPN client summary; preserved VPN detail, renew/sync actions, order navigation elsewhere, and backend/API behavior.
+- Added a cache-busted, scoped stylesheet for the VPN card and order summary sheet. Validation: source checks and JavaScript syntax checks; live Telegram WebView visual QA remains outstanding.
+
 ## 5.1.78 - Account page redesign and Mini App visual parity
 
 - Reworked the account page's profile hero, completion indicator, three summary metrics, VPN service panel, guest/security notices, and account action list into one consistent card hierarchy.
