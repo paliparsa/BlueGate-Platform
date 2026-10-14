@@ -1,6 +1,6 @@
 /* BlueGate Mini App overlays — visual skin only; z-index and positioning stay in behavior layers */
 #userApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog,.dialog-card,.auth-modal-content,.modal-content,.modal-card,.popup-card,.popup-panel,.language-popup,.language-modal,.stars-popup,.stars-modal,.credit-popup,.topup-popup,.mini-credit-topup-panel,[role="dialog"],[role="alertdialog"]),
-#adminApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog){
+#adminApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog,.dialog-card,.auth-modal-content,.modal-content,.modal-card,.popup-card,.popup-panel,.language-popup,.language-modal,.stars-popup,.stars-modal,.credit-popup,.topup-popup,.mini-credit-topup-panel,[role="dialog"],[role="alertdialog"]){
   color:var(--text)!important;background-color:#080808!important;background-image:none!important;border-color:#242424!important;border-radius:var(--r-xl)!important;box-shadow:var(--elev-lg)!important
 }
 dialog::backdrop,.order-more-popup-backdrop,.mini-credit-topup-backdrop,.purchase-confirm-overlay,.app-sheet-backdrop,.modal-backdrop,.dialog-backdrop,.popup-backdrop,.language-popup-backdrop,.stars-popup-backdrop,.sheet-backdrop,.overlay-backdrop{background:rgba(0,0,0,.82);background-image:none;backdrop-filter:blur(4px)}
