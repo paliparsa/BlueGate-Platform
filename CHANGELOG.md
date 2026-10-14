@@ -1,3 +1,11 @@
+## 5.1.67 - Rewards popup redesign
+
+- Redesigned the rewards fullscreen sheet with a compact intro, live spin-balance and mission-state summaries, refined wheel surface, clearer mission progress cards, and a consistent empty state.
+- Aligned the reward sheet panel and body spacing with the shared `BlueGateUI.openSheet` surface and existing Mini App design tokens; scoped the changes to the rewards view.
+- Preserved server-backed spin execution, prize selection/result handling, mission rendering data, and the existing `claim_missions` action. No reward economics or APIs changed.
+- Two review loops: (1) visual hierarchy and shared sheet consistency; (2) source-level behavior regression checks for spin and claim actions, scoped selectors, responsive rules, and stylesheet registration.
+- Verification: source-level checks only; live Telegram WebView and server reward flows were not run.
+
 ## 5.1.66 - Unified referral center and invite popup
 
 - Redesigned the referral center sheet with a consistent BlueGate surface system, improved referral/reward stat hierarchy, VIP progress, invite-link card, sub-referral list, and empty state.

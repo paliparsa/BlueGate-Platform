@@ -2130,12 +2130,23 @@ function _walletReferral(u){
 }
 function _walletMissions(u){
   const today=Number(u.today_referrals||0);
-  return `<div class="wallet-tab-panel">
-    ${renderSpinWheel()}
-    <article class="wallet-card missions-panel">
-      <div class="section-title"><h2>🎯 ماموریت‌های امروز</h2><small>${nf(today)} دعوت امروز</small></div>
-      <div class="missions-grid">${(state.missions||[]).map(missionCard).join('')||'<p class="muted">مأموریتی نیست.</p>'}</div>
-      <button class="success" id="claimBtn" style="width:100%;margin-top:10px">دریافت پاداش‌های آماده</button>
+  const missions=Array.isArray(state.missions)?state.missions:[];
+  const ready=missions.filter(m=>m&&m.done&&!m.claimed).length;
+  const claimed=missions.filter(m=>m&&m.claimed).length;
+  return `<div class="wallet-tab-panel rewards-center-v27">
+    <section class="rewards-overview-v27">
+      <div class="rewards-overview-copy-v27"><small>BLUEGATE REWARDS</small><h2>پاداش‌های شما</h2><p>ماموریت‌ها را کامل کن و شانس‌هایت را برای دریافت جایزه استفاده کن.</p></div>
+      <div class="rewards-overview-icon-v27" aria-hidden="true">🎁</div>
+    </section>
+    <div class="rewards-stats-v27">
+      <article><span class="rewards-stat-icon-v27">🎡</span><div><small>شانس گردونه</small><b>${nf(u.spin_balance||0)}</b></div></article>
+      <article><span class="rewards-stat-icon-v27">🎯</span><div><small>ماموریت‌های آماده</small><b>${nf(ready)}</b><em>${nf(claimed)} دریافت‌شده</em></div></article>
+    </div>
+    <section class="rewards-wheel-wrap-v27">${renderSpinWheel()}</section>
+    <article class="wallet-card missions-panel rewards-missions-v27">
+      <div class="section-title"><div><h2>ماموریت‌های روزانه</h2><small>${nf(today)} دعوت امروز</small></div><span class="rewards-mission-count-v27">${nf(missions.length)} ماموریت</span></div>
+      <div class="missions-grid">${missions.map(missionCard).join('')||'<div class="rewards-empty-v27"><b>فعلاً ماموریتی تعریف نشده</b><p>بعداً دوباره سر بزن؛ ماموریت‌های جدید اینجا نمایش داده می‌شوند.</p></div>'}</div>
+      <button class="success rewards-claim-btn-v27" id="claimBtn" style="width:100%;margin-top:12px">دریافت پاداش‌های آماده</button>
     </article>
   </div>`;
 }
