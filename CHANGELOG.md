@@ -1,3 +1,13 @@
+## 5.1.61 - Unified VPN order and service detail redesign
+
+- Unified the VPN detail screen opened from My Orders and VPNs under the same renderer class and shared styling layer, keeping only their contextual back navigation and order/payment actions different.
+- Rebuilt the top identity hierarchy around the client name, order number, service status, location count, and subscription ID; subscription IDs are now tappable copy controls and no longer live in a separate client-identity card below.
+- Upgraded the remaining-traffic ring with a luminous dual-tone ring and moved used/remaining/total traffic figures beside it; removed the duplicate horizontal traffic bar and the redundant traffic panel.
+- Removed customer-facing subscription-mode and last-sync metadata while preserving expiry, subscription URL actions, service locations, add-ons, renew/sync controls, and pending-payment behavior.
+- Added responsive handling for mobile widths, long client/subscription IDs, focus-visible controls, and reduced motion.
+- Two review loops: (1) unify the two entry points and rebuild client/order hierarchy; (2) check compact widths, ID-copy behavior, traffic layout, removed metadata, stylesheet ordering, and preserved action hooks.
+- Source-level checks only; live Telegram WebView visual and VPN renewal/delivery flow testing remain outstanding.
+
 ## 5.1.60 - Dedicated VPN order delivery redesign
 
 - Redesigned the VPN order-delivery detail view with a clearer order/status bar, service identity hero, traffic and expiry overview, compact service metadata, client identity, subscription link actions, locations, add-ons, and pending-payment section.
