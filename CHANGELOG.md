@@ -1,3 +1,9 @@
+## 5.1.74 - Premium spin wheel redesign
+
+- Reworked the rewards wheel into a premium dark-glass/gaming-style experience with a metallic rim, illuminated hub, pointer, ambient glow, and a high-contrast spin action.
+- Restyled the chance badge, wheel prize list, reward result panel, and responsive sizing for smaller phones.
+- Kept the existing spin endpoint and reward-registration flow unchanged; added reduced-motion handling and cache-busted stylesheet registration.
+
 ## 5.1.73 - Referral and rewards visual repair
 
 - Added a scoped final stylesheet to restore consistent bordered surfaces, spacing, hierarchy, responsive metric grids, reward/mission cards, and tier-guide rows in the referral and rewards sheets.
