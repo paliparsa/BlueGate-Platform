@@ -2628,12 +2628,25 @@ function admin_order_keyboard(int $orderId): string {
     $rows[]=[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_orders'],['text'=>'🛒 فروشگاه ادمین','callback_data'=>'adm_shop']];return json_markup(['inline_keyboard'=>$rows]);
 }
 function admin_order_service_status_text(int $orderId): string {
-    $o=order_by_id($orderId);if(!$o)return 'سفارش پیدا نشد.';$q=db()->prepare('SELECT * FROM user_services WHERE order_id=? ORDER BY id DESC LIMIT 1');$q->execute([$orderId]);$svc=$q->fetch();
-    $txt="📡 <b>وضعیت سرویس سفارش #{$orderId}</b>\n\n";
-    if(!$svc)return $txt."هنوز Client ساخته نشده است.\nاگر Mapping پلن کامل است، «ساخت و ارسال از پنل» را بزن.";
-    $txt.='Service ID: <code>'.(int)$svc['id']."</code>\nوضعیت: <b>".h((string)$svc['status'])."</b>\n";
-    $instances=function_exists('bluegate_service_instances')?bluegate_service_instances((int)$svc['id']):[];foreach($instances as $i){$txt.="\n• ".h((string)($i['provider_name']??('Provider #'.(int)$i['provider_id'])))."\nClient: <code>".h((string)($i['external_username']??'—'))."</code>\nTarget: <code>".h((string)($i['remote_target_id']??'—'))."</code>\nStatus: <b>".h((string)($i['status']??'—'))."</b>";if(!empty($i['subscription_url']))$txt.="\nSub: <code>".h((string)$i['subscription_url'])."</code>";$txt.="\n";}
-    $jq=db()->prepare('SELECT status,attempt_count,max_attempts,last_error_message FROM provisioning_jobs WHERE user_service_id=? ORDER BY id DESC LIMIT 3');$jq->execute([(int)$svc['id']]);foreach($jq->fetchAll()?:[] as $j){$txt.="\nJob: <b>".h((string)$j['status'])."</b> ".(int)$j['attempt_count'].'/'.(int)$j['max_attempts'];if(!empty($j['last_error_message']))$txt.="\n<code>".h(mb_substr((string)$j['last_error_message'],0,300))."</code>";}return $txt;
+    $o=order_by_id($orderId);if(!$o)return 'سفارش پیدا نشد.';
+    $serviceId=(int)($o['user_service_id']??0);$svc=null;
+    if($serviceId>0){$q=db()->prepare('SELECT * FROM user_services WHERE id=? AND user_id=? LIMIT 1');$q->execute([$serviceId,(int)$o['user_id']]);$svc=$q->fetch();}
+    if(!$svc){$q=db()->prepare('SELECT * FROM user_services WHERE order_id=? AND user_id=? ORDER BY id DESC LIMIT 1');$q->execute([$orderId,(int)$o['user_id']]);$svc=$q->fetch();}
+    $action=(string)($o['service_action']??'');$txt="📡 <b>وضعیت سرویس سفارش #{$orderId}</b>\n\n";
+    if(in_array($action,['renew','add_traffic','add_days'],true))$txt.='نوع عملیات: <b>'.h($action==='renew'?'تمدید سرویس':($action==='add_traffic'?'افزایش ترافیک':'افزایش مدت'))."</b>\n";
+    if(!$svc){$txt.=in_array($action,['renew','add_traffic','add_days'],true)?"سرویس اصلی سفارش پیدا نشد. شناسه سرویس: <code>{$serviceId}</code>\n":"هنوز سرویسی برای این سفارش ثبت نشده است. اگر Mapping پلن کامل است، «ساخت و ارسال از پنل» را بزن.\n";}
+    else{
+        $txt.='Service ID: <code>'.(int)$svc['id']."</code>\nوضعیت: <b>".h((string)$svc['status'])."</b>\n";
+        if(!empty($svc['expires_at']))$txt.='انقضای ثبت‌شده: <code>'.h((string)$svc['expires_at'])."</code>\n";
+        $instances=function_exists('bluegate_service_instances')?bluegate_service_instances((int)$svc['id']):[];
+        foreach($instances as $i){$txt.="\n• ".h((string)($i['provider_name']??('Provider #'.(int)$i['provider_id'])))."\nClient: <code>".h((string)($i['external_username']??'—'))."</code>\nTarget: <code>".h((string)($i['remote_target_id']??'—'))."</code>\nStatus: <b>".h((string)($i['status']??'—'))."</b>";if(!empty($i['expires_at']))$txt.="\nانقضا: <code>".h((string)$i['expires_at'])."</code>";if(!empty($i['subscription_url']))$txt.="\nSub: <code>".h((string)$i['subscription_url'])."</code>";$txt.="\n";}
+    }
+    $pattern='%"order_id":'.$orderId.'%';
+    $jq=db()->prepare('SELECT id,status,attempt_count,max_attempts,last_error_message,result_json FROM provisioning_jobs WHERE request_json LIKE ? ORDER BY id DESC LIMIT 5');$jq->execute([$pattern]);$jobs=$jq->fetchAll()?:[];
+    if(!$jobs&&$svc){$jq=db()->prepare('SELECT id,status,attempt_count,max_attempts,last_error_message,result_json FROM provisioning_jobs WHERE user_service_id=? ORDER BY id DESC LIMIT 3');$jq->execute([(int)$svc['id']]);$jobs=$jq->fetchAll()?:[];}
+    if($jobs){$txt.="\n<b>وضعیت Jobها</b>\n";foreach($jobs as $j){$txt.="\nJob #".(int)$j['id'].": <b>".h((string)$j['status'])."</b> ".(int)$j['attempt_count'].'/'.(int)$j['max_attempts'];$result=bluegate_json_array($j['result_json']??null);if(!empty($result['verified']))$txt.=" · <b>تأیید پنل: بله</b>";elseif((string)$j['status']==='completed')$txt.=" · <b>تأیید پنل: ثبت نشده؛ نیازمند بررسی</b>";if(!empty($j['last_error_message']))$txt.="\nخطا: <code>".h(mb_substr((string)$j['last_error_message'],0,300))."</code>";}}
+    else $txt.="\nبرای این سفارش Job مرتبطی ثبت نشده است.";
+    return $txt;
 }
 function bot_quick_buy_link(int $productId, ?int $variantId=null): string {
     $bot=trim((string)app_config('BOT_USERNAME',''));
