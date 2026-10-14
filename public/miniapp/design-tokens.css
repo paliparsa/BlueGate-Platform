@@ -17,6 +17,8 @@
   --bgds-r-1:var(--r-sm);--bgds-r-2:var(--r-md);--bgds-r-3:var(--r-lg);--bgds-r-4:var(--r-lg);--bgds-r-5:var(--r-xl);--bgds-r-6:var(--r-xxl);
   --bgds-shadow-card:var(--elev-sm);--bgds-shadow-float:var(--elev-lg);--bgds-focus:var(--focus-ring);
   --mini-canvas:#030303;--mini-surface:#090909;--mini-surface-raised:#0d0d0d;--mini-payment-surface:#0a0a0a;
+  --mini-control-size:44px;
+  --mini-focus-ring:0 0 0 3px color-mix(in srgb,var(--accent) 32%,transparent);
   --bg-font-body:16px;--bg-font-control:16px;--bg-font-secondary:15px;--bg-font-micro:14px;
 
   /* Shared legacy aliases retained for existing feature rules during migration. */
