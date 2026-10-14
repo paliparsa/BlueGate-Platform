@@ -1,3 +1,10 @@
+## 5.1.26 - Complete Mini App palette normalization
+
+- Standardize the home page, catalog/product cards, wallet/credit/payment methods, tabs, menu states, and order indicators around a near-black surface, white text, blue primary actions, and restrained violet selection accents.
+- Unify language, Telegram Stars, credit/top-up, product details, and purchase confirmation overlays with subtle borders, consistent card surfaces, spacing, and lightweight backdrop blur.
+- Reduce strong card gradients and keep success, warning, and error status colors semantically distinct.
+- Keep legacy layout/behavior stylesheets, but make the centralized final palette layer authoritative; refresh every local CSS/JS asset cache key.
+
 ## 5.1.25 - Fix legacy palette override and stale asset cache
 
 - Remove legacy `!important` locks from accent tokens in `bluegate-theme.css` that blocked the Mini App's runtime palette.
