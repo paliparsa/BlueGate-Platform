@@ -1,0 +1,10 @@
+/* BlueGate Mini App design base — typography, reset and page canvas */
+html{background:var(--bg);color-scheme:dark}
+body{background:var(--bg);color:var(--text);font-family:var(--mini-font-family);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#userApp,#adminApp,.app-shell,.page,#adminContent{color:var(--text)}
+h1,h2,h3,h4,h5,h6,.section-title h2,.product-title{color:var(--text);letter-spacing:-.018em}
+p,.muted,.text-muted,.subtle,.helper-text{color:var(--muted)}
+a{color:#8ba5ff;text-decoration-color:rgba(139,165,255,.35)}
+:where(button,input,select,textarea,[tabindex]):focus-visible{outline:0;box-shadow:var(--focus-ring)}
+::selection{background:rgba(49,94,251,.34);color:#fff}
+hr,.divider,.section-divider{border-color:var(--line)}
