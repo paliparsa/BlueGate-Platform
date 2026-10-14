@@ -1,3 +1,12 @@
+## 5.1.50 - Category picker popup visual parity
+
+- Restyled the category-selection popup used before browsing category-based products to match the redesigned product details popup.
+- Use a centered, near-black modal with a blurred dim backdrop, compact header/close control, matching rounded borders and contained scrolling on mobile and desktop.
+- Restyle category choices as consistent dark option cards with aligned icon/image, title, supporting text and selected-state indicator.
+- Preserve category IDs, selection state, click handlers, close behavior and product filtering.
+- Register the stylesheet after the existing product popup and shop-control styles; add PHP filemtime cache-busting.
+- Source-level validation only; live Telegram WebView visual and interaction checks remain outstanding.
+
 ## 5.1.49 - Category and filter button visual parity
 
 - Made the Store's category picker and filter/sort control a consistent paired component: equal width and height, shared grid alignment, matching icon tiles, typography, borders, surface and spacing.
