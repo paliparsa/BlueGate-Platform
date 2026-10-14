@@ -1,3 +1,9 @@
+## 5.1.76 - Shared customer hero surfaces and ticket header fix
+
+- Fixed the support-center hero layout by placing its description and action buttons in distinct rows, preventing the description from appearing underneath the new-ticket button.
+- Reused the support center's dark accent-tinted gradient, border, soft highlight, and subtle decorative rings on the customer credit card, orders header, and storefront header.
+- Kept the styling scoped to the requested cards; no purchase, credit, order, or ticket business logic changed.
+
 ## 5.1.75 - Support ticket layout repair
 
 - Registered the existing scoped support-center stylesheet after the shared Mini App and rewards layers so ticket-page cards, status badges, search and filters, empty states, ticket creation form, and conversation/composer styles actually apply.
