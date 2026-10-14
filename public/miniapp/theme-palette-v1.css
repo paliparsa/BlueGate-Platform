@@ -375,3 +375,145 @@ input:focus, textarea:focus, select:focus {
   border-color: #8B5CF6 !important;
 }
 ::selection { background: rgba(139,92,246,.28); color: #FFFFFF; }
+
+
+/* v5.1.27 — deep-black palette: final override after all legacy styles.
+   Visual-only layer; intentionally does not alter application behavior. */
+:root {
+  --bgds-bg: #030303 !important;
+  --bgds-bg-2: #050505 !important;
+  --bgds-surface-1: #080808 !important;
+  --bgds-surface-2: #0B0B0B !important;
+  --bgds-surface-3: #101010 !important;
+  --bgds-text: #F5F5F5 !important;
+  --bgds-muted: #A6A6A6 !important;
+  --bgds-border: rgba(255,255,255,.075) !important;
+  --bgds-border-strong: rgba(255,255,255,.14) !important;
+  --bgds-primary: var(--primary, #3477EE) !important;
+  --bgds-purple: #8B5CF6 !important;
+  --bgds-success: #42D6A0 !important;
+  --bgds-warning: #F5C86A !important;
+  --bgds-danger: #FF718A !important;
+  color-scheme: dark;
+}
+html, body, #userApp, #adminApp, .app-shell, .page,
+#homePage, #shopPage, #ordersPage, #walletPage, #supportPage {
+  background-color: #030303 !important;
+  color: #F5F5F5 !important;
+}
+/* Black card surfaces. Remove decorative gradients and pseudo-element glow. */
+.product-tile, .product-card, .product-card-modern, .product-item,
+.product-grid .product, .shop-product-card, .catalog-card, .detail-card,
+.wallet-card, .account-hub-card, .mission-card, .order-row, .order-card,
+.quick-card, .mini-stat, .admin-card, .admin-item, .glowing-flash-card,
+.flash-card, .product-info-card, .hero, .shop-page-intro,
+.account-center-mini-hero, .mini-credit-hero-v27, .glass,
+.payment-method, .wallet-method, .payment-option, .wallet-method-option,
+.payment-method-option, .topup-method-option {
+  background: #080808 !important;
+  background-image: none !important;
+  border-color: rgba(255,255,255,.075) !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,.16) !important;
+}
+.product-tile::before, .product-tile::after, .product-card::before,
+.product-card::after, .glowing-flash-card::before, .glowing-flash-card::after,
+.hero::after, .hero-glow {
+  background-image: none !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+/* Very subtle gray separators throughout all screens. */
+hr, .divider, .card, .panel, .section-card, .list-item,
+.account-menu-row, .cat-pill, .filter-chip, .filter-choice-grid button,
+.variant-btn, .purchase-plan-option, .shop-filter-trigger,
+.credit-launch, .mini-settings-actions button {
+  border-color: rgba(255,255,255,.075) !important;
+}
+.secondary, button.secondary, .btn-secondary, .button-secondary,
+.ghost, button.ghost, .btn-ghost, .icon-btn, .purchase-confirm-cancel,
+.tab, [role="tab"], .order-more-popup-option, .purchase-confirm-desc,
+.purchase-confirm-specs, .mini-topup-balance, .mini-topup-after,
+.purchase-confirm-price-primary, .bg-centered-confirm-message,
+.language-option, .language-popup button, .stars-popup button {
+  background-color: #0B0B0B !important;
+  background-image: none !important;
+  border-color: rgba(255,255,255,.075) !important;
+  box-shadow: none !important;
+  color: #EAEAEA !important;
+}
+/* Keep blue primary actions; glow is deliberately limited to interaction states. */
+.primary, .btn-primary, button.primary, .button-primary, .btn-main,
+.purchase-confirm-submit, .mini-credit-primary, .credit-primary-action,
+.wallet-topup-button, .wallet-add-credit, .credit-add-button,
+button[type="submit"].primary {
+  background: var(--primary, #3477EE) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transition: box-shadow .16s ease, filter .16s ease, transform .16s ease;
+}
+.primary:hover, .btn-primary:hover, button.primary:hover,
+.button-primary:hover, .btn-main:hover, .purchase-confirm-submit:hover,
+.mini-credit-primary:hover, .credit-primary-action:hover,
+.wallet-topup-button:hover, .wallet-add-credit:hover, .credit-add-button:hover,
+.primary:focus-visible, .btn-primary:focus-visible, button.primary:focus-visible {
+  box-shadow: 0 0 0 2px rgba(74,141,255,.12) !important;
+}
+.cat-pill.active, .filter-chip.active, .filter-choice-grid button.active,
+.variant-btn.active, .purchase-plan-option.active, .purchase-plan-option.selected,
+.orders-filter-option.active, .admin-tabs button.active, .bottom-nav button.active,
+.topbar-desktop-nav button.active, .account-menu-row.active, .tab.active,
+[role="tab"][aria-selected="true"], [aria-current="page"],
+.payment-method.active, .wallet-method.active, .payment-option.active,
+.mini-topup-method-list>button.active, .wallet-method-option.active,
+.payment-method-option.active, .topup-method-option.active,
+.payment-method[aria-checked="true"], .payment-option[aria-checked="true"] {
+  background: #101010 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255,255,255,.16) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025) !important;
+}
+/* Same black panel for every popup, sheet, modal, language and Stars flow. */
+.order-more-popup-backdrop, .mini-credit-topup-backdrop,
+.purchase-confirm-overlay, .app-sheet-backdrop, .modal-backdrop,
+.dialog-backdrop, .popup-backdrop, .language-popup-backdrop,
+.stars-popup-backdrop, [class*="popup-backdrop"], [class*="modal-backdrop"],
+[class*="sheet-backdrop"], [class*="overlay-backdrop"] {
+  background: rgba(0,0,0,.82) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: blur(4px) !important;
+}
+.order-more-popup-card, .mini-credit-topup-panel, .purchase-confirm-card,
+.dialog-card, .auth-modal-content, .app-sheet-panel, .app-sheet .app-sheet-content,
+.modal-content, .modal-card, .popup-card, .popup-panel, .language-popup,
+.language-modal, .stars-popup, .stars-modal, .credit-popup, .topup-popup,
+[class*="popup-card"], [class*="modal-content"], [class*="modal-card"],
+[class*="sheet-panel"] {
+  background: #080808 !important;
+  background-image: none !important;
+  color: #F5F5F5 !important;
+  border: 1px solid rgba(255,255,255,.085) !important;
+  box-shadow: 0 20px 56px rgba(0,0,0,.62) !important;
+}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+textarea, select, .field input, .field textarea, .field select {
+  background: #050505 !important;
+  background-image: none !important;
+  color: #F5F5F5 !important;
+  border-color: rgba(255,255,255,.085) !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: rgba(255,255,255,.22) !important;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.025) !important;
+}
+/* Semantic statuses stay meaningful; only decorative glow is removed. */
+.status-badge.success, .status-badge.active, .status-badge.ok, .status-success, .badge-success { color: #42D6A0 !important; box-shadow: none !important; }
+.status-badge.warning, .status-badge.pending, .status-warning, .badge-warning { color: #F5C86A !important; box-shadow: none !important; }
+.status-badge.danger, .status-badge.failed, .status-danger, .badge-danger { color: #FF718A !important; box-shadow: none !important; }
+.price-pill, .product-badge, .product-tag, .category-badge, .badge {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+::selection { background: rgba(74,141,255,.22); color: #FFFFFF; }
