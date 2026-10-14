@@ -1,0 +1,270 @@
+/* BlueGate Platform v5.1.48 — final product details / purchase popup layer.
+   Presentation only: preserves purchase.js markup, selected-plan state, coupon and checkout handlers. */
+.purchase-confirm-overlay.mini-purchase-overlay{
+  position:fixed!important;inset:0!important;z-index:2147482500!important;
+  display:grid!important;place-items:center!important;
+  box-sizing:border-box!important;
+  padding:max(14px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;
+  background:rgba(0,0,0,.84)!important;
+  -webkit-backdrop-filter:blur(8px)!important;backdrop-filter:blur(8px)!important;
+  direction:rtl!important;overscroll-behavior:contain!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .mini-purchase-card{
+  position:relative!important;isolation:isolate!important;box-sizing:border-box!important;
+  display:flex!important;flex-direction:column!important;gap:15px!important;
+  width:min(470px,100%)!important;max-width:100%!important;
+  max-height:calc(var(--mini-viewport-height,100dvh) - max(28px,env(safe-area-inset-top) + env(safe-area-inset-bottom) + 20px))!important;
+  margin:0!important;padding:clamp(14px,3.8vw,22px)!important;
+  overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+  border:1px solid #292929!important;border-radius:24px!important;
+  background:#080808!important;background-image:none!important;color:#f5f5f5!important;
+  box-shadow:0 28px 90px rgba(0,0,0,.72),inset 0 1px rgba(255,255,255,.035)!important;
+  transform:translateY(12px) scale(.985)!important;transition:transform .2s ease!important;
+  scrollbar-width:thin;scrollbar-color:#353535 transparent;
+}
+.purchase-confirm-overlay.mini-purchase-overlay.open .mini-purchase-card{transform:none!important}
+.purchase-confirm-overlay.mini-purchase-overlay .mini-purchase-grabber{display:none!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-header{
+  display:grid!important;grid-template-columns:minmax(0,1fr) 40px!important;
+  align-items:center!important;gap:12px!important;
+  padding:0 0 15px!important;margin:0!important;
+  border:0!important;border-bottom:1px solid #252525!important;
+  background:transparent!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-brand{
+  grid-column:1!important;grid-row:1!important;display:flex!important;flex-direction:row!important;
+  align-items:center!important;justify-content:flex-start!important;gap:12px!important;
+  min-width:0!important;text-align:right!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-brand>div:first-child{min-width:0!important;flex:1 1 auto!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-brand h3{
+  margin:0!important;color:#f8f8f8!important;font-size:clamp(16px,4vw,19px)!important;
+  font-weight:900!important;line-height:1.55!important;white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-brand p{
+  display:block!important;margin:4px 0 0!important;color:#a3a3a3!important;
+  font-size:12px!important;font-weight:700!important;line-height:1.6!important;overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-avatar{
+  width:54px!important;height:54px!important;flex:0 0 54px!important;box-sizing:border-box!important;
+  border:1px solid #303030!important;border-radius:15px!important;
+  background:#111!important;color:#e5e5e5!important;font-size:23px!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-avatar img{
+  width:100%!important;height:100%!important;object-fit:contain!important;padding:4px!important;box-sizing:border-box!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-close{
+  grid-column:2!important;grid-row:1!important;align-self:start!important;
+  width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+  border:1px solid #303030!important;border-radius:12px!important;
+  background:#111!important;color:#e5e5e5!important;font-size:17px!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-step{
+  display:grid!important;gap:12px!important;min-width:0!important;
+  margin:0!important;padding:14px!important;border:1px solid #252525!important;
+  border-radius:17px!important;background:#0c0c0c!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-step-head{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:10px!important;margin:0!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-step-head span{
+  color:#bdbdbd!important;font-size:12px!important;font-weight:800!important;line-height:1.5!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-step-head h4{
+  margin:3px 0 0!important;color:#f5f5f5!important;font-size:14px!important;font-weight:850!important;line-height:1.55!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-step-head>b{
+  flex:0 0 auto!important;padding:5px 8px!important;border:1px solid #303030!important;
+  border-radius:9px!important;background:#151515!important;color:#cfcfcf!important;font-size:11px!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-option{
+  position:relative!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  justify-content:space-between!important;gap:10px!important;box-sizing:border-box!important;
+  min-width:0!important;min-height:102px!important;padding:12px!important;overflow:hidden!important;
+  border:1px solid #2b2b2b!important;border-radius:14px!important;
+  background:#111!important;color:#eee!important;text-align:right!important;box-shadow:none!important;
+  transition:border-color .16s ease,background-color .16s ease!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-option.active{
+  border:1px solid #d8d8d8!important;background:#1a1a1a!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-title{
+  display:-webkit-box!important;min-width:0!important;max-width:100%!important;
+  padding:0 0 0 25px!important;color:#f4f4f4!important;font-size:13px!important;font-weight:850!important;
+  line-height:1.6!important;overflow-wrap:anywhere!important;white-space:normal!important;
+  -webkit-line-clamp:3!important;-webkit-box-orient:vertical!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-price{
+  display:flex!important;flex-wrap:wrap!important;align-items:baseline!important;justify-content:flex-start!important;
+  gap:5px 7px!important;min-width:0!important;margin-top:auto!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-price>strong{
+  display:inline-flex!important;flex-wrap:wrap!important;align-items:baseline!important;gap:4px!important;
+  max-width:100%!important;color:#f4f4f4!important;font-size:15px!important;font-weight:950!important;
+  line-height:1.45!important;white-space:normal!important;overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-price>strong small{
+  color:#a9a9a9!important;font-size:10px!important;font-weight:700!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-price>s{
+  order:-1!important;flex-basis:100%!important;color:#888!important;font-size:11px!important;line-height:1.3!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-discount{
+  display:inline-flex!important;align-items:center!important;max-width:100%!important;
+  padding:3px 6px!important;border:1px solid #553033!important;border-radius:7px!important;
+  background:#241315!important;color:#ffb9bd!important;font-size:10px!important;font-weight:850!important;
+  line-height:1.4!important;white-space:normal!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-option>i{
+  top:9px!important;left:9px!important;width:20px!important;height:20px!important;
+  border:1px solid #3a3a3a!important;background:#1b1b1b!important;color:transparent!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-option.active>i{
+  border-color:#ededed!important;background:#ededed!important;color:#080808!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-price-primary{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;
+  gap:12px!important;margin:0!important;padding:14px!important;
+  border:1px solid #303030!important;border-radius:15px!important;background:#111!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-price-primary>span{
+  color:#bcbcbc!important;font-size:12px!important;font-weight:750!important;line-height:1.6!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-price-primary>div{
+  display:flex!important;flex-wrap:wrap!important;align-items:baseline!important;justify-content:flex-end!important;
+  gap:4px 7px!important;max-width:100%!important;direction:ltr!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-price-primary s{
+  color:#888!important;font-size:12px!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-price-primary strong{
+  color:#fff!important;font-size:clamp(20px,5vw,25px)!important;font-weight:950!important;line-height:1.3!important;
+  overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-price-primary small{
+  color:#aaa!important;font-size:11px!important;font-weight:700!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs{
+  display:grid!important;gap:0!important;margin:0!important;padding:0!important;overflow:hidden!important;
+  border:1px solid #252525!important;border-radius:15px!important;background:#0c0c0c!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs>div{
+  display:grid!important;grid-template-columns:minmax(75px,.72fr) minmax(0,1.4fr)!important;
+  align-items:start!important;gap:12px!important;padding:11px 12px!important;min-width:0!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs>div+div{border-top:1px solid #202020!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs span{
+  color:#929292!important;font-size:11px!important;font-weight:750!important;line-height:1.65!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs b{
+  max-width:none!important;min-width:0!important;color:#e8e8e8!important;font-size:12px!important;
+  font-weight:800!important;line-height:1.65!important;text-align:start!important;overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs b.cyan,
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs b.green{color:#ededed!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-desc{
+  margin:0!important;padding:13px!important;border:1px solid #262626!important;border-radius:15px!important;background:#0c0c0c!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-desc>b{
+  display:block!important;margin:0 0 7px!important;color:#d8d8d8!important;font-size:12px!important;font-weight:850!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-desc p{
+  max-height:min(22dvh,190px)!important;margin:0!important;padding:0!important;overflow-y:auto!important;
+  color:#bdbdbd!important;font-size:12px!important;line-height:1.9!important;white-space:pre-line!important;
+  overflow-wrap:anywhere!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-guarantee{
+  margin:0!important;padding:10px 12px!important;border:1px solid #2b2b2b!important;
+  border-radius:12px!important;background:#101010!important;color:#bdbdbd!important;
+  font-size:11px!important;font-weight:750!important;line-height:1.7!important;text-align:center!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-coupon{
+  display:grid!important;gap:8px!important;margin:0!important;color:#c2c2c2!important;font-size:12px!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-coupon>span{font-weight:850!important;line-height:1.6!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-coupon>span small{color:#858585!important;font-size:10px!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-row{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:stretch!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-row input{
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;min-height:44px!important;
+  padding:0 12px!important;border:1px solid #303030!important;border-radius:11px!important;
+  background:#111!important;color:#f3f3f3!important;font:inherit!important;font-size:14px!important;outline:none!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-row input:focus{
+  border-color:#777!important;box-shadow:0 0 0 2px rgba(255,255,255,.06)!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-row button{
+  min-width:82px!important;min-height:44px!important;padding:0 13px!important;
+  border:1px solid #3b3b3b!important;border-radius:11px!important;background:#202020!important;
+  color:#f0f0f0!important;font:inherit!important;font-size:12px!important;font-weight:850!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-feedback{
+  color:#929292!important;font-size:11px!important;line-height:1.7!important;overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-feedback.success{color:#bdbdbd!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-feedback.error{color:#ff9ca5!important}
+.purchase-confirm-overlay.mini-purchase-overlay .mini-purchase-secondary-actions{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:0!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .mini-purchase-secondary-actions button{
+  min-width:0!important;min-height:42px!important;padding:9px!important;border:1px solid #2d2d2d!important;
+  border-radius:11px!important;background:#101010!important;color:#d5d5d5!important;
+  font:inherit!important;font-size:12px!important;font-weight:800!important;overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-actions{
+  position:sticky!important;bottom:-1px!important;z-index:3!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;
+  margin:0!important;padding:12px 0 0!important;border:0!important;
+  background:linear-gradient(180deg,rgba(8,8,8,0),#080808 20px)!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-submit{
+  min-width:0!important;min-height:50px!important;padding:12px 14px!important;
+  border:1px solid #e4e4e4!important;border-radius:13px!important;
+  background:#ededed!important;color:#080808!important;box-shadow:none!important;
+  font:inherit!important;font-size:14px!important;font-weight:950!important;line-height:1.6!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-submit:disabled{opacity:.58!important}
+.purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-cancel{
+  min-width:0!important;min-height:40px!important;padding:9px!important;border:1px solid #292929!important;
+  border-radius:12px!important;background:#101010!important;color:#c8c8c8!important;
+  font:inherit!important;font-size:12px!important;font-weight:800!important;
+}
+.purchase-confirm-overlay.mini-purchase-overlay :is(button,input){font-family:inherit}
+.purchase-confirm-overlay.mini-purchase-overlay :is(button,input):focus-visible{
+  outline:2px solid #bcbcbc!important;outline-offset:2px!important;
+}
+@media(max-width:390px){
+  .purchase-confirm-overlay.mini-purchase-overlay{padding:10px 8px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .mini-purchase-card{
+    width:100%!important;max-height:calc(var(--mini-viewport-height,100dvh) - 20px)!important;
+    padding:14px 12px!important;gap:11px!important;border-radius:20px!important;
+  }
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-header{grid-template-columns:minmax(0,1fr) 36px!important;gap:8px!important;padding-bottom:11px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-close{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-avatar{width:44px!important;height:44px!important;flex-basis:44px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-grid{gap:7px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-option{min-height:94px!important;padding:9px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-title{font-size:12px!important;line-height:1.55!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-price>strong{font-size:13px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-price-primary{padding:11px!important;gap:8px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-specs>div{grid-template-columns:minmax(65px,.7fr) minmax(0,1.4fr)!important;gap:8px!important;padding:9px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-row{grid-template-columns:minmax(0,1fr) auto!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-coupon-row button{min-width:72px!important;padding-inline:9px!important}
+}
+@media(max-height:700px){
+  .purchase-confirm-overlay.mini-purchase-overlay .mini-purchase-card{gap:10px!important;padding-block:12px!important}
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-confirm-desc p{max-height:14dvh!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .purchase-confirm-overlay.mini-purchase-overlay,.purchase-confirm-overlay.mini-purchase-overlay .mini-purchase-card,
+  .purchase-confirm-overlay.mini-purchase-overlay .purchase-plan-option{transition:none!important}
+}
