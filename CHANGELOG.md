@@ -1,3 +1,11 @@
+## 5.1.72 - Support ticket copy and UI redesign
+
+- Reworked customer ticket list copy, status summaries, search/filter labels, and empty states to be clearer and consistent.
+- Replaced support-area emoji/decorative glyphs with the shared inline SVG icon helper in the ticket list, create form, attachments, and conversation header/composer.
+- Improved new-ticket form guidance, attachment selection feedback, loading states, duplicate-submit protection, and validation messaging.
+- Refined ticket cards, status pills, chat bubbles, closed-ticket notice, composer, and mobile spacing while preserving existing ticket APIs and attachment behavior.
+- Source-level review includes checking status labels/classes, event binding, SVG helper entries, and CSS registration. Live API behavior and Telegram WebView rendering still require hands-on verification.
+
 ## 5.1.71 - Rewards/referral layout repair and tier guide
 
 - Rebuilt the rewards overview into explicit bordered panels for wheel chances, ready-to-claim rewards, completed missions, and already-claimed rewards.
