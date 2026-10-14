@@ -1,3 +1,13 @@
+## 5.1.48 - Product details popup redesign
+
+- Added a dedicated final-layer stylesheet for the product details / purchase popup, with a true-black surface, centered layout on mobile and desktop, cleaner header, and clearer close control.
+- Rebuilt plan options into consistent selectable cards with stronger selected-state contrast, readable long plan names, and better handling of discounted and variable prices.
+- Reorganized price summary, product/delivery metadata, description, coupon input, secondary actions, and checkout controls into distinct low-noise sections.
+- Improved internal scrolling, sticky checkout actions, narrow-screen spacing, short viewport behavior, focus visibility, safe-area handling, and reduced-motion support.
+- Preserved the existing purchase.js markup, plan selection, coupon preview/application, cart/share actions, and order submission handlers.
+- Loop 1 reviewed component hierarchy, selected-plan affordance, and separation of price/metadata/actions. Loop 2 checked CSS cascade order, narrow widths/heights, long text and price wrapping, asset registration/cache-busting, and preserved interaction selectors.
+- Source-level checks only; live Telegram WebView visual and tap testing remains outstanding.
+
 ## 5.1.47 - Unified product card layout redesign
 
 - Introduced a dedicated final-layer stylesheet for the Mini App product cards: true-black surfaces, consistent media framing, stronger name/price hierarchy, compact two-column grid, and responsive spacing.
