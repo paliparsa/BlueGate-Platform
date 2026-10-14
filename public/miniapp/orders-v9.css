@@ -1,5 +1,5 @@
 /* Orders v9: clearer page hierarchy, filter controls and order cards. */
-#ordersPage .orders-header {
+#ordersPage .orders-header 
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -7,10 +7,8 @@
   min-height: 164px;
   margin: 10px 0 14px !important;
   padding: 22px !important;
-  border-radius: var(--r-xxl, 28px) !important;
-  background:
-    radial-gradient(circle at 15% 100%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 44%),
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, #101827), #0b1423 68%) !important;
+  border-radius: var(--r-xxl, 28px) !important;background:var(--bg2);
+
 }
 
 #ordersPage .orders-header-copy { min-width: 0; }
@@ -24,7 +22,7 @@
 }
 #ordersPage .orders-header h2 { font-size: clamp(24px, 5vw, 32px) !important; }
 #ordersPage .orders-header p { margin-top: 5px; font-size: 13px; }
-#ordersPage .orders-header-icon {
+#ordersPage .orders-header-icon 
   display: none;
   flex: 0 0 68px;
   width: 68px;
@@ -32,9 +30,9 @@
   place-items: center;
   border: 1px solid rgba(255,255,255,.16);
   border-radius: 22px;
-  background: rgba(255,255,255,.09);
-  box-shadow: 0 14px 30px rgba(0,0,0,.2);
+  background: rgba(255,255,255,.09);box-shadow:none;
   font-size: 32px;
+
 }
 #ordersPage .orders-header-stats {
   display: flex;
@@ -94,26 +92,26 @@
   color: var(--text);
   font-size: 11px;
 }
-#ordersPage .filter-chip.active {
+#ordersPage .filter-chip.active 
   border-color: color-mix(in srgb, var(--accent) 58%, transparent) !important;
   background: color-mix(in srgb, var(--accent) 19%, #101827) !important;
-  color: var(--text);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 13%, transparent);
+  color: var(--text);box-shadow:none;
+
 }
 #ordersPage .filter-chip.active b { background: var(--accent); color: #06101c; }
 #ordersPage .advanced-filter b { font-size: 17px; }
 
-#ordersPage .order-row {
-  border-radius: 20px !important;
-  background: linear-gradient(145deg, rgba(21,38,59,.88), rgba(8,17,29,.82)) !important;
+#ordersPage .order-row 
+  border-radius: 20px !important;background:var(--surface);
   transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+
 }
-#ordersPage .order-row:hover {
-  border-color: color-mix(in srgb, var(--accent) 36%, rgba(255,255,255,.1)) !important;
-  box-shadow: 0 16px 34px rgba(0,0,0,.2);
+#ordersPage .order-row:hover 
+  border-color: color-mix(in srgb, var(--accent) 36%, rgba(255,255,255,.1)) !important;box-shadow:none;
+
 }
 #ordersPage .parity-order-main { padding: 15px 15px 13px !important; }
-#ordersPage .parity-order-main .order-icon {
+#ordersPage .parity-order-main .order-icon 
   position: relative;
   display: flex;
   flex-direction: column;
@@ -121,8 +119,8 @@
   gap: 2px;
   width: 48px;
   height: 48px;
-  border-radius: 16px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 27%, #111827), #0d1726);
+  border-radius: 16px;background:var(--surface);
+
 }
 #ordersPage .parity-order-copy { gap: 5px; }
 #ordersPage .parity-order-copy h3 { overflow-wrap: anywhere; white-space: normal; font-size: 14px; line-height: 1.55; }
@@ -190,7 +188,7 @@
 
 /* Credit center: keep transaction copy readable on narrow screens. */
 .credit-center-mini-v27 { gap: 12px; }
-.credit-center-mini-v27 .mini-credit-hero-v27 { box-shadow: 0 18px 42px rgba(0,0,0,.16); }
+.credit-center-mini-v27 .mini-credit-hero-v27 box-shadow:none;  }
 .credit-center-mini-v27 .mini-credit-stats-v27 > div { min-width: 0; }
 .credit-center-mini-v27 .mini-credit-stats-v27 b { display: block; overflow-wrap: anywhere; }
 .credit-center-mini-v27 .mini-credit-history-preview { padding: 16px; }
@@ -305,15 +303,15 @@
 .vpn-sub-topbar { position: relative; min-height: 44px; }
 .vpn-sub-top-actions { display: flex; gap: 6px; margin-inline: auto; order: 2; }
 .vpn-sub-top-action { min-height: 36px; padding: 7px 10px; border: 1px solid rgba(119,201,255,.2); border-radius: 11px; background: rgba(255,255,255,.04); color: var(--text); font-size: 11px; font-weight: 900; white-space: nowrap; }
-.vpn-sub-top-action.primary { border-color: transparent; background: linear-gradient(135deg,#1778e8,#43b6ff); color: #fff; }
+.vpn-sub-top-action.primary  border-color: transparent;background:var(--accent); color: #fff;  }
 .vpn-sub-top-action i { font-style: normal; margin-inline-end: 4px; }
 .vpn-sub-copy h1 { max-width: 100%; overflow-wrap: anywhere; }
 .vpn-sub-pills { margin-top: 12px; }
 .vpn-sub-pills > span { max-width: 100%; min-width: 0; }
 .vpn-sub-pills > span b { min-width: 0; max-width: 180px; overflow-wrap: anywhere; }
-.vpn-sub-orb-wrap { min-height: 160px; padding: 10px; background: linear-gradient(145deg,rgba(119,201,255,.08),rgba(255,255,255,.02)); }
-.vpn-sub-orb { width: 126px; height: 126px; background: conic-gradient(#3a9fff calc(var(--p)*1%),rgba(255,255,255,.08) 0); }
-.vpn-sub-orb:before { inset: 10px; background: radial-gradient(circle at 50% 35%,rgba(58,159,255,.12),#091421 70%); }
+.vpn-sub-orb-wrap  min-height: 160px; padding: 10px;background:var(--surface2);  }
+.vpn-sub-orb  width: 126px; height: 126px;background:var(--surface2);  }
+.vpn-sub-orb:before  inset: 10px;background:var(--surface2);  }
 .vpn-sub-orb strong { font-size: 24px; }
 .vpn-sub-overview { gap: 8px; }
 .vpn-sub-panel { padding: 12px; }
