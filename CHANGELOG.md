@@ -1,3 +1,13 @@
+## 5.1.30 - Root-level royal blue design system
+
+- Added a dedicated Mini App design architecture: semantic tokens, base typography/reset, surfaces, controls, overlays, and responsive/reduced-motion guardrails.
+- Applied the royal-blue accent (#315EFB), deep-black canvas, graphite surfaces, controlled corner radii, and shared user/admin component rules.
+- Added a dedicated web-admin visual contract for navigation, data surfaces, controls, and form focus states.
+- Removed the former final palette override from the Mini App load chain; the new design layers now own final visual tokens and shared component styling.
+- Registered the new Mini App stylesheets in PHP filemtime cache-busting and refreshed static cache keys.
+- Kept feature-specific layout, purchase/payment flows, wallet logic, authentication, APIs, and admin behavior untouched.
+- Verification: source-level CSS/HTML/PHP checks; no live browser visual regression run was available in this workflow.
+
 ## 5.1.29 - Mini App design system rebuild
 
 - Rebuilt the final Mini App visual layer as one source of truth for deep-black surfaces, graphite borders, typography, controls, cards, navigation and overlays.
