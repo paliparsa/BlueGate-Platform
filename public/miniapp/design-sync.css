@@ -64,7 +64,7 @@ button,.primary,.secondary,.danger,.success,.warning,.ghost{transition:transform
 .successbackground:var(--surface2);border:1px solid rgba(75,216,167,.34)!important;color:#041c15!importantt}
 .warningbackground:var(--surface2);border:1px solid rgba(255,211,110,.35)!important;color:#221904!importantt}
 .dangerbackground:var(--surface2);border:1px solid rgba(255,117,138,.35)!important;color:#fff!importantt}
-button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none!important;box-shadow:var(--bgds-focus)!important;border-color:var(--bgds-primary)!important}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visibleoutline:none!important;box-shadow:none;border-color:var(--bgds-primary)!importantt}
 
 /* One status/badge language across the two surfaces. */
 .status-badge,.badge,.soon,.variant-badge,.valid-indicator,.vpn-sub-status,.vpn-sub-pills>span,.mini-connection,.oac-status
@@ -76,7 +76,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 
 /* Search/filter controls. */
 .searchbar,.searchbar-modernmin-height:50px!important;border-radius:var(--r-md)!important;border:1px solid rgba(119,201,255,.14)!important;background:var(--surface2);box-shadow:none;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!importantt}
-.searchbar:focus-within,.searchbar-modern:focus-within{border-color:rgba(49,94,251,.48)!important;box-shadow:var(--bgds-focus)!important}
+.searchbar:focus-within,.searchbar-modern:focus-withinborder-color:rgba(49,94,251,.48)!important;box-shadow:none;t}
 .searchbar input,.searchbar-modern input{color:var(--bgds-text)!important;font-size:14px!important}
 .searchbar input::placeholder,.searchbar-modern input::placeholder{color:#829bb4!important}
 .shop-filter-trigger{width:42px!important;height:42px!important;border-radius:var(--r-md)!important;background:rgba(255,255,255,.035)!important;border-color:rgba(119,201,255,.11)!important}
