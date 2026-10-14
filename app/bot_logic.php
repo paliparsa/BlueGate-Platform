@@ -54,7 +54,7 @@ function route_bot_start_payload(int $chat_id, $message_id, array $user, string 
     if($payload==='')return false;
     clear_step($chat_id);
     if(preg_match('/^buy_p_(\d+)$/',$payload,$m) || preg_match('/^buy_v_(\d+)_(\d+)$/',$payload,$m) || $payload==='shop'){
-        send_or_edit($chat_id,$message_id,'🛍 خرید و مدیریت سفارش‌ها فقط داخل Mini App انجام می‌شود. برای ادامه Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_or_edit($chat_id,$message_id,'🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return true;
     }
     if($payload==='services'){show_bot_services($chat_id,$message_id,(int)$user['id']);return true;}
@@ -109,7 +109,7 @@ function handle_message(array $message): void {
     if (is_full_admin($chat_id) && in_array(strtolower($text), ['/backup','backup','/adminbackup'], true)) {
         try { $b = blue_backup_send_to_admin($chat_id); send_msg($chat_id, "✅ بکاپ ساخته و همینجا ارسال شد.
 فایل: <code>".h($b['filename'])."</code>", admin_keyboard()); }
-        catch (Throwable $e) { send_msg($chat_id, '❌ ساخت/ارسال بکاپ شکست خورد: <code>'.h($e->getMessage()).'</code>', admin_keyboard()); }
+        catch (Throwable $e) { error_log('[Bot backup] '.$e->getMessage()); send_msg($chat_id, '❌ ساخت یا ارسال بکاپ ناموفق بود. جزئیات فنی در لاگ سرور ثبت شد.', admin_keyboard()); }
         return;
     }
     if (is_full_admin($chat_id) && in_array(strtolower($text), ['/restore_backup','restore_backup','restore'], true)) {
@@ -170,7 +170,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
     }
     if (preg_match('~^/(?:orders|shop|buy)(?:@\w+)?$~i', $text)) {
         clear_step($chat_id);
-        send_msg($chat_id, '🛍 خرید و «سفارش‌های من» در ربات غیرفعال است. برای خرید، پرداخت و پیگیری سفارش‌ها Mini App را باز کن.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_msg($chat_id, '🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return;
     }
     if (preg_match('~^/services(?:@\w+)?$~i', $text)) {
@@ -196,7 +196,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
 
 function handle_keyboard_text(int $chat_id, array $user, string $text): bool {
     if (in_array($text, ['🛒 فروشگاه','⚡ خرید سریع','🧾 سفارش‌های من','📦 سفارش‌های من','🧾 سفارش‌ها'], true)) {
-        send_msg($chat_id, '🛍 خرید و «سفارش‌های من» فقط داخل Mini App در دسترس است.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_msg($chat_id, '🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return true;
     }
     $map = [
@@ -307,7 +307,7 @@ function show_bot_credit_topup_invoice(int $chat_id,$message_id,array $t): void 
 
 function handle_user_callback(int $chat_id, $message_id, array $user, string $data): void {
     if ($data === 'u_shop' || $data === 'u_orders' || str_starts_with($data,'shop_') || str_starts_with($data,'order_')) {
-        send_or_edit($chat_id,$message_id,'🛍 خرید و مدیریت سفارش‌ها از داخل ربات غیرفعال شده. برای خرید، پرداخت و مشاهده سفارش‌ها Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_or_edit($chat_id,$message_id,'🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return;
     }
     if ($data === 'u_ref') {
@@ -691,17 +691,17 @@ email2@test.com | pass2</code>", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'prod_toggle_')) { $pid=(int)substr($data,12); db()->prepare('UPDATE products SET is_active=1-is_active WHERE id=?')->execute([$pid]); show_admin_products($chat_id, $message_id); return; }
     if (str_starts_with($data, 'ord_view_')) { show_admin_order($chat_id, $message_id, (int)substr($data,9)); return; }
     if (str_starts_with($data, 'prod_delete_')) { $pid=(int)substr($data,12); db()->prepare('UPDATE products SET is_active=0 WHERE id=?')->execute([$pid]); send_msg($chat_id, "محصول #{$pid} غیرفعال شد.", admin_shop_keyboard()); return; }
-    if (str_starts_with($data, 'ord_archive_')) { $oid=(int)substr($data,12); $o=archive_order($oid); if ($o) send_or_edit($chat_id,$message_id,"📦 سفارش #{$oid} آرشیو شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; }
+    if (str_starts_with($data, 'ord_archive_')) { $oid=(int)substr($data,12); $current=order_by_id($oid); if(!$current){send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard());return;} if(normalize_order_status((string)$current['status'])!=='delivered'&&!is_cleanup_order_status((string)$current['status'])){send_or_edit($chat_id,$message_id,'آرشیو فقط برای سفارش‌های تحویل‌شده، لغو‌شده، رد‌شده یا مرجوع‌شده مجاز است.',admin_order_keyboard($oid));return;} $o=archive_order($oid); if ($o) send_or_edit($chat_id,$message_id,"📦 سفارش #{$oid} آرشیو شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_delete_')) { $oid=(int)substr($data,11); $o=order_by_id($oid); if (!$o) { send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; } if (!is_cleanup_order_status($o['status'])) { send_or_edit($chat_id,$message_id,'حذف کامل فقط برای سفارش‌های لغو/رد/مرجوع‌شده مجاز است.',admin_order_keyboard($oid)); return; } send_or_edit($chat_id,$message_id,"⚠️ سفارش <code>#{$oid}</code> کامل حذف شود؟ این عملیات قابل برگشت نیست.", json_markup(['inline_keyboard'=>[[['text'=>'✅ بله، حذف کامل', 'callback_data'=>'ord_confirm_delete_'.$oid]],[['text'=>'❌ لغو', 'callback_data'=>'ord_view_'.$oid]]]])); return; }
     if (str_starts_with($data, 'ord_confirm_delete_')) { $oid=(int)substr($data,19); if (hard_delete_order($oid,true)) send_or_edit($chat_id,$message_id,"✅ سفارش #{$oid} کامل حذف شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'حذف انجام نشد. فقط سفارش‌های لغو/رد/مرجوع‌شده قابل حذف کامل هستند.',admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_receipt_')) { $oid=(int)substr($data,12);$o=order_by_id($oid);if(!$o||empty($o['receipt_file_id'])){send_or_edit($chat_id,$message_id,'رسیدی برای این سفارش ثبت نشده است.',admin_order_keyboard($oid));return;}$src=resolve_receipt_photo_source((string)$o['receipt_file_id']);$r=$src?tg('sendPhoto',['chat_id'=>$chat_id,'photo'=>$src,'caption'=>'🧾 رسید سفارش #'.$oid,'reply_markup'=>admin_order_keyboard($oid)]):['ok'=>false];if(empty($r['ok']))send_msg($chat_id,'نمایش تصویر رسید ممکن نشد. متن/جزئیات سفارش همچنان در دسترس است.',admin_order_keyboard($oid));return; }
     if (str_starts_with($data, 'ord_review_')) { $oid=(int)substr($data,11); $o=update_order_status($oid, 'reviewing', 'سفارش در حال بررسی است'); if ($o) { send_user_message_by_id((int)$o['user_id'], "👀 سفارش <code>#{$oid}</code> در حال بررسی است.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_paid_')) { $oid=(int)substr($data,9); $o=approve_order_payment($oid,'پرداخت تایید شد','',true); if ($o) { send_user_message_by_id((int)$o['user_id'], "✅ پرداخت سفارش <code>#{$oid}</code> تایید شد.\nبعد از آماده شدن، اطلاعات تحویل برای شما ارسال می‌شود.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_prepare_')) { $oid=(int)substr($data,12); $o=mark_order_preparing($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "📦 سفارش <code>#{$oid}</code> در حال آماده‌سازی است.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
-    if (str_starts_with($data, 'ord_provision_')) { $oid=(int)substr($data,14); try{$r=bluegate_admin_provision_order_now($oid);$msg=($r['state']??'')==='delivered'?'✅ Client ساخته شد و لینک Subscription برای مشتری فعال شد.':'⏳ ساخت سرویس شروع شد و Retry خودکار فعال است.';send_or_edit($chat_id,$message_id,$msg,admin_order_keyboard($oid));}catch(Throwable $e){send_or_edit($chat_id,$message_id,"❌ ساخت از پنل ناموفق بود.\n<code>".h(mb_substr($e->getMessage(),0,700))."</code>",admin_order_keyboard($oid));} return; }
+    if (str_starts_with($data, 'ord_provision_')) { $oid=(int)substr($data,14); try{$r=bluegate_admin_provision_order_now($oid);$msg=($r['state']??'')==='delivered'?'✅ Client ساخته شد و لینک Subscription برای مشتری فعال شد.':'⏳ ساخت سرویس شروع شد و Retry خودکار فعال است.';send_or_edit($chat_id,$message_id,$msg,admin_order_keyboard($oid));}catch(Throwable $e){error_log('[BlueGate admin provisioning order #'.$oid.'] '.$e->getMessage());send_or_edit($chat_id,$message_id,'❌ ساخت سرویس از پنل ناموفق بود. جزئیات فنی در لاگ سرور ثبت شد؛ وضعیت سفارش را دوباره بررسی کن.',admin_order_keyboard($oid));} return; }
     if (str_starts_with($data, 'ord_service_status_')) { $oid=(int)substr($data,19); send_or_edit($chat_id,$message_id,admin_order_service_status_text($oid),admin_order_keyboard($oid)); return; }
     if (str_starts_with($data, 'ord_auto_deliver_')) { $oid=(int)substr($data,17); $o=auto_deliver_order($oid); if ($o) { send_user_message_once((int)$o['user_id'],'order:'.$oid.':delivered',"📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h(order_catalog_display_name($o))."</b>\n\nاطلاعات تحویل:\n<code>".h($o['delivery_text'])."</code>", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } else send_msg($chat_id, 'موجودی آماده برای این سفارش پیدا نشد. از تحویل دستی استفاده کن.', admin_order_keyboard($oid)); return; }
-    if (str_starts_with($data, 'ord_reject_')) { $oid=(int)substr($data,11); $o=reject_order($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "❌ سفارش <code>#{$oid}</code> رد شد. برای پیگیری با پشتیبانی ارتباط بگیر.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
+    if (str_starts_with($data, 'ord_reject_')) { $oid=(int)substr($data,11); $current=order_by_id($oid); if(!$current){send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard());return;} if(!in_array(normalize_order_status((string)$current['status']),['pending_payment','receipt_submitted','reviewing','payment_confirmed','preparing'],true)){send_or_edit($chat_id,$message_id,'رد این سفارش در وضعیت فعلی مجاز نیست.',admin_order_keyboard($oid));return;} $o=reject_order($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "❌ سفارش <code>#{$oid}</code> رد شد. برای پیگیری با پشتیبانی ارتباط بگیر.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_deliver_')) { $oid=(int)substr($data,12); set_step($chat_id, 'admin_deliver_order', (string)$oid); send_msg($chat_id, "📩 متن تحویل سفارش <code>#{$oid}</code> را بفرست.
 مثلاً ایمیل/پسورد، لینک ساب VPN، کد گیفت یا توضیحات تحویل. قالب مناسب محصول خودکار اعمال می‌شود.", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_note_')) { $oid=(int)substr($data,9); set_step($chat_id, 'admin_order_note', (string)$oid); send_msg($chat_id, "📝 یادداشت داخلی سفارش <code>#{$oid}</code> را بفرست. فقط ادمین می‌بیند.", admin_shop_keyboard()); return; }
