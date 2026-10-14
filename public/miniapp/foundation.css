@@ -1,12 +1,9 @@
 /*
- * Mini App UI foundation
- *
- * This file is the stable contract between the base styles and the visual
- * enhancement layers below it. Component-specific rules stay in their
- * existing files; shared tokens and layer boundaries belong here.
+ * Mini App foundation — stable behavior contract for component styles.
+ * Visual tokens are centrally finalized by theme-palette-v1.css.
  */
 :root {
-  --mini-font-family: "Vazirmatn", "Inter", Tahoma, "Segoe UI", sans-serif;
+  --mini-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif;
   --mini-space-page: 14px;
   --mini-space-bottom-nav: 100px;
   --mini-safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -21,39 +18,16 @@
   --mini-z-overlay: 500000;
   --mini-z-feedback: 900000;
 }
-
-html,
-body {
-  touch-action: pan-y;
-}
-
-html {
-  box-sizing: border-box;
-  -webkit-text-size-adjust: 100%;
-}
-
-*, *::before, *::after {
-  box-sizing: inherit;
-}
-
-body {
-  font-family: var(--mini-font-family);
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
+html, body { touch-action: pan-y; }
+html { box-sizing: border-box; -webkit-text-size-adjust: 100%; }
+*, *::before, *::after { box-sizing: inherit; }
+body { font-family: var(--mini-font-family); }
+button, input, select, textarea { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
-    transition-duration: 0.001ms !important;
+    transition-duration: .001ms !important;
   }
 }
