@@ -1,3 +1,10 @@
+## 5.1.35 - Mini App header redesign
+
+- Rebuilt the Mini App header with the BlueGate symbol, clearer greeting/title hierarchy, compact graphite surfaces, and royal-blue accents.
+- Tuned spacing, controls, safe-area offsets, and narrow-screen behavior while preserving existing header IDs, language switcher, notification/auth controls, and navigation hooks.
+- Refreshed Mini App asset cache keys to load the updated markup and styles.
+- Source-level checks only; live Telegram/browser visual regression testing remains outstanding.
+
 ## 5.1.34 - Component accent fallback cleanup
 
 - Removed the final legacy violet fallback values from shared Mini App component-parity rules.
