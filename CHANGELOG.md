@@ -1,3 +1,14 @@
+## 5.1.62 - VPN subscription actions and traffic-expiry redesign
+
+- Rebuilt the subscription-link card as a dark premium panel with a dedicated copy control, clear action hierarchy, and responsive action grid.
+- Fixed QR behavior: QR now opens inside a centered in-app sheet with the actual subscription encoded, a readable URL, and a copy action instead of navigating directly to a QR image endpoint.
+- Added a direct Happ import action using the supported `happ://add/{subscription-url}` deep-link format.
+- Moved service expiry into the traffic ring's information column and removed the separate expiry card to reduce duplicated vertical space.
+- Repositioned and restyled renew/update controls with consistent inline SVG icons; replaced VPN detail-page emoji location/status/action marks with matching vector icons.
+- Preserved service renew/sync API calls, subscription viewing/copying, location list, add-ons, and pending-payment handling.
+- Two review loops: (1) subscription actions, QR/Happ flows, and expiry/traffic grouping; (2) responsive controls, deep-link construction, SVG coverage, cache-busting, and preservation of existing action handlers.
+- Source-level checks only; live Happ app handoff, QR camera scan, and Telegram WebView visual testing remain outstanding.
+
 ## 5.1.61 - Unified VPN order and service detail redesign
 
 - Unified the VPN detail screen opened from My Orders and VPNs under the same renderer class and shared styling layer, keeping only their contextual back navigation and order/payment actions different.
