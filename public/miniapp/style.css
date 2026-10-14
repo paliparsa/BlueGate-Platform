@@ -5304,3 +5304,40 @@ body.order-more-popup-open{overflow:hidden}
 .mini-notification-empty p{max-width:270px;margin:0;color:#929fb4;font-size:12px;line-height:1.9}
 @media(max-width:430px){.mini-notification-feed{gap:11px}.mini-notification-list{gap:8px}.mini-notification-row{grid-template-columns:38px minmax(0,1fr);gap:9px;padding:11px!important;border-radius:15px!important}.mini-notification-icon{width:38px;height:38px;border-radius:12px;font-size:18px}.mini-notification-titleline b{font-size:12.5px}.mini-notification-copy small{font-size:11.5px;line-height:1.75}.mini-notification-empty{padding:23px 14px}}
 @media(prefers-reduced-motion:reduce){.mini-notification-row{transition:none!important}}
+
+
+/* BlueGate language picker v5.1.37 — centered, accessible, monochrome modal */
+body.bg-language-picker-open{overflow:hidden}
+.bg-language-picker{position:fixed;inset:0;z-index:10120;display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;isolation:isolate}
+.bg-language-picker.open{opacity:1;visibility:visible}
+.bg-language-picker-backdrop{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:0;background:rgba(0,0,0,.76);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.bg-language-picker-card{position:relative;z-index:1;width:min(100%,410px);max-height:min(84dvh,620px);overflow:auto;overscroll-behavior:contain;padding:22px;border:1px solid rgba(116,174,255,.2);border-radius:25px;background:linear-gradient(155deg,#11151d 0%,#080a0f 76%);color:#f5f7fb;box-shadow:0 28px 90px rgba(0,0,0,.68),inset 0 1px rgba(255,255,255,.045);transform:translateY(12px) scale(.975);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.bg-language-picker.open .bg-language-picker-card{transform:translateY(0) scale(1)}
+.bg-language-picker-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.bg-language-picker-symbol{width:46px;height:46px;display:grid;place-items:center;border-radius:16px;background:rgba(45,121,230,.13);border:1px solid rgba(89,157,255,.23);color:#79baff}
+.bg-language-picker-symbol svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}
+.bg-language-picker-close{width:38px;height:38px;flex:0 0 38px;padding:0;border-radius:13px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.045);color:#aeb8c8;font-size:25px;font-weight:400;line-height:1}
+.bg-language-picker-eyebrow{margin-bottom:7px;color:#7dbbff;font-size:10px;letter-spacing:1.8px;font-weight:850}
+.bg-language-picker-card h2{font-size:21px;line-height:1.45;font-weight:900;letter-spacing:-.3px}
+.bg-language-picker-card p{margin-top:7px;margin-bottom:20px;color:#909aaa;font-size:13px;line-height:1.8}
+.bg-language-picker-options{display:grid;gap:10px}
+.bg-language-option{width:100%;min-height:76px;display:flex;align-items:center;gap:13px;padding:13px 14px;border:1px solid rgba(255,255,255,.085);border-radius:17px;background:rgba(255,255,255,.027);color:#e7ebf2;text-align:start;transition:border-color .16s ease,background .16s ease,transform .16s ease}
+.bg-language-option:hover{border-color:rgba(108,174,255,.35);background:rgba(255,255,255,.045)}
+.bg-language-option.is-selected{border-color:rgba(72,151,255,.78);background:linear-gradient(100deg,rgba(29,97,183,.19),rgba(255,255,255,.035));box-shadow:inset 0 0 0 1px rgba(72,151,255,.1)}
+.bg-language-option-mark{width:21px;height:21px;flex:0 0 21px;display:grid;place-items:center;border:1.5px solid #586273;border-radius:50%}
+.bg-language-option-mark span{width:9px;height:9px;border-radius:50%;background:transparent}
+.bg-language-option.is-selected .bg-language-option-mark{border-color:#65adff}
+.bg-language-option.is-selected .bg-language-option-mark span{background:#65adff;box-shadow:0 0 12px rgba(101,173,255,.4)}
+.bg-language-option-copy{display:grid;gap:4px;flex:1;min-width:0}
+.bg-language-option-copy strong{font-size:15px;font-weight:850}
+.bg-language-option-copy small{font-size:11px;color:#8d98a9}
+.bg-language-option-code{font-size:11px;font-weight:900;letter-spacing:1px;color:#6f7c8e}
+.bg-language-option.is-selected .bg-language-option-code{color:#8bc2ff}
+.bg-language-picker-actions{display:flex;gap:10px;margin-top:20px}
+.bg-language-picker-actions button{min-height:46px;border-radius:14px;font-size:13px}
+.bg-language-picker-cancel{flex:0 0 auto;padding-inline:17px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.08)!important;color:#bac3d0!important}
+.bg-language-picker-confirm{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;background:#176bd0!important;border:1px solid #287fe7!important;color:white!important;box-shadow:0 8px 22px rgba(13,91,190,.22)}
+.bg-language-picker-confirm:disabled{opacity:.48;box-shadow:none;cursor:default}
+.bg-language-picker-confirm span{font-size:17px}
+@media(max-width:420px){.bg-language-picker{padding:13px}.bg-language-picker-card{padding:19px;border-radius:22px}.bg-language-picker-card h2{font-size:19px}.bg-language-picker-actions{gap:8px}.bg-language-picker-cancel{padding-inline:13px!important}}
+@media(prefers-reduced-motion:reduce){.bg-language-picker,.bg-language-picker-card,.bg-language-option{transition:none!important}}
