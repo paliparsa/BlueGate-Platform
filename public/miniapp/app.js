@@ -1405,7 +1405,7 @@ function orderDetailHtml(o){
     </div>
   ` : '';
 
-  return `<section class="detail-card order-detail-page order-detail-v2">
+  return `<section class="detail-card order-detail-page order-detail-v2 ${isVpnService(o)?'vpn-order-detail':'service-order-detail'}">
     <!-- Top Action Bar -->
     <div class="od-top-bar">
       <button class="od-back-btn" data-order-back>

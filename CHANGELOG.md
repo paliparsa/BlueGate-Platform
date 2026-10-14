@@ -1,3 +1,13 @@
+## 5.1.57 - Non-VPN order payment page redesign
+
+- Added a dedicated payment-page visual layer for non-VPN service orders in My Orders, keeping VPN order/service details explicitly excluded.
+- Clarified payment hierarchy with a restrained dark surface, readable order payment method header, countdown and support notice, balanced payment-method cards, and consistent card/crypto receipt and wallet details.
+- Improved compact mobile layouts, long wallet/address text wrapping, input focus states, disabled feedback, and reduced-motion behavior.
+- Preserved existing payment method visibility, wallet/card/Stars/crypto flows, receipt and TXID submission handlers, expiry rules, support links, and API payloads; only a presentation class was added to distinguish non-VPN order details.
+- Registered the new stylesheet as the final visual layer and in PHP filemtime cache-busting.
+- Two review loops: (1) schematic hierarchy and consistent payment-method grouping; (2) VPN exclusion, narrow-screen overflow, focus/reduced-motion, and preservation of existing payment actions.
+- Source-level validation only; live Telegram WebView payment-flow visual/functional testing remains outstanding.
+
 ## 5.1.56 - My Orders card redesign
 
 - Reworked order cards into a clearer information hierarchy: product/order title and ID, date and payment countdown, emphasized final price, and a dedicated status area.
