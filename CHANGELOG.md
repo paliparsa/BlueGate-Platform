@@ -1,3 +1,11 @@
+## 5.1.43 - Five-tab bottom navigation redesign
+
+- Rebalanced all five bottom tabs into equal-width touch targets with consistent icon and label alignment.
+- Added a restrained active-tab surface, clearer selected-state indicator, and keyboard-visible focus styling.
+- Replaced the support tab emoji with a matching inline SVG icon for a consistent icon system.
+- Improved safe-area spacing, small-screen sizing, reduced-motion behavior, and desktop visibility rules without changing tab identifiers or navigation behavior.
+- Source review completed; final appearance and tap testing in the live Telegram WebView remains outstanding.
+
 ## 5.1.42 - Product card integrity and responsive polish
 
 - Tightened product-card title and price overflow handling to prevent clipped or uneven price rows.
