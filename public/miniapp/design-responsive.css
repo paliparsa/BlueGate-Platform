@@ -412,3 +412,111 @@
 @media(prefers-reduced-motion:reduce){
   #userApp #shopPage .product-tile.product-card-v2{transition:none!important}
 }
+
+
+/* v5.1.46 — product-card redesign, two-pass audit:
+   Pass 1: remove fixed-height clipping and reserve independent corners for controls.
+   Pass 2: responsive sizing, readable price panel, percent-only discount badge. */
+#userApp #shopPage .product-tile.product-card-v2{
+  box-sizing:border-box!important;
+  display:flex!important;flex:0 0 184px!important;
+  width:184px!important;min-width:184px!important;max-width:calc(100vw - 28px)!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  overflow:hidden!important;
+  background:#000!important;color:#fff!important;
+  border:1px solid #292929!important;border-radius:18px!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.34)!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-media{
+  box-sizing:border-box!important;position:relative!important;
+  flex:0 0 auto!important;width:100%!important;height:auto!important;
+  min-height:0!important;max-height:none!important;
+  aspect-ratio:1 / 0.94!important;padding:10px!important;
+  overflow:hidden!important;background:#000!important;border-bottom:1px solid #242424!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-media>img{
+  box-sizing:border-box!important;width:100%!important;height:100%!important;
+  max-height:none!important;object-fit:contain!important;padding:5px!important;background:#000!important;
+}
+#userApp #shopPage .product-card-v2 .discount-badge{
+  position:absolute!important;z-index:6!important;top:9px!important;left:9px!important;right:auto!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:auto!important;min-width:0!important;max-width:calc(100% - 58px)!important;
+  min-height:29px!important;height:auto!important;padding:5px 9px!important;
+  overflow:hidden!important;white-space:nowrap!important;
+  border:1px solid #ff6577!important;border-radius:9px!important;
+  background:#b91c35!important;color:#fff!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.48)!important;
+  font-size:12px!important;font-weight:900!important;line-height:1.2!important;
+}
+#userApp #shopPage .product-card-v2 .discount-badge .disc-val{
+  display:block!important;min-width:0!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+#userApp #shopPage .product-card-v2 .discount-badge .disc-fire{display:none!important}
+#userApp #shopPage .product-card-v2 .wishlist-fab{
+  position:absolute!important;z-index:7!important;top:8px!important;right:8px!important;left:auto!important;
+  display:grid!important;place-items:center!important;
+  width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;
+  padding:0!important;border:1px solid #3a3a3a!important;border-radius:12px!important;
+  background:#111!important;color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.5)!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-open{
+  position:absolute!important;z-index:5!important;left:9px!important;right:auto!important;bottom:9px!important;
+  width:30px!important;height:30px!important;background:#111!important;border:1px solid #363636!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-content{
+  box-sizing:border-box!important;display:flex!important;flex:1 0 auto!important;
+  flex-direction:column!important;gap:10px!important;
+  width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;
+  padding:12px!important;overflow:visible!important;background:#000!important;
+}
+#userApp #shopPage .product-card-v2 .tile-name{
+  display:-webkit-box!important;box-sizing:border-box!important;
+  width:100%!important;min-width:0!important;min-height:0!important;height:auto!important;max-height:3.3em!important;
+  margin:0!important;overflow:hidden!important;color:#fff!important;
+  font-size:13px!important;font-weight:800!important;line-height:1.65!important;
+  text-align:right!important;overflow-wrap:anywhere!important;
+  -webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-price{
+  box-sizing:border-box!important;display:flex!important;flex:0 0 auto!important;
+  flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
+  gap:3px!important;width:100%!important;min-width:0!important;min-height:68px!important;height:auto!important;max-height:none!important;
+  margin-top:auto!important;padding:9px 10px!important;overflow:visible!important;
+  border:1px solid #343434!important;border-radius:12px!important;background:#111!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-price>span{
+  display:block!important;min-width:0!important;color:#b5b5b5!important;
+  font-size:10px!important;font-weight:650!important;line-height:1.35!important;text-align:right!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-price>strong{
+  display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;
+  color:#fff!important;font-size:clamp(15px,4.2vw,18px)!important;font-weight:900!important;
+  line-height:1.45!important;text-align:right!important;white-space:normal!important;
+  overflow-wrap:anywhere!important;word-break:normal!important;font-variant-numeric:tabular-nums;
+}
+#userApp #shopPage .product-card-v2.discount-tile{border-color:#57232c!important}
+#userApp #shopPage .product-card-v2 .wishlist-fab:focus-visible,
+#userApp #shopPage .product-card-v2 .product-card-open:focus-visible{outline:2px solid #fff!important;outline-offset:2px!important}
+#shopSections .catalog-grid-view .product-grid-wrap{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-items:stretch!important;gap:12px!important;overflow:visible!important;
+}
+#shopSections .catalog-grid-view .product-grid-wrap>.catalog-tile{
+  flex:initial!important;width:100%!important;min-width:0!important;max-width:100%!important;
+}
+@media(max-width:390px){
+  #userApp #shopPage .product-tile.product-card-v2{flex-basis:calc((100vw - 42px)/2)!important;width:calc((100vw - 42px)/2)!important;min-width:0!important}
+  #userApp #shopPage .product-card-v2 .product-card-media{padding:7px!important;aspect-ratio:1/0.92!important}
+  #userApp #shopPage .product-card-v2 .product-card-content{padding:9px!important;gap:8px!important}
+  #userApp #shopPage .product-card-v2 .product-card-price{min-height:62px!important;padding:8px!important}
+  #userApp #shopPage .product-card-v2 .wishlist-fab{top:7px!important;right:7px!important;width:33px!important;height:33px!important;min-width:33px!important;min-height:33px!important}
+  #userApp #shopPage .product-card-v2 .discount-badge{top:7px!important;left:7px!important;max-width:calc(100% - 51px)!important;padding:5px 7px!important;font-size:11px!important}
+}
+@media(min-width:760px){
+  #userApp #shopPage .product-tile.product-card-v2{width:100%!important;min-width:0!important;flex-basis:auto!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #userApp #shopPage .product-tile.product-card-v2,#userApp #shopPage .product-card-v2 *{animation:none!important;transition:none!important}
+}

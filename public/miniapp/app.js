@@ -1726,7 +1726,7 @@ function productDiscountInfo(p){
 }
 function productDiscountBadgeHtml(p){
   const d=productDiscountInfo(p); if(!d)return '';
-  const label=d.kind==='variant'&&d.title?`${d.percent}٪ · ${d.title}`:`${d.percent}٪ تخفیف`;
+  const label=`${nf(d.percent)}٪`;
   return `<span class="discount-badge discount-badge-exact"><span class="disc-val">${esc(label)}</span><span class="disc-fire">🔥</span></span>`;
 }
 function specialDiscountsBannerHtml(){
