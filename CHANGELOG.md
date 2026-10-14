@@ -1,3 +1,10 @@
+## 5.1.77 - Mini App-wide design rhythm unification
+
+- Added a final shared styling layer to align customer-facing typography, heading hierarchy, control sizing, card radii, border treatment, section spacing, and narrow-screen sizing across the Mini App.
+- Preserved feature-specific product artwork, wheel layout, and modal internals; the goal is a consistent design system, not making every page identical.
+- Loaded the shared layer through the already-registered shared hero stylesheet, after the existing feature styles.
+- Validation: source-level checks only; live Telegram WebView rendering still needs visual verification.
+
 ## 5.1.76 - Shared customer hero surfaces and ticket header fix
 
 - Fixed the support-center hero layout by placing its description and action buttons in distinct rows, preventing the description from appearing underneath the new-ticket button.
