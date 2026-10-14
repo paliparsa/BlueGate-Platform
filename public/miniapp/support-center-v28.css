@@ -24,7 +24,7 @@
 .support-center-v2 .support-ticket-search input{flex:1;min-width:0;width:100%;height:100%;padding:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:12px}
 .support-center-v2 .support-ticket-search input::placeholder{color:var(--muted);opacity:.85}
 .support-center-v2 .support-ticket-search:focus-within{border-color:color-mix(in srgb,var(--accent) 65%,var(--line));box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 10%,transparent)}
-.support-center-v2 .support-ticket-search kbd{display:grid;place-items:center;min-width:22px;height:22px;border:1px solid var(--line);border-radius:6px;font:11px inherit;background:var(--surface);cursor:pointer}
+.support-center-v2 .support-ticket-search kbd{display:grid;place-items:center;min-width:22px;height:22px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:11px;background:var(--surface);cursor:pointer}
 .support-center-v2 .support-ticket-filters{display:flex;align-items:center;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:1px 0 3px;scrollbar-width:none}
 .support-center-v2 .support-ticket-filters::-webkit-scrollbar{display:none}
 .support-center-v2 .support-ticket-filter{flex:0 0 auto;min-height:34px;padding:7px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:background .16s,border-color .16s,color .16s}
