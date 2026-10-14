@@ -6,7 +6,7 @@
 - Refined responsive card hierarchy, invite-code/link presentation, and share sheet layout using a new scoped stylesheet registered in the cache-busted asset manifest.
 - Preserved server-backed mission rewards, spin endpoint, referral code/link, referral tree, QR, and account/wallet entry routes.
 - Two review loops: (1) copy/content, icon consistency, hierarchy and responsive layout; (2) event IDs, API flow, empty states, clipboard/share handling, CSS registration, and version consistency.
-- Automated repository lint/syntax checks pending; live Telegram WebView and real reward/referral flows must still be exercised.
+- Automated repository lint/syntax checks passed; live Telegram WebView and real reward/referral flows still need hands-on verification.
 
 ## 5.1.69 - Support center redesign
 
