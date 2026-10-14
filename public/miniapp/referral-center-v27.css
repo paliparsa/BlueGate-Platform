@@ -1,0 +1,40 @@
+/* v5.1.68 — referral center polish, shared BlueGate sheet tokens */
+.referral-center-v27{gap:12px}
+.referral-center-v27 .referral-top-v27{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden;padding:17px;border:1px solid color-mix(in srgb,var(--primary) 32%,var(--border));border-radius:var(--r-xl,20px);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 15%,var(--card)),var(--card) 76%);box-shadow:var(--elev-sm,0 4px 16px rgba(0,0,0,.18))}
+.referral-center-v27 .referral-top-v27:after{content:"";position:absolute;width:125px;height:125px;left:-44px;bottom:-80px;border:1px solid color-mix(in srgb,var(--primary) 25%,transparent);border-radius:50%;pointer-events:none}
+.referral-center-v27 .referral-top-copy-v27{min-width:0;position:relative;z-index:1}
+.referral-center-v27 .referral-top-copy-v27>small{font-size:9px;letter-spacing:.12em;color:var(--primary);font-weight:900}
+.referral-center-v27 .referral-top-copy-v27 h2{margin:5px 0;font-size:20px;font-weight:900;line-height:1.5;letter-spacing:-.025em}
+.referral-center-v27 .referral-top-copy-v27 p{margin:0;max-width:38ch;font-size:11px;line-height:1.9;color:var(--muted)}
+.referral-center-v27 .referral-top-icon-v27{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border:1px solid color-mix(in srgb,var(--primary) 28%,var(--border));border-radius:15px;background:var(--surface,var(--bg));font-size:25px;font-weight:900;color:var(--primary)}
+.referral-center-v27 .referral-balance-v27{padding:15px 17px;border:1px solid var(--border);border-radius:var(--r-xl,20px);background:var(--card);box-shadow:var(--elev-sm,0 4px 16px rgba(0,0,0,.15))}
+.referral-center-v27 .referral-balance-label-v27{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:750;color:var(--muted)}
+.referral-center-v27 .referral-live-dot-v27{width:6px;height:6px;border-radius:50%;background:var(--success,#43bd96);box-shadow:0 0 0 4px color-mix(in srgb,var(--success,#43bd96) 12%,transparent)}
+.referral-center-v27 .referral-balance-v27>strong{display:block;margin:5px 0;font-size:clamp(24px,6vw,31px);line-height:1.4;font-weight:950;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.referral-center-v27 .referral-balance-v27>p{margin:0;font-size:11px;line-height:1.85;color:var(--muted)}
+.referral-center-v27 .referral-stats-v27{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.referral-center-v27 .referral-stats-v27>article{display:flex;align-items:center;gap:9px;min-width:0;padding:11px;border:1px solid var(--border);border-radius:15px;background:var(--card);box-shadow:var(--elev-sm,0 4px 16px rgba(0,0,0,.12))}
+.referral-center-v27 .referral-stat-icon-v27{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border:1px solid var(--border);border-radius:11px;background:var(--surface,var(--bg));font-size:15px;color:var(--primary)}
+.referral-center-v27 .referral-stats-v27>article>div{display:grid;gap:3px;min-width:0}
+.referral-center-v27 .referral-stats-v27 small{font-size:10px;line-height:1.6;color:var(--muted)}
+.referral-center-v27 .referral-stats-v27 b{font-size:15px;line-height:1.5;font-weight:900;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.referral-center-v27 .referral-invite-card-v27{padding:14px;border-radius:var(--r-xl,20px);background:var(--card);box-shadow:var(--elev-sm,0 4px 16px rgba(0,0,0,.14))}
+.referral-center-v27 .referral-card-head{margin-bottom:11px}
+.referral-center-v27 .referral-card-head h3{font-size:14px;font-weight:900}
+.referral-center-v27 .referral-url-v27{display:grid;gap:6px;margin-top:9px;padding:11px 12px;border:1px solid var(--border);border-radius:13px;background:var(--surface,var(--bg));min-width:0}
+.referral-center-v27 .referral-url-v27 small{font-size:10px;color:var(--muted);font-weight:750}
+.referral-center-v27 .referral-url-v27 span{display:block;min-width:0;overflow-wrap:anywhere;word-break:break-word;font-size:11px;line-height:1.75;color:var(--text);text-align:left}
+.referral-center-v27 .ref-link-mini-v2{border-radius:14px}
+.referral-center-v27 .ref-mini-actions-v2{gap:7px}
+.referral-center-v27 .ref-mini-actions-v2 button{min-height:43px;border-radius:12px;font-weight:850}
+.referral-center-v27 .ref-custom-mini-v2{margin-top:12px}
+.referral-center-v27 .referral-tree-card{border-radius:var(--r-xl,20px);background:var(--card);box-shadow:var(--elev-sm,0 4px 16px rgba(0,0,0,.12))}
+.referral-center-v27 #referralTreePlaceholder .referral-tree-head{margin-bottom:4px}
+.referral-center-v27 .referral-node{gap:9px}
+.referral-center-v27 .referral-node-avatar{border-radius:12px}
+#appSheet.app-sheet-fullscreen:has(.referral-center-v27) .app-sheet-panel{border-radius:var(--r-xxl,24px) var(--r-xxl,24px) 0 0}
+#appSheet.app-sheet-fullscreen:has(.referral-center-v27) .app-sheet-header{padding-bottom:12px}
+#appSheet.app-sheet-fullscreen:has(.referral-center-v27) .app-sheet-body{padding-top:0}
+@media(min-width:640px){.referral-center-v27 .referral-stats-v27{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:390px){.referral-center-v27 .referral-top-v27{padding:14px}.referral-center-v27 .referral-top-copy-v27 h2{font-size:18px}.referral-center-v27 .referral-top-icon-v27{flex-basis:40px;width:40px;height:40px}.referral-center-v27 .referral-stats-v27{gap:7px}.referral-center-v27 .referral-stats-v27>article{padding:9px;gap:7px}.referral-center-v27 .referral-stat-icon-v27{flex-basis:30px;width:30px;height:30px}.referral-center-v27 .referral-stats-v27 b{font-size:14px}.referral-center-v27 .ref-mini-actions-v2{grid-template-columns:1fr 1fr}.referral-center-v27 .ref-mini-actions-v2 button:last-child{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){.referral-center-v27 *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
