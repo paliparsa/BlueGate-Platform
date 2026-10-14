@@ -4442,12 +4442,7 @@ html.mini-service-open .bottom-nav,html.mini-service-open .topbar,html.mini-serv
    BlueGate v2.5.1 — Readability & Typography Accessibility Pass
    Mini App final layer: larger text, safer inputs, consistent rhythm.
    ================================================================ */
-:root{
-  --bg-font-body:17px;
-  --bg-font-control:16px;
-  --bg-font-secondary:15px;
-  --bg-font-micro:14px;
-}
+
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-size:var(--bg-font-body);line-height:1.72}
 button,.primary,.secondary,.danger,.success,.warning,input,select,textarea{font-size:var(--bg-font-control)!important;line-height:1.45}
@@ -4463,7 +4458,7 @@ small{font-size:var(--bg-font-micro)!important;line-height:1.65}
   font-size:14px!important;
 }
 @media(max-width:430px){
-  :root{--bg-font-body:16px;--bg-font-control:16px;--bg-font-secondary:15px;--bg-font-micro:14px}
+  
   body{line-height:1.75}
   .bottom-nav button{font-size:14px!important}
 }
