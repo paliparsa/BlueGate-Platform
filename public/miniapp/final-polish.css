@@ -1,7 +1,5 @@
 /* BlueGate v1.8 Final Responsive & Motion Polish */
-:root{--vy-motion-fast:160ms;--vy-motion:220ms;--vy-motion-slow:320ms}
 html,body{max-width:100%;overflow-x:hidden}
-*{box-sizing:border-box}
 button,input,select,textarea{max-width:100%}
 .admin-card,.wallet-card,.section-row,.infra-provider-card,.catalog-mobile-service-card{min-width:0;overflow:hidden}
 .admin-actions,.infra-provider-actions,.catalog-mobile-actions,.dialog-actions,.app-sheet-footer{display:flex;flex-wrap:wrap;gap:8px;min-width:0}

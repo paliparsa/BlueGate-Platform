@@ -1,5 +1,5 @@
 /* BlueGate Mini App — structural brand helpers only.
-   Palette and component visuals are owned by theme-palette-v1.css. */
+   Palette and shared component visuals are owned by design-tokens.css and the design-*.css layers. */
 .brand-box {
   display: flex !important;
   align-items: center !important;

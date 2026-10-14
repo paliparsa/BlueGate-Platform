@@ -1,6 +1,6 @@
 /*
  * Mini App foundation — stable behavior contract for component styles.
- * Visual tokens are centrally finalized by theme-palette-v1.css.
+ * Visual tokens are owned by design-tokens.css; shared canvas and typography are owned by design-base.css.
  */
 :root {
   --mini-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif;

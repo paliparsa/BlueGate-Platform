@@ -1,9 +1,27 @@
-/* BlueGate Mini App design base — authoritative canvas, typography, and focus */
-html{background:#050608!important;color-scheme:dark}
-body{background:#050608!important;color:#f5f7fb;font-family:var(--mini-font-family);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-#userApp,#adminApp,.app-shell,.page,#adminContent,#homePage,#shopPage,#ordersPage,#walletPage,#supportPage,#profilePage,#accountPage,#referralPage,#vipPage,#creditPage{background-color:var(--bg)!important;background-image:none!important;color:var(--text)}
+/* BlueGate Mini App base layer — authoritative canvas, typography, and focus */
+*{box-sizing:border-box}
+html{
+  margin:0!important;padding-left:0!important;padding-right:0!important;
+  border:0!important;outline:0!important;box-shadow:none!important;
+  background:var(--bg)!important;background-image:none!important;color-scheme:dark;
+}
+body{
+  margin:0!important;padding-top:0!important;
+  padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;
+  border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;
+  background:var(--bg)!important;background-image:none!important;color:var(--text)!important;
+  font-family:var(--mini-font-family);letter-spacing:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+body::before,body::after{background:none!important;animation:none!important}
+#userApp,#adminApp,.app-shell,.page,#adminContent,#homePage,#shopPage,#ordersPage,#walletPage,#supportPage,#profilePage,#accountPage,#referralPage,#vipPage,#creditPage{
+  background-color:var(--bg)!important;background-image:none!important;color:var(--text);
+}
+#userApp,#adminApp,.app-shell{outline:0!important;box-shadow:none!important}
+#userApp,#adminApp{border-radius:0!important}
 #userApp :is(h1,h2,h3,h4,h5,h6,.section-title h2,.product-title),#adminApp :is(h1,h2,h3,h4,h5,h6,.section-title h2,.product-title){color:var(--text)}
 #userApp :is(p,.muted,.text-muted,.subtle,.helper-text),#adminApp :is(p,.muted,.text-muted,.subtle,.helper-text){color:var(--muted)}
+#userApp,#adminApp,#userApp :not(i):not(svg):not(path):not(code):not(pre):not(kbd):not(samp):not(.fa):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-symbols-outlined):not(.iconfont):not([data-icon-font]),#adminApp :not(i):not(svg):not(path):not(code):not(pre):not(kbd):not(samp):not(.fa):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-symbols-outlined):not(.iconfont):not([data-icon-font]){font-family:var(--mini-font-family)!important}
+#userApp :is(code,pre,kbd,samp,.bank-card-number,.mono,.monospace),#adminApp :is(code,pre,kbd,samp,.bank-card-number,.mono,.monospace){font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important}
 a{color:#8ba5ff;text-decoration-color:rgba(139,165,255,.35)}
 :where(button,input,select,textarea,[tabindex]):focus-visible{outline:0;box-shadow:var(--focus-ring)}
 ::selection{background:rgba(49,94,251,.34);color:#fff}

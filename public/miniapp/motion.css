@@ -1,5 +1,4 @@
 /* BlueGate Mini App Motion System v4.2.0 — additive, layout-safe */
-:root{--bgm-fast:150ms;--bgm-med:240ms;--bgm-ease:cubic-bezier(.2,.75,.25,1)}
 body::before{content:"";position:fixed;z-index:-3;inset:-24vmax;pointer-events:none;background: var(--bg);filter:blur(34px);opacity:.34;animation:bgmAmbient 20s ease-in-out infinite alternate}
 @keyframes bgmAmbient{to{transform:translate3d(1.3%,-1%,0) scale(1.035)}}
 

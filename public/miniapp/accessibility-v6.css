@@ -1,9 +1,4 @@
 /* Phase 6: Persian/RTL typography and keyboard/touch accessibility. */
-:root {
-  --mini-control-size: 44px;
-  --mini-focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 32%, transparent);
-}
-
 html[dir="rtl"] {
   text-align: right;
 }

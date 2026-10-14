@@ -1,19 +1,39 @@
 /* BlueGate Mini App design tokens — royal blue / deep black v1 */
 :root{
   color-scheme:dark;
-  --bg:#050608;--bg2:#080a0e;--surface:#101217;--surface2:#151922;--surface3:#1b202b;
-  --card:#101217;--card2:#151922;--line:rgba(255,255,255,.085);--line-strong:rgba(255,255,255,.14);
-  --text:#f5f7fb;--muted:#9ba3b2;--muted-2:#c1c7d1;
+  --bg:#030303;--bg2:#050505;--surface:#090909;--surface2:#0d0d0d;--surface3:#121212;
+  --card:#090909;--card2:#0d0d0d;--line:#1b1b1b;--line-strong:#292929;
+  --text:#f5f5f5;--muted:#9b9b9b;--muted-2:#c6c6c6;
   --accent:#315efb;--primary:#315efb;--secondary:#315efb;--accent-soft:rgba(49,94,251,.14);
   --success:#32c997;--warning:#f3bd4f;--danger:#ff647c;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-xxl:24px;--r-pill:999px;
   --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;
   --elev-sm:0 4px 16px rgba(0,0,0,.22);--elev-md:0 12px 32px rgba(0,0,0,.34);--elev-lg:0 24px 64px rgba(0,0,0,.52);
   --focus-ring:0 0 0 3px rgba(49,94,251,.3);
-  --mini-font-family:"Yekan","Inter","Vazirmatn",Tahoma,Arial,sans-serif;
+  --mini-font-family:"Yekan","Yekan Bakh","Vazirmatn",Tahoma,Arial,sans-serif;
   --bgds-bg:var(--bg);--bgds-bg-2:var(--bg2);--bgds-surface-1:var(--surface);--bgds-surface-2:var(--surface2);--bgds-surface-3:var(--surface3);
   --bgds-text:var(--text);--bgds-muted:var(--muted);--bgds-muted-2:var(--muted-2);--bgds-border:var(--line);--bgds-border-strong:var(--line-strong);
   --bgds-primary:var(--accent);--bgds-primary-soft:#7694ff;--bgds-purple:var(--accent);
   --bgds-r-1:var(--r-sm);--bgds-r-2:var(--r-md);--bgds-r-3:var(--r-lg);--bgds-r-4:var(--r-lg);--bgds-r-5:var(--r-xl);--bgds-r-6:var(--r-xxl);
   --bgds-shadow-card:var(--elev-sm);--bgds-shadow-float:var(--elev-lg);--bgds-focus:var(--focus-ring);
+  --mini-canvas:#030303;--mini-surface:#090909;--mini-surface-raised:#0d0d0d;--mini-payment-surface:#0a0a0a;
+  --mini-control-size:44px;
+  --mini-overlay-gutter:max(12px,env(safe-area-inset-left,0px));
+  --mini-overlay-gutter-right:max(12px,env(safe-area-inset-right,0px));
+  --mini-overlay-top:max(12px,env(safe-area-inset-top,0px));
+  --mini-overlay-bottom:max(12px,env(safe-area-inset-bottom,0px));
+  --bgm-fast:150ms;--bgm-med:240ms;--bgm-ease:cubic-bezier(.2,.75,.25,1);
+  --vy-motion-fast:160ms;--vy-motion:220ms;--vy-motion-slow:320ms;
+  --mini-focus-ring:0 0 0 3px color-mix(in srgb,var(--accent) 32%,transparent);
+  --bg-font-body:16px;--bg-font-control:16px;--bg-font-secondary:15px;--bg-font-micro:14px;
+
+  /* Shared legacy aliases retained for existing feature rules during migration. */
+  --shadow:var(--elev-md);
+  --ease-ios:cubic-bezier(0.2,0.8,0.2,1);
+  --ease-spring:cubic-bezier(0.175,0.885,0.32,1.275);
+  /* Unified UI spacing, timing and surfaces: canonical definitions. */
+  --u-space-1:4px;--u-space-2:8px;--u-space-3:12px;--u-space-4:16px;--u-space-5:20px;--u-space-6:24px;--u-space-8:32px;
+  --u-r-sm:var(--r-sm);--u-r-md:var(--r-md);--u-r-lg:var(--r-lg);--u-r-xl:var(--r-xl);
+  --u-fast:160ms;--u-standard:220ms;--u-sheet:280ms;
+  --u-surface:#101217;--u-surface-2:#151922;--u-border:rgba(255,255,255,.085);
 }
