@@ -1,3 +1,11 @@
+## 5.1.45 - Product card black theme and price clarity
+
+- Corrected product card surfaces to true black, including the image frame and content area.
+- Rebuilt the price panel as a dedicated high-contrast block with a larger, bold price on its own line so it remains obvious on narrow screens.
+- Preserved the existing image frame ratio (`1 / 0.88`), `object-fit: contain`, inner image padding, card sizing behavior, product data, discount badges, wishlist, and product preview hooks.
+- Loop 2 regression checks verify the image geometry and existing interaction markup remain unchanged.
+- Live Telegram WebView visual/tap testing remains outstanding.
+
 ## 5.1.44 - Product cards visual rebuild
 
 - Rebuilt product-card surfaces with a cleaner deep-navy treatment, quieter borders, clearer image framing, and stronger price hierarchy.
