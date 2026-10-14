@@ -1,0 +1,18 @@
+/* BlueGate Web controls — shared site and admin control language */
+:where(.bg-admin-shell,.bg-admin-sidebar,.bg-admin-main,.bg-admin-card,.admin-page,#memberContent){
+  --admin-accent:#315efb;--admin-surface:#101217;--admin-surface-2:#080a0e;--admin-line:rgba(255,255,255,.085);--admin-muted:#9ba3b2
+}
+:where(.bg-admin-shell .bg-admin-card,.bg-admin-shell .admin-card,.bg-admin-shell .stat-card,.bg-admin-shell .panel,.bg-admin-shell .card,.bg-admin-shell .admin-panel){
+  background:var(--surface);background-image:none;border:1px solid var(--line);border-radius:16px;box-shadow:none;color:var(--text)
+}
+:where(.bg-admin-shell button,.bg-admin-shell .btn,.bg-admin-shell .button,.bg-admin-shell .admin-btn,#memberContent .bg-admin-shell button){
+  border-radius:12px;transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease
+}
+:where(.bg-admin-shell .btn-primary,.bg-admin-shell .primary,.bg-admin-shell button.primary,.bg-admin-shell .admin-btn-primary){
+  background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:none
+}
+:where(.bg-admin-shell input,.bg-admin-shell select,.bg-admin-shell textarea,.bg-admin-shell .form-control){
+  background:#0b0d12;color:var(--text);border-color:var(--line-strong);border-radius:12px
+}
+:where(.bg-admin-shell input:focus,.bg-admin-shell select:focus,.bg-admin-shell textarea:focus){border-color:var(--accent);box-shadow:0 0 0 3px rgba(49,94,251,.3);outline:0}
+:where(.bg-admin-shell .active,.bg-admin-shell [aria-current=page]){--admin-accent:#315efb}
