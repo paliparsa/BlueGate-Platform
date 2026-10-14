@@ -1,3 +1,11 @@
+## 5.1.42 - Product card integrity and responsive polish
+
+- Tightened product-card title and price overflow handling to prevent clipped or uneven price rows.
+- Standardized discount badge contrast, spacing, and truncation so badges remain legible beside wishlist controls.
+- Added consistent focus-visible affordances for wishlist/open controls and subtle featured-state border support.
+- Kept the existing product data, discount calculation, favorite state behavior, and purchase flow unchanged.
+- Source-level review completed; live Telegram WebView visual and interaction testing remains outstanding.
+
 ## 5.1.41 - Premium product cards redesign
 
 - Rebuilt storefront product cards with a balanced media area, dark graphite/blue glass styling, clearer two-line titles, and a consistent price footer.
