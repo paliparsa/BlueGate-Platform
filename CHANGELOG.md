@@ -1,3 +1,10 @@
+## 5.1.36 - Mini App notification popup redesign
+
+- Redesigned notification rows with clearer title/body/time hierarchy, distinct unread markers, and type-aware icon surfaces.
+- Improved empty state, count summary, text wrapping, tap feedback, and compact mobile layout.
+- Preserved the existing notification read API, badge updates, and action routing to related orders/sections.
+- Refreshed Mini App asset cache keys. Source-level checks only; live Telegram/browser visual regression testing remains outstanding.
+
 ## 5.1.35 - Mini App header redesign
 
 - Rebuilt the Mini App header with the BlueGate symbol, clearer greeting/title hierarchy, compact graphite surfaces, and royal-blue accents.
