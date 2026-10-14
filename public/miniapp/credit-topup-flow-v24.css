@@ -1,0 +1,64 @@
+/* BlueGate v5.1.64 — credit top-up journey redesign.
+   Presentation-only layer: existing markup, API calls and payment handlers remain unchanged. */
+#miniCreditTopupSheet{--topup-bg:#070B12;--topup-card:#101A29;--topup-line:#26364B;--topup-muted:#91A2B8;--topup-text:#F2F6FC;--topup-blue:#4AA8FF;--topup-cyan:#6DD8D0;color:var(--topup-text);isolation:isolate}
+#miniCreditTopupSheet .mini-credit-topup-backdrop{background:rgba(1,5,12,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#miniCreditTopupSheet .mini-credit-topup-panel{inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(520px,calc(100vw - 28px));max-height:min(82dvh,760px);overflow:auto;overscroll-behavior:contain;padding:0 20px calc(20px + env(safe-area-inset-bottom));border:1px solid #26364b;border-radius:24px;background:radial-gradient(120% 70% at 100% 0%,rgba(39,113,186,.13),transparent 55%),var(--topup-bg);box-shadow:0 28px 100px rgba(0,0,0,.58);scrollbar-width:thin;scrollbar-color:#2a405b transparent;animation:creditTopupIn .2s ease-out both}
+#miniCreditTopupSheet .mini-credit-sheet-handle{width:42px;height:4px;background:#33465d;margin:12px auto 15px}
+#miniCreditTopupSheet .mini-credit-topup-panel>header{position:sticky;top:0;z-index:2;align-items:center;margin:0 -2px 18px;padding:4px 2px 15px;background:linear-gradient(var(--topup-bg) 78%,rgba(7,11,18,0));border-bottom:1px solid rgba(67,91,120,.32)}
+#miniCreditTopupSheet .mini-credit-topup-panel>header small{display:inline-flex;align-items:center;gap:7px;color:#79C5FF;font-size:10px;letter-spacing:.13em;font-weight:900}
+#miniCreditTopupSheet .mini-credit-topup-panel>header small:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--topup-cyan);box-shadow:0 0 12px #6dd8d077}
+#miniCreditTopupSheet .mini-credit-topup-panel>header h3{font-size:21px;line-height:1.45;font-weight:850;letter-spacing:-.025em;margin:4px 0 3px;color:var(--topup-text)}
+#miniCreditTopupSheet .mini-credit-topup-panel>header p{margin:0;font-size:12px;line-height:1.8;color:var(--topup-muted);max-width:390px}
+#miniCreditTopupSheet .mini-credit-topup-panel>header .ghost{flex:0 0 38px;width:38px;height:38px;min-height:38px;padding:0;display:grid;place-items:center;border:1px solid var(--topup-line);border-radius:12px;background:#0d1522;color:#b8c8dc;font-size:17px}
+#miniCreditTopupSheet .mini-credit-topup-body{gap:13px;min-width:0}
+#miniCreditTopupSheet .mini-topup-balance,#miniCreditTopupSheet .mini-topup-after{gap:12px;padding:15px 16px;border:1px solid var(--topup-line);border-radius:16px;background:linear-gradient(120deg,rgba(27,49,76,.78),rgba(13,22,35,.94));min-width:0}
+#miniCreditTopupSheet .mini-topup-balance{position:relative;overflow:hidden}
+#miniCreditTopupSheet .mini-topup-balance:after{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(var(--topup-blue),var(--topup-cyan))}
+#miniCreditTopupSheet .mini-topup-balance span,#miniCreditTopupSheet .mini-topup-after span{font-size:12px;line-height:1.7;color:#a6b8ce}
+#miniCreditTopupSheet .mini-topup-balance b{font-size:clamp(18px,5vw,24px);line-height:1.35;font-weight:900;color:#f7fbff;direction:ltr;unicode-bidi:plaintext;overflow-wrap:anywhere}
+#miniCreditTopupSheet .mini-topup-after{background:#0c1623;border-color:#23374d}
+#miniCreditTopupSheet .mini-topup-after b{font-size:15px;font-weight:850;color:#8ed6ff;overflow-wrap:anywhere}
+#miniCreditTopupSheet .mini-topup-presets{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#miniCreditTopupSheet .mini-topup-presets button{min-width:0;min-height:48px;padding:8px 5px;border:1px solid #26384f;border-radius:13px;background:linear-gradient(145deg,#111c2b,#0c1420);color:#cbd8e8;font-size:13px;font-weight:800;transition:border-color .16s,background .16s,transform .16s}
+#miniCreditTopupSheet .mini-topup-presets button.active{border-color:#459ff0;background:linear-gradient(145deg,#173653,#10243a);color:#91d1ff;box-shadow:inset 0 0 0 1px #459ff022}
+#miniCreditTopupSheet .mini-topup-custom,#miniCreditTopupSheet .mini-topup-file{display:grid;gap:8px;color:#b9c7d8;font-size:12px;font-weight:750}
+#miniCreditTopupSheet .mini-topup-custom input,#miniCreditTopupSheet .mini-topup-custom textarea,#miniCreditTopupSheet .mini-topup-file input{width:100%;min-height:46px;padding:12px 13px;border:1px solid #2a3c52;border-radius:13px;background:#080f19;color:#f2f7ff;outline:none;box-shadow:none;line-height:1.6}
+#miniCreditTopupSheet .mini-topup-custom textarea{min-height:78px;resize:vertical}
+#miniCreditTopupSheet .mini-topup-custom input:focus,#miniCreditTopupSheet .mini-topup-custom textarea:focus,#miniCreditTopupSheet .mini-topup-file input:focus{border-color:#4aa8ff;box-shadow:0 0 0 3px #4aa8ff20}
+#miniCreditTopupSheet .mini-topup-limit{margin:0;color:#8295ad;font-size:11px;line-height:1.8}
+#miniCreditTopupSheet .mini-credit-topup-body>.primary.wide,#miniCreditTopupSheet .mini-credit-topup-body>button.primary.wide{min-height:49px;border:1px solid #5aafff;border-radius:14px;background:linear-gradient(110deg,#2379cb,#248ed8 60%,#237fb8);color:#fff;font-size:14px;font-weight:850;box-shadow:0 8px 24px #1476c525}
+#miniCreditTopupSheet .mini-credit-topup-body>.ghost.wide,#miniCreditTopupSheet .mini-credit-topup-body>button.ghost.wide{min-height:43px;border:1px solid #273a50;border-radius:13px;background:#0c1420;color:#afc0d4;font-weight:750}
+#miniCreditTopupSheet .mini-topup-method-list{display:grid;gap:10px}
+#miniCreditTopupSheet .mini-topup-method-list>button{grid-template-columns:46px minmax(0,1fr) 18px;gap:12px;min-height:76px;padding:13px;border:1px solid #26384e;border-radius:16px;background:linear-gradient(120deg,#111d2c,#0b131f);color:var(--topup-text);transition:border-color .16s,background .16s,transform .16s;min-width:0}
+#miniCreditTopupSheet .mini-topup-method-list>button>span{width:44px;height:44px;border:1px solid #2b4159;border-radius:13px;background:#14253a;font-size:0}
+#miniCreditTopupSheet .mini-topup-method-list>button>span:after{font-size:21px;line-height:1}
+#miniCreditTopupSheet .mini-topup-method-list>button[data-mini-topup-method="card"]>span:after{content:"";width:23px;height:16px;border:2px solid #82caff;border-radius:4px;background:linear-gradient(#82caff 0 3px,transparent 3px);display:block}
+#miniCreditTopupSheet .mini-topup-method-list>button[data-mini-topup-method="stars"]>span:after{content:"✦";color:#ffd878;font-size:28px}
+#miniCreditTopupSheet .mini-topup-method-list>button[data-mini-topup-method="crypto"]>span:after{content:"◇";color:#81dcd1;font-size:28px}
+#miniCreditTopupSheet .mini-topup-method-list b{display:block;font-size:14px;line-height:1.7;font-weight:850;color:#edf5ff}
+#miniCreditTopupSheet .mini-topup-method-list small{font-size:11px;line-height:1.7;color:#92a6bd;margin-top:2px}
+#miniCreditTopupSheet .mini-topup-method-list i{font-size:20px;color:#80bff0}
+#miniCreditTopupSheet .mini-topup-card-list{display:grid;gap:9px}
+#miniCreditTopupSheet .mini-topup-bank{width:100%;padding:14px 15px;border:1px solid #293b51;border-radius:15px;background:linear-gradient(120deg,#111c2b,#0b131f);color:#eaf3ff;text-align:start;transition:border-color .16s,background .16s;min-width:0}
+#miniCreditTopupSheet .mini-topup-bank.active{border-color:#4aa8ff;background:linear-gradient(120deg,#142e47,#101c2c);box-shadow:inset 0 0 0 1px #4aa8ff20}
+#miniCreditTopupSheet .mini-topup-bank b{font-size:12px;color:#a8bdd4}
+#miniCreditTopupSheet .mini-topup-bank strong{font-size:clamp(16px,4.5vw,20px);letter-spacing:.07em;color:#f5f9ff;overflow-wrap:anywhere}
+#miniCreditTopupSheet .mini-topup-bank small{font-size:12px;color:#91a7bf}
+#miniCreditTopupSheet .mini-topup-instructions{margin:0;padding:13px 14px;border:1px solid #293b51;border-radius:14px;background:#0e1826;color:#aebfd2;font-size:12px;line-height:1.95;white-space:pre-wrap;overflow-wrap:anywhere}
+#miniCreditTopupSheet .mini-topup-crypto-box{display:grid;gap:9px;padding:15px;border:1px solid #2a3d54;border-radius:16px;background:linear-gradient(140deg,#111d2d,#0a121d);min-width:0}
+#miniCreditTopupSheet .mini-topup-crypto-box small{font-size:11px;color:#96abc2}
+#miniCreditTopupSheet .mini-topup-crypto-box strong{font-size:clamp(18px,5vw,24px);line-height:1.5;color:#92d5ff;overflow-wrap:anywhere}
+#miniCreditTopupSheet .mini-topup-crypto-box code{display:block;max-width:100%;border:1px solid #263a51;border-radius:12px;background:#060c14;color:#dceaff;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;padding:13px;user-select:text}
+#miniCreditTopupSheet .mini-topup-success{padding:12px 8px 18px}
+#miniCreditTopupSheet .mini-topup-success>span{width:66px;height:66px;border:1px solid #2a8e7977;background:radial-gradient(circle at 30% 20%,#43c9a833,#122a2b);color:#78e2c8;box-shadow:0 0 35px #36bfa21a;font-size:28px}
+#miniCreditTopupSheet .mini-topup-success b{font-size:clamp(22px,6vw,29px);line-height:1.5;overflow-wrap:anywhere;color:#f5f9ff}
+#miniCreditTopupSheet .mini-topup-success small{display:block;max-width:330px;margin:0 auto;color:#a0b3c8;line-height:1.8}
+#miniCreditTopupSheet .hub-empty{padding:18px 14px;border:1px dashed #2b3d52;border-radius:14px;background:#0c1420;color:#91a4bb;font-size:12px;line-height:1.8;text-align:center}
+#miniCreditTopupSheet button:focus-visible{outline:2px solid #76c6ff;outline-offset:3px}
+#miniCreditTopupSheet button:disabled{opacity:.55;cursor:not-allowed}
+@keyframes creditTopupIn{from{opacity:0;transform:translate(-50%,-48%) scale(.985)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media(hover:hover){#miniCreditTopupSheet .mini-topup-presets button:hover,#miniCreditTopupSheet .mini-topup-method-list>button:hover,#miniCreditTopupSheet .mini-topup-bank:hover{border-color:#478fc9;background-color:#132238}}
+@media(max-width:520px){#miniCreditTopupSheet .mini-credit-topup-panel{width:calc(100vw - 22px);max-height:min(84dvh,760px);padding:0 15px calc(16px + env(safe-area-inset-bottom));border-radius:22px}#miniCreditTopupSheet .mini-credit-sheet-handle{margin-top:10px}#miniCreditTopupSheet .mini-credit-topup-panel>header{margin-bottom:14px;padding-bottom:13px}#miniCreditTopupSheet .mini-credit-topup-panel>header h3{font-size:19px}#miniCreditTopupSheet .mini-topup-presets{gap:6px}#miniCreditTopupSheet .mini-topup-presets button{min-height:45px;font-size:12px;padding-inline:3px}#miniCreditTopupSheet .mini-topup-method-list>button{grid-template-columns:42px minmax(0,1fr) 14px;padding:11px;gap:10px}#miniCreditTopupSheet .mini-topup-method-list>button>span{width:40px;height:40px}}
+@media(max-width:360px){#miniCreditTopupSheet .mini-credit-topup-panel{width:calc(100vw - 16px);padding-inline:12px}#miniCreditTopupSheet .mini-topup-presets button{font-size:11px}#miniCreditTopupSheet .mini-topup-balance,#miniCreditTopupSheet .mini-topup-after{padding:12px}}
+@media(max-height:560px){#miniCreditTopupSheet .mini-credit-topup-panel{max-height:calc(100dvh - 18px);padding-bottom:14px}#miniCreditTopupSheet .mini-credit-topup-panel>header{margin-bottom:10px;padding-bottom:10px}}
+@media(prefers-reduced-motion:reduce){#miniCreditTopupSheet .mini-credit-topup-panel{animation:none}#miniCreditTopupSheet button{transition:none!important}}
