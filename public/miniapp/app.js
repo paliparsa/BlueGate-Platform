@@ -2205,11 +2205,15 @@ function bgFeatureIcon(name,size=22){
  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>',
  copy:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
  qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v2M14 20h2M19 19h2v2h-2z"/>',
- info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v5M12 7h.01"/>',chart:'<path d="M3 3v18h18M7 14l4-4 4 3 5-7"/>',gem:'<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l-3 6 6 12 6-12-3-6"/>',coins:'<ellipse cx="9" cy="5" rx="7" ry="3"/><path d="M2 5v6c0 1.66 3.13 3 7 3 1.2 0 2.33-.14 3.3-.39M2 8c0 1.66 3.13 3 7 3M16 10c3.31 0 6 1.34 6 3s-2.69 3-6 3-6-1.34-6-3 2.69-3 6-3Z"/><path d="M10 13v6c0 1.66 2.69 3 6 3s6-1.34 6-3v-6"/>',
+ info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v5M12 7h.01"/>',
+ chart:'<path d="M3 3v18h18M7 14l4-4 4 3 5-7"/>',
+ gem:'<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l-3 6 6 12 6-12-3-6"/>',
+ coins:'<ellipse cx="9" cy="5" rx="7" ry="3"/><path d="M2 5v6c0 1.66 3.13 3 7 3 1.2 0 2.33-.14 3.3-.39M2 8c0 1.66 3.13 3 7 3M16 10c3.31 0 6 1.34 6 3s-2.69 3-6 3-6-1.34-6-3 2.69-3 6-3Z"/><path d="M10 13v6c0 1.66 2.69 3 6 3s6-1.34 6-3v-6"/>',
  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15l2 2 5-5"/>',
  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H3v2a5 5 0 0 0 5 5M17 6h4v2a5 5 0 0 1-5 5"/>',
- check:'<path d="m5 12 4 4L19 6"/>',medal:'<circle cx="12" cy="8" r="6"/><path d="m8.2 13-1.4 8 5.2-2.7 5.2 2.7-1.4-8"/>',
+ check:'<path d="m5 12 4 4L19 6"/>',
+ medal:'<circle cx="12" cy="8" r="6"/><path d="m8.2 13-1.4 8 5.2-2.7 5.2 2.7-1.4-8"/>',
  headset:'<path d="M3 13v-2a9 9 0 0 1 18 0v2"/><path d="M5 13h2v6H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2ZM19 13h-2v6h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2ZM17 19a5 5 0 0 1-5 3"/>',
  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
  ticket:'<path d="M4 5h16v4a3 3 0 0 0 0 6v4H4v-4a3 3 0 0 0 0-6V5Z"/><path d="M9 9h6M9 15h6"/>',
@@ -2218,10 +2222,12 @@ function bgFeatureIcon(name,size=22){
  message:'<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>',
  plus:'<path d="M12 5v14M5 12h14"/>',
  chevronLeft:'<path d="m15 18-6-6 6-6"/>',
- paperclip:'<path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/>,image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+ paperclip:'<path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/>',
+ image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
  lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
  loader:'<path d="M21 12a9 9 0 1 1-6.2-8.56"/>',
- close:'<path d="m18 6-12 12M6 6l12 12"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'
+ close:'<path d="m18 6-12 12M6 6l12 12"/>',
+ send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'
  };
  return `<svg class="bg-feature-svg" width="${Number(size)||22}" height="${Number(size)||22}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${p[name]||p.gift}</svg>`;
 }
