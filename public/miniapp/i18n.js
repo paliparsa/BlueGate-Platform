@@ -49,6 +49,76 @@ function apply(){
  else location.reload();
 }
 function setLanguage(next){if(next!=='fa'&&next!=='en')return;localStorage.setItem(KEY,next);language=next;location.reload();}
+
+function closeLanguagePicker(){
+ const modal=document.getElementById('bgLanguagePicker');
+ if(!modal)return;
+ modal.classList.remove('open');
+ modal.setAttribute('aria-hidden','true');
+ document.body.classList.remove('bg-language-picker-open');
+ if(modal._returnFocus?.isConnected)modal._returnFocus.focus({preventScroll:true});
+ window.setTimeout(()=>modal.remove(),190);
+}
+function openLanguagePicker(event){
+ const existing=document.getElementById('bgLanguagePicker');
+ if(existing){existing.classList.add('open');return;}
+ const en=language==='en';
+ const modal=document.createElement('div');
+ modal.id='bgLanguagePicker';
+ modal.className='bg-language-picker';
+ modal.setAttribute('aria-hidden','false');
+ modal._returnFocus=event?.currentTarget||document.activeElement;
+ modal.innerHTML=`
+  <button class="bg-language-picker-backdrop" type="button" data-lang-close aria-label="${en?'Close language selection':'بستن انتخاب زبان'}"></button>
+  <section class="bg-language-picker-card" role="dialog" aria-modal="true" aria-labelledby="bgLanguagePickerTitle" aria-describedby="bgLanguagePickerHint" dir="${en?'ltr':'rtl'}">
+   <header class="bg-language-picker-head">
+    <div class="bg-language-picker-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h10M9 3v2c0 5-2.5 8-6 10M6 9c1 2 3 4 6 5M14 19l3.5-9 3.5 9M15.3 16h4.4"/></svg></div>
+    <button class="bg-language-picker-close" type="button" data-lang-close aria-label="${en?'Close':'بستن'}">×</button>
+   </header>
+   <div class="bg-language-picker-eyebrow">BLUEGATE · PREFERENCES</div>
+   <h2 id="bgLanguagePickerTitle">${en?'Choose your language':'زبان موردنظرت رو انتخاب کن'}</h2>
+   <p id="bgLanguagePickerHint">${en?'Choose the language used across the Mini App.':'زبان نمایش بخش‌های مینی‌اپ رو مشخص کن.'}</p>
+   <div class="bg-language-picker-options" role="radiogroup" aria-label="${en?'Language':'زبان'}">
+    <button type="button" class="bg-language-option ${language==='fa'?'is-selected':''}" role="radio" aria-checked="${language==='fa'}" data-lang-option="fa">
+     <span class="bg-language-option-mark" aria-hidden="true"><span></span></span><span class="bg-language-option-copy"><strong>فارسی</strong><small>Persian · فارسی</small></span><span class="bg-language-option-code">FA</span>
+    </button>
+    <button type="button" class="bg-language-option ${language==='en'?'is-selected':''}" role="radio" aria-checked="${language==='en'}" data-lang-option="en">
+     <span class="bg-language-option-mark" aria-hidden="true"><span></span></span><span class="bg-language-option-copy"><strong>English</strong><small>English · انگلیسی</small></span><span class="bg-language-option-code">EN</span>
+    </button>
+   </div>
+   <footer class="bg-language-picker-actions">
+    <button type="button" class="bg-language-picker-cancel" data-lang-close>${en?'Cancel':'انصراف'}</button>
+    <button type="button" class="bg-language-picker-confirm" data-lang-confirm>${en?'Apply language':'تأیید و تغییر زبان'} <span aria-hidden="true">↗</span></button>
+   </footer>
+  </section>`;
+ document.body.appendChild(modal);
+ document.body.classList.add('bg-language-picker-open');
+ let selected=language;
+ const options=[...modal.querySelectorAll('[data-lang-option]')];
+ const confirm=modal.querySelector('[data-lang-confirm]');
+ const update=next=>{
+  if(next!=='fa'&&next!=='en')return;
+  selected=next;
+  options.forEach(option=>{const active=option.dataset.langOption===selected;option.classList.toggle('is-selected',active);option.setAttribute('aria-checked',String(active));});
+  confirm.disabled=selected===language;
+  confirm.innerHTML=(en?'Apply language':'تأیید و تغییر زبان')+' <span aria-hidden="true">↗</span>';
+ };
+ options.forEach(option=>option.addEventListener('click',()=>update(option.dataset.langOption)));
+ modal.querySelectorAll('[data-lang-close]').forEach(button=>button.addEventListener('click',closeLanguagePicker));
+ modal.addEventListener('click',e=>{if(e.target===modal)closeLanguagePicker();});
+ modal.querySelector('[data-lang-confirm]').addEventListener('click',()=>{if(selected!==language){setLanguage(selected);return;}closeLanguagePicker();});
+ modal.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();closeLanguagePicker();return;}
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+   if(e.target.matches('[data-lang-option]')){e.preventDefault();const idx=options.indexOf(e.target);options[(idx+(e.key==='ArrowDown'?1:options.length-1))%options.length].focus();}
+  }
+  if(e.key==='Tab'){const focusable=[...modal.querySelectorAll('button:not(:disabled)')],first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
+ });
+ update(selected);
+ modal.classList.add('open');
+ window.requestAnimationFrame(()=>options.find(o=>o.dataset.langOption===selected)?.focus({preventScroll:true}));
+}
+
 function init(){
  if(!document.body)return;
  let toggles=Array.from(document.querySelectorAll('[data-language-toggle],#bluegateLanguageToggle'));
@@ -56,7 +126,7 @@ function init(){
   const top=document.querySelector('#adminApp .topbar')||document.querySelector('#userApp .topbar')||document.querySelector('.topbar');
   if(top){const b=document.createElement('button');b.type='button';b.className='icon-btn bluegate-language-toggle';b.setAttribute('data-language-toggle','');b.title='Change language';b.style.cssText='min-width:58px;font-weight:800;z-index:20';top.appendChild(b);toggles=[b];}
  }
- toggles.forEach(b=>{if(b.dataset.languageBound!=='1'){b.dataset.languageBound='1';b.addEventListener('click',async()=>{const next=language==='fa'?'en':'fa',en=language==='en';let ok=false;try{if(window.BlueGateUI?.confirmCentered){ok=await window.BlueGateUI.confirmCentered({title:en?'Change language?':'تغییر زبان؟',message:en?'Do you want to switch the Mini App language?':'می‌خوای زبان مینی‌اپ رو عوض کنی؟',confirmText:en?'Yes, change it':'آره، تغییر بده',cancelText:en?'No, keep it':'نه، همین بمونه'});}else if(window.BlueGateUI?.confirm){ok=await window.BlueGateUI.confirm({title:en?'Change language?':'تغییر زبان؟',message:en?'Do you want to switch the Mini App language?':'می‌خوای زبان مینی‌اپ رو عوض کنی؟',confirmText:en?'Yes, change it':'آره، تغییر بده',cancelText:en?'No, keep it':'نه، همین بمونه'});}else{ok=window.confirm(en?'Do you want to switch the Mini App language?':'می‌خوای زبان مینی‌اپ رو عوض کنی؟');}}catch(_){ok=false;}if(ok)setLanguage(next);});}});
+ toggles.forEach(b=>{if(b.dataset.languageBound!=='1'){b.dataset.languageBound='1';b.addEventListener('click',openLanguagePicker);}});
  toggles.forEach(b=>{b.innerHTML=language==='fa'?'<span class="bg-lang-flag-us" role="img" aria-label="United States flag">🇺🇸</span>':'<svg class="bg-lang-flag-ir" viewBox="0 0 36 24" role="img" aria-label="Iran lion and sun flag" width="36" height="24"><rect width="36" height="24" rx="2" fill="#fff"/><path fill="#239f40" d="M0 0h36v7H0z"/><path fill="#da0000" d="M0 17h36v7H0z"/><g fill="#da0000" stroke="#da0000" stroke-width=".65" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="8.8" r="3.1" fill="none" stroke-width="1.1"/><path d="M17.7 11.3l-2.2 4.2 2.1-.7 1.6 1.4.7-4.5-1.1-1.2zM16.3 13.1l-3.1-.2 1.6 1.4-1 1.8 3.3-1.3zM19.1 13l2.4-.8-1 2.2 1.5 1.1-3.1-.2zM20.5 10.6l2.8 1.1-2.7.4zM15.4 9.7l-2.2 1.6 2.8-.2zM17.8 6.3l.8-1.4.8 1.4z"/></g><path d="M23 7.2l-1.3 8.6" stroke="#da0000" stroke-width=".8"/></svg>';b.setAttribute('aria-label',language==='fa'?'Switch to English':'تغییر به فارسی');b.title=language==='fa'?'Switch to English':'تغییر زبان';});
  document.documentElement.lang=language;document.documentElement.dir=language==='fa'?'rtl':'ltr';document.body.classList.toggle('bluegate-lang-en',language==='en');
  if(language==='en')translateElement(document.body);
