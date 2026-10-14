@@ -2000,9 +2000,9 @@ function renderMiniSupportPage(){
 }
 function openMiniSupport(){
   if(state?.is_guest){openAuthModal();return}
-  const tickets=state.support_tickets||[];
-  const body=`<div class="mini-support-panel"><div class="mini-support-actions"><button class="primary" data-support-ticket-new>＋ تیکت جدید</button><button class="ghost" id="miniSupportTelegram">ارتباط مستقیم در تلگرام</button></div><div class="mini-support-list">${tickets.length?tickets.map(t=>`<button class="account-menu-row" data-support-ticket="${t.id}"><span class="account-menu-icon">#</span><div><b>${esc(t.subject||'تیکت پشتیبانی')}</b><small>${esc(miniSupportStatusLabel(t.status))} · ${esc(t.last_message_at||t.created_at||'')}</small></div><em>‹</em></button>`).join(''):'<div class="u-empty"><div class="u-empty-icon">?</div><h3>هنوز تیکتی نداری</h3><p>اگر در خرید یا سرویس مشکلی داری، از همین‌جا پیام بده.</p></div>'}</div></div>`;
-  BlueGateUI.openSheet({type:'fullscreen',eyebrow:'BLUEGATE SUPPORT',title:'پشتیبانی',subtitle:'ثبت و پیگیری درخواست‌ها',body,onOpen:(host)=>{
+  const tickets=Array.isArray(state.support_tickets)?state.support_tickets:[];
+  const body=\`<div class="mini-support-panel support-legacy-v3"><div class="mini-support-actions"><button class="primary" data-support-ticket-new>\${bgFeatureIcon('plus',17)} ثبت تیکت جدید</button><button class="ghost" id="miniSupportTelegram">\${bgFeatureIcon('send',16)} ارتباط در تلگرام</button></div><div class="mini-support-list">\${tickets.length?tickets.map(t=>\`<button type="button" class="account-menu-row support-legacy-ticket" data-support-ticket="\${Number(t.id)||0}"><span class="account-menu-icon">\${bgFeatureIcon('ticket',18)}</span><span><b>\${esc(t.subject||'درخواست پشتیبانی')}</b><small><span class="support-ticket-status \${miniSupportStatusClass(t.status)}">\${esc(miniSupportStatusLabel(t.status))}</span><span>\${esc(t.last_message_at||t.created_at||'آخرین فعالیت ثبت نشده')}</span></small></span>\${bgFeatureIcon('chevronLeft',16)}</button>\`).join(''):\`<div class="support-empty-state"><span class="support-empty-icon">\${bgFeatureIcon('ticket',26)}</span><h3>هنوز تیکتی ثبت نکرده‌ای</h3><p>اگر به کمک نیاز داری، درخواستت را ثبت کن تا تیم پشتیبانی پیگیری کند.</p></div>\`}</div></div>\`;
+  BlueGateUI.openSheet({type:'fullscreen',eyebrow:'BLUEGATE SUPPORT',title:'مرکز پشتیبانی',subtitle:'ثبت درخواست و پیگیری پاسخ‌ها',body,onOpen:host=>{
     host.querySelector('[data-support-ticket-new]')?.addEventListener('click',newMiniSupportTicket);
     host.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
     host.querySelector('#miniSupportTelegram')?.addEventListener('click',()=>{const url=miniSupportUrl();if(tg?.openTelegramLink)tg.openTelegramLink(url);else if(tg?.openLink)tg.openLink(url);else window.open(url,'_blank','noopener')});
@@ -2218,7 +2218,10 @@ function bgFeatureIcon(name,size=22){
  message:'<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>',
  plus:'<path d="M12 5v14M5 12h14"/>',
  chevronLeft:'<path d="m15 18-6-6 6-6"/>',
- paperclip:'<path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/>,close:'<path d="m18 6-12 12M6 6l12 12"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'
+ paperclip:'<path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/>,image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+ lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+ loader:'<path d="M21 12a9 9 0 1 1-6.2-8.56"/>',
+ close:'<path d="m18 6-12 12M6 6l12 12"/>',send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'
  };
  return `<svg class="bg-feature-svg" width="${Number(size)||22}" height="${Number(size)||22}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${p[name]||p.gift}</svg>`;
 }
