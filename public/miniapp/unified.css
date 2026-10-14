@@ -8,7 +8,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden!important}
 .topbar-actions{margin-inline-start:auto}
 .topbar .auth-top-btn{min-height:40px!important;padding:8px 13px!important;font-weight:850!important}
 .topbar-desktop-nav button,.bottom-nav button{gap:6px!important}
-.nav-icon{font-family:Vazirmatn,sans-serif;font-size:18px;line-height:1;font-weight:800}
+.nav-icon{font-family:var(--mini-font-family);font-size:18px;line-height:1;font-weight:800}
 .bottom-nav{grid-template-columns:repeat(5,1fr)!important;max-width:720px!important;padding:6px 8px!important}
 .bottom-nav button{min-height:52px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;font-size:14px!important}
 .bottom-nav button.active .nav-icon{transform:translateY(-1px) scale(1.06)}
