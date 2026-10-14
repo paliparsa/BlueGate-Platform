@@ -5487,3 +5487,64 @@ body.bg-language-picker-open{overflow:hidden}
 @media(min-width:760px){#userApp #shopPage .product-tile.product-card-v2{width:100%!important;min-width:0!important}}
 @media(max-width:430px){#userApp #shopPage .product-tile.product-card-v2{border-radius:20px!important}#userApp #shopPage .product-card-v2 .product-card-media{padding:9px!important}#userApp #shopPage .product-card-v2 .product-card-content{gap:8px;padding:10px!important}#userApp #shopPage .product-card-v2 .tile-name{font-size:12px!important;min-height:40px}#userApp #shopPage .product-card-v2 .product-card-price{padding:7px 8px;min-height:34px}#userApp #shopPage .product-card-v2 .product-card-price>strong{font-size:11px}#userApp #shopPage .product-card-v2 .wishlist-fab{width:31px;height:31px;min-width:31px;top:7px;right:7px}}
 @media(prefers-reduced-motion:reduce){#userApp #shopPage .product-tile.product-card-v2{animation:none!important;transition:none!important}}
+
+ 
+/* v5.1.42 — product card integrity pass (loop 2)
+   Keeps catalog data untouched; normalizes price, badges, featured state and wishlist affordances. */
+#userApp #shopPage .product-tile.product-card-v2{
+  min-width:0;
+  color:#e8eef8;
+  border-color:rgba(148,176,212,.17)!important;
+  background:linear-gradient(160deg,rgba(23,32,46,.98),rgba(10,15,24,.99))!important;
+}
+#userApp #shopPage .product-card-v2 .product-card-content{min-width:0;overflow:hidden}
+#userApp #shopPage .product-card-v2 .tile-name{
+  min-height:42px;max-height:calc(1.65em * 2 + 2px);
+  overflow:hidden;text-overflow:ellipsis;overflow-wrap:anywhere;
+}
+#userApp #shopPage .product-card-v2 .product-card-price{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+  gap:6px;min-width:0;overflow:hidden;
+}
+#userApp #shopPage .product-card-v2 .product-card-price>span{
+  min-width:0;white-space:normal;overflow-wrap:anywhere;
+}
+#userApp #shopPage .product-card-v2 .product-card-price>strong{
+  min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums;
+}
+#userApp #shopPage .product-card-v2 .discount-badge{
+  display:inline-flex;align-items:center;justify-content:center;gap:3px;
+  max-width:calc(100% - 54px);min-width:0;overflow:hidden;
+  border:1px solid rgba(255,133,133,.28)!important;
+  background:linear-gradient(135deg,rgba(180,45,58,.96),rgba(126,36,48,.96))!important;
+  color:#fff!important;text-overflow:ellipsis;white-space:nowrap;
+}
+#userApp #shopPage .product-card-v2 .discount-badge .disc-val{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#userApp #shopPage .product-card-v2.discount-tile{
+  border-color:rgba(238,94,111,.25)!important;
+}
+#userApp #shopPage .product-card-v2 :is(.featured-badge,.product-featured-badge,[data-badge="featured"]){
+  max-width:calc(100% - 54px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#userApp #shopPage .product-card-v2 :is(.featured,.is-featured,[data-featured="1"]){
+  border-color:rgba(222,183,103,.34)!important;
+}
+#userApp #shopPage .product-card-v2 .wishlist-fab{
+  flex:0 0 auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+#userApp #shopPage .product-card-v2 .wishlist-fab:focus-visible,
+#userApp #shopPage .product-card-v2 .product-card-open:focus-visible{
+  outline:2px solid #83bfff;outline-offset:2px;
+}
+@media(max-width:430px){
+  #userApp #shopPage .product-card-v2 .product-card-price{grid-template-columns:minmax(0,1fr);gap:3px}
+  #userApp #shopPage .product-card-v2 .product-card-price>span{font-size:9px!important}
+  #userApp #shopPage .product-card-v2 .product-card-price>strong{font-size:12px!important;text-align:right}
+}
+@media(prefers-reduced-motion:reduce){
+  #userApp #shopPage .product-card-v2,
+  #userApp #shopPage .product-card-v2 *{scroll-behavior:auto!important}
+}
