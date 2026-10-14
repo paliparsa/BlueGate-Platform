@@ -1,3 +1,13 @@
+## 5.1.56 - My Orders card redesign
+
+- Reworked order cards into a clearer information hierarchy: product/order title and ID, date and payment countdown, emphasized final price, and a dedicated status area.
+- Added a more cohesive dark surface, restrained accent edge, subtle dividers, and a clearer separation for the order progress stepper.
+- Tuned narrow mobile layouts for long names/status labels, discounted prices, and the rename action.
+- Preserved the existing order-card markup, status computation, countdown logic, order navigation, rename action, and stepper interactions.
+- Loaded the new CSS as the final visual layer, registered it for PHP filemtime cache-busting, and corrected the literal newline between the previously added stylesheet links.
+- Two review loops: (1) content hierarchy and visual grouping; (2) small-screen fit, price/timer/status edge cases, CSS balance, asset order, and interaction preservation.
+- Source-level validation only; visual verification in Telegram WebView remains outstanding.
+
 ## 5.1.55 - My Orders account header and filter rail redesign
 
 - Redesigned the account/orders hero with a compact black-blue surface, clearer title hierarchy and three distinct order-count metrics.
