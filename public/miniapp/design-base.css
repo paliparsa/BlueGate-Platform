@@ -10,11 +10,6 @@ a{color:#8ba5ff;text-decoration-color:rgba(139,165,255,.35)}
 hr,.divider,.section-divider{border-color:var(--line)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
 
-/* Shared Persian typography and edge-to-edge application canvas. */
-#userApp,#adminApp,.app-shell{outline:0;box-shadow:none}
-#userApp,#adminApp,button,input,textarea,select,option,[role="button"],[role="dialog"],[role="alertdialog"]{font-family:var(--mini-font-family)}
-body::before,body::after{background-image:none}
-
 /* Shared typography and canvas contract; icon/code glyph fonts are preserved. */
 html,body{margin:0!important;padding-left:0!important;padding-right:0!important;border:0!important;outline:0!important;box-shadow:none!important;background:var(--mini-canvas,#030303)!important;background-image:none!important;color:var(--text)!important}
 body{padding-top:0!important;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;border-radius:0!important}
