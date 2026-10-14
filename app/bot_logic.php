@@ -338,12 +338,12 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if(str_starts_with($data,'topup_card_')){
         $id=(int)substr($data,11);
         try{$t=set_credit_topup_method($id,(int)$user['id'],'card');show_bot_credit_topup_invoice($chat_id,$message_id,$t);}
-        catch(Throwable $e){send_or_edit($chat_id,$message_id,'کارت به کارت برای شارژ اعتبار در دسترس نیست.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']]]]));}return;
+        catch(Throwable $e){error_log('[BlueGate credit topup card #'.$id.'] '.$e->getMessage());send_or_edit($chat_id,$message_id,'پرداخت کارت‌به‌کارت برای شارژ انجام نشد. روش دیگری را انتخاب کن یا وضعیت درخواست را بررسی کن.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']]]]));}return;
     }
     if(str_starts_with($data,'topup_stars_')){
         $id=(int)substr($data,12);
         try{$t=set_credit_topup_method($id,(int)$user['id'],'stars');$res=send_stars_invoice_for_topup($t);show_bot_credit_topup_invoice($chat_id,$message_id,credit_topup_by_id($id));if(empty($res['ok']))send_msg($chat_id,'ارسال فاکتور Stars ممکن نشد.');}
-        catch(Throwable $e){send_msg($chat_id,'پرداخت Stars برای شارژ اعتبار در دسترس نیست.',back_main_keyboard());}return;
+        catch(Throwable $e){error_log('[BlueGate credit topup Stars #'.$id.'] '.$e->getMessage());send_msg($chat_id,'پرداخت Stars برای شارژ انجام نشد. کمی بعد دوباره تلاش کن یا روش دیگری را انتخاب کن.',back_main_keyboard());}return;
     }
     if(str_starts_with($data,'topup_crypto_')){
         $id=(int)substr($data,13);$wallets=array_values(array_filter(crypto_wallets(true),fn($w)=>crypto_wallet_supported((string)$w['asset'],(string)$w['network'])));
@@ -355,7 +355,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if(str_starts_with($data,'topup_cw_')){
         $p=explode('_',substr($data,9));$id=(int)($p[0]??0);$wid=(int)($p[1]??0);
         try{$t=set_credit_topup_method($id,(int)$user['id'],'crypto',['wallet_id'=>$wid]);show_bot_credit_topup_invoice($chat_id,$message_id,$t);}
-        catch(Throwable $e){send_msg($chat_id,'ساخت پرداخت رمزارز ممکن نشد.',back_main_keyboard());}return;
+        catch(Throwable $e){error_log('[BlueGate credit topup crypto #'.$id.'] '.$e->getMessage());send_msg($chat_id,'ساخت پرداخت رمزارزی انجام نشد. دوباره تلاش کن یا روش دیگری را انتخاب کن.',back_main_keyboard());}return;
     }
     if(str_starts_with($data,'topup_view_')){
         $id=(int)substr($data,11);$t=credit_topup_by_id($id);
@@ -473,19 +473,19 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'order_pay_wallet_')) {
         $oid=(int)substr($data, 17);
         try { $order=apply_wallet_to_order($oid, (int)$user['id']); if (normalize_order_status((string)($order['status'] ?? '')) === 'payment_confirmed') { notify_admin_order((int)$order['id'], 'پرداخت کامل با اعتبار کیف پول', 'Telegram Bot', '💙 پرداخت سفارش از اعتبار کیف پول انجام شد.'); } show_order_invoice($chat_id, $message_id, $order); }
-        catch (Throwable $e) { error_log('[BlueGate wallet payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'امکان پرداخت از کیف پول برای این سفارش نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch (Throwable $e) { error_log('[BlueGate wallet payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'پرداخت از اعتبار برای این سفارش انجام نشد. وضعیت سفارش را در Mini App بررسی کن؛ اگر موجودی تغییر کرده است، با پشتیبانی تماس بگیر.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_pay_card_')) {
         $oid=(int)substr($data, 15);
         try { $order=order_set_payment_method($oid, (int)$user['id'], 'card', []); show_order_invoice($chat_id, $message_id, $order); }
-        catch (Throwable $e) { send_msg($chat_id, 'امکان انتخاب کارت به کارت نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch (Throwable $e) { error_log('[BlueGate card payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'پرداخت کارت‌به‌کارت برای این سفارش شروع نشد. وضعیت سفارش را در Mini App بررسی کن یا روش دیگری را انتخاب کن.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_pay_stars_')) {
         $oid=(int)substr($data, 16);
         try { $order=order_set_payment_method($oid, (int)$user['id'], 'stars', []); $res=send_stars_invoice_for_order($order); show_order_invoice($chat_id, $message_id, order_by_id($oid)); if (empty($res['ok'])) send_msg($chat_id, 'ارسال فاکتور Stars ممکن نشد. شاید پرداخت Stars برای بات فعال نیست.'); }
-        catch (Throwable $e) { send_msg($chat_id, 'امکان پرداخت با Stars برای این سفارش نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch (Throwable $e) { error_log('[BlueGate Stars payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'پرداخت با Stars برای این سفارش شروع نشد. کمی بعد دوباره تلاش کن یا روش دیگری را انتخاب کن.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_pay_crypto_')) {
@@ -500,7 +500,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'order_crypto_wallet_')) {
         $parts=explode('_',$data); $oid=(int)($parts[3]??0); $wid=(int)($parts[4]??0);
         try { $order=start_crypto_payment($oid, (int)$user['id'], $wid); show_order_invoice($chat_id, $message_id, $order); }
-        catch(Throwable $e){ send_msg($chat_id, 'امکان انتخاب کیف پول رمزارز نیست. نرخ یا ولت را در پنل ادمین بررسی کن.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch(Throwable $e){ error_log('[BlueGate crypto wallet selection order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'انتخاب پرداخت رمزارزی برای این سفارش انجام نشد. از Mini App دوباره تلاش کن یا روش دیگری را انتخاب کن.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_crypto_hash_')) {
