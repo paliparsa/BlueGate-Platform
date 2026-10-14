@@ -18,3 +18,7 @@ dialog::backdrop,.modal-backdrop,.popup-backdrop,.sheet-backdrop,.overlay-backdr
 
 /* Nested surfaces inside dialogs stay dark and legible. */
 #userApp :is([role="dialog"],[role="alertdialog"],.modal-content,.modal-card,.popup-card,.popup-panel,.app-sheet-panel,.language-popup,.stars-popup,.credit-popup,.topup-popup) :is(.card,.panel,.section-card,.option,.payment-method,.payment-option,.wallet-method,.form-section){background-color:#0d0d0d!important;background-image:none!important;border-color:#242424!important;color:#f2f2f2!important}
+
+/* Feature overlays keep geometry in behavior layers; shared surfaces are opaque black. */
+#userApp :is(.app-sheet-panel,.auth-modal-content,.wallet-confirm-card,.purchase-confirm-card,.purchase-confirm-dialog,.modal-content,.popup-content,.sheet-content,.cart-sheet-inner,.preview-sheet-inner,.qr-sheet-inner,.share-sheet-inner,.palette-popup,.cmd-palette,.lightbox),#adminApp :is(.app-sheet-panel,.auth-modal-content,.modal-content,.popup-content,.sheet-content){background:#080808!important;background-image:none!important;border-color:#242424!important}
+#userApp :is(.modal-header,.popup-header,.sheet-header,.modal-footer,.popup-footer,.sheet-footer),#adminApp :is(.modal-header,.popup-header,.sheet-header,.modal-footer,.popup-footer,.sheet-footer){background:#080808!important;background-image:none!important;border-color:#242424!important}
