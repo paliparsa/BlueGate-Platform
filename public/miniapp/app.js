@@ -470,7 +470,7 @@ const BlueGateCommandLoader=(()=>{
   function ensure(){
     if(root)return root;
     root=document.createElement('div');root.id='bgCommandLoader';root.className='bg-command-loader';root.setAttribute('role','status');root.setAttribute('aria-live','polite');root.setAttribute('aria-hidden','true');
-    root.innerHTML='<div class="bg-loader-glass"><div class="bg-loader-orbit"><span class="bg-loader-orbit-dot"></span><span class="bg-loader-orbit-dot second"></span><div class="bg-loader-core"><span class="bg-loader-mark">B</span></div></div><div class="bg-loader-title">در حال انجام درخواست</div><div class="bg-loader-message"></div><div class="bg-loader-track"><i></i></div><div class="bg-loader-foot">BlueGate <span>•</span> لطفاً صفحه را نبند</div></div>';
+    root.innerHTML='<div class="bg-loader-glass"><div class="bg-loader-orbit"><span class="bg-loader-orbit-dot"></span><span class="bg-loader-orbit-dot second"></span><div class="bg-loader-core"><img class="bg-loader-mark" src="/web/assets/logo-mark.webp" alt="BlueGate" width="43" height="43"></div></div><div class="bg-loader-title">در حال انجام درخواست</div><div class="bg-loader-message"></div><div class="bg-loader-track"><i></i></div><div class="bg-loader-foot">BlueGate <span>•</span> لطفاً صفحه را نبند</div></div>';
     document.body.appendChild(root);textNode=root.querySelector('.bg-loader-message');return root;
   }
   function show(action){
