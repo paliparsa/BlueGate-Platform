@@ -342,7 +342,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     }
     if(str_starts_with($data,'topup_stars_')){
         $id=(int)substr($data,12);
-        try{$t=set_credit_topup_method($id,(int)$user['id'],'stars');$res=send_stars_invoice_for_topup($t);show_bot_credit_topup_invoice($chat_id,$message_id,credit_topup_by_id($id));if(empty($res['ok']))send_msg($chat_id,'ارسال فاکتور Stars ممکن نشد.');}
+        try{$t=set_credit_topup_method($id,(int)$user['id'],'stars');$res=send_stars_invoice_for_topup($t);show_bot_credit_topup_invoice($chat_id,$message_id,credit_topup_by_id($id));if(empty($res['ok']))send_msg($chat_id,"ارسال فاکتور Stars برای درخواست شارژ #{$id} ممکن نشد. وضعیت درخواست را بررسی کن یا روش دیگری را انتخاب کن.");}
         catch(Throwable $e){error_log('[BlueGate credit topup Stars #'.$id.'] '.$e->getMessage());send_msg($chat_id,'پرداخت Stars برای شارژ انجام نشد. کمی بعد دوباره تلاش کن یا روش دیگری را انتخاب کن.',back_main_keyboard());}return;
     }
     if(str_starts_with($data,'topup_crypto_')){
@@ -484,7 +484,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     }
     if (str_starts_with($data, 'order_pay_stars_')) {
         $oid=(int)substr($data, 16);
-        try { $order=order_set_payment_method($oid, (int)$user['id'], 'stars', []); $res=send_stars_invoice_for_order($order); show_order_invoice($chat_id, $message_id, order_by_id($oid)); if (empty($res['ok'])) send_msg($chat_id, 'ارسال فاکتور Stars ممکن نشد. شاید پرداخت Stars برای بات فعال نیست.'); }
+        try { $order=order_set_payment_method($oid, (int)$user['id'], 'stars', []); $res=send_stars_invoice_for_order($order); show_order_invoice($chat_id, $message_id, order_by_id($oid)); if (empty($res['ok'])) send_msg($chat_id, "ارسال فاکتور Stars برای سفارش #{$oid} ممکن نشد. وضعیت سفارش را در Mini App بررسی کن یا روش دیگری را انتخاب کن."); }
         catch (Throwable $e) { error_log('[BlueGate Stars payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'پرداخت با Stars برای این سفارش شروع نشد. کمی بعد دوباره تلاش کن یا روش دیگری را انتخاب کن.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
@@ -511,7 +511,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'order_check_crypto_')) {
         $oid=(int)substr($data, 19);
         try { crypto_verify_order($oid); show_order_invoice($chat_id, $message_id, order_by_id($oid)); }
-        catch(Throwable $e){ send_msg($chat_id, 'بررسی پرداخت رمزارز انجام نشد؛ کمی بعد دوباره امتحان کن.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch(Throwable $e){ error_log('[BlueGate crypto verification order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'بررسی پرداخت رمزارز انجام نشد. کمی بعد دوباره تلاش کن یا با پشتیبانی تماس بگیر.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_receipt_')) {
@@ -691,7 +691,7 @@ email2@test.com | pass2</code>", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'prod_toggle_')) { $pid=(int)substr($data,12); db()->prepare('UPDATE products SET is_active=1-is_active WHERE id=?')->execute([$pid]); show_admin_products($chat_id, $message_id); return; }
     if (str_starts_with($data, 'ord_view_')) { show_admin_order($chat_id, $message_id, (int)substr($data,9)); return; }
     if (str_starts_with($data, 'prod_delete_')) { $pid=(int)substr($data,12); db()->prepare('UPDATE products SET is_active=0 WHERE id=?')->execute([$pid]); send_msg($chat_id, "محصول #{$pid} غیرفعال شد.", admin_shop_keyboard()); return; }
-    if (str_starts_with($data, 'ord_archive_')) { $oid=(int)substr($data,12); $current=order_by_id($oid); if(!$current){send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard());return;} if(normalize_order_status((string)$current['status'])!=='delivered'&&!is_cleanup_order_status((string)$current['status'])){send_or_edit($chat_id,$message_id,'آرشیو فقط برای سفارش‌های تحویل‌شده، لغو‌شده، رد‌شده یا مرجوع‌شده مجاز است.',admin_order_keyboard($oid));return;} $o=archive_order($oid); if ($o) send_or_edit($chat_id,$message_id,"📦 سفارش #{$oid} آرشیو شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; }
+    if (str_starts_with($data, 'ord_archive_')) { $oid=(int)substr($data,12); $current=order_by_id($oid); if(!$current){send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard());return;} if(!empty($current['archived_at'])){send_or_edit($chat_id,$message_id,"سفارش #{$oid} از قبل آرشیو شده است.",admin_order_keyboard($oid));return;} if(normalize_order_status((string)$current['status'])!=='delivered'&&!is_cleanup_order_status((string)$current['status'])){send_or_edit($chat_id,$message_id,'آرشیو فقط برای سفارش‌های تحویل‌شده، لغو‌شده، رد‌شده یا مرجوع‌شده مجاز است.',admin_order_keyboard($oid));return;} $o=archive_order($oid); if ($o) send_or_edit($chat_id,$message_id,"📦 سفارش #{$oid} آرشیو شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_delete_')) { $oid=(int)substr($data,11); $o=order_by_id($oid); if (!$o) { send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; } if (!is_cleanup_order_status($o['status'])) { send_or_edit($chat_id,$message_id,'حذف کامل فقط برای سفارش‌های لغو/رد/مرجوع‌شده مجاز است.',admin_order_keyboard($oid)); return; } send_or_edit($chat_id,$message_id,"⚠️ سفارش <code>#{$oid}</code> کامل حذف شود؟ این عملیات قابل برگشت نیست.", json_markup(['inline_keyboard'=>[[['text'=>'✅ بله، حذف کامل', 'callback_data'=>'ord_confirm_delete_'.$oid]],[['text'=>'❌ لغو', 'callback_data'=>'ord_view_'.$oid]]]])); return; }
     if (str_starts_with($data, 'ord_confirm_delete_')) { $oid=(int)substr($data,19); if (hard_delete_order($oid,true)) send_or_edit($chat_id,$message_id,"✅ سفارش #{$oid} کامل حذف شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'حذف انجام نشد. فقط سفارش‌های لغو/رد/مرجوع‌شده قابل حذف کامل هستند.',admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_receipt_')) { $oid=(int)substr($data,12);$o=order_by_id($oid);if(!$o||empty($o['receipt_file_id'])){send_or_edit($chat_id,$message_id,'رسیدی برای این سفارش ثبت نشده است.',admin_order_keyboard($oid));return;}$src=resolve_receipt_photo_source((string)$o['receipt_file_id']);$r=$src?tg('sendPhoto',['chat_id'=>$chat_id,'photo'=>$src,'caption'=>'🧾 رسید سفارش #'.$oid,'reply_markup'=>admin_order_keyboard($oid)]):['ok'=>false];if(empty($r['ok']))send_msg($chat_id,'نمایش تصویر رسید ممکن نشد. متن/جزئیات سفارش همچنان در دسترس است.',admin_order_keyboard($oid));return; }
