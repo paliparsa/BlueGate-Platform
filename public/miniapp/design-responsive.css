@@ -6,3 +6,112 @@
 @media(prefers-reduced-motion:reduce){
   :where(button,.btn,.card,.product-card,.order-card,.modal,.popup,.sheet){transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
+
+
+/* v5.1.43 — five-tab bottom navigation, loop 2: compact, balanced, touch-safe */
+#userApp .bottom-nav{
+  position:fixed!important;
+  z-index:120!important;
+  inset-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px));
+  bottom:max(8px, env(safe-area-inset-bottom, 0px))!important;
+  width:auto!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  align-items:stretch!important;
+  gap:4px!important;
+  min-height:0!important;
+  padding:7px!important;
+  border:1px solid rgba(116,184,255,.16)!important;
+  border-radius:22px!important;
+  background:rgba(7,12,20,.94)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(135%)!important;
+  backdrop-filter:blur(22px) saturate(135%)!important;
+  transform:translateZ(0);
+  isolation:isolate;
+}
+#userApp .bottom-nav button{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:center!important;
+  gap:4px!important;
+  min-width:0!important;
+  min-height:58px!important;
+  height:58px!important;
+  padding:5px 2px!important;
+  overflow:hidden!important;
+  border:1px solid transparent!important;
+  border-radius:15px!important;
+  background:transparent!important;
+  color:#8e9db1!important;
+  font-family:inherit!important;
+  font-size:10px!important;
+  font-weight:750!important;
+  line-height:1.25!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  transition:color .18s ease,background .18s ease,border-color .18s ease,transform .18s ease!important;
+  -webkit-tap-highlight-color:transparent;
+}
+#userApp .bottom-nav button .nav-icon{
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 25px!important;
+  width:25px!important;
+  height:25px!important;
+  min-width:25px!important;
+  margin:0!important;
+  font-size:0!important;
+  line-height:1!important;
+  color:currentColor!important;
+  filter:none!important;
+  transform:none!important;
+}
+#userApp .bottom-nav button .nav-icon svg,
+#userApp .bottom-nav button .nav-icon .bg-ico{
+  display:block!important;
+  width:21px!important;
+  height:21px!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.7!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+}
+#userApp .bottom-nav button.active{
+  color:#dceeff!important;
+  border-color:rgba(75,160,255,.18)!important;
+  background:linear-gradient(180deg,rgba(46,128,218,.22),rgba(34,92,158,.12))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+#userApp .bottom-nav button.active .nav-icon{color:#78bdff!important}
+#userApp .bottom-nav button.active::after{
+  content:""!important;
+  position:absolute!important;
+  inset:auto 30% 3px!important;
+  height:2px!important;
+  border-radius:99px!important;
+  background:#66b3ff!important;
+  box-shadow:0 0 9px rgba(74,164,255,.3)!important;
+  animation:none!important;
+}
+#userApp .bottom-nav button:focus-visible{
+  outline:2px solid #78bdff!important;
+  outline-offset:-3px!important;
+}
+#userApp .bottom-nav button:active{transform:scale(.97)!important}
+@media(max-width:380px){
+  #userApp .bottom-nav{inset-inline:7px;gap:2px!important;padding:6px!important;border-radius:19px!important}
+  #userApp .bottom-nav button{min-height:55px!important;height:55px!important;gap:3px!important;font-size:9px!important;border-radius:13px!important}
+  #userApp .bottom-nav button .nav-icon{flex-basis:23px!important;width:23px!important;height:23px!important;min-width:23px!important}
+  #userApp .bottom-nav button .nav-icon svg,#userApp .bottom-nav button .nav-icon .bg-ico{width:20px!important;height:20px!important}
+}
+@media(min-width:700px){
+  #userApp .bottom-nav{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #userApp .bottom-nav button{transition:none!important}
+  #userApp .bottom-nav button:active{transform:none!important}
+}
