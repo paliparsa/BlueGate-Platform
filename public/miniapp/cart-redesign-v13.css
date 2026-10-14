@@ -21,6 +21,8 @@
 #cartFab.cart-fab:active{transform:scale(.97)!important}
 #cartFab.cart-fab:focus-visible{outline:2px solid #c6ceff!important;outline-offset:3px!important}
 
+#cartFab.cart-fab.hidden{display:none!important}
+
 /* Modal frame: same centered, nearly-black visual language as product details. */
 #cartSheet.cart-sheet{
   position:fixed!important;inset:0!important;z-index:2147482300!important;
