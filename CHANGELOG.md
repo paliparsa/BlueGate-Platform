@@ -1,3 +1,13 @@
+## 5.1.58 - Full non-VPN order detail and payment redesign
+
+- Redesigned the full order detail screen for all non-VPN product types: header and order status, amount due, progress timeline, savings and price breakdown, order metadata, payment methods and method-specific forms, history, notes, delivery details, and bottom actions.
+- Kept the dedicated VPN experience outside this layer by scoping all styles to the existing `service-order-detail` marker; VPN service classification and page logic remain unchanged.
+- Added responsive treatment for narrow mobile widths, long product names/payment addresses, sticky actions, keyboard focus, and reduced-motion preferences.
+- Preserved payment-method visibility, countdown/expiry rules, wallet/card/Stars/crypto selection, receipt and TXID handlers, API payloads, and existing order/service actions.
+- Loaded the full-page stylesheet after the previous payment and order layers; registered PHP filemtime cache-busting.
+- Two review loops: (1) page hierarchy and payment flow; (2) narrow-screen layout, long text, status variants, action preservation, and VPN exclusion.
+- Source-level validation only; live Telegram WebView visual and end-to-end payment testing remains outstanding.
+
 ## 5.1.57 - Non-VPN order payment page redesign
 
 - Added a dedicated payment-page visual layer for non-VPN service orders in My Orders, keeping VPN order/service details explicitly excluded.
