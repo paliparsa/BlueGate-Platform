@@ -1,6 +1,6 @@
 /* BlueGate Mini App surfaces — shared visual ownership for customer + in-app admin */
-#userApp :is(.card,.panel,.product-card,.product-card-modern,.product-item,.product-grid .product,.shop-product-card,.product-info-card,.detail-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.catalog-card,.catalog-tile,.product-tile,.service-card,.bg-card,.glowing-flash-card,.flash-card,[data-product-card],[data-product-id]),
-#adminApp :is(.card,.panel,.product-card,.product-card-modern,.product-item,.product-info-card,.detail-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-stat-card,.admin-panel,.admin-section,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.service-card,.catalog-card,.catalog-tile,[data-product-card],[data-product-id]){
+#userApp :is(.card,.panel,.product-info-card,.detail-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card),
+#adminApp :is(.card,.panel,.product-info-card,.detail-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-stat-card,.admin-panel,.admin-section,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card){
   color:var(--text)!important;background-color:var(--surface)!important;background-image:none!important;border-color:var(--line)!important;box-shadow:var(--elev-sm)!important;border-radius:var(--r-lg)!important
 }
 #userApp :is(.topbar,.app-header,.page-header,.bottom-nav,.nav-bar,.mobile-nav),
@@ -13,7 +13,14 @@
 }
 #userApp :is(.nav-item.active,.nav-link.active,.bottom-nav button.active) :is(svg,.bg-ico,.icon),
 #adminApp :is(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active) :is(svg,.bg-ico,.icon){color:var(--accent)!important;filter:none!important}
-#userApp :is(.badge,.chip,.tag,.status-badge,.filter-chip),#adminApp :is(.badge,.chip,.tag,.status-badge,.filter-chip){border-radius:var(--r-sm)!important}
+#userApp :is(.badge,.chip,.tag,.status-badge,.filter-chip),#adminApp :is(.badge,.chip,.tag,.status-badge,.filter-chip){border-radius:var(--r-sm)!important
+}
+
+/* Product-card shells share the canonical dark surface without overriding feature-owned geometry. */
+#userApp :is(.product-card,.product-card-modern,.product-item,.product-grid .product,.shop-product-card,.catalog-card,.catalog-tile,.product-tile,.service-card,.bg-card,.glowing-flash-card,.flash-card,[data-product-card],[data-product-id]),
+#adminApp :is(.product-card,.product-card-modern,.product-item,.service-card,.catalog-card,.catalog-tile,[data-product-card],[data-product-id]){
+  color:var(--text)!important;background-color:var(--surface)!important;background-image:none!important;border-color:var(--line)!important;box-shadow:var(--elev-sm)!important
+}
 
 /* Remove decorative gradients from product-card pseudo layers; product media remains untouched. */
 #userApp :is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::before,#userApp :is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::after{background-image:none;box-shadow:none}
