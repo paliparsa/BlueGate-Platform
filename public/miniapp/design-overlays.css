@@ -1,21 +1,20 @@
 /* BlueGate Mini App overlays — visual skin only; z-index and positioning stay in behavior layers */
-#userApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog),
+#userApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog,.dialog-card,.auth-modal-content,.modal-content,.modal-card,.popup-card,.popup-panel,.language-popup,.language-modal,.stars-popup,.stars-modal,.credit-popup,.topup-popup,[role="dialog"],[role="alertdialog"]),
 #adminApp :is(dialog,.modal,.popup,.sheet,.bottom-sheet,.app-sheet,.drawer,.popover,.confirm-dialog){
-  color:var(--text)!important;background-color:#0c0e13!important;background-image:none!important;border-color:var(--line)!important;border-radius:var(--r-xl)!important;box-shadow:var(--elev-lg)!important
+  color:var(--text)!important;background-color:#080808!important;background-image:none!important;border-color:#242424!important;border-radius:var(--r-xl)!important;box-shadow:var(--elev-lg)!important
 }
-dialog::backdrop,.modal-backdrop,.popup-backdrop,.sheet-backdrop,.overlay-backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+dialog::backdrop,.modal-backdrop,.popup-backdrop,.sheet-backdrop,.overlay-backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(4px)}
 #userApp :is(.modal-header,.popup-header,.sheet-header,.dialog-header,.modal-footer,.popup-footer,.sheet-footer),
 #adminApp :is(.modal-header,.popup-header,.sheet-header,.dialog-header,.modal-footer,.popup-footer,.sheet-footer){border-color:var(--line)!important}
 #userApp :is(.toast,.toast-message,.notice,.inline-alert),#adminApp :is(.toast,.toast-message,.notice,.inline-alert){border-radius:var(--r-md)!important;box-shadow:var(--elev-sm)}
 
 #userApp :is(.app-sheet-panel,.vy-admin-parity-sheet .app-sheet-panel,.app-confirm-layer .app-sheet-panel),
-#adminApp :is(.app-sheet-panel,.vy-admin-parity-sheet .app-sheet-panel,.app-confirm-layer .app-sheet-panel){background:#0c0e13!important;background-image:none!important;border-color:var(--line)!important;box-shadow:var(--elev-lg)!important}
+#adminApp :is(.app-sheet-panel,.vy-admin-parity-sheet .app-sheet-panel,.app-confirm-layer .app-sheet-panel){background:#080808!important;background-image:none!important;border-color:#242424!important;box-shadow:var(--elev-lg)!important}
 #adminApp .topbar,#adminApp .admin-tabs{background:#080a0e!important;background-image:none!important;border-color:var(--line)!important;box-shadow:none!important}
 #adminApp .admin-tabs button.active{background:var(--accent-soft)!important;background-image:none!important;border-color:rgba(49,94,251,.36)!important}
 
 /* Preserve the data-bearing subscription progress ring; it is not a decorative gradient. */
 #userApp .vpn-sub-orb,#adminApp .vpn-sub-orb{background:conic-gradient(var(--accent) calc(var(--p)*1%),rgba(255,255,255,.08) 0)!important}
 
-
-/* Unified Mini App design ownership v1 — dark popup surfaces; overlay geometry stays in feature layers */
-#userApp :is(.order-more-popup-card,.mini-credit-topup-panel,.purchase-confirm-card,.dialog-card,.auth-modal-content,.app-sheet-panel,.app-sheet .app-sheet-content,.modal-content,.modal-card,.popup-card,.popup-panel,.language-popup,.language-modal,.stars-popup,.stars-modal,.credit-popup,.topup-popup,[class*="popup-card"],[class*="modal-content"],[class*="modal-card"],[class*="sheet-panel"],[role="dialog"],[role="alertdialog"]),#adminApp :is(.dialog-card,.auth-modal-content,.app-sheet-panel,.modal-content,.modal-card,.popup-card,.popup-panel,[class*="modal-content"],[class*="modal-card"],[class*="sheet-panel"],[role="dialog"],[role="alertdialog"]){background:#080808!important;background-color:#080808!important;background-image:none!important;border-color:#242424!important;color:#f5f5f5!important;box-shadow:var(--elev-lg)!important}#userApp :is(.order-more-popup-backdrop,.mini-credit-topup-backdrop,.purchase-confirm-overlay,.app-sheet-backdrop,.modal-backdrop,.dialog-backdrop,.popup-backdrop,.language-popup-backdrop,.stars-popup-backdrop,[class*="popup-backdrop"],[class*="modal-backdrop"],[class*="sheet-backdrop"],[class*="overlay-backdrop"]),#adminApp :is(.app-sheet-backdrop,.modal-backdrop,.dialog-backdrop,.popup-backdrop,[class*="modal-backdrop"],[class*="sheet-backdrop"]){background:rgba(0,0,0,.82)!important;background-image:none!important}#userApp :is([role="dialog"],[role="alertdialog"],.modal-content,.modal-card,.popup-card,.popup-panel,.app-sheet-panel,.app-sheet .app-sheet-content,.language-popup,.stars-popup,.credit-popup,.topup-popup) :is(.card,.panel,.section-card,.option,.payment-method,.payment-option,.wallet-method,.form-section){background-color:#0d0d0d!important;background-image:none!important;border-color:#242424!important;color:#f2f2f2!important}
+/* Nested surfaces inside dialogs stay dark and legible. */
+#userApp :is([role="dialog"],[role="alertdialog"],.modal-content,.modal-card,.popup-card,.popup-panel,.app-sheet-panel,.language-popup,.stars-popup,.credit-popup,.topup-popup) :is(.card,.panel,.section-card,.option,.payment-method,.payment-option,.wallet-method,.form-section){background-color:#0d0d0d!important;background-image:none!important;border-color:#242424!important;color:#f2f2f2!important}
