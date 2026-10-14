@@ -42,8 +42,7 @@
 #homePage .account-vpn-hub .u-empty{margin:10px!important;border:1px dashed var(--account-card-border)!important;background:color-mix(in srgb,var(--surface2) 65%,transparent)!important}
 .account-order-summary{direction:rtl;min-width:0}
 .account-order-summary-list{display:grid;gap:9px;max-height:min(58dvh,520px);overflow:auto;overscroll-behavior:contain;padding:1px 2px 5px}
-.account-order-summary-row{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:start;gap:10px;padding:12px;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:15px;background:color-mix(in srgb,var(--surface2,#111923) 82%,transparent);min-width:0}
-.account-order-summary-index{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--accent) 13%,transparent);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent);font-size:11px;font-weight:900}
+.account-order-summary-row{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:10px;padding:12px;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:15px;background:color-mix(in srgb,var(--surface2,#111923) 82%,transparent);min-width:0}
 .account-order-summary-copy{display:grid;gap:4px;min-width:0}
 .account-order-summary-copy>small{font-size:10px;line-height:1.5;color:var(--muted)}
 .account-order-summary-copy>b{font-size:13px;line-height:1.65;font-weight:850;overflow-wrap:anywhere}
