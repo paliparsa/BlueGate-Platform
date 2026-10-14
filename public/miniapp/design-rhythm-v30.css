@@ -1,0 +1,109 @@
+/* BlueGate Mini App 5.1.77 — cross-page design rhythm
+   Shared typography, card geometry, spacing and control sizing.
+   Intentionally excludes product artwork, wheel geometry and modal internals. */
+:root{
+  --bg-ui-page-gutter:16px;
+  --bg-ui-section-gap:16px;
+  --bg-ui-card-padding:16px;
+  --bg-ui-card-radius:20px;
+  --bg-ui-control-radius:13px;
+  --bg-ui-title-size:18px;
+  --bg-ui-section-title-size:17px;
+  --bg-ui-body-size:14px;
+  --bg-ui-secondary-size:13px;
+  --bg-ui-caption-size:12px;
+  --bg-ui-control-size:14px;
+  --bg-ui-card-border:color-mix(in srgb,var(--line) 88%,transparent);
+}
+#userApp{
+  font-family:var(--mini-font-family,"Yekan","Yekan Bakh",Tahoma,sans-serif);
+  font-size:var(--bg-ui-body-size);
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+#userApp :is(h1,h2,h3,h4,h5,h6){font-family:inherit;letter-spacing:0;line-height:1.4}
+#userApp :is(.page-title,.page-header h1,.page-header h2,.section-title h2,.section-heading,.support-page-intro h2,.orders-header h1,.shop-page-intro h1){font-size:var(--bg-ui-title-size);font-weight:850}
+#userApp :is(.section-title,.section-heading,.section-header){gap:10px}
+#userApp :is(p,.description,.subtitle,.helper-text,.muted,.text-muted){line-height:1.75}
+#userApp :is(.mini-support-page,.credit-center-mini-v27,#ordersPage,#shopPage,#homePage,#walletPage,#accountPage,#referralPage,#vipPage,#profilePage){
+  --page-section-gap:var(--bg-ui-section-gap);
+}
+#userApp :is(.mini-support-page,.credit-center-mini-v27,#ordersPage,#shopPage,#homePage,#walletPage,#accountPage,#referralPage,#vipPage,#profilePage) > :is(section,.section,.card,.panel){
+  margin-block-end:var(--bg-ui-section-gap);
+}
+#userApp :is(.card,.panel,.section-card,.stat-card,.setting-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.order-card,.product-info-card,.detail-card,.wallet-card,.mini-credit-hero-v27,.orders-header.parity-page-hero,.shop-page-intro.parity-page-hero,.support-page-hero){
+  border-radius:var(--bg-ui-card-radius);
+}
+#userApp :is(.card,.panel,.section-card,.stat-card,.setting-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.product-info-card,.detail-card,.wallet-card){
+  border-color:var(--bg-ui-card-border);
+}
+#userApp :is(.section-title h2,.section-heading h2,.card-title,.panel-title,.support-section-title,.orders-section-title,.credit-section-title){
+  font-size:var(--bg-ui-section-title-size);
+  line-height:1.45;
+  font-weight:800;
+}
+#userApp :is(.card p,.panel p,.section-card p,.stat-card p,.setting-card p,.support-card p,.ticket-card p,.referral-card p,.vip-card p,.credit-card p,.balance-card p,.history-card p){
+  font-size:var(--bg-ui-body-size);
+}
+#userApp :is(small,.small,.caption,.meta,.eyebrow,.member-kicker,.helper-text,.field-hint,.form-hint,.empty-state p){
+  font-size:var(--bg-ui-secondary-size);
+  line-height:1.65;
+}
+#userApp :is(button,.btn,.primary,.secondary,.danger,.success,.warning,.ghost,.outline,.icon-btn,.block-btn,.primary-btn,.secondary-btn,.cta-button,.action-button,.admin-action){
+  font-family:inherit;
+  font-size:var(--bg-ui-control-size);
+  line-height:1.4;
+  font-weight:750;
+  border-radius:var(--bg-ui-control-radius);
+}
+#userApp :is(input,select,textarea){
+  font-family:inherit;
+  font-size:var(--bg-ui-control-size);
+  line-height:1.5;
+  border-radius:var(--bg-ui-control-radius);
+}
+#userApp :is(.badge,.chip,.status-badge,.pill,.tag){
+  font-size:var(--bg-ui-caption-size);
+  line-height:1.45;
+  border-radius:999px;
+}
+#userApp :is(.empty-state,.empty-state-card,.loading-state,.error-state){
+  border-radius:var(--bg-ui-card-radius);
+}
+#userApp :is(.stat-card,.metric-card,.summary-card,.balance-card,.credit-card){
+  min-width:0;
+}
+#userApp :is(.stat-card,.metric-card,.summary-card) :is(strong,.value,.amount,.stat-value){
+  font-variant-numeric:tabular-nums;
+  line-height:1.25;
+}
+#userApp :is(.card,.panel,.section-card,.stat-card,.setting-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.order-card,.product-info-card,.detail-card,.wallet-card){
+  overflow-wrap:anywhere;
+}
+#userApp :is(.card,.panel,.section-card,.stat-card,.setting-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.order-card,.product-info-card,.detail-card,.wallet-card) :is(svg,.bg-ico){
+  flex-shrink:0;
+}
+@media(max-width:620px){
+  :root{
+    --bg-ui-page-gutter:12px;
+    --bg-ui-section-gap:12px;
+    --bg-ui-card-padding:14px;
+    --bg-ui-card-radius:18px;
+    --bg-ui-title-size:17px;
+    --bg-ui-section-title-size:16px;
+    --bg-ui-body-size:14px;
+    --bg-ui-secondary-size:12.5px;
+    --bg-ui-control-size:13.5px;
+  }
+  #userApp :is(.card,.panel,.section-card,.stat-card,.setting-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.order-card,.product-info-card,.detail-card,.wallet-card){
+    border-radius:var(--bg-ui-card-radius);
+  }
+}
+@media(max-width:360px){
+  :root{--bg-ui-card-padding:12px;--bg-ui-title-size:16px;--bg-ui-section-title-size:15px}
+  #userApp :is(button,.btn,.primary,.secondary,.danger,.success,.warning,.ghost,.outline,.block-btn,.primary-btn,.secondary-btn,.cta-button,.action-button){max-width:100%;white-space:normal}
+}
+@media(prefers-reduced-motion:reduce){
+  #userApp :is(button,.btn,.card,.panel){scroll-behavior:auto}
+}
