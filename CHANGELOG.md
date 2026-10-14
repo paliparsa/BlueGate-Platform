@@ -1,3 +1,11 @@
+## 5.1.63 - Credit center home redesign
+
+- Reworked the credit center's visual hierarchy with a refined dark balance hero, clearer currency/stat tiles, compact action sizing, and more legible recent-activity rows.
+- Scoped all overrides to the existing credit-center component and preserved current balance values, currency conversion, top-up, payment, transaction, and API behavior.
+- Added narrow-screen and reduced-motion handling; reused the existing stylesheet entry so runtime asset filemtime cache-busting continues to apply.
+- Two review loops: (1) layout hierarchy, card contrast, action affordance, and transaction readability; (2) selector scoping, narrow widths, long values, reduced motion, and preservation of existing flows.
+- Verification: source-level review only. Live browser, Telegram WebView, and real payment-flow regression tests were not available in this workflow.
+
 ## 5.1.62 - VPN subscription actions and traffic-expiry redesign
 
 - Rebuilt the subscription-link card as a dark premium panel with a dedicated copy control, clear action hierarchy, and responsive action grid.
