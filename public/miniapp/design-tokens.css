@@ -18,6 +18,11 @@
   --bgds-shadow-card:var(--elev-sm);--bgds-shadow-float:var(--elev-lg);--bgds-focus:var(--focus-ring);
   --mini-canvas:#030303;--mini-surface:#090909;--mini-surface-raised:#0d0d0d;--mini-payment-surface:#0a0a0a;
   --mini-control-size:44px;
+  --mini-overlay-gutter:max(12px,env(safe-area-inset-left,0px));
+  --mini-overlay-gutter-right:max(12px,env(safe-area-inset-right,0px));
+  --mini-overlay-top:max(12px,env(safe-area-inset-top,0px));
+  --mini-overlay-bottom:max(12px,env(safe-area-inset-bottom,0px));
+  --bgm-fast:150ms;--bgm-med:240ms;--bgm-ease:cubic-bezier(.2,.75,.25,1);
   --mini-focus-ring:0 0 0 3px color-mix(in srgb,var(--accent) 32%,transparent);
   --bg-font-body:16px;--bg-font-control:16px;--bg-font-secondary:15px;--bg-font-micro:14px;
 
