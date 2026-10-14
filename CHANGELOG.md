@@ -1,3 +1,9 @@
+## 5.1.75 - Support ticket layout repair
+
+- Registered the existing scoped support-center stylesheet after the shared Mini App and rewards layers so ticket-page cards, status badges, search and filters, empty states, ticket creation form, and conversation/composer styles actually apply.
+- Added a cache-busted stylesheet URL; no ticket APIs, message flow, or attachment behavior changed.
+- Source-level validation confirms the ticket stylesheet is linked from the Mini App entry point. Telegram WebView rendering still needs a live visual check.
+
 ## 5.1.74 - Premium spin wheel redesign
 
 - Reworked the rewards wheel into a premium dark-glass/gaming-style experience with a metallic rim, illuminated hub, pointer, ambient glow, and a high-contrast spin action.
