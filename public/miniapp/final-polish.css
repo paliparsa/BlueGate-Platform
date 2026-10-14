@@ -1,5 +1,4 @@
 /* BlueGate v1.8 Final Responsive & Motion Polish */
-:root{--vy-motion-fast:160ms;--vy-motion:220ms;--vy-motion-slow:320ms}
 html,body{max-width:100%;overflow-x:hidden}
 *{box-sizing:border-box}
 button,input,select,textarea{max-width:100%}
