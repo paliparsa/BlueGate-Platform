@@ -1,0 +1,117 @@
+/* BlueGate Mini App — final dark-surface and Persian typography consistency patch.
+   Loaded last intentionally to neutralize legacy feature-layer overrides. */
+:root {
+  color-scheme: dark !important;
+  --bgds-bg: #030303 !important;
+  --bgds-bg-2: #050505 !important;
+  --bgds-surface-1: #080808 !important;
+  --bgds-surface-2: #0b0b0b !important;
+  --bgds-surface-3: #111111 !important;
+  --bgds-border: #1b1b1b !important;
+  --bgds-border-strong: #292929 !important;
+}
+/* Remove the gray frame/outer canvas inside Telegram's WebView. */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #030303 !important;
+  background-color: #030303 !important;
+  background-image: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+body, body::before, body::after,
+#userApp, #adminApp, .app-shell, .app-container, .app-root, main,
+#userApp::before, #userApp::after, #adminApp::before, #adminApp::after {
+  background-color: #030303 !important;
+  background-image: none !important;
+  border-color: #1b1b1b !important;
+}
+#userApp, #adminApp, .app-shell {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+/* One Persian font throughout all ordinary UI, including dynamically-created nodes. */
+html, body, body *:not(i):not(svg):not(path):not(.fa):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-symbols-outlined):not([data-icon-font]) {
+  font-family: "Yekan", "Yekan Bakh", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+}
+input, textarea, select, option, button, [role="button"], [role="dialog"], [role="alertdialog"] {
+  font-family: "Yekan", "Yekan Bakh", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+}
+/* Product cards must stay near-black, not pale/washed out from old gradients. */
+:is(.card,.panel,.section-card,.product-tile,.product-card,.product-card-modern,
+.product-item,.product-grid .product,.shop-product-card,.catalog-card,.catalog-tile,
+.detail-card,.product-info-card,.glowing-flash-card,.flash-card,.hero,.shop-page-intro,
+[data-product-card], [data-product-id], .product-list-item) {
+  background: #090909 !important;
+  background-color: #090909 !important;
+  background-image: none !important;
+  border-color: #1c1c1c !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,.22) !important;
+  color: #f3f3f3 !important;
+}
+:is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::before,
+:is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::after {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+/* Payment methods: neutral graphite at rest, one restrained blue selection state. */
+:is(.payment-method,.wallet-method,.payment-option,.wallet-method-option,
+.payment-method-option,.topup-method-option,.mini-topup-method-list > button,
+[data-payment-method],[data-mini-topup-method]) {
+  background: #0a0a0a !important;
+  background-color: #0a0a0a !important;
+  background-image: none !important;
+  border: 1px solid #242424 !important;
+  color: #ededed !important;
+  box-shadow: none !important;
+}
+:is(.payment-method,.wallet-method,.payment-option,.wallet-method-option,
+.payment-method-option,.topup-method-option,.mini-topup-method-list > button,
+[data-payment-method],[data-mini-topup-method]) :is(svg,i,.icon) {
+  filter: grayscale(1) saturate(.25) !important;
+}
+:is(.payment-method.active,.wallet-method.active,.payment-option.active,
+.wallet-method-option.active,.payment-method-option.active,.topup-method-option.active,
+.mini-topup-method-list > button.active,[data-payment-method][aria-checked="true"],
+[data-payment-method].active,[data-mini-topup-method].active) {
+  background: #101722 !important;
+  background-color: #101722 !important;
+  background-image: none !important;
+  border-color: #315b9c !important;
+  color: #f5f7fb !important;
+  box-shadow: inset 0 0 0 1px rgba(65,125,220,.12) !important;
+}
+/* Every modal/sheet/popup panel is black; dimming belongs only to its backdrop. */
+:is(.order-more-popup-card,.mini-credit-topup-panel,.purchase-confirm-card,.dialog-card,
+.auth-modal-content,.app-sheet-panel,.app-sheet .app-sheet-content,.modal-content,
+.modal-card,.popup-card,.popup-panel,.language-popup,.language-modal,.stars-popup,
+.stars-modal,.credit-popup,.topup-popup,[class*="popup-card"],[class*="modal-content"],
+[class*="modal-card"],[class*="sheet-panel"],[role="dialog"],[role="alertdialog"]) {
+  background: #080808 !important;
+  background-color: #080808 !important;
+  background-image: none !important;
+  border-color: #242424 !important;
+  color: #f5f5f5 !important;
+  box-shadow: 0 18px 54px rgba(0,0,0,.62) !important;
+}
+:is(.order-more-popup-backdrop,.mini-credit-topup-backdrop,.purchase-confirm-overlay,
+.app-sheet-backdrop,.modal-backdrop,.dialog-backdrop,.popup-backdrop,
+.language-popup-backdrop,.stars-popup-backdrop,[class*="popup-backdrop"],
+[class*="modal-backdrop"],[class*="sheet-backdrop"],[class*="overlay-backdrop"]) {
+  background: rgba(0,0,0,.82) !important;
+  background-image: none !important;
+}
+/* Keep common nested content from reintroducing light panels inside dark dialogs. */
+:is([role="dialog"],[role="alertdialog"],.modal-content,.modal-card,.popup-card,
+.popup-panel,.app-sheet-panel,.app-sheet .app-sheet-content,.language-popup,
+.stars-popup,.credit-popup,.topup-popup) :is(.card,.panel,.section-card,.option,
+.payment-method,.payment-option,.wallet-method,.form-section) {
+  background-color: #0d0d0d !important;
+  background-image: none !important;
+  border-color: #242424 !important;
+  color: #f2f2f2 !important;
+}
