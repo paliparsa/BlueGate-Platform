@@ -1,0 +1,20 @@
+/* BlueGate Mini App design components — consistent control states */
+:where(button,.btn,.primary,.primary-btn,.block-btn,.cta-button,.admin-action,.action-button){
+  border-radius:var(--r-md);font-family:var(--mini-font-family);transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease
+}
+:where(.primary,.primary-btn,.block-btn.primary,.cta-button,.btn-primary,.admin-action.primary){
+  color:#fff;background:var(--accent);border:1px solid var(--accent);box-shadow:none
+}
+:where(.primary,.primary-btn,.block-btn.primary,.cta-button,.btn-primary,.admin-action.primary):hover{background:#244de0;border-color:#244de0}
+:where(.secondary,.btn-secondary,.ghost,.outline,.icon-btn,.admin-action.secondary){
+  background:var(--surface2);color:var(--text);border:1px solid var(--line)
+}
+:where(.danger,.btn-danger){background:rgba(255,100,124,.1);color:var(--danger);border-color:rgba(255,100,124,.28)}
+:where(input:not([type=checkbox]):not([type=radio]),select,textarea,.field input,.field select,.field textarea){
+  background:#0b0d12;color:var(--text);border-color:var(--line-strong);border-radius:var(--r-md)
+}
+:where(input,select,textarea)::placeholder{color:#737d8d;opacity:1}
+:where(input,select,textarea):focus{border-color:rgba(49,94,251,.8);box-shadow:var(--focus-ring);outline:0}
+:where(.form-field,.field,.input-wrap) label{color:var(--muted)}
+:where(button:disabled,.btn:disabled,[aria-disabled=true]){opacity:.52;cursor:not-allowed;box-shadow:none}
+:where(.switch input:checked + span,.toggle input:checked + span,.checkmark.is-checked){background:var(--accent);border-color:var(--accent)}
