@@ -1,3 +1,12 @@
+## 5.1.46 - Product card redesign and discount badge correction
+
+- Reworked product cards with flexible content heights so the price and card details cannot be clipped by the previous fixed 242px/86px sizing.
+- Gave the wishlist button and discount badge independent, reserved top corners; the heart remains visible on discounted products.
+- Discount badges now show only the percentage (for example, `25٪`) without a plan/product name or extra label.
+- Refined the black card surface, responsive image frame, readable price panel, and two-column catalog grid; retained product preview and wishlist data hooks.
+- Loop 1 identified fixed catalog heights and competing width rules as the source of hidden content; Loop 2 checked selector order, small-screen sizing, badge text, and interaction hooks.
+- Automated source checks passed; live Telegram WebView screenshot and tap testing remain outstanding.
+
 ## 5.1.45 - Product card black theme and price clarity
 
 - Corrected product card surfaces to true black, including the image frame and content area.
