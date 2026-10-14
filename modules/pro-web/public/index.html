@@ -20,10 +20,14 @@
     #bgRouteBoot{display:none}
     html.bg-route-boot body{background:#06101d}
     html.bg-route-boot #bgRouteBoot{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;background:#06101d;color:#d9e9ff;font-family:inherit}
-    html.bg-route-boot #bgRouteBoot>div{display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid rgba(116,170,225,.16);border-radius:14px;background:#0b1828;box-shadow:0 18px 50px rgba(0,0,0,.22)}
-    html.bg-route-boot #bgRouteBoot i{width:17px;height:17px;border:2px solid rgba(99,196,255,.25);border-top-color:#63c4ff;border-radius:50%;animation:bgRouteSpin .7s linear infinite}
+    html.bg-route-boot #bgRouteBoot>div{display:grid;justify-items:center;gap:12px;padding:24px 28px;border:1px solid rgba(116,170,225,.16);border-radius:22px;background:#0b1828;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+    html.bg-route-boot #bgRouteBoot .bg-route-loader-mark{position:relative;width:76px;height:76px;display:grid;place-items:center;border-radius:50%}
+    html.bg-route-boot #bgRouteBoot .bg-route-loader-mark:before{content:"";position:absolute;inset:0;border:2px solid rgba(99,196,255,.16);border-top-color:#63c4ff;border-right-color:rgba(49,94,251,.85);border-radius:50%;animation:bgRouteSpin .85s linear infinite}
+    html.bg-route-boot #bgRouteBoot .bg-route-loader-mark img{position:relative;z-index:1;width:43px;height:43px;object-fit:contain;display:block}
+    html.bg-route-boot #bgRouteBoot .bg-route-loader-label{font-size:13px;color:#d9e9ff}
     html.bg-route-boot #siteHeader,html.bg-route-boot #top,html.bg-route-boot .footer,html.bg-route-boot #announcement{visibility:hidden}
     @keyframes bgRouteSpin{to{transform:rotate(360deg)}}
+    @media(prefers-reduced-motion:reduce){html.bg-route-boot #bgRouteBoot .bg-route-loader-mark:before{animation:none}}
   </style>
   <link rel="stylesheet" href="/design-system.css?v=0">
   <link rel="stylesheet" href="/web/css/store.css?v=0">
@@ -39,7 +43,7 @@
   <link rel="stylesheet" href="/web/css/orders-v9.css?v=0">
 </head>
 <body>
-  <div id="bgRouteBoot" aria-live="polite"><div><i></i><span>در حال باز کردن بخش درخواستی…</span></div></div>
+  <div id="bgRouteBoot" aria-live="polite"><div><span class="bg-route-loader-mark"><img src="/web/assets/logo.webp" alt="BlueGate"></span><span class="bg-route-loader-label">در حال باز کردن بخش درخواستی…</span></div></div>
   <div id="announcement" class="announcement hidden"></div>
 
   <header class="site-header" id="siteHeader">
