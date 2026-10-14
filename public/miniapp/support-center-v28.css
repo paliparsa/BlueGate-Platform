@@ -1,0 +1,83 @@
+/* v5.1.69 — customer support center redesign, scoped to the ticket page */
+.mini-support-page.support-center-v2{display:grid;gap:16px;min-width:0;padding:2px 0 calc(var(--mini-bottom-clearance,90px) + 14px);color:var(--text)}
+.support-center-v2 .support-page-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;overflow:hidden;padding:22px;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));border-radius:22px;background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--accent) 15%,transparent),transparent 55%),linear-gradient(135deg,color-mix(in srgb,var(--surface) 96%,var(--accent)),var(--surface));box-shadow:0 14px 36px #0000000a}
+.support-center-v2 .support-page-hero:after{content:"";position:absolute;z-index:-1;inset:auto -42px -76px auto;width:190px;height:190px;border:1px solid color-mix(in srgb,var(--accent) 13%,transparent);border-radius:50%;box-shadow:0 0 0 22px color-mix(in srgb,var(--accent) 3%,transparent),0 0 0 46px color-mix(in srgb,var(--accent) 2%,transparent);pointer-events:none}
+.support-center-v2 .support-page-intro{display:grid;gap:8px;min-width:0}
+.support-center-v2 .member-kicker{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.13em;font-weight:800;color:var(--accent)}
+.support-live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 13%,transparent)}
+.support-center-v2 .support-page-intro h2{margin:0;font-size:clamp(23px,3vw,30px);font-weight:850;line-height:1.3;letter-spacing:-.035em}
+.support-center-v2 .support-page-intro p{margin:0;max-width:52ch;color:var(--muted);font-size:13px;line-height:1.9}
+.support-center-v2 .support-page-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;min-width:168px}
+.support-center-v2 .support-page-actions>*{display:flex;align-items:center;justify-content:center;gap:7px;min-height:43px;width:100%;border-radius:13px;font-size:12px;font-weight:750;white-space:nowrap}
+.support-center-v2 .support-telegram-link{border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 88%,transparent);color:var(--text);text-decoration:none}
+.support-center-v2 .support-center-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.support-center-v2 .support-center-stat{display:flex;align-items:center;gap:12px;min-width:0;padding:15px;border:1px solid var(--line);border-radius:17px;background:var(--surface);box-shadow:0 8px 24px #00000008}
+.support-center-v2 .support-center-stat>span:last-child{display:grid;gap:4px;min-width:0}
+.support-center-v2 .support-center-stat small{font-size:11px;line-height:1.5;color:var(--muted)}
+.support-center-v2 .support-center-stat b{font-size:23px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.support-center-v2 .support-center-stat-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border:1px solid color-mix(in srgb,var(--accent) 14%,var(--line));border-radius:13px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));color:var(--accent);font-size:18px}
+.support-center-v2 .support-center-stat-icon.team{background:color-mix(in srgb,#f59e0b 10%,var(--surface));color:#d99010;border-color:color-mix(in srgb,#f59e0b 20%,var(--line))}
+.support-center-v2 .support-center-stat-icon.waiting{background:color-mix(in srgb,#22c55e 9%,var(--surface));color:#16a34a;border-color:color-mix(in srgb,#22c55e 18%,var(--line))}
+.support-center-v2 .support-center-toolbar{display:grid;gap:11px;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.support-center-v2 .support-ticket-search{display:flex;align-items:center;gap:10px;min-width:0;height:45px;padding:0 12px;border:1px solid var(--line);border-radius:13px;background:var(--surface2);color:var(--muted)}
+.support-center-v2 .support-ticket-search>span{font-size:22px;line-height:1}
+.support-center-v2 .support-ticket-search input{flex:1;min-width:0;width:100%;height:100%;padding:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:12px}
+.support-center-v2 .support-ticket-search input::placeholder{color:var(--muted);opacity:.85}
+.support-center-v2 .support-ticket-search:focus-within{border-color:color-mix(in srgb,var(--accent) 65%,var(--line));box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 10%,transparent)}
+.support-center-v2 .support-ticket-search kbd{display:grid;place-items:center;min-width:22px;height:22px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:11px;background:var(--surface);cursor:pointer}
+.support-center-v2 .support-ticket-filters{display:flex;align-items:center;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:1px 0 3px;scrollbar-width:none}
+.support-center-v2 .support-ticket-filters::-webkit-scrollbar{display:none}
+.support-center-v2 .support-ticket-filter{flex:0 0 auto;min-height:34px;padding:7px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:background .16s,border-color .16s,color .16s}
+.support-center-v2 .support-ticket-filter:hover{background:var(--surface2);color:var(--text)}
+.support-center-v2 .support-ticket-filter.is-active{border-color:color-mix(in srgb,var(--accent) 25%,var(--line));background:color-mix(in srgb,var(--accent) 11%,var(--surface));color:var(--accent)}
+.support-center-v2 .support-list-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 1px 0}
+.support-center-v2 .support-list-heading>div{display:grid;gap:3px}
+.support-center-v2 .support-list-heading b{font-size:15px;font-weight:800}
+.support-center-v2 .support-list-heading small,.support-center-v2 .support-list-heading-note{font-size:10px;color:var(--muted)}
+.support-center-v2 .support-page-list{display:grid;gap:8px}
+.support-center-v2 .support-page-list .support-ticket-card{display:flex;align-items:center;gap:12px;min-width:0;min-height:78px;padding:13px!important;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text);text-align:start;box-shadow:0 6px 18px #00000006;transition:border-color .16s,background .16s,transform .16s}
+.support-center-v2 .support-page-list .support-ticket-card:hover{border-color:color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 3%,var(--surface))}
+.support-center-v2 .support-page-list .support-ticket-card:active{transform:scale(.994)}
+.support-center-v2 .support-ticket-mark{display:flex;flex:0 0 43px;align-items:center;justify-content:center;gap:1px;width:43px;height:43px;border:1px solid color-mix(in srgb,var(--accent) 17%,var(--line));border-radius:13px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));color:var(--accent);font-size:12px;font-weight:850;font-variant-numeric:tabular-nums}
+.support-center-v2 .support-ticket-main{display:grid;gap:6px;flex:1;min-width:0}
+.support-center-v2 .support-ticket-main b{overflow-wrap:anywhere;font-size:13px;line-height:1.55;font-weight:750}
+.support-center-v2 .support-ticket-main small{display:block;overflow-wrap:anywhere;color:var(--muted);font-size:10px;line-height:1.5}
+.support-center-v2 .support-ticket-date-label{opacity:.8}
+.support-center-v2 .support-ticket-side{display:flex;align-items:center;gap:9px;flex:0 0 auto;max-width:45%}
+.support-center-v2 .support-ticket-status{max-width:100%;padding:5px 9px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:750;line-height:1.45;text-align:center;white-space:normal}
+.support-center-v2 .support-ticket-chevron{color:var(--muted);font-size:23px;line-height:1}
+.support-center-v2 .support-filter-empty{padding:30px 16px;border:1px dashed var(--line);border-radius:17px;background:var(--surface)}
+.support-center-v2 .support-filter-empty .u-empty-icon{color:var(--accent)}
+.support-center-v2 .support-page-hero-guest{grid-template-columns:minmax(0,1fr);justify-items:start}
+.support-center-v2 .support-page-hero-guest .support-page-actions{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;max-width:480px}
+@media(max-width:620px){
+ .mini-support-page.support-center-v2{gap:12px}
+ .support-center-v2 .support-page-hero{grid-template-columns:minmax(0,1fr);gap:15px;padding:17px;border-radius:19px}
+ .support-center-v2 .support-page-intro h2{font-size:24px}
+ .support-center-v2 .support-page-actions{grid-template-columns:repeat(2,minmax(0,1fr));min-width:0}
+ .support-center-v2 .support-page-actions>*{min-height:41px;padding-inline:8px;font-size:11px}
+ .support-center-v2 .support-center-stats{gap:7px}
+ .support-center-v2 .support-center-stat{align-items:flex-start;gap:8px;padding:11px 9px;border-radius:14px}
+ .support-center-v2 .support-center-stat-icon{flex-basis:30px;width:30px;height:30px;border-radius:10px;font-size:15px}
+ .support-center-v2 .support-center-stat small{font-size:10px}
+ .support-center-v2 .support-center-stat b{font-size:19px}
+ .support-center-v2 .support-center-toolbar{gap:9px;padding:10px;border-radius:15px}
+ .support-center-v2 .support-ticket-filters{margin-inline:-1px}
+ .support-center-v2 .support-ticket-filter{padding-inline:10px;font-size:10px}
+ .support-center-v2 .support-list-heading-note{display:none}
+ .support-center-v2 .support-page-list .support-ticket-card{gap:9px;min-height:72px;padding:10px!important;border-radius:14px}
+ .support-center-v2 .support-ticket-mark{flex-basis:36px;width:36px;height:36px;border-radius:11px;font-size:11px}
+ .support-center-v2 .support-ticket-main b{font-size:12px}
+ .support-center-v2 .support-ticket-side{flex-direction:column-reverse;align-items:flex-end;gap:4px;max-width:43%}
+ .support-center-v2 .support-ticket-status{padding:4px 7px;font-size:9px}
+ .support-center-v2 .support-ticket-chevron{font-size:18px}
+ .support-center-v2 .support-page-hero-guest .support-page-actions{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:360px){
+ .support-center-v2 .support-page-actions{grid-template-columns:minmax(0,1fr)}
+ .support-center-v2 .support-center-stat{display:grid;gap:7px}
+ .support-center-v2 .support-ticket-side{max-width:40%}
+ .support-center-v2 .support-ticket-status{font-size:8px}
+ .support-center-v2 .support-ticket-search kbd{display:none}
+}
+@media(prefers-reduced-motion:reduce){.support-center-v2 .support-ticket-filter,.support-center-v2 .support-page-list .support-ticket-card{transition:none}}

@@ -1913,7 +1913,7 @@ function renderMiniSupportPage(){
   const host=$('supportPage');
   if(!host)return;
   if(state?.is_guest){
-    host.innerHTML=`<section class="mini-support-page">
+    host.innerHTML=`<section class="mini-support-page support-center-v2">
       <div class="support-page-hero support-page-hero-guest">
         <div class="support-page-brand-mark" aria-hidden="true">BG</div>
         <span class="member-kicker">BLUEGATE SUPPORT</span>
@@ -1928,28 +1928,81 @@ function renderMiniSupportPage(){
     host.querySelector('#miniSupportLogin')?.addEventListener('click',openAuthModal);
     return;
   }
-  const tickets=state?.support_tickets||[];
-  host.innerHTML=`<section class="mini-support-page">
-    <div class="support-page-hero">
+  const tickets=Array.isArray(state?.support_tickets)?state.support_tickets:[];
+  const closed=t=>['closed','resolved'].includes(String(t?.status||'').toLowerCase());
+  const needsTeam=t=>['open','waiting_admin'].includes(String(t?.status||'').toLowerCase());
+  const waitingUser=t=>String(t?.status||'').toLowerCase()==='waiting_customer';
+  const renderRows=(filter='',query='')=>{
+    const q=String(query||'').trim().toLocaleLowerCase();
+    const filtered=tickets.filter(t=>{
+      const status=String(t?.status||'').toLowerCase();
+      const matchesFilter=filter==='active'?!closed(t):filter==='team'?needsTeam(t):filter==='user'?waitingUser(t):filter==='closed'?closed(t):true;
+      const haystack=[t?.subject,t?.id,t?.last_message_at,t?.created_at,miniSupportStatusLabel(status)].join(' ').toLocaleLowerCase();
+      return matchesFilter&&(!q||haystack.includes(q));
+    });
+    if(!filtered.length)return `<div class="u-empty support-ticket-empty support-filter-empty"><div class="u-empty-icon" aria-hidden="true">${tickets.length?'⌕':'✉'}</div><h3>${tickets.length?'نتیجه‌ای پیدا نشد':'هنوز تیکتی نداری'}</h3><p>${tickets.length?'عبارت جست‌وجو یا فیلتر وضعیت را تغییر بده.':'اگر در خرید یا سرویس مشکلی داری، درخواستت را ثبت کن تا تیم پشتیبانی پیگیری کند.'}</p>${tickets.length?'':'<button class="primary" data-support-ticket-new>ثبت اولین تیکت</button>'}</div>`;
+    return filtered.map(t=>`<button type="button" class="account-menu-row support-ticket-card" data-support-ticket="${Number(t.id)||0}">
+      <span class="account-menu-icon support-ticket-mark" aria-hidden="true"><span>#</span>${esc(String(t.id||''))}</span>
+      <span class="support-ticket-main"><b>${esc(t.subject||'تیکت پشتیبانی')}</b><small><span class="support-ticket-date-label">آخرین فعالیت</span> ${esc(t.last_message_at||t.created_at||'بدون پیام')}</small></span>
+      <span class="support-ticket-side"><span class="support-ticket-status ${miniSupportStatusClass(t.status)}">${esc(miniSupportStatusLabel(t.status))}</span><span class="support-ticket-chevron" aria-hidden="true">‹</span></span>
+    </button>`).join('');
+  };
+  host.innerHTML=`<section class="mini-support-page support-center-v2">
+    <header class="support-page-hero">
       <div class="support-page-intro">
-        <span class="member-kicker">BLUEGATE SUPPORT</span>
-        <h2>تیکت‌های من</h2>
-        <p>درخواست‌ها و پاسخ‌های تیم پشتیبانی را همین‌جا دنبال کن.</p>
+        <span class="member-kicker"><span class="support-live-dot"></span> BLUEGATE SUPPORT</span>
+        <h2>مرکز پشتیبانی</h2>
+        <p>همهٔ درخواست‌ها و پاسخ‌های تیم پشتیبانی، یک‌جا و مرتب.</p>
       </div>
       <div class="support-page-actions">
-        <button class="primary support-new-ticket-btn" data-support-ticket-new><span aria-hidden="true">＋</span> تیکت جدید</button>
-        <a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener">پشتیبانی تلگرام</a>
+        <button class="primary support-new-ticket-btn" data-support-ticket-new><span aria-hidden="true">＋</span> ثبت تیکت جدید</button>
+        <a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener"><span aria-hidden="true">↗</span> پشتیبانی تلگرام</a>
+      </div>
+    </header>
+    <div class="support-center-stats" aria-label="خلاصه تیکت‌ها">
+      <article class="support-center-stat"><span class="support-center-stat-icon all" aria-hidden="true">▤</span><span><small>کل درخواست‌ها</small><b>${tickets.length}</b></span></article>
+      <article class="support-center-stat"><span class="support-center-stat-icon team" aria-hidden="true">◷</span><span><small>نیازمند پیگیری</small><b>${tickets.filter(needsTeam).length}</b></span></article>
+      <article class="support-center-stat"><span class="support-center-stat-icon waiting" aria-hidden="true">✓</span><span><small>در انتظار کاربر</small><b>${tickets.filter(waitingUser).length}</b></span></article>
+    </div>
+    <div class="support-center-toolbar">
+      <label class="support-ticket-search"><span aria-hidden="true">⌕</span><input type="search" id="supportTicketSearch" placeholder="جست‌وجوی موضوع یا شماره تیکت" autocomplete="off" aria-label="جست‌وجوی تیکت‌ها"></label>
+      <div class="support-ticket-filters" role="group" aria-label="فیلتر وضعیت تیکت">
+        <button type="button" class="support-ticket-filter is-active" data-support-filter="all" aria-pressed="true">همه</button>
+        <button type="button" class="support-ticket-filter" data-support-filter="active" aria-pressed="false">باز</button>
+        <button type="button" class="support-ticket-filter" data-support-filter="team" aria-pressed="false">نیازمند پیگیری</button>
+        <button type="button" class="support-ticket-filter" data-support-filter="user" aria-pressed="false">در انتظار من</button>
+        <button type="button" class="support-ticket-filter" data-support-filter="closed" aria-pressed="false">بسته‌شده</button>
       </div>
     </div>
-    <div class="support-list-heading"><b>درخواست‌های پشتیبانی</b><span>${tickets.length} تیکت</span></div>
-    <div class="mini-support-list support-page-list">${tickets.length?tickets.map(t=>`<button type="button" class="account-menu-row support-ticket-card" data-support-ticket="${Number(t.id)||0}">
-      <span class="account-menu-icon support-ticket-mark" aria-hidden="true">#${esc(String(t.id||''))}</span>
-      <span class="support-ticket-main"><b>${esc(t.subject||'تیکت پشتیبانی')}</b><small>${esc(t.last_message_at||t.created_at||'بدون پیام')}</small></span>
-      <span class="support-ticket-side"><span class="support-ticket-status ${miniSupportStatusClass(t.status)}">${esc(miniSupportStatusLabel(t.status))}</span><span class="support-ticket-chevron" aria-hidden="true">‹</span></span>
-    </button>`).join(''):'<div class="u-empty support-ticket-empty"><div class="u-empty-icon" aria-hidden="true">✉</div><h3>هنوز تیکتی نداری</h3><p>اگر در خرید یا سرویس مشکلی داری، درخواستت را ثبت کن تا تیم پشتیبانی پیگیری کند.</p><button class="primary" data-support-ticket-new>ثبت اولین تیکت</button></div>'}</div>
+    <div class="support-list-heading"><div><b>درخواست‌های پشتیبانی</b><small id="supportTicketResultCount">${tickets.length} درخواست</small></div><span class="support-list-heading-note">جدیدترین فعالیت در ابتدا</span></div>
+    <div class="mini-support-list support-page-list" id="supportTicketList">${renderRows()}</div>
   </section>`;
-  host.querySelectorAll('[data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
-  host.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
+  let activeFilter='all';
+  const list=host.querySelector('#supportTicketList');
+  const search=host.querySelector('#supportTicketSearch');
+  const updateList=()=>{
+    if(list)list.innerHTML=renderRows(activeFilter,search?.value||'');
+    const count=list?.querySelectorAll('[data-support-ticket]').length||0;
+    const countLabel=host.querySelector('#supportTicketResultCount');
+    if(countLabel)countLabel.textContent=`${count} درخواست`;
+    list?.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
+  list?.querySelectorAll('[data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
+    list?.querySelectorAll('[data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
+  };
+  search?.addEventListener('input',updateList);
+  host.querySelectorAll('[data-support-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+    activeFilter=String(btn.dataset.supportFilter||'all');
+    host.querySelectorAll('[data-support-filter]').forEach(item=>{
+      const selected=item===btn;
+      item.classList.toggle('is-active',selected);
+      item.setAttribute('aria-pressed',selected?'true':'false');
+    });
+    updateList();
+  }));
+  host.querySelectorAll('.support-page-hero [data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
+  list?.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
+  search?.addEventListener('keydown',e=>{if(e.key==='Escape'){search.value='';updateList();search.blur()}});
+  
 }
 function openMiniSupport(){
   if(state?.is_guest){openAuthModal();return}

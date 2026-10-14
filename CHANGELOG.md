@@ -1,3 +1,11 @@
+## 5.1.69 - Support center redesign
+
+- Rebuilt the customer ticket page hierarchy around a shared BlueGate support hero, live ticket-status summaries, search, status filters, and clearer ticket rows.
+- Kept the existing support ticket APIs, create/reply actions, attachment handling, conversation polling, closed-ticket restrictions, and Telegram support link intact.
+- Added a dedicated, page-scoped stylesheet and registered it through the Mini App asset manifest so filemtime cache-busting remains active; no schema or business-rule changes.
+- Two review loops: (1) layout hierarchy, shared tokens, compact/mobile behavior, empty/no-results states; (2) event wiring, status filtering, existing API handlers, stylesheet registration, and version consistency.
+- Verification is source-level only; live Telegram WebView, browser interaction, and server-backed ticket flows were not exercised.
+
 ## 5.1.68 - Referral center refinement
 
 - Reworked the referral center hierarchy: a dedicated intro, available-credit card, compact real-data referral metrics, VIP progress, and a clearer invitation-link area.
