@@ -1,0 +1,201 @@
+/* BlueGate Mini App v5.1.58 — full non-VPN order detail + payment page.
+   Scoped only to the existing service-order-detail class; managed VPN stays on its own page. */
+.service-order-detail.order-detail-v2{
+  --od20-bg:#090a0d;--od20-panel:#11141a;--od20-panel2:#151a22;--od20-line:rgba(158,177,205,.15);
+  --od20-text:#edf2f9;--od20-muted:#929eb0;
+  position:relative;display:flex;flex-direction:column;gap:16px;width:100%;max-width:100%;min-width:0;
+  margin:0 auto;padding:clamp(12px,3.3vw,22px);box-sizing:border-box;overflow:hidden;
+  border:1px solid rgba(147,166,194,.1);border-radius:26px;
+  background:radial-gradient(120% 42% at 100% 0%,rgba(48,100,160,.10),transparent 70%),var(--od20-bg);
+  color:var(--od20-text);box-shadow:0 18px 48px rgba(0,0,0,.22)
+}
+.service-order-detail.order-detail-v2 *{box-sizing:border-box;min-width:0}
+.service-order-detail.order-detail-v2 .od-top-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  margin:0;padding:0 0 13px;border-bottom:1px solid var(--od20-line)
+}
+.service-order-detail.order-detail-v2 .od-back-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;max-width:100%;padding:8px 12px;
+  border:1px solid var(--od20-line);border-radius:13px;background:#12151b;color:#c2cede;font-size:12.5px;font-weight:750
+}
+.service-order-detail.order-detail-v2 .od-back-icon{font-size:15px}
+.service-order-detail.order-detail-v2 .od-order-id{
+  display:inline-flex;align-items:center;min-height:32px;max-width:100%;padding:6px 10px;border:1px solid var(--od20-line);
+  border-radius:11px;background:#10141a;color:#aab7ca;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .od-head-section{
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin:0;padding:clamp(15px,3.5vw,22px);
+  border:1px solid rgba(141,166,200,.16);border-radius:22px;
+  background:linear-gradient(145deg,rgba(25,32,43,.9),rgba(14,16,21,.98) 68%);
+  box-shadow:inset 0 1px rgba(255,255,255,.025)
+}
+.service-order-detail.order-detail-v2 .od-title{
+  margin:0;color:#f5f7fb;font-size:clamp(20px,5vw,27px);font-weight:900;line-height:1.55;letter-spacing:-.025em;
+  overflow-wrap:anywhere;word-break:normal
+}
+.service-order-detail.order-detail-v2 .od-badges-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;width:100%}
+.service-order-detail.order-detail-v2 .od-badges-row .badge,
+.service-order-detail.order-detail-v2 .od-badges-row>span{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:6px 10px;border:1px solid var(--od20-line);
+  border-radius:999px;background:#171c24;color:#b7c4d7;font-size:11.5px;font-weight:750;line-height:1.65;white-space:normal;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .od-head-section .payment-countdown-badge{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;width:100%;margin:2px 0 0!important;
+  padding:11px 13px;border:1px solid rgba(230,178,76,.22);border-radius:14px;background:rgba(101,72,24,.16);color:#e9c77e
+}
+.service-order-detail.order-detail-v2 .od-head-section .payment-countdown-badge .timer-val{
+  min-width:64px;padding:5px 8px;border:1px solid rgba(230,178,76,.2);border-radius:9px;background:rgba(0,0,0,.18);
+  color:#ffe2a0;font-size:16px;font-variant-numeric:tabular-nums;text-align:center
+}
+.service-order-detail.order-detail-v2 .order-stepper{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0;padding:17px 10px;
+  border:1px solid var(--od20-line);border-radius:20px;background:linear-gradient(160deg,#12161d,#0e1015)
+}
+.service-order-detail.order-detail-v2 .order-stepper .step{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;min-width:0;padding:0 2px;text-align:center
+}
+.service-order-detail.order-detail-v2 .order-stepper .step-circle{
+  display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:0 0 34px;border:1px solid rgba(151,171,200,.2);
+  border-radius:50%;background:#191e27;color:#9eacc0;font-size:13px
+}
+.service-order-detail.order-detail-v2 .order-stepper .step.done .step-circle{
+  border-color:rgba(91,195,151,.35);background:rgba(31,108,76,.2);color:#8ee1b8
+}
+.service-order-detail.order-detail-v2 .order-stepper .step.active .step-circle{
+  border-color:rgba(92,164,235,.5);background:rgba(37,100,165,.26);color:#b6dcff;box-shadow:0 0 0 4px rgba(64,133,204,.07)
+}
+.service-order-detail.order-detail-v2 .order-stepper .step-label{color:#c6cfdd;font-size:clamp(10px,2.8vw,12px);font-weight:850;line-height:1.6;overflow-wrap:anywhere}
+.service-order-detail.order-detail-v2 .order-stepper .step.active .step-label{color:#c3e0ff}
+.service-order-detail.order-detail-v2 .order-stepper .step-hint{color:#7f8b9d;font-size:10px;line-height:1.55;overflow-wrap:anywhere}
+.service-order-detail.order-detail-v2 .order-stepper .step-line{
+  position:absolute;top:16px;right:calc(50% + 22px);width:calc(100% - 42px);height:2px;border-radius:2px;background:#2b303a
+}
+.service-order-detail.order-detail-v2 .order-stepper .step-line.done{background:#387c65}
+.service-order-detail.order-detail-v2 .order-stepper.canceled{display:block;padding:14px 16px}
+.service-order-detail.order-detail-v2 .order-stepper .stepper-cancel{display:flex;align-items:center;gap:12px;color:#f1b5b5}
+.service-order-detail.order-detail-v2 .order-stepper .stepper-cancel>div{display:flex;flex-direction:column;gap:4px}
+.service-order-detail.order-detail-v2 .order-stepper .stepper-cancel small{color:#a99595;line-height:1.7}
+.service-order-detail.order-detail-v2 .od-price-hero{
+  position:relative;display:flex;align-items:stretch;justify-content:space-between;gap:12px;margin:0;padding:clamp(18px,4vw,25px);
+  overflow:hidden;border:1px solid rgba(88,151,217,.28);border-radius:22px;
+  background:radial-gradient(100% 120% at 100% 0%,rgba(39,100,163,.24),transparent 65%),linear-gradient(135deg,#121c2a,#0d1118);
+  box-shadow:0 12px 30px rgba(0,0,0,.16)
+}
+.service-order-detail.order-detail-v2 .od-price-hero:before{
+  content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,transparent,#5b9bd8,#80c9bb,transparent);opacity:.8
+}
+.service-order-detail.order-detail-v2 .od-price-hero-main{display:flex;flex-direction:column;gap:8px;width:100%;min-width:0}
+.service-order-detail.order-detail-v2 .od-price-hero-main>span{color:#a8b8cd;font-size:13px;font-weight:700}
+.service-order-detail.order-detail-v2 .od-price-hero-main>b{
+  color:#f5f9ff;font-size:clamp(26px,7vw,35px);font-weight:950;line-height:1.35;letter-spacing:-.035em;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .savings-breakdown-card{
+  width:100%;margin:0!important;padding:15px!important;border-color:rgba(70,181,130,.22)!important;border-radius:19px!important;
+  background:linear-gradient(140deg,rgba(22,79,56,.19),rgba(15,20,19,.96))!important
+}
+.service-order-detail.order-detail-v2 .savings-breakdown-card>div:first-child{gap:8px;flex-wrap:wrap}
+.service-order-detail.order-detail-v2 .savings-breakdown-card span,
+.service-order-detail.order-detail-v2 .savings-breakdown-card b{overflow-wrap:anywhere}
+.service-order-detail.order-detail-v2 .savings-breakdown-card>div:last-child{font-size:12.5px!important;line-height:1.9}
+.service-order-detail.order-detail-v2 .od-info-grid-v2{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0
+}
+.service-order-detail.order-detail-v2 .od-info-card{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:9px;min-height:82px;min-width:0;
+  margin:0;padding:13px 14px;border:1px solid var(--od20-line);border-radius:16px;
+  background:linear-gradient(145deg,#14171d,#101216)
+}
+.service-order-detail.order-detail-v2 .od-info-card small{color:#8f9caf;font-size:11.5px;line-height:1.7}
+.service-order-detail.order-detail-v2 .od-info-card>b{
+  display:block;max-width:100%;color:#e4eaf3;font-size:13px;font-weight:850;line-height:1.8;overflow-wrap:anywhere;word-break:break-word
+}
+.service-order-detail.order-detail-v2 .od-info-card .od-money-value{color:#dbeaff;font-variant-numeric:tabular-nums}
+.service-order-detail.order-detail-v2 .od-info-card .od-delivery-value{color:#c0d3e9}
+.service-order-detail.order-detail-v2 .timeline-details,
+.service-order-detail.order-detail-v2 .note-box,
+.service-order-detail.order-detail-v2 .delivery-box{
+  min-width:0;margin:0;padding:15px;border:1px solid var(--od20-line);border-radius:18px;background:#11141a;color:#b8c3d3;
+  line-height:1.95;overflow-wrap:anywhere;word-break:break-word
+}
+.service-order-detail.order-detail-v2 .timeline-details summary{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;color:#dce5f1;font-size:13px;font-weight:850
+}
+.service-order-detail.order-detail-v2 .timeline-details summary::-webkit-details-marker{display:none}
+.service-order-detail.order-detail-v2 .timeline-details[open] summary{padding-bottom:12px;border-bottom:1px solid var(--od20-line)}
+.service-order-detail.order-detail-v2 .timeline-details>*:not(summary){max-width:100%;overflow-wrap:anywhere}
+.service-order-detail.order-detail-v2 .note-box>b{color:#e5ebf4}
+.service-order-detail.order-detail-v2 .note-box.customer{border-color:rgba(92,150,211,.2);background:linear-gradient(140deg,rgba(28,57,89,.16),#11141a)}
+.service-order-detail.order-detail-v2 .delivery-box.clean-delivery{border-color:rgba(79,183,137,.2);background:linear-gradient(140deg,rgba(25,78,57,.15),#11141a);color:#c4dfd2}
+.service-order-detail.order-detail-v2 .payment-box{
+  margin:0!important;padding:clamp(14px,3.5vw,21px)!important;border-radius:23px!important;border-color:rgba(133,161,198,.19)!important;
+  background:radial-gradient(120% 60% at 100% 0%,rgba(49,103,163,.11),transparent 65%),#0c0e12!important;
+  box-shadow:0 15px 36px rgba(0,0,0,.2)!important
+}
+.service-order-detail.order-detail-v2 .payment-box .section-title.compact h3{font-size:clamp(16px,4vw,19px)}
+.service-order-detail.order-detail-v2 .payment-box .payment-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.service-order-detail.order-detail-v2 .payment-box .pay-method{min-height:92px;border-radius:17px}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-container,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-container{gap:15px;border-radius:19px}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-form-section,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-txid-section{gap:14px}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-submit-btn,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-submit-btn{min-height:50px}
+.service-order-detail.order-detail-v2 .od-sticky-actions{
+  position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);z-index:4;
+  display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:0;padding:10px;
+  border:1px solid rgba(149,169,199,.17);border-radius:19px;
+  background:rgba(13,15,20,.93);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 12px 35px rgba(0,0,0,.38)
+}
+.service-order-detail.order-detail-v2 .od-sticky-actions button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:42px;
+  padding:9px 11px;border:1px solid var(--od20-line);border-radius:12px;background:#171b23;color:#d4deec;
+  font-size:12px;font-weight:800;line-height:1.6;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .od-sticky-actions .mini-service-open-btn{flex:1 1 135px;border-color:rgba(83,155,225,.25);background:linear-gradient(110deg,#17406a,#1b5688);color:#f5f9ff}
+.service-order-detail.order-detail-v2 .od-sticky-actions .mini-service-copy-btn{flex:1 1 95px}
+.service-order-detail.order-detail-v2 .od-sticky-actions .od-note-btn{flex:1 1 125px}
+.service-order-detail.order-detail-v2 .od-sticky-actions .od-renew-btn{flex:0 1 auto}
+.service-order-detail.order-detail-v2 .od-sticky-actions .od-more-btn{flex:0 0 auto}
+.service-order-detail.order-detail-v2 button:focus-visible,
+.service-order-detail.order-detail-v2 a:focus-visible,
+.service-order-detail.order-detail-v2 input:focus-visible,
+.service-order-detail.order-detail-v2 summary:focus-visible{
+  outline:2px solid #76baff;outline-offset:3px
+}
+.service-order-detail.order-detail-v2 button:disabled{opacity:.55;cursor:wait}
+.service-order-detail.order-detail-v2 img{max-width:100%;height:auto}
+@media(max-width:420px){
+  .service-order-detail.order-detail-v2{gap:12px;padding:10px;border-radius:22px}
+  .service-order-detail.order-detail-v2 .od-top-bar{align-items:stretch}
+  .service-order-detail.order-detail-v2 .od-back-btn{flex:1 1 145px}
+  .service-order-detail.order-detail-v2 .od-order-id{justify-content:center}
+  .service-order-detail.order-detail-v2 .od-head-section{padding:15px;border-radius:19px}
+  .service-order-detail.order-detail-v2 .order-stepper{padding:14px 5px;gap:1px;border-radius:17px}
+  .service-order-detail.order-detail-v2 .order-stepper .step-circle{width:29px;height:29px;flex-basis:29px;font-size:11px}
+  .service-order-detail.order-detail-v2 .order-stepper .step-line{top:14px;right:calc(50% + 18px);width:calc(100% - 34px)}
+  .service-order-detail.order-detail-v2 .order-stepper .step-hint{font-size:9px}
+  .service-order-detail.order-detail-v2 .od-price-hero{padding:17px;border-radius:19px}
+  .service-order-detail.order-detail-v2 .od-info-grid-v2{gap:7px}
+  .service-order-detail.order-detail-v2 .od-info-card{min-height:76px;padding:11px;border-radius:14px}
+  .service-order-detail.order-detail-v2 .payment-box .payment-grid{gap:8px}
+  .service-order-detail.order-detail-v2 .payment-box .pay-method{min-height:84px;padding:11px}
+  .service-order-detail.order-detail-v2 .od-sticky-actions{gap:6px;padding:8px;border-radius:16px}
+  .service-order-detail.order-detail-v2 .od-sticky-actions button{min-height:40px;padding:8px;font-size:11.5px}
+}
+@media(max-width:340px){
+  .service-order-detail.order-detail-v2 .od-info-grid-v2,
+  .service-order-detail.order-detail-v2 .payment-box .payment-grid{grid-template-columns:1fr}
+  .service-order-detail.order-detail-v2 .od-badges-row{align-items:flex-start}
+  .service-order-detail.order-detail-v2 .order-stepper .step-hint{display:none}
+  .service-order-detail.order-detail-v2 .od-sticky-actions>*{flex:1 1 100%!important}
+}
+@media(hover:hover){
+  .service-order-detail.order-detail-v2 .od-info-card:hover,
+  .service-order-detail.order-detail-v2 .payment-box .pay-method:hover{border-color:rgba(112,168,230,.31)}
+  .service-order-detail.order-detail-v2 .od-sticky-actions button:hover{border-color:rgba(112,168,230,.32);filter:brightness(1.06)}
+}
+@media(prefers-reduced-motion:reduce){
+  .service-order-detail.order-detail-v2 *{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+}
