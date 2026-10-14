@@ -1,3 +1,13 @@
+## 5.1.70 - Rewards and referrals copy/icon repair
+
+- Reworked rewards and invite-friends copy for clearer Persian wording, consistent terminology, and less ambiguous status text.
+- Replaced decorative emojis in rewards, referral stats, VIP level, mission states, share actions, empty states, and spin results with consistent inline SVG icons.
+- Improved mission progress labels and empty/disabled states; made spin results update in the open sheet and improved share/copy failure feedback.
+- Refined responsive card hierarchy, invite-code/link presentation, and share sheet layout using a new scoped stylesheet registered in the cache-busted asset manifest.
+- Preserved server-backed mission rewards, spin endpoint, referral code/link, referral tree, QR, and account/wallet entry routes.
+- Two review loops: (1) copy/content, icon consistency, hierarchy and responsive layout; (2) event IDs, API flow, empty states, clipboard/share handling, CSS registration, and version consistency.
+- Automated repository lint/syntax checks pending; live Telegram WebView and real reward/referral flows must still be exercised.
+
 ## 5.1.69 - Support center redesign
 
 - Rebuilt the customer ticket page hierarchy around a shared BlueGate support hero, live ticket-status summaries, search, status filters, and clearer ticket rows.
