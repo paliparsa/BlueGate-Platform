@@ -1986,6 +1986,7 @@ function renderMiniSupportPage(){
     const countLabel=host.querySelector('#supportTicketResultCount');
     if(countLabel)countLabel.textContent=`${count} درخواست`;
     list?.querySelectorAll('[data-support-ticket]').forEach(x=>x.addEventListener('click',()=>openMiniSupportTicket(Number(x.dataset.supportTicket))));
+  list?.querySelectorAll('[data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
     list?.querySelectorAll('[data-support-ticket-new]').forEach(x=>x.addEventListener('click',newMiniSupportTicket));
   };
   search?.addEventListener('input',updateList);
