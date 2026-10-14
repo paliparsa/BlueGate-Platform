@@ -1638,7 +1638,7 @@ function vpnServiceDetailHtml(o,{context='service',order=null}={}){
   const orderId=Number(order?.id||o.order_id||0);
   const waitingPay=order&&['pending_payment','pending','rejected'].includes(String(order.status||''));
   const topActions=waitingPay?'':`${manual?`<button class="vpn-top-action primary" data-renew-order="${o.order_id}"><i>↻</i><span>تمدید سرویس</span></button>`:`<button class="vpn-top-action primary" data-service-renew="${o.id}"><i>↻</i><span>تمدید</span></button><button class="vpn-top-action" data-service-sync="${o.id}"><i>⟳</i><span>بروزرسانی</span></button>`}`;
-  return `<section class="vpn-sub-page">
+  return `<section class="vpn-sub-page ${context==='order'?'vpn-sub-page-order':'vpn-sub-page-service'}">
     <div class="vpn-sub-topbar">${back}<div class="vpn-sub-top-actions">${topActions}</div><div class="vpn-sub-topmeta">${orderId?`<span>سفارش #${nf(orderId)}</span>`:''}<b class="vpn-sub-status ${status==='active'?'ok':status==='expired'||status==='provisioning_failed'?'bad':'warn'}"><i></i>${esc(statusFa)}</b></div></div>
     <article class="vpn-sub-identity">
       <div class="vpn-sub-copy"><div><div class="vpn-sub-micro"><i></i> BLUEGATE MANAGED VPN</div><h1>${title}</h1><p>${hasUrl?'سرویس آماده استفاده است. لینک اشتراک را مستقیم در کلاینت VPN باز کن یا کپی کن.':'سرویس شما ثبت شده و پس از ساخت Client، لینک اشتراک همین‌جا فعال می‌شود.'}</p></div><div class="vpn-sub-pills"><span class="${status==='active'?'ok':'warn'}"><i></i>${esc(statusFa)}</span>${locations?`<span>◉ ${nf(locations)} مسیر فعال</span>`:''}${clientName?`<span>Client: <b>${esc(clientName)}</b></span>`:''}</div></div>
