@@ -1,5 +1,6 @@
 /* BlueGate Web admin visual contract — calm data density and clear navigation */
-.bg-admin-shell{background:#050608!important;color:#f5f7fb!important}
+#memberContent:has(.bg-admin-shell),.bg-admin-shell{background:#050608!important;color:#f5f7fb!important}
+.bg-admin-shell{--bgds-bg:#050608;--bgds-bg-2:#080a0e;--bgds-surface-1:#101217;--bgds-surface-2:#151922;--bgds-surface-3:#1b202b;--bgds-text:#f5f7fb;--bgds-muted:#9ba3b2;--bgds-border:rgba(255,255,255,.085);--bgds-border-strong:rgba(255,255,255,.14);--bgds-primary:#315efb;--bgds-primary-soft:#7694ff;--bgds-purple:#315efb}
 :where(.bg-admin-shell .bg-admin-sidebar,.bg-admin-shell .admin-sidebar,.bg-admin-shell .bg-admin-topbar,.bg-admin-shell .admin-topbar,.bg-admin-shell .bg-admin-header){background:#080a0e!important;background-image:none!important;border-color:rgba(255,255,255,.085)!important;box-shadow:none!important}
 :where(.bg-admin-shell .bg-admin-sidebar a.active,.bg-admin-shell .admin-sidebar a.active,.bg-admin-shell .bg-admin-nav a.active,.bg-admin-shell .admin-nav a.active){color:#fff!important;background:rgba(49,94,251,.14)!important;background-image:none!important;border-color:rgba(49,94,251,.32)!important;box-shadow:none!important}
 :where(.bg-admin-shell .table-wrap,.bg-admin-shell table,.bg-admin-shell .data-table){border-color:rgba(255,255,255,.085);color:#f5f7fb}
