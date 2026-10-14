@@ -1,3 +1,10 @@
+## 5.1.33 - Final accent normalization
+
+- Normalized remaining violet/purple accent values in the Mini App core, unified component, parity, and web-admin CSS to the royal-blue accent or neutral graphite borders.
+- Kept semantic warning, error, success, discount, and segmented-wheel colors intact; preserved the VPN subscription progress visualization.
+- Refreshed static cache keys after the final CSS pass.
+- No JavaScript or backend business-logic files changed. Validation remains source-level; interactive browser smoke tests require an available browser/test runner.
+
 ## 5.1.32 - Legacy visual ownership cleanup
 
 - Replaced decorative legacy gradients in the Mini App core, unified components, parity layers, order surfaces, and web-admin layers with semantic royal-blue/deep-black design tokens.
