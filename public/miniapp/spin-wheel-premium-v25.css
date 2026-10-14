@@ -1,0 +1,179 @@
+/* BlueGate 5.1.74 — premium spin wheel experience; scoped to rewards only. */
+.rewards-center-v27 .spin-section-v2 {
+  position:relative; isolation:isolate; overflow:hidden;
+  padding:18px !important; border-radius:26px !important;
+  border:1px solid rgba(105,192,255,.28) !important;
+  background:
+    radial-gradient(ellipse at 50% 42%,rgba(40,112,164,.17),transparent 47%),
+    linear-gradient(155deg,#111e2b 0%,#0a1018 60%,#111621 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 18px 42px rgba(0,0,0,.23);
+}
+.rewards-center-v27 .spin-section-v2:before {
+  content:""; position:absolute; inset:0 0 auto; height:2px; z-index:-1;
+  background:linear-gradient(90deg,transparent,#50d9ff,#8b7bff,#50d9ff,transparent);
+  opacity:.9;
+}
+.rewards-center-v27 .spin-head { gap:12px; position:relative; }
+.rewards-center-v27 .spin-head-icon {
+  display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px;
+  border-radius:15px; color:#83e7ff;
+  border:1px solid rgba(104,220,255,.26);
+  background:linear-gradient(145deg,rgba(55,173,218,.2),rgba(85,100,220,.12));
+  box-shadow:0 0 24px rgba(45,190,255,.1);
+}
+.rewards-center-v27 .spin-head-text small {
+  color:#7fe2ff; font-size:10px; font-weight:800; letter-spacing:.04em;
+}
+.rewards-center-v27 .spin-head-text h3 {
+  margin-top:4px; font-size:20px; line-height:1.4; letter-spacing:-.02em;
+  color:#f4faff; font-weight:900;
+}
+.rewards-center-v27 .spin-chances-badge {
+  gap:8px; padding:8px 11px; border-radius:15px;
+  border:1px solid rgba(255,202,105,.32);
+  background:linear-gradient(145deg,rgba(184,121,25,.18),rgba(109,69,12,.13));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.rewards-center-v27 .spin-chances-badge b {
+  min-width:24px; color:#ffe4a6; font-size:22px; font-weight:950;
+  font-variant-numeric:tabular-nums; text-align:center;
+}
+.rewards-center-v27 .spin-chances-badge span { color:#d9c49a; font-size:10px; line-height:1.5; }
+.rewards-center-v27 .spin-desc {
+  margin:14px 0 5px !important; padding:11px 12px;
+  border:1px solid rgba(120,158,190,.16); border-radius:13px;
+  background:rgba(255,255,255,.025); color:#a9b9ca;
+  font-size:11px; line-height:1.95;
+}
+.rewards-center-v27 .wheel-stage {
+  min-height:clamp(290px,78vw,390px); margin:3px -5px 0;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  perspective:900px; isolation:isolate;
+}
+.rewards-center-v27 .wheel-glow {
+  position:absolute; width:min(78vw,310px); aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle,rgba(56,177,255,.24) 0%,rgba(113,86,255,.12) 44%,transparent 72%);
+  filter:blur(14px); pointer-events:none; z-index:0;
+  animation:bluegateWheelAura 3.8s ease-in-out infinite alternate;
+}
+.rewards-center-v27 .spin-wheel-v2 {
+  position:relative; z-index:1; width:min(70vw,284px) !important;
+  height:min(70vw,284px) !important; max-width:284px !important; max-height:284px !important;
+  border-radius:50%; flex:0 0 auto; overflow:visible;
+  border:7px solid #152333;
+  outline:2px solid rgba(133,222,255,.72);
+  box-shadow:0 0 0 5px rgba(15,25,39,.92),0 0 0 7px rgba(88,179,234,.18),
+    0 18px 45px rgba(0,0,0,.52),0 0 32px rgba(45,176,255,.19),
+    inset 0 0 0 2px rgba(255,255,255,.55);
+  transition:transform 5.1s cubic-bezier(.12,.72,.08,1);
+  will-change:transform;
+}
+.rewards-center-v27 .spin-wheel-v2:before {
+  content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none;
+  background:repeating-conic-gradient(from -1deg,rgba(255,255,255,.83) 0deg 1.1deg,transparent 1.1deg calc(360deg / var(--wheel-segments, 8))),
+    radial-gradient(circle at 30% 22%,rgba(255,255,255,.25),transparent 34%),
+    radial-gradient(circle,transparent 57%,rgba(4,11,20,.24) 100%);
+  mix-blend-mode:soft-light;
+}
+.rewards-center-v27 .spin-wheel-v2:after {
+  content:""; position:absolute; inset:8px; border:1px solid rgba(255,255,255,.4);
+  border-radius:50%; box-shadow:inset 0 0 0 1px rgba(4,13,22,.2); pointer-events:none;
+}
+.rewards-center-v27 .wheel-center-v2 {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:31%; height:31%; border-radius:50%; z-index:3;
+  display:flex; align-items:center; justify-content:center;
+  border:4px solid #d7f4ff;
+  background:radial-gradient(circle at 35% 25%,#314a65 0%,#152638 52%,#09121e 100%);
+  box-shadow:0 0 0 3px rgba(8,17,28,.86),0 0 0 5px rgba(103,217,255,.48),
+    0 5px 15px rgba(0,0,0,.48),inset 0 2px 4px rgba(255,255,255,.16);
+}
+.rewards-center-v27 .wheel-center-v2:before {
+  content:""; position:absolute; inset:6px; border:1px solid rgba(151,228,255,.45); border-radius:50%;
+}
+.rewards-center-v27 .wheel-center-v2 span {
+  position:relative; color:#f0fbff; font-size:clamp(11px,3vw,15px);
+  font-weight:1000; letter-spacing:.12em; text-shadow:0 1px 8px rgba(74,204,255,.5);
+}
+.rewards-center-v27 .wheel-pointer-v2 {
+  position:absolute; top:calc(50% - min(39vw,156px)); left:50%;
+  transform:translateX(-50%); z-index:5; width:43px; height:49px;
+  display:grid; place-items:center; color:#fff2b7;
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.6));
+}
+.rewards-center-v27 .wheel-pointer-v2 svg {
+  width:38px !important; height:43px !important;
+  fill:currentColor; stroke:#6f4b16; stroke-width:1.1;
+}
+.rewards-center-v27 .spin-btn-v2 {
+  position:relative; isolation:isolate; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  width:100%; min-height:52px; margin:3px 0 0; padding:13px 18px;
+  border:1px solid rgba(151,232,255,.45) !important; border-radius:16px !important;
+  color:#04131c !important; font-size:13px; font-weight:900; letter-spacing:.01em;
+  background:linear-gradient(100deg,#72e7ff 0%,#78caff 42%,#b1a1ff 100%) !important;
+  box-shadow:0 8px 22px rgba(62,181,255,.18),inset 0 1px 0 rgba(255,255,255,.65);
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
+}
+.rewards-center-v27 .spin-btn-v2:before {
+  content:""; position:absolute; z-index:-1; top:-50%; bottom:-50%; left:-35%; width:22%;
+  transform:rotate(22deg); background:rgba(255,255,255,.5); filter:blur(8px);
+  transition:left .55s ease;
+}
+.rewards-center-v27 .spin-btn-v2:not(:disabled):hover { transform:translateY(-2px); filter:saturate(1.12); box-shadow:0 12px 28px rgba(62,181,255,.26); }
+.rewards-center-v27 .spin-btn-v2:not(:disabled):hover:before { left:115%; }
+.rewards-center-v27 .spin-btn-v2:active { transform:scale(.99); }
+.rewards-center-v27 .spin-btn-v2:disabled {
+  color:#8294a7 !important; border-color:rgba(125,148,171,.16) !important;
+  background:linear-gradient(100deg,#263443,#1b2632) !important; box-shadow:none;
+}
+.rewards-center-v27 .spin-result {
+  display:flex; align-items:flex-start; gap:11px; margin-top:12px; padding:14px;
+  border:1px solid rgba(79,221,166,.35); border-radius:16px;
+  background:linear-gradient(120deg,rgba(26,130,88,.2),rgba(17,38,35,.52));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+.rewards-center-v27 .spin-result-icon {
+  display:grid; place-items:center; flex:0 0 39px; width:39px; height:39px;
+  border-radius:13px; color:#a1f5ce; background:rgba(58,204,141,.14);
+  border:1px solid rgba(80,224,160,.22);
+}
+.rewards-center-v27 .spin-result b { display:block; margin-bottom:4px; color:#baf8d8; font-size:13px; }
+.rewards-center-v27 .spin-result p { margin:0; color:#e1f4ea; font-size:12px; line-height:1.9; overflow-wrap:anywhere; }
+.rewards-center-v27 .wheel-prizes {
+  display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:9px !important; margin-top:14px !important;
+}
+.rewards-center-v27 .wheel-prize {
+  position:relative; min-width:0; padding:12px 12px 12px 36px !important;
+  border:1px solid rgba(123,165,199,.19) !important; border-radius:15px !important;
+  background:linear-gradient(145deg,rgba(28,42,57,.83),rgba(16,24,34,.92)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+.rewards-center-v27 .wheel-prize:before {
+  content:""; position:absolute; left:12px; top:15px; width:9px; height:9px;
+  border-radius:50%; background:linear-gradient(135deg,#77e4ff,#a69bff);
+  box-shadow:0 0 12px rgba(97,212,255,.28);
+}
+.rewards-center-v27 .wheel-prize b {
+  display:block; color:#eaf5ff; font-size:11px; line-height:1.7; font-weight:800;
+  overflow-wrap:anywhere;
+}
+.rewards-center-v27 .wheel-prize span { color:#8fa9bf; font-size:10px; line-height:1.7; }
+@keyframes bluegateWheelAura { from { opacity:.58; transform:scale(.94); } to { opacity:1; transform:scale(1.06); } }
+@media(prefers-reduced-motion:reduce) {
+ .rewards-center-v27 .wheel-glow { animation:none; }
+ .rewards-center-v27 .spin-wheel-v2,.rewards-center-v27 .spin-btn-v2 { transition:none; }
+}
+@media(max-width:390px) {
+ .rewards-center-v27 .spin-section-v2 { padding:14px !important; border-radius:22px !important; }
+ .rewards-center-v27 .spin-head-icon { width:39px; height:39px; flex-basis:39px; }
+ .rewards-center-v27 .spin-head-text h3 { font-size:18px; }
+ .rewards-center-v27 .spin-chances-badge { padding:7px 8px; gap:5px; }
+ .rewards-center-v27 .spin-chances-badge b { font-size:19px; }
+ .rewards-center-v27 .wheel-stage { min-height:285px; }
+ .rewards-center-v27 .spin-wheel-v2 { width:min(68vw,258px) !important; height:min(68vw,258px) !important; }
+ .rewards-center-v27 .wheel-pointer-v2 { top:calc(50% - min(38vw,143px)); }
+ .rewards-center-v27 .wheel-prize { padding:10px 10px 10px 27px !important; }
+ .rewards-center-v27 .wheel-prize:before { left:9px; }
+}
