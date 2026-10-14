@@ -198,3 +198,180 @@ hr,.divider { border-color: rgba(190,200,220,.10) !important; }
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
 }
+
+
+/* v5.1.26 — final cross-screen palette normalization.
+   This block intentionally comes last: legacy stylesheets remain for layout/behavior,
+   while this file owns the Mini App visual tokens. */
+:root {
+  --bgds-bg: #07080D !important;
+  --bgds-bg-2: #0A0C12 !important;
+  --bgds-surface-1: #10131B !important;
+  --bgds-surface-2: #151925 !important;
+  --bgds-surface-3: #1C2130 !important;
+  --bgds-text: #F5F7FC !important;
+  --bgds-muted: #A7AFBF !important;
+  --bgds-border: rgba(190,200,220,.12) !important;
+  --bgds-border-strong: rgba(139,92,246,.42) !important;
+  --bgds-primary: var(--primary, #4A8DFF) !important;
+  --bgds-purple: #8B5CF6 !important;
+  --bgds-success: #42D6A0 !important;
+  --bgds-warning: #F5C86A !important;
+  --bgds-danger: #FF718A !important;
+}
+html, body, #userApp, #adminApp, .app-shell, .page {
+  background-color: #07080D !important;
+  color: #F5F7FC !important;
+}
+/* Main page and product cards: near-black surfaces, restrained decoration. */
+.product-tile, .product-card, .product-card-modern, .product-item,
+.product-grid .product, .shop-product-card, .catalog-card,
+.detail-card, .wallet-card, .account-hub-card, .mission-card,
+.order-row, .order-card, .quick-card, .mini-stat, .admin-card, .admin-item,
+.glowing-flash-card, .flash-card, .product-info-card {
+  background: #10131B !important;
+  color: #F5F7FC !important;
+  border: 1px solid rgba(190,200,220,.12) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.20) !important;
+}
+.product-tile::before, .product-tile::after, .product-card::before,
+.product-card::after, .glowing-flash-card::before, .glowing-flash-card::after {
+  opacity: .12 !important;
+}
+.product-tile h1, .product-tile h2, .product-tile h3,
+.product-card h1, .product-card h2, .product-card h3,
+.product-name, .product-title, .product-price, .price,
+.wallet-card-main strong, .order-card-total {
+  color: #F5F7FC !important;
+}
+.product-price, .price-pill, .product-badge, .badge,
+.stock-badge, .product-tag, .category-badge {
+  border-color: rgba(74,141,255,.25) !important;
+}
+.price-pill, .product-badge, .product-tag, .category-badge {
+  background: rgba(74,141,255,.10) !important;
+  color: #AFCBFF !important;
+}
+/* One button language across shop, wallet, account and checkout. */
+.primary, .btn-primary, button.primary, .button-primary, .btn-main,
+.purchase-confirm-submit, .mini-credit-primary, .credit-primary-action,
+.wallet-topup-button, .wallet-add-credit, .credit-add-button,
+button[type="submit"].primary {
+  background: var(--primary, #4A8DFF) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 7px 20px rgba(74,141,255,.15) !important;
+}
+.secondary, button.secondary, .btn-secondary, .button-secondary,
+.ghost, button.ghost, .btn-ghost, .icon-btn, .purchase-confirm-cancel {
+  background: #151925 !important;
+  color: #E5EAF4 !important;
+  border: 1px solid rgba(190,200,220,.15) !important;
+  box-shadow: none !important;
+}
+a, .link, .accent-text, .wallet-method-help { color: #86B5FF; }
+/* Wallet balance and top-up/payment method states. */
+.wallet-balance, .wallet-balance strong, .balance-amount,
+.credit-balance, .credit-balance strong, .mini-topup-balance strong,
+.wallet-card-main strong, .wallet-amount, .account-balance {
+  color: #FFFFFF !important;
+}
+.wallet-topup-button, .wallet-add-credit, .credit-add-button,
+.mini-credit-primary, .credit-primary-action { background: var(--primary,#4A8DFF) !important; }
+.payment-method, .wallet-method, .payment-option, .mini-topup-method-list>button,
+.wallet-method-option, .payment-method-option, .topup-method-option {
+  background: #11141D !important;
+  color: #E9EDF6 !important;
+  border: 1px solid rgba(190,200,220,.13) !important;
+}
+.payment-method.active, .wallet-method.active, .payment-option.active,
+.mini-topup-method-list>button.active, .wallet-method-option.active,
+.payment-method-option.active, .topup-method-option.active,
+.payment-method[aria-checked="true"], .payment-option[aria-checked="true"] {
+  background: rgba(139,92,246,.10) !important;
+  border-color: #8B5CF6 !important;
+  box-shadow: inset 0 0 0 1px rgba(139,92,246,.16) !important;
+}
+/* Consistent active tabs, filters, selected plans and menu rows. */
+.cat-pill.active, .filter-chip.active, .filter-choice-grid button.active,
+.variant-btn.active, .purchase-plan-option.active, .purchase-plan-option.selected,
+.orders-filter-option.active, .admin-tabs button.active, .bottom-nav button.active,
+.topbar-desktop-nav button.active, .account-menu-row.active,
+.tab.active, [role="tab"][aria-selected="true"], [aria-current="page"] {
+  background: rgba(74,141,255,.12) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(139,92,246,.62) !important;
+  box-shadow: inset 0 0 0 1px rgba(139,92,246,.08) !important;
+}
+/* Shared popup / modal / sheet treatment, including language and Stars flows. */
+.order-more-popup-backdrop, .mini-credit-topup-backdrop,
+.purchase-confirm-overlay, .app-sheet-backdrop, .modal-backdrop,
+.dialog-backdrop, .popup-backdrop, .language-popup-backdrop,
+.stars-popup-backdrop, [class*="popup-backdrop"], [class*="modal-backdrop"],
+[class*="sheet-backdrop"], [class*="overlay-backdrop"] {
+  background: rgba(2,3,8,.72) !important;
+  -webkit-backdrop-filter: blur(5px) saturate(108%) !important;
+  backdrop-filter: blur(5px) saturate(108%) !important;
+}
+.order-more-popup-card, .mini-credit-topup-panel, .purchase-confirm-card,
+.dialog-card, .auth-modal-content, .app-sheet-panel, .app-sheet .app-sheet-content,
+.modal-content, .modal-card, .popup-card, .popup-panel, .language-popup,
+.language-modal, .stars-popup, .stars-modal, .credit-popup, .topup-popup,
+[class*="popup-card"], [class*="modal-content"], [class*="modal-card"],
+[class*="sheet-panel"] {
+  background: #11141D !important;
+  color: #F5F7FC !important;
+  border: 1px solid rgba(190,200,220,.15) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,.48) !important;
+}
+.order-more-popup-option, .purchase-confirm-desc, .purchase-confirm-specs,
+.mini-topup-balance, .mini-topup-after, .mini-topup-method-list>button,
+.purchase-confirm-price-primary, .bg-centered-confirm-message,
+.modal-content .option, .popup-card .option, .language-option,
+.language-popup button, .stars-popup button {
+  background-color: rgba(255,255,255,.035) !important;
+  border-color: rgba(190,200,220,.12) !important;
+  color: #F5F7FC !important;
+}
+.order-more-popup-option.active, .mini-topup-method-list>button.active,
+.language-option.active, .language-popup button.active, .stars-popup button.active {
+  border-color: #8B5CF6 !important;
+  background: rgba(139,92,246,.10) !important;
+}
+.order-more-popup-title, .purchase-confirm-brand h3, .mini-credit-topup-panel h2,
+.modal-content h1, .modal-content h2, .modal-content h3,
+.popup-card h1, .popup-card h2, .popup-card h3,
+.language-popup h1, .language-popup h2, .stars-popup h1, .stars-popup h2 {
+  color: #FFFFFF !important;
+}
+.order-more-popup-option small, .purchase-confirm-desc p,
+.mini-credit-topup-panel p, .modal-content p, .popup-card p {
+  color: #A7AFBF !important;
+}
+/* Keep status meaning intact; do not recolor success/warning/error to the accent. */
+.status-badge.success, .status-badge.active, .status-badge.ok, .vpn-sub-status.ok,
+.status-badge.warning, .status-badge.pending, .status-badge.danger,
+.status-badge.failed, .status-success, .status-warning, .status-danger,
+.badge-success, .badge-warning, .badge-danger {
+  box-shadow: none !important;
+}
+.status-badge.success, .status-badge.active, .status-badge.ok, .status-success, .badge-success {
+  color: #42D6A0 !important;
+}
+.status-badge.warning, .status-badge.pending, .status-warning, .badge-warning {
+  color: #F5C86A !important;
+}
+.status-badge.danger, .status-badge.failed, .status-danger, .badge-danger {
+  color: #FF718A !important;
+}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
+textarea, select, .field input, .field textarea, .field select {
+  background-color: #0B0D14 !important;
+  color: #F5F7FC !important;
+  border-color: rgba(190,200,220,.15) !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #8B5CF6 !important;
+}
+::selection { background: rgba(139,92,246,.28); color: #FFFFFF; }
