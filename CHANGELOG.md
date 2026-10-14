@@ -8,6 +8,7 @@
 - Standardized service-monitor Telegram alerts with a direct reference to the existing Mini App service view; in-app notifications remain enabled as a separate channel.
 - Localized mixed Persian/English Telegram admin labels and standardized payment-failure messages while retaining diagnostic details in server logs.
 - Hide the archive action for already archived orders and handle repeated archive callbacks safely; clarify unsuccessful Stars invoice creation and log crypto-verification failures.
+- Make credit-top-up approval/rejection buttons status-aware and reject stale top-up rejection callbacks without changing completed or canceled requests.
 - Validation planned: source-level assertions, PHP syntax checks where available, and workflow checks. Live Telegram testing remains necessary for final UI verification.
 
 ## 5.1.80 - Account email info flow and remove customer palette
