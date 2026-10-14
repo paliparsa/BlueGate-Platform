@@ -1917,13 +1917,13 @@ function renderMiniSupportPage(){
   const host=$('supportPage');
   if(!host)return;
   if(state?.is_guest){
-    host.innerHTML=\`<section class="mini-support-page support-center-v2">
+    host.innerHTML=`<section class="mini-support-page support-center-v2">
       <header class="support-page-hero support-page-hero-guest">
-        <span class="support-hero-icon" aria-hidden="true">\${bgFeatureIcon('headset',30)}</span>
+        <span class="support-hero-icon" aria-hidden="true">${bgFeatureIcon('headset',30)}</span>
         <div class="support-page-intro"><span class="member-kicker">BLUEGATE SUPPORT</span><h2>پشتیبانی BlueGate</h2><p>برای ثبت درخواست، پیگیری پاسخ‌ها و ارسال فایل، ابتدا وارد حساب کاربری‌ات شو.</p></div>
-        <div class="support-page-actions"><button class="primary" id="miniSupportLogin">\${bgFeatureIcon('user',17)} ورود یا ثبت‌نام</button><a class="ghost support-telegram-link" href="\${esc(miniSupportUrl())}" target="_blank" rel="noopener">\${bgFeatureIcon('send',16)} ارتباط در تلگرام</a></div>
+        <div class="support-page-actions"><button class="primary" id="miniSupportLogin">${bgFeatureIcon('user',17)} ورود یا ثبت‌نام</button><a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener">${bgFeatureIcon('send',16)} ارتباط در تلگرام</a></div>
       </header>
-    </section>\`;
+    </section>`;
     host.querySelector('#miniSupportLogin')?.addEventListener('click',openAuthModal);
     return;
   }
@@ -1942,37 +1942,37 @@ function renderMiniSupportPage(){
     });
     if(!filtered.length){
       const hasTickets=tickets.length>0;
-      return \`<div class="support-empty-state" role="status"><span class="support-empty-icon" aria-hidden="true">\${bgFeatureIcon(hasTickets?'search':'ticket',28)}</span><h3>\${hasTickets?'درخواستی با این مشخصات پیدا نشد':'هنوز درخواستی ثبت نکرده‌ای'}</h3><p>\${hasTickets?'عبارت جست‌وجو یا فیلتر وضعیت را تغییر بده.':'اگر برای خرید یا سرویس به کمک نیاز داری، یک تیکت ثبت کن تا درخواستت را پیگیری کنیم.'}</p>\${hasTickets?'':'<button class="primary" data-support-ticket-new>'+bgFeatureIcon('plus',17)+' ثبت اولین تیکت</button>'}</div>\`;
+      return `<div class="support-empty-state" role="status"><span class="support-empty-icon" aria-hidden="true">${bgFeatureIcon(hasTickets?'search':'ticket',28)}</span><h3>${hasTickets?'درخواستی با این مشخصات پیدا نشد':'هنوز درخواستی ثبت نکرده‌ای'}</h3><p>${hasTickets?'عبارت جست‌وجو یا فیلتر وضعیت را تغییر بده.':'اگر برای خرید یا سرویس به کمک نیاز داری، یک تیکت ثبت کن تا درخواستت را پیگیری کنیم.'}</p>${hasTickets?'':'<button class="primary" data-support-ticket-new>'+bgFeatureIcon('plus',17)+' ثبت اولین تیکت</button>'}</div>`;
     }
-    return filtered.map(t=>\`<button type="button" class="support-ticket-card-v3" data-support-ticket="\${Number(t.id)||0}">
-      <span class="support-ticket-mark-v3" aria-hidden="true">\${bgFeatureIcon('ticket',20)}<small>#\${esc(String(t.id||''))}</small></span>
-      <span class="support-ticket-main-v3"><b>\${esc(t.subject||'درخواست پشتیبانی')}</b><small><span>\${bgFeatureIcon('clock',12)} آخرین فعالیت</span>\${esc(t.last_message_at||t.created_at||'هنوز پیامی ثبت نشده')}</small></span>
-      <span class="support-ticket-side-v3"><span class="support-ticket-status \${miniSupportStatusClass(t.status)}">\${esc(miniSupportStatusLabel(t.status))}</span><span class="support-ticket-chevron-v3" aria-hidden="true">\${bgFeatureIcon('chevronLeft',17)}</span></span>
-    </button>\`).join('');
+    return filtered.map(t=>`<button type="button" class="support-ticket-card-v3" data-support-ticket="${Number(t.id)||0}">
+      <span class="support-ticket-mark-v3" aria-hidden="true">${bgFeatureIcon('ticket',20)}<small>#${esc(String(t.id||''))}</small></span>
+      <span class="support-ticket-main-v3"><b>${esc(t.subject||'درخواست پشتیبانی')}</b><small><span>${bgFeatureIcon('clock',12)} آخرین فعالیت</span>${esc(t.last_message_at||t.created_at||'هنوز پیامی ثبت نشده')}</small></span>
+      <span class="support-ticket-side-v3"><span class="support-ticket-status ${miniSupportStatusClass(t.status)}">${esc(miniSupportStatusLabel(t.status))}</span><span class="support-ticket-chevron-v3" aria-hidden="true">${bgFeatureIcon('chevronLeft',17)}</span></span>
+    </button>`).join('');
   };
   const awaitingTeam=tickets.filter(needsTeam).length,awaitingUser=tickets.filter(waitingUser).length;
-  host.innerHTML=\`<section class="mini-support-page support-center-v2 support-center-v3">
+  host.innerHTML=`<section class="mini-support-page support-center-v2 support-center-v3">
     <header class="support-page-hero">
       <div class="support-page-intro"><span class="member-kicker"><span class="support-live-dot"></span> BLUEGATE SUPPORT</span><h2>مرکز پشتیبانی</h2><p>درخواستت را ثبت کن و پاسخ‌های تیم پشتیبانی را از همین‌جا دنبال کن.</p></div>
-      <div class="support-page-actions"><button class="primary support-new-ticket-btn" data-support-ticket-new>\${bgFeatureIcon('plus',17)} ثبت تیکت جدید</button><a class="ghost support-telegram-link" href="\${esc(miniSupportUrl())}" target="_blank" rel="noopener">\${bgFeatureIcon('send',16)} پشتیبانی تلگرام</a></div>
+      <div class="support-page-actions"><button class="primary support-new-ticket-btn" data-support-ticket-new>${bgFeatureIcon('plus',17)} ثبت تیکت جدید</button><a class="ghost support-telegram-link" href="${esc(miniSupportUrl())}" target="_blank" rel="noopener">${bgFeatureIcon('send',16)} پشتیبانی تلگرام</a></div>
     </header>
     <section class="support-center-stats" aria-label="خلاصه درخواست‌ها">
-      <article class="support-center-stat"><span class="support-center-stat-icon all" aria-hidden="true">\${bgFeatureIcon('ticket',20)}</span><span><small>کل تیکت‌ها</small><b>\${tickets.length.toLocaleString('fa-IR')}</b></span></article>
-      <article class="support-center-stat"><span class="support-center-stat-icon team" aria-hidden="true">\${bgFeatureIcon('headset',20)}</span><span><small>نیازمند پاسخ پشتیبانی</small><b>\${awaitingTeam.toLocaleString('fa-IR')}</b></span></article>
-      <article class="support-center-stat"><span class="support-center-stat-icon waiting" aria-hidden="true">\${bgFeatureIcon('message',20)}</span><span><small>منتظر پاسخ شما</small><b>\${awaitingUser.toLocaleString('fa-IR')}</b></span></article>
+      <article class="support-center-stat"><span class="support-center-stat-icon all" aria-hidden="true">${bgFeatureIcon('ticket',20)}</span><span><small>کل تیکت‌ها</small><b>${tickets.length.toLocaleString('fa-IR')}</b></span></article>
+      <article class="support-center-stat"><span class="support-center-stat-icon team" aria-hidden="true">${bgFeatureIcon('headset',20)}</span><span><small>نیازمند پاسخ پشتیبانی</small><b>${awaitingTeam.toLocaleString('fa-IR')}</b></span></article>
+      <article class="support-center-stat"><span class="support-center-stat-icon waiting" aria-hidden="true">${bgFeatureIcon('message',20)}</span><span><small>منتظر پاسخ شما</small><b>${awaitingUser.toLocaleString('fa-IR')}</b></span></article>
     </section>
     <section class="support-center-toolbar" aria-label="جست‌وجو و فیلتر تیکت‌ها">
-      <label class="support-ticket-search"><span aria-hidden="true">\${bgFeatureIcon('search',18)}</span><input type="search" id="supportTicketSearch" placeholder="جست‌وجو بر اساس موضوع یا شماره تیکت" autocomplete="off" aria-label="جست‌وجوی تیکت‌ها"><button type="button" id="supportTicketClear" aria-label="پاک کردن جست‌وجو" hidden>\${bgFeatureIcon('close',15)}</button></label>
+      <label class="support-ticket-search"><span aria-hidden="true">${bgFeatureIcon('search',18)}</span><input type="search" id="supportTicketSearch" placeholder="جست‌وجو بر اساس موضوع یا شماره تیکت" autocomplete="off" aria-label="جست‌وجوی تیکت‌ها"><button type="button" id="supportTicketClear" aria-label="پاک کردن جست‌وجو" hidden>${bgFeatureIcon('close',15)}</button></label>
       <div class="support-ticket-filters" role="group" aria-label="فیلتر وضعیت تیکت">
-        <button type="button" class="support-ticket-filter is-active" data-support-filter="all" aria-pressed="true">همه <span>\${tickets.length.toLocaleString('fa-IR')}</span></button>
+        <button type="button" class="support-ticket-filter is-active" data-support-filter="all" aria-pressed="true">همه <span>${tickets.length.toLocaleString('fa-IR')}</span></button>
         <button type="button" class="support-ticket-filter" data-support-filter="team" aria-pressed="false">نیازمند پاسخ</button>
         <button type="button" class="support-ticket-filter" data-support-filter="user" aria-pressed="false">نوبت پاسخ شما</button>
         <button type="button" class="support-ticket-filter" data-support-filter="closed" aria-pressed="false">بسته‌شده</button>
       </div>
     </section>
-    <div class="support-list-heading"><div><b>درخواست‌های شما</b><small id="supportTicketResultCount">\${tickets.length.toLocaleString('fa-IR')} تیکت</small></div><span class="support-list-heading-note">آخرین فعالیت در ابتدا</span></div>
-    <div class="support-page-list" id="supportTicketList">\${renderRows()}</div>
-  </section>\`;
+    <div class="support-list-heading"><div><b>درخواست‌های شما</b><small id="supportTicketResultCount">${tickets.length.toLocaleString('fa-IR')} تیکت</small></div><span class="support-list-heading-note">آخرین فعالیت در ابتدا</span></div>
+    <div class="support-page-list" id="supportTicketList">${renderRows()}</div>
+  </section>`;
   let activeFilter='all';
   const list=host.querySelector('#supportTicketList'),search=host.querySelector('#supportTicketSearch'),clear=host.querySelector('#supportTicketClear');
   const bindRows=()=>{
@@ -1983,7 +1983,7 @@ function renderMiniSupportPage(){
     if(list)list.innerHTML=renderRows(activeFilter,search?.value||'');
     const count=list?.querySelectorAll('[data-support-ticket]').length||0;
     const countLabel=host.querySelector('#supportTicketResultCount');
-    if(countLabel)countLabel.textContent=\`\${count.toLocaleString('fa-IR')} تیکت\`;
+    if(countLabel)countLabel.textContent=`${count.toLocaleString('fa-IR')} تیکت`;
     if(clear)clear.hidden=!search?.value;
     bindRows();
   };
@@ -2028,13 +2028,13 @@ function newMiniSupportTicket(){
   BlueGateUI.openSheet({
     type:'fullscreen',eyebrow:'BLUEGATE SUPPORT',title:'ثبت تیکت جدید',
     subtitle:'موضوع و شرح درخواستت را بنویس تا تیم پشتیبانی بررسی کند.',
-    body:\`<form class="support-compose-form mini-ticket-create">
-      <div class="support-compose-intro"><span class="support-compose-icon" aria-hidden="true">\${bgFeatureIcon('message',21)}</span><div><b>چطور می‌توانیم کمکت کنیم؟</b><small>شرح دقیق مشکل کمک می‌کند سریع‌تر راهنمایی‌ات کنیم.</small></div></div>
+    body:`<form class="support-compose-form mini-ticket-create">
+      <div class="support-compose-intro"><span class="support-compose-icon" aria-hidden="true">${bgFeatureIcon('message',21)}</span><div><b>چطور می‌توانیم کمکت کنیم؟</b><small>شرح دقیق مشکل کمک می‌کند سریع‌تر راهنمایی‌ات کنیم.</small></div></div>
       <label class="support-form-field"><span>موضوع تیکت</span><input name="subject" maxlength="255" required placeholder="مثلاً مشکل اتصال یا پرداخت" autocomplete="off"></label>
       <label class="support-form-field"><span>شرح درخواست</span><textarea name="message" maxlength="4000" rows="5" required placeholder="چه اتفاقی افتاده؟ هر جزئیاتی که مهم است بنویس…"></textarea><small class="support-field-hint">حداکثر ۴۰۰۰ نویسه</small></label>
-      <label class="support-file-label"><span class="support-file-icon" aria-hidden="true">\${bgFeatureIcon('paperclip',20)}</span><span class="support-file-copy"><b>افزودن پیوست <em>اختیاری</em></b><small>تصویر، PDF یا فایل متنی · حداکثر ۵ مگابایت</small><small class="support-file-selected" data-support-file-name>هنوز فایلی انتخاب نشده</small></span><input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label>
-      <button class="primary support-submit-ticket" type="submit">\${bgFeatureIcon('send',17)} ثبت تیکت و ورود به گفت‌وگو</button>
-    </form>\`,
+      <label class="support-file-label"><span class="support-file-icon" aria-hidden="true">${bgFeatureIcon('paperclip',20)}</span><span class="support-file-copy"><b>افزودن پیوست <em>اختیاری</em></b><small>تصویر، PDF یا فایل متنی · حداکثر ۵ مگابایت</small><small class="support-file-selected" data-support-file-name>هنوز فایلی انتخاب نشده</small></span><input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label>
+      <button class="primary support-submit-ticket" type="submit">${bgFeatureIcon('send',17)} ثبت تیکت و ورود به گفت‌وگو</button>
+    </form>`,
     onOpen:host=>{
       const form=host.querySelector('form.mini-ticket-create'),fileInput=form?.querySelector('[name="attachment"]'),fileName=form?.querySelector('[data-support-file-name]');
       fileInput?.addEventListener('change',()=>{if(fileName)fileName.textContent=fileInput.files?.[0]?.name||'هنوز فایلی انتخاب نشده'});
@@ -2070,9 +2070,9 @@ async function openMiniSupportTicket(id){
     prepareMiniLayer('previewSheet');
     const pv=$('previewSheet'),t=r.ticket||{},ticketIsClosed=['closed','resolved'].includes(String(t.status||'').toLowerCase());
     const composer=ticketIsClosed
-      ? \`<div class="support-ticket-closed-notice" role="status"><span class="support-closed-icon" aria-hidden="true">\${bgFeatureIcon('lock',20)}</span><div><b>این تیکت بسته شده است</b><span>امکان ارسال پیام یا بازگشایی دوبارهٔ این تیکت وجود ندارد. برای موضوع جدید، تیکت تازه‌ای ثبت کن.</span></div></div>\`
-      : \`<form class="support-chat-composer" id="miniSupportComposer"><textarea name="message" rows="1" maxlength="4000" placeholder="پیامت را بنویس…" aria-label="متن پیام"></textarea><label class="attach-button" aria-label="افزودن پیوست" title="افزودن پیوست">\${bgFeatureIcon('paperclip',19)}<input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary" type="submit">\${bgFeatureIcon('send',16)} ارسال</button></form>\`;
-    pv.innerHTML=\`<div class="preview-sheet-inner mini-chat-shell"><div class="preview-sheet-handle" data-close-preview></div><header class="support-chat-head"><span class="support-chat-head-icon" aria-hidden="true">\${bgFeatureIcon('headset',21)}</span><div><span class="member-kicker">BLUEGATE SUPPORT · تیکت #\${Number(id)}</span><b>\${esc(t.subject||'گفت‌وگوی پشتیبانی')}</b><small class="support-chat-status \${miniSupportStatusClass(t.status)}">\${esc(miniSupportStatusLabel(t.status))}</small></div><button type="button" class="ghost support-chat-close" data-close-preview aria-label="بستن گفت‌وگو">\${bgFeatureIcon('close',17)} بستن</button></header><div class="support-chat-messages" id="miniSupportMessages">\${(r.messages||[]).map(supportMessageHtml).join('')||\`<div class="support-chat-empty"><span aria-hidden="true">\${bgFeatureIcon('message',25)}</span><b>گفت‌وگو هنوز شروع نشده</b><small>پیامت را در کادر پایین بنویس تا تیم پشتیبانی در جریان قرار بگیرد.</small></div>\`}</div>\${composer}</div>\`;
+      ? `<div class="support-ticket-closed-notice" role="status"><span class="support-closed-icon" aria-hidden="true">${bgFeatureIcon('lock',20)}</span><div><b>این تیکت بسته شده است</b><span>امکان ارسال پیام یا بازگشایی دوبارهٔ این تیکت وجود ندارد. برای موضوع جدید، تیکت تازه‌ای ثبت کن.</span></div></div>`
+      : `<form class="support-chat-composer" id="miniSupportComposer"><textarea name="message" rows="1" maxlength="4000" placeholder="پیامت را بنویس…" aria-label="متن پیام"></textarea><label class="attach-button" aria-label="افزودن پیوست" title="افزودن پیوست">${bgFeatureIcon('paperclip',19)}<input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"></label><button class="primary" type="submit">${bgFeatureIcon('send',16)} ارسال</button></form>`;
+    pv.innerHTML=`<div class="preview-sheet-inner mini-chat-shell"><div class="preview-sheet-handle" data-close-preview></div><header class="support-chat-head"><span class="support-chat-head-icon" aria-hidden="true">${bgFeatureIcon('headset',21)}</span><div><span class="member-kicker">BLUEGATE SUPPORT · تیکت #${Number(id)}</span><b>${esc(t.subject||'گفت‌وگوی پشتیبانی')}</b><small class="support-chat-status ${miniSupportStatusClass(t.status)}">${esc(miniSupportStatusLabel(t.status))}</small></div><button type="button" class="ghost support-chat-close" data-close-preview aria-label="بستن گفت‌وگو">${bgFeatureIcon('close',17)} بستن</button></header><div class="support-chat-messages" id="miniSupportMessages">${(r.messages||[]).map(supportMessageHtml).join('')||`<div class="support-chat-empty"><span aria-hidden="true">${bgFeatureIcon('message',25)}</span><b>گفت‌وگو هنوز شروع نشده</b><small>پیامت را در کادر پایین بنویس تا تیم پشتیبانی در جریان قرار بگیرد.</small></div>`}</div>${composer}</div>`;
     pv.classList.add('open');
     pv.querySelectorAll('[data-close-preview]').forEach(x=>x.addEventListener('click',closePreviewSheet));
     bindSupportPreview(pv);
@@ -2083,7 +2083,7 @@ async function openMiniSupportTicket(id){
       const f=new FormData(form),msg=String(f.get('message')||'').trim(),file=f.get('attachment');
       if(!msg&&!file?.size){showStatus('پیام بنویس یا فایلی برای ارسال انتخاب کن.','error');return}
       form.dataset.sending='1';
-      const submit=form.querySelector('[type="submit"]');
+      const submit=form.querySelector('[type="submit"]'),originalLabel=submit?.innerHTML||'ارسال';
       if(submit){submit.disabled=true;submit.innerHTML=bgFeatureIcon('loader',16)+' در حال ارسال…'}
       try{
         const a=await supportFilePayload(file);
@@ -2091,7 +2091,7 @@ async function openMiniSupportTicket(id){
         await openMiniSupportTicket(id);
       }catch(e){
         delete form.dataset.sending;
-        if(submit){submit.disabled=false;submit.innerHTML=bgFeatureIcon('send',16)+' ارسال'}
+        if(submit){submit.disabled=false;submit.innerHTML=originalLabel}
         showStatus(e.message||'ارسال پیام ناموفق بود.','error');
       }
     });
