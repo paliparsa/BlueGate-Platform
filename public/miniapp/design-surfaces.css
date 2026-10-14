@@ -17,3 +17,8 @@
 
 /* Remove decorative gradients from product-card pseudo layers; product media remains untouched. */
 #userApp :is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::before,#userApp :is(.product-tile,.product-card,.product-card-modern,.product-item,.catalog-card,.catalog-tile)::after{background-image:none;box-shadow:none}
+
+/* Product card internals share the same quiet graphite surface. */
+#userApp :is(.product-tile,.product-card,.catalog-tile,.product-tile-card,.service-card,.tile-card,.product-card-modern,.product-item,.catalog-card) .tile-body,#userApp :is(.product-tile,.product-card,.catalog-tile,.product-tile-card,.service-card,.tile-card,.product-card-modern,.product-item,.catalog-card) :is(.product-info,.product-content),#adminApp :is(.product-tile,.product-card,.catalog-tile,.product-tile-card,.service-card,.tile-card) .tile-body{background:var(--surface)!important;background-image:none!important}
+#userApp :is(.tile-img,.tile-placeholder),#adminApp :is(.tile-img,.tile-placeholder){background-color:var(--surface2)!important;background-image:none!important;box-shadow:none!important}
+#userApp :is(.product-tile,.product-card) .price-pill{background:var(--accent-soft)!important;border-color:rgba(49,94,251,.22)!important}
