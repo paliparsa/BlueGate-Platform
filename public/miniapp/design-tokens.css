@@ -24,7 +24,7 @@
   --ease-spring:cubic-bezier(0.175,0.885,0.32,1.275);
   /* Unified UI spacing, timing and surfaces: canonical definitions. */
   --u-space-1:4px;--u-space-2:8px;--u-space-3:12px;--u-space-4:16px;--u-space-5:20px;--u-space-6:24px;--u-space-8:32px;
-  --u-r-sm:8px;--u-r-md:12px;--u-r-lg:16px;--u-r-xl:20px;
+  --u-r-sm:var(--r-sm);--u-r-md:var(--r-md);--u-r-lg:var(--r-lg);--u-r-xl:var(--r-xl);
   --u-fast:160ms;--u-standard:220ms;--u-sheet:280ms;
   --u-surface:#101217;--u-surface-2:#151922;--u-border:rgba(255,255,255,.085);
 }
