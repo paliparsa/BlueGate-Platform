@@ -19,7 +19,7 @@
   --ease-ios:var(--bgds-ease);
 }
 
-html,body{background:radial-gradient(circle at 8% -4%,rgba(50,144,244,.18),transparent 28%),radial-gradient(circle at 94% 8%,rgba(61,177,255,.09),transparent 24%),linear-gradient(180deg,var(--bgds-bg),#071321 38%,var(--bgds-bg))!important;color:var(--bgds-text)}
+html,body{background: var(--bg) !important;color:var(--bgds-text)}
 body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
 .muted{color:var(--bgds-muted)!important}
 
@@ -27,9 +27,7 @@ body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
 .glass,.wallet-card,.detail-card,.admin-card,.admin-item,.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,.vpn-subscription-card,.vpn-sub-targets,.presentation-sheet,.dialog-card,.auth-modal-content{
   border-color:rgba(119,201,255,.13)!important;
 }
-.wallet-card,.detail-card,.admin-card,.admin-item,.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,.vpn-sub-targets{
-  background:linear-gradient(180deg,rgba(16,32,53,.92),rgba(11,24,40,.92))!important;
-  box-shadow:0 14px 38px rgba(0,0,0,.13)!important;
+.wallet-card,.detail-card,.admin-card,.admin-item,.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,.vpn-sub-targets{background: var(--surface) !important;box-shadow: none !important;
 }
 .quick-card,.mini-stat,.hub-ref-stats>div,.vpn-sub-metrics>div,.mini-account-stats button,.mini-settings-actions button{
   background:rgba(255,255,255,.026)!important;
@@ -41,9 +39,7 @@ body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
   position:relative;
   isolation:isolate;
   overflow:hidden;
-  border:1px solid rgba(119,201,255,.17)!important;
-  background:radial-gradient(circle at 88% -8%,rgba(59,159,255,.20),transparent 34%),linear-gradient(135deg,rgba(13,32,53,.97),rgba(7,17,30,.97))!important;
-  box-shadow:var(--bgds-shadow-card)!important;
+  border:1px solid rgba(119,201,255,.17)!important;background: var(--surface) !important;box-shadow: none !important;
 }
 .shop-page-intro::after,.account-center-mini-hero::after,.mini-credit-hero-v27::after,.wallet-card-main::after,.vpn-sub-identity::after{
   content:"";position:absolute;z-index:-1;width:190px;height:190px;border-radius:50%;left:-95px;bottom:-125px;background:rgba(59,159,255,.10);filter:blur(12px);pointer-events:none
@@ -60,7 +56,7 @@ body{font-size:var(--bgds-font-body);line-height:var(--bgds-line-body)}
 
 /* Unified button hierarchy from Web. */
 button,.primary,.secondary,.danger,.success,.warning,.ghost{transition:transform var(--bgds-normal) var(--bgds-ease),border-color var(--bgds-normal),background var(--bgds-normal),box-shadow var(--bgds-normal)!important}
-.primary{background:linear-gradient(135deg,#1778e8,#43b6ff)!important;border:1px solid transparent!important;color:#fff!important;box-shadow:0 12px 26px rgba(39,142,240,.20)!important}
+.primary{background: var(--accent) !important;border:1px solid transparent!important;color:#fff!important;box-shadow: none !important}
 .secondary{background:var(--bgds-surface-2)!important;border:1px solid var(--bgds-border)!important;color:var(--bgds-text)!important;box-shadow:none!important}
 .ghost,button.ghost{background:rgba(255,255,255,.024)!important;border:1px solid var(--bgds-border)!important;color:var(--bgds-muted-2)!important;box-shadow:none!important}
 .success{background:linear-gradient(135deg,#229f78,#4bd8a7)!important;border:1px solid rgba(75,216,167,.34)!important;color:#041c15!important}
@@ -77,7 +73,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .status-badge.danger,.status-badge.failed,.vpn-sub-status.bad,.oac-status.danger{border-color:rgba(255,117,138,.20)!important;background:rgba(255,117,138,.07)!important;color:#ff9cac!important}
 
 /* Search/filter controls. */
-.searchbar,.searchbar-modern{min-height:50px!important;border-radius:var(--r-md)!important;border:1px solid rgba(119,201,255,.14)!important;background:linear-gradient(180deg,rgba(16,32,53,.78),rgba(11,24,40,.78))!important;box-shadow:none!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}
+.searchbar,.searchbar-modern{min-height:50px!important;border-radius:var(--r-md)!important;border:1px solid rgba(119,201,255,.14)!important;background: var(--surface2) !important;box-shadow:none!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}
 .searchbar:focus-within,.searchbar-modern:focus-within{border-color:rgba(59,159,255,.48)!important;box-shadow:var(--bgds-focus)!important}
 .searchbar input,.searchbar-modern input{color:var(--bgds-text)!important;font-size:14px!important}
 .searchbar input::placeholder,.searchbar-modern input::placeholder{color:#829bb4!important}
@@ -85,13 +81,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 
 /* Product/card parity: crisp edges, controlled depth, no heavy neon. */
 .product-tile,.glowing-flash-card,.cat-pill{
-  border-color:rgba(119,201,255,.12)!important;
-  background:linear-gradient(160deg,rgba(15,31,51,.96),rgba(8,18,31,.96))!important;
-  box-shadow:0 13px 34px rgba(0,0,0,.12)!important;
+  border-color:rgba(119,201,255,.12)!important;background: var(--surface) !important;box-shadow: none !important;
 }
 .product-tile,.glowing-flash-card{border-radius:var(--r-lg)!important}
 .cat-pill{border-radius:var(--r-md)!important}
-.cat-pill.active{border-color:rgba(59,159,255,.44)!important;background:linear-gradient(180deg,rgba(59,159,255,.11),rgba(11,24,40,.96))!important;outline:0!important}
+.cat-pill.active{border-color:rgba(59,159,255,.44)!important;background: var(--accent-soft) !important;outline:0!important}
 .price-pill,.flash-card-cur-price{color:var(--bgds-warning)!important}
 
 /* VPN identity now speaks the same visual language as Web without changing touch UX. */
@@ -102,8 +96,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .vpn-sub-panel,.vpn-subscription-card,.vpn-sub-targets{border-radius:var(--r-lg)!important}
 .vpn-sub-panel header small,.vpn-subscription-card header small,.vpn-sub-targets header small{color:var(--bgds-primary-soft)!important;letter-spacing:.11em!important;font-weight:900!important}
 .vpn-sub-progress,.mini-profile-completion>i{background:rgba(255,255,255,.06)!important}
-.vpn-sub-progress i,.mini-profile-completion>i>em{background:linear-gradient(90deg,var(--bgds-primary),#70e7ff)!important}
-.vpn-subscription-card.ready{background:linear-gradient(180deg,rgba(59,159,255,.065),rgba(11,24,40,.96))!important;border-color:rgba(119,201,255,.20)!important}
+.vpn-sub-progress i,.mini-profile-completion>i>em{background: var(--surface2) !important}
+.vpn-subscription-card.ready{background: var(--surface) !important;border-color:rgba(119,201,255,.20)!important}
 
 /* Wallet gets the same balance-card emphasis as Web. */
 .wallet-card-main{border-radius:var(--r-xl)!important;padding:20px!important}
@@ -121,7 +115,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 
 /* Skeleton/loading parity. */
 .sk,.rate-loading{position:relative!important;overflow:hidden!important;background:rgba(255,255,255,.045)!important}
-.sk::after,.rate-loading::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(119,201,255,.10),transparent)!important;transform:translateX(-100%);animation:bgds-shimmer 1.4s linear infinite}
+.sk::after,.rate-loading::after{content:"";position:absolute;inset:0;background: var(--surface2) !important;transform:translateX(-100%);animation:bgds-shimmer 1.4s linear infinite}
 @keyframes bgds-shimmer{to{transform:translateX(100%)}}
 
 /* Web-like feedback/toast. */
@@ -131,16 +125,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 #status.toast.warning,.toast.warning{border-color:rgba(255,211,110,.24)!important}
 
 /* Bottom navigation keeps the Mini App interaction model, only the visual language syncs. */
-.bottom-nav.glass,.bottom-nav{background:rgba(8,20,34,.94)!important;border:1px solid rgba(119,201,255,.14)!important;box-shadow:0 -10px 34px rgba(0,0,0,.22)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
+.bottom-nav.glass,.bottom-nav{background:rgba(8,20,34,.94)!important;border:1px solid rgba(119,201,255,.14)!important;box-shadow: none !important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
 .bottom-nav button{color:var(--bgds-muted)!important;background:transparent!important;border-color:transparent!important}
-.bottom-nav button.active{color:var(--bgds-text)!important;background:rgba(59,159,255,.10)!important;box-shadow:inset 0 0 0 1px rgba(119,201,255,.12)!important}
+.bottom-nav button.active{color:var(--bgds-text)!important;background:rgba(59,159,255,.10)!important;box-shadow: none !important}
 
 /* Bottom sheets remain touch-first; their inner visual grammar matches Web modals. */
-.dialog-card,.bottom-sheet,.app-sheet,.cart-sheet-inner,.preview-sheet-inner,.qr-sheet-inner,.share-sheet-inner,.presentation-sheet{
-  background:linear-gradient(180deg,var(--bgds-surface-2),var(--bgds-surface-1))!important;
-  border-color:rgba(119,201,255,.14)!important;
-  box-shadow:var(--bgds-shadow-float)!important
-}
+.dialog-card,.bottom-sheet,.app-sheet,.cart-sheet-inner,.preview-sheet-inner,.qr-sheet-inner,.share-sheet-inner,.presentation-sheet{background: #0c0e13 !important;
+  border-color:rgba(119,201,255,.14)!important;box-shadow: none !important}
 .presentation-header,.cart-sheet-head{border-bottom-color:rgba(119,201,255,.10)!important}
 
 /* Typography rhythm. */
