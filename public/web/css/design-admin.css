@@ -1,0 +1,14 @@
+/* BlueGate Web admin visual contract — dense data surfaces, calm hierarchy */
+:where(.bg-admin-shell,.bg-admin-shell *,.bg-admin-shell *::before,.bg-admin-shell *::after){--admin-accent:#315efb}
+.bg-admin-shell{background:#050608;color:#f5f7fb}
+:where(.bg-admin-shell .bg-admin-sidebar,.bg-admin-shell .admin-sidebar,.bg-admin-shell .bg-admin-topbar,.bg-admin-shell .admin-topbar,.bg-admin-shell .bg-admin-header){
+  background:#080a0e;background-image:none;border-color:var(--line);box-shadow:none
+}
+:where(.bg-admin-shell .bg-admin-sidebar a.active,.bg-admin-shell .admin-sidebar a.active,.bg-admin-shell .bg-admin-nav a.active,.bg-admin-shell .admin-nav a.active){
+  color:#fff;background:rgba(49,94,251,.14);border-color:rgba(49,94,251,.32);box-shadow:none
+}
+:where(.bg-admin-shell .table-wrap,.bg-admin-shell table,.bg-admin-shell .data-table){border-color:var(--line);color:var(--text)}
+.bg-admin-shell :where(th,td){border-color:var(--line)}
+.bg-admin-shell :where(th){background:#0b0d12;color:#c1c7d1}
+.bg-admin-shell :where(.badge,.chip,.tag,.status-badge){border-radius:8px}
+@media(max-width:760px){.bg-admin-shell :where(.bg-admin-card,.admin-card,.stat-card,.panel,.card){border-radius:12px}}
