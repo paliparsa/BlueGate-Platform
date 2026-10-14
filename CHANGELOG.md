@@ -1,3 +1,9 @@
+## 5.1.40 - Balanced storefront controls
+
+- Matched category and filter control widths and heights to restore symmetry under the search field.
+- Reduced icon and label sizing consistently, with an additional compact-screen adjustment.
+- Updated storefront cache token to ensure the new styles are picked up.
+
 ## 5.1.39 - Storefront layout and filter refinement
 
 - Replaced decorative Unicode/emoji marks in the storefront discovery area and category picker with consistent inline SVG icons; localized category labels remain supported.
