@@ -1,3 +1,11 @@
+## 5.1.71 - Rewards/referral layout repair and tier guide
+
+- Rebuilt the rewards overview into explicit bordered panels for wheel chances, ready-to-claim rewards, completed missions, and already-claimed rewards.
+- Restored visible card boundaries and hierarchy around daily missions, each mission state, the claim area, referral metrics, current balance, invite link, and cooperation level.
+- Added a “راهنمای سطح‌ها” sheet explaining Bronze/Silver/Gold/Diamond thresholds and benefit multipliers, highlighting the current level.
+- Replaced added decorative symbols with the shared inline SVG icon helper; retained referral, QR, mission-claim, and spin API handlers.
+- Source-level review: checked function boundaries, existing action IDs, responsive grid/card selectors, guide event wiring, and cache-busted CSS registration. Live Telegram WebView and server-side reward/referral behavior still require hands-on verification.
+
 ## 5.1.70 - Rewards and referrals copy/icon repair
 
 - Reworked rewards and invite-friends copy for clearer Persian wording, consistent terminology, and less ambiguous status text.
