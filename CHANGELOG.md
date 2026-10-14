@@ -1,3 +1,13 @@
+## 5.1.64 - Credit top-up and payment journey redesign
+
+- Added a dedicated final-layer stylesheet for the full credit top-up popup journey: amount selection, payment-method selection, card receipt submission, crypto wallet/TXID steps, and confirmation.
+- Changed the top-up sheet from a bottom-only panel into a centered dark modal consistent with the Mini App's product/cart popups, with a restrained blue/cyan accent, clearer amount hierarchy, selectable presets, method cards, bank account cards, crypto address and success states.
+- Added responsive sizing for narrow phones and short viewports, safe-area handling, keyboard focus visibility, long address/card-number wrapping, and reduced-motion support.
+- Registered the new stylesheet in public/miniapp/index.php so filemtime cache-busting remains active.
+- Preserved all existing top-up amount validation, live-rate conversion, enabled-method checks, create/set/cancel top-up API calls, Stars invoice flow, receipt upload, crypto TXID submission, and confirmation behavior; no payment/business logic changed.
+- Two review loops: (1) journey hierarchy and consistent visual language across each step; (2) narrow screens, long values, scroll containment, selector scoping, cache-busting registration, and unchanged payment handlers.
+- Verification: source-level review only. Live browser/Telegram WebView visual checks and real card/Stars/crypto payment regression tests remain outstanding.
+
 ## 5.1.63 - Credit center home redesign
 
 - Reworked the credit center's visual hierarchy with a refined dark balance hero, clearer currency/stat tiles, compact action sizing, and more legible recent-activity rows.
