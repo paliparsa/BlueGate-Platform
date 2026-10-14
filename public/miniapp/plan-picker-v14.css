@@ -1,0 +1,115 @@
+/* BlueGate Platform v5.1.52 — intermediate service-group / plan-family selector.
+   Scoped to .catalog-group-picker; keeps group IDs and existing selection handlers intact. */
+#appSheet.app-sheet:has(.catalog-group-picker){
+  z-index:2147482450!important;align-items:center!important;justify-content:center!important;
+  box-sizing:border-box!important;
+  padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important;
+  background:transparent!important;overscroll-behavior:contain!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-backdrop{
+  background:rgba(0,0,0,.84)!important;-webkit-backdrop-filter:blur(8px)!important;backdrop-filter:blur(8px)!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-panel{
+  display:flex!important;flex-direction:column!important;gap:0!important;box-sizing:border-box!important;isolation:isolate!important;
+  width:min(470px,100%)!important;max-width:100%!important;height:auto!important;
+  max-height:calc(var(--mini-viewport-height,100dvh) - max(20px,env(safe-area-inset-top) + env(safe-area-inset-bottom) + 12px))!important;
+  margin:0!important;padding:0!important;overflow:hidden!important;border:1px solid #292929!important;border-radius:24px!important;
+  background:#080808!important;background-image:none!important;color:#f5f5f5!important;
+  box-shadow:0 28px 90px rgba(0,0,0,.72),inset 0 1px rgba(255,255,255,.035)!important;
+  transform:translateY(12px) scale(.985)!important;transition:transform .2s ease!important;
+}
+#appSheet.app-sheet.open:has(.catalog-group-picker) .app-sheet-panel{transform:none!important}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-handle{display:none!important}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-header{
+  display:grid!important;grid-template-columns:minmax(0,1fr) 40px!important;align-items:center!important;gap:12px!important;
+  flex:0 0 auto!important;margin:0!important;padding:19px 18px 15px!important;
+  border:0!important;border-bottom:1px solid #252525!important;background:transparent!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-heading{grid-column:1!important;grid-row:1!important;min-width:0!important}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-heading small{
+  display:block!important;margin:0 0 4px!important;color:#b7c4ff!important;font-size:11px!important;font-weight:850!important;line-height:1.5!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-heading h3{
+  margin:0!important;color:#f8f8f8!important;font-size:clamp(16px,4vw,19px)!important;font-weight:900!important;
+  line-height:1.55!important;overflow-wrap:anywhere!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-heading p{
+  margin:4px 0 0!important;color:#a3a3a3!important;font-size:12px!important;font-weight:650!important;line-height:1.65!important;overflow-wrap:anywhere!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-close{
+  grid-column:2!important;grid-row:1!important;align-self:start!important;display:grid!important;place-items:center!important;
+  box-sizing:border-box!important;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+  margin:0!important;padding:0!important;border:1px solid #303030!important;border-radius:12px!important;
+  background:#111!important;color:#e5e5e5!important;font-size:22px!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-body{
+  flex:1 1 auto!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;
+  padding:14px 16px 16px!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;
+  scrollbar-width:thin;scrollbar-color:#353535 transparent;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-picker{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start!important;
+  gap:8px!important;min-width:0!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option{
+  position:relative!important;display:grid!important;grid-template-columns:44px minmax(0,1fr) 24px!important;
+  align-items:center!important;gap:12px!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;min-height:76px!important;
+  margin:0!important;padding:12px!important;overflow:hidden!important;border:1px solid #292929!important;border-radius:15px!important;
+  background:#101010!important;color:#eee!important;box-shadow:none!important;text-align:start!important;direction:rtl!important;
+  font:inherit!important;cursor:pointer!important;transition:border-color .16s ease,background-color .16s ease,transform .16s ease!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option:is(:hover,:focus-visible){
+  border-color:#555!important;background:#151515!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option:focus-visible{outline:2px solid #bcbcbc!important;outline-offset:2px!important}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option:active{transform:scale(.99)!important}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option:disabled{opacity:.58!important;cursor:wait!important}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-icon{
+  grid-column:1!important;grid-row:1!important;display:grid!important;place-items:center!important;
+  box-sizing:border-box!important;width:44px!important;height:44px!important;min-width:44px!important;margin:0!important;padding:8px!important;
+  border:1px solid #303030!important;border-radius:12px!important;background:#181818!important;color:#cbd4ff!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-icon svg{
+  display:block!important;width:24px!important;height:24px!important;max-width:24px!important;max-height:24px!important;stroke:currentColor!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-copy{
+  grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:center!important;gap:5px!important;min-width:0!important;width:100%!important;margin:0!important;padding:0!important;text-align:start!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-copy b{
+  display:-webkit-box!important;max-width:100%!important;min-width:0!important;margin:0!important;padding:0!important;color:#f4f4f4!important;
+  font-size:13px!important;font-weight:900!important;line-height:1.55!important;white-space:normal!important;overflow-wrap:anywhere!important;overflow:hidden!important;
+  -webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-copy small{
+  display:block!important;max-width:100%!important;margin:0!important;padding:0!important;color:#999!important;
+  font-size:11px!important;font-weight:700!important;line-height:1.5!important;white-space:normal!important;overflow-wrap:anywhere!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-arrow{
+  grid-column:3!important;grid-row:1!important;display:grid!important;place-items:center!important;width:24px!important;height:24px!important;
+  border:1px solid #303030!important;border-radius:8px!important;background:#171717!important;color:#aaa!important;
+}
+#appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-arrow svg{display:block!important;width:15px!important;height:15px!important;stroke:currentColor!important}
+#appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-footer{border-top:1px solid #242424!important;background:#080808!important}
+#appSheet.app-sheet:has(.catalog-group-picker) :is(button):focus-visible{outline-offset:2px!important}
+@media(max-width:390px){
+  #appSheet.app-sheet:has(.catalog-group-picker){padding:8px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-panel{max-height:calc(var(--mini-viewport-height,100dvh) - 16px)!important;border-radius:20px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-header{grid-template-columns:minmax(0,1fr) 36px!important;gap:8px!important;padding:15px 13px 12px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-close{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-body{padding:11px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-picker{gap:7px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option{grid-template-columns:38px minmax(0,1fr) 22px!important;gap:9px!important;min-height:66px!important;padding:9px!important;border-radius:13px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-icon{width:38px!important;height:38px!important;min-width:38px!important;border-radius:10px!important;padding:6px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option-arrow{width:22px!important;height:22px!important}
+}
+@media(max-height:520px){
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-panel{max-height:calc(var(--mini-viewport-height,100dvh) - 12px)!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-header{padding-block:10px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-body{padding-block:9px!important}
+  #appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option{min-height:58px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #appSheet.app-sheet:has(.catalog-group-picker) .app-sheet-panel,
+  #appSheet.app-sheet:has(.catalog-group-picker) .catalog-group-option{transition:none!important}
+}
