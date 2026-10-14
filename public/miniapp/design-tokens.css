@@ -23,6 +23,7 @@
   --mini-overlay-top:max(12px,env(safe-area-inset-top,0px));
   --mini-overlay-bottom:max(12px,env(safe-area-inset-bottom,0px));
   --bgm-fast:150ms;--bgm-med:240ms;--bgm-ease:cubic-bezier(.2,.75,.25,1);
+  --vy-motion-fast:160ms;--vy-motion:220ms;--vy-motion-slow:320ms;
   --mini-focus-ring:0 0 0 3px color-mix(in srgb,var(--accent) 32%,transparent);
   --bg-font-body:16px;--bg-font-control:16px;--bg-font-secondary:15px;--bg-font-micro:14px;
 
