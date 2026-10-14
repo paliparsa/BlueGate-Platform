@@ -1,16 +1,16 @@
-/* BlueGate Mini App design surfaces — shared by customer and in-app admin views */
-:where(.card,.product-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-stat-card,.admin-panel,.admin-section,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.catalog-tile,.product-tile,.service-card,.bg-card){
-  background:var(--surface);border-color:var(--line);box-shadow:none;color:var(--text);border-radius:var(--r-lg)
+/* BlueGate Mini App surfaces — shared visual ownership for customer + in-app admin */
+#userApp :is(.card,.product-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.catalog-tile,.product-tile,.service-card,.bg-card),
+#adminApp :is(.card,.product-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-stat-card,.admin-panel,.admin-section,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.service-card){
+  color:var(--text)!important;background-color:var(--surface)!important;background-image:none!important;border-color:var(--line)!important;box-shadow:none!important;border-radius:var(--r-lg)!important
 }
-:where(.card,.product-card,.order-card,.wallet-card,.stat-card,.setting-card,.section-card,.admin-card,.admin-stat-card,.admin-panel,.admin-section,.support-card,.ticket-card,.referral-card,.vip-card,.credit-card,.balance-card,.history-card,.service-card){
-  background-image:none
+#userApp :is(.topbar,.app-header,.page-header,.bottom-nav,.nav-bar,.mobile-nav),
+#adminApp :is(.topbar,.app-header,.page-header,.admin-header,.admin-topbar,.bottom-nav,.admin-tabs,.nav-bar,.mobile-nav){
+  background-color:rgba(5,6,8,.96)!important;background-image:none!important;border-color:var(--line)!important;box-shadow:none!important;backdrop-filter:blur(16px)
 }
-:where(.topbar,.app-header,.page-header,.admin-header,.admin-topbar,.bottom-nav,.admin-tabs,.nav-bar,.mobile-nav){
-  background:rgba(5,6,8,.94);border-color:var(--line);box-shadow:none;backdrop-filter:blur(16px)
+#userApp :is(.nav-item.active,.nav-link.active,.bottom-nav button.active,.nav-bar button.active,[aria-current="page"]),
+#adminApp :is(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active,.nav-bar button.active,[aria-current="page"]){
+  color:#fff!important;background-color:var(--accent-soft)!important;background-image:none!important;border-color:rgba(49,94,251,.36)!important;box-shadow:none!important
 }
-:where(.bottom-nav,.admin-tabs,.nav-bar,.mobile-nav){border-top:1px solid var(--line)}
-:where(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active,[aria-current="page"]){
-  color:#fff;background:var(--accent-soft);border-color:rgba(49,94,251,.35);box-shadow:none
-}
-:where(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active) :where(svg,.bg-ico,.icon){color:var(--accent);filter:none}
-:where(.badge,.chip,.tag,.status-badge,.filter-chip){border-radius:var(--r-sm)}
+#userApp :is(.nav-item.active,.nav-link.active,.bottom-nav button.active) :is(svg,.bg-ico,.icon),
+#adminApp :is(.nav-item.active,.nav-link.active,.admin-tabs button.active,.bottom-nav button.active) :is(svg,.bg-ico,.icon){color:var(--accent)!important;filter:none!important}
+#userApp :is(.badge,.chip,.tag,.status-badge,.filter-chip),#adminApp :is(.badge,.chip,.tag,.status-badge,.filter-chip){border-radius:var(--r-sm)!important}
