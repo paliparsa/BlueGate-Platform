@@ -1,3 +1,13 @@
+## 5.1.52 - Plan-group selection popup redesign
+
+- Redesigned the intermediate selector shown for products with multiple service groups (for example, choosing a VPN type before choosing its plan).
+- Replaced the generic sheet presentation with a centered near-black modal aligned with the product and cart popups, including a restrained blurred backdrop, compact header and contained scrolling.
+- Restyled each group as a clear selectable row with a vector icon, readable service name, plan count, starting-price hint and directional affordance.
+- Improved narrow-screen sizing, long-name wrapping, keyboard focus, pressed/disabled feedback and reduced-motion behavior.
+- Preserved group/product IDs and the existing transition into the selected product's plan-and-checkout popup.
+- Registered a dedicated stylesheet in the HTML and PHP asset cache-busting lists.
+- Source-level checks only; live Telegram WebView visual testing remains outstanding.
+
 ## 5.1.51 - Cart button and cart popup redesign
 
 - Redesigned the floating cart button as a clear, compact pill with a vector cart icon, label and persistent item-count badge.
