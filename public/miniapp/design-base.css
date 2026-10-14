@@ -1,7 +1,7 @@
 /* BlueGate Mini App design base — authoritative canvas, typography, and focus */
-html{background:#050608!important;color-scheme:dark}
-body{background:#050608!important;color:#f5f7fb;font-family:var(--mini-font-family);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-#userApp,#adminApp,.app-shell,.page,#adminContent,#homePage,#shopPage,#ordersPage,#walletPage,#supportPage,#profilePage,#accountPage,#referralPage,#vipPage,#creditPage{background-color:var(--bg)!important;background-image:none!important;color:var(--text)}
+html{background:var(--bg);color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mini-font-family);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#userApp,#adminApp,.app-shell,.page,#adminContent,#homePage,#shopPage,#ordersPage,#walletPage,#supportPage,#profilePage,#accountPage,#referralPage,#vipPage,#creditPage{background-color:var(--bg);background-image:none;color:var(--text)}
 #userApp :is(h1,h2,h3,h4,h5,h6,.section-title h2,.product-title),#adminApp :is(h1,h2,h3,h4,h5,h6,.section-title h2,.product-title){color:var(--text)}
 #userApp :is(p,.muted,.text-muted,.subtle,.helper-text),#adminApp :is(p,.muted,.text-muted,.subtle,.helper-text){color:var(--muted)}
 a{color:#8ba5ff;text-decoration-color:rgba(139,165,255,.35)}
@@ -10,6 +10,7 @@ a{color:#8ba5ff;text-decoration-color:rgba(139,165,255,.35)}
 hr,.divider,.section-divider{border-color:var(--line)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
 
-
-/* Unified Mini App design ownership v1 */
-html{background:#030303;color-scheme:dark}body{margin:0;background:#030303;background-image:none;color:var(--text);font-family:var(--mini-font-family);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body::before,body::after{background-image:none}#userApp,#adminApp,.app-shell,.app-container,.app-root,main{background-color:#030303;background-image:none;border-color:var(--line)}#userApp,#adminApp,.app-shell{outline:0;box-shadow:none}html,body,body *:not(i):not(svg):not(path):not(.fa):not([class^="fa-"]):not([class*=" fa-"]):not(.material-icons):not(.material-symbols-outlined):not([data-icon-font]){font-family:var(--mini-font-family)}input,textarea,select,option,button,[role="button"],[role="dialog"],[role="alertdialog"]{font-family:var(--mini-font-family)}
+/* Shared Persian typography and edge-to-edge application canvas. */
+#userApp,#adminApp,.app-shell{outline:0;box-shadow:none}
+#userApp,#adminApp,button,input,textarea,select,option,[role="button"],[role="dialog"],[role="alertdialog"]{font-family:var(--mini-font-family)}
+body::before,body::after{background-image:none}
