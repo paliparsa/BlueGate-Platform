@@ -1,3 +1,11 @@
+## 5.1.68 - Referral center refinement
+
+- Reworked the referral center hierarchy: a dedicated intro, available-credit card, compact real-data referral metrics, VIP progress, and a clearer invitation-link area.
+- Show the user's current referral URL directly while preserving the existing share, copy-link, QR, referral-code customization, and referral-tree handlers.
+- Account and credit entry points continue to use the same `openMiniReferralCenter()` route; the shared fullscreen sheet and existing design tokens remain the shell.
+- Two review loops: (1) layout and responsive polish against the shared BlueGate sheet; (2) re-read the modified function, check all existing action IDs and API-backed data, ensure CSS registration and version/changelog consistency.
+- Verification is source-level only; live Telegram WebView and actual share/QR flows were not exercised.
+
 ## 5.1.67 - Rewards popup redesign
 
 - Redesigned the rewards fullscreen sheet with a compact intro, live spin-balance and mission-state summaries, refined wheel surface, clearer mission progress cards, and a consistent empty state.
