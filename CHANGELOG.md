@@ -1,3 +1,10 @@
+## 5.1.59 - Unified order note popup
+
+- Changed the bottom-right “یادداشت سفارش” action on order details to open the same centered “بیشتر” popup note editor users prefer, instead of the older generic edit dialog.
+- Reused the existing popup form, validation limits, save feedback, and `customer_order_note` API flow; no backend or order data behavior changed.
+- Kept the “بیشتر” menu entry and bottom action connected to the same note view, while preserving all other order actions and the dedicated VPN styling exclusion.
+- Refreshed the Mini App JavaScript cache key. Source-level handler checks only; live Telegram WebView testing remains outstanding.
+
 ## 5.1.58 - Full non-VPN order detail and payment redesign
 
 - Redesigned the full order detail screen for all non-VPN product types: header and order status, amount due, progress timeline, savings and price breakdown, order metadata, payment methods and method-specific forms, history, notes, delivery details, and bottom actions.
