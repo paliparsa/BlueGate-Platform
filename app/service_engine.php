@@ -546,9 +546,10 @@ function bluegate_save_monitoring_settings(array $in): array {
 function bluegate_monitor_begin(string $type): int { if(!table_exists('monitoring_runs'))return 0;$q=db()->prepare('INSERT INTO monitoring_runs (run_type,status) VALUES (? ,"running")');$q->execute([$type]);return(int)db()->lastInsertId(); }
 function bluegate_monitor_finish(int $id,array $s,array $details=[]): void { if($id<=0||!table_exists('monitoring_runs'))return;db()->prepare('UPDATE monitoring_runs SET status=?,scanned_count=?,success_count=?,warning_count=?,error_count=?,details_json=?,completed_at=NOW() WHERE id=?')->execute([($s['errors']??0)>0?'completed_with_errors':'completed',(int)($s['scanned']??0),(int)($s['success']??0),(int)($s['warnings']??0),(int)($s['errors']??0),json_encode($details,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$id]); }
 function bluegate_monitor_notify_user(int $userId,string $title,string $body,int $serviceId,string $key): void {
+    // In-app notification and optional Telegram alert are separate delivery channels.
     notify_user_event($userId,'service',$title,$body,null,'service',(string)$serviceId);
     $cfg=bluegate_monitoring_settings();if(empty($cfg['telegram_alerts_enabled']))return;
-    try{$u=get_user_by_id($userId);if($u&&!empty($u['telegram_id']))send_msg((int)$u['telegram_id'],"🔔 <b>".h($title)."</b>\n\n".h($body));}catch(Throwable $e){error_log('[BlueGate monitor notify] '.$e->getMessage());}
+    try{$u=get_user_by_id($userId);if($u&&!empty($u['telegram_id']))send_msg((int)$u['telegram_id'],"🔔 <b>".h($title)."</b>\n\n".h($body)."\n\nبرای مشاهده جزئیات سرویس، بخش «VPNهای من» را در Mini App باز کن.");}catch(Throwable $e){error_log('[BlueGate monitor notify] '.$e->getMessage());}
 }
 function bluegate_alert_once(int $serviceId,string $key,string $cycle,string $value,array $meta,callable $send): bool {
     if(!table_exists('service_alert_states')){$send();return true;}$q=db()->prepare('SELECT * FROM service_alert_states WHERE user_service_id=? AND alert_key=? LIMIT 1');$q->execute([$serviceId,$key]);$old=$q->fetch();if($old&&hash_equals((string)$old['cycle_key'],$cycle)&&empty($old['resolved_at']))return false;$send();

@@ -54,7 +54,7 @@ function route_bot_start_payload(int $chat_id, $message_id, array $user, string 
     if($payload==='')return false;
     clear_step($chat_id);
     if(preg_match('/^buy_p_(\d+)$/',$payload,$m) || preg_match('/^buy_v_(\d+)_(\d+)$/',$payload,$m) || $payload==='shop'){
-        send_or_edit($chat_id,$message_id,'🛍 خرید و مدیریت سفارش‌ها فقط داخل Mini App انجام می‌شود. برای ادامه Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_or_edit($chat_id,$message_id,'🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return true;
     }
     if($payload==='services'){show_bot_services($chat_id,$message_id,(int)$user['id']);return true;}
@@ -109,7 +109,7 @@ function handle_message(array $message): void {
     if (is_full_admin($chat_id) && in_array(strtolower($text), ['/backup','backup','/adminbackup'], true)) {
         try { $b = blue_backup_send_to_admin($chat_id); send_msg($chat_id, "✅ بکاپ ساخته و همینجا ارسال شد.
 فایل: <code>".h($b['filename'])."</code>", admin_keyboard()); }
-        catch (Throwable $e) { send_msg($chat_id, '❌ ساخت/ارسال بکاپ شکست خورد: <code>'.h($e->getMessage()).'</code>', admin_keyboard()); }
+        catch (Throwable $e) { error_log('[Bot backup] '.$e->getMessage()); send_msg($chat_id, '❌ ساخت یا ارسال بکاپ ناموفق بود. جزئیات فنی در لاگ سرور ثبت شد.', admin_keyboard()); }
         return;
     }
     if (is_full_admin($chat_id) && in_array(strtolower($text), ['/restore_backup','restore_backup','restore'], true)) {
@@ -170,7 +170,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
     }
     if (preg_match('~^/(?:orders|shop|buy)(?:@\w+)?$~i', $text)) {
         clear_step($chat_id);
-        send_msg($chat_id, '🛍 خرید و «سفارش‌های من» در ربات غیرفعال است. برای خرید، پرداخت و پیگیری سفارش‌ها Mini App را باز کن.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_msg($chat_id, '🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return;
     }
     if (preg_match('~^/services(?:@\w+)?$~i', $text)) {
@@ -196,7 +196,7 @@ Rows: <b>{$res['restored_rows']}</b>", admin_keyboard());
 
 function handle_keyboard_text(int $chat_id, array $user, string $text): bool {
     if (in_array($text, ['🛒 فروشگاه','⚡ خرید سریع','🧾 سفارش‌های من','📦 سفارش‌های من','🧾 سفارش‌ها'], true)) {
-        send_msg($chat_id, '🛍 خرید و «سفارش‌های من» فقط داخل Mini App در دسترس است.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_msg($chat_id, '🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.', miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return true;
     }
     $map = [
@@ -307,7 +307,7 @@ function show_bot_credit_topup_invoice(int $chat_id,$message_id,array $t): void 
 
 function handle_user_callback(int $chat_id, $message_id, array $user, string $data): void {
     if ($data === 'u_shop' || $data === 'u_orders' || str_starts_with($data,'shop_') || str_starts_with($data,'order_')) {
-        send_or_edit($chat_id,$message_id,'🛍 خرید و مدیریت سفارش‌ها از داخل ربات غیرفعال شده. برای خرید، پرداخت و مشاهده سفارش‌ها Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
+        send_or_edit($chat_id,$message_id,'🛍 خرید، سفارش‌ها و پیگیری پرداخت فقط در Mini App در دسترس است. برای ادامه، Mini App را باز کن.',miniapp_only_notice_keyboard(is_full_admin($chat_id)));
         return;
     }
     if ($data === 'u_ref') {
@@ -338,12 +338,12 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if(str_starts_with($data,'topup_card_')){
         $id=(int)substr($data,11);
         try{$t=set_credit_topup_method($id,(int)$user['id'],'card');show_bot_credit_topup_invoice($chat_id,$message_id,$t);}
-        catch(Throwable $e){send_or_edit($chat_id,$message_id,'کارت به کارت برای شارژ اعتبار در دسترس نیست.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']]]]));}return;
+        catch(Throwable $e){error_log('[BlueGate credit topup card #'.$id.'] '.$e->getMessage());send_or_edit($chat_id,$message_id,'پرداخت کارت‌به‌کارت برای شارژ انجام نشد. روش دیگری را انتخاب کن یا وضعیت درخواست را بررسی کن.',json_markup(['inline_keyboard'=>[[['text'=>'🔙 اعتبار من','callback_data'=>'u_wallet']]]]));}return;
     }
     if(str_starts_with($data,'topup_stars_')){
         $id=(int)substr($data,12);
-        try{$t=set_credit_topup_method($id,(int)$user['id'],'stars');$res=send_stars_invoice_for_topup($t);show_bot_credit_topup_invoice($chat_id,$message_id,credit_topup_by_id($id));if(empty($res['ok']))send_msg($chat_id,'ارسال فاکتور Stars ممکن نشد.');}
-        catch(Throwable $e){send_msg($chat_id,'پرداخت Stars برای شارژ اعتبار در دسترس نیست.',back_main_keyboard());}return;
+        try{$t=set_credit_topup_method($id,(int)$user['id'],'stars');$res=send_stars_invoice_for_topup($t);show_bot_credit_topup_invoice($chat_id,$message_id,credit_topup_by_id($id));if(empty($res['ok']))send_msg($chat_id,"ارسال فاکتور Stars برای درخواست شارژ #{$id} ممکن نشد. وضعیت درخواست را بررسی کن یا روش دیگری را انتخاب کن.");}
+        catch(Throwable $e){error_log('[BlueGate credit topup Stars #'.$id.'] '.$e->getMessage());send_msg($chat_id,'پرداخت Stars برای شارژ انجام نشد. کمی بعد دوباره تلاش کن یا روش دیگری را انتخاب کن.',back_main_keyboard());}return;
     }
     if(str_starts_with($data,'topup_crypto_')){
         $id=(int)substr($data,13);$wallets=array_values(array_filter(crypto_wallets(true),fn($w)=>crypto_wallet_supported((string)$w['asset'],(string)$w['network'])));
@@ -355,7 +355,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if(str_starts_with($data,'topup_cw_')){
         $p=explode('_',substr($data,9));$id=(int)($p[0]??0);$wid=(int)($p[1]??0);
         try{$t=set_credit_topup_method($id,(int)$user['id'],'crypto',['wallet_id'=>$wid]);show_bot_credit_topup_invoice($chat_id,$message_id,$t);}
-        catch(Throwable $e){send_msg($chat_id,'ساخت پرداخت رمزارز ممکن نشد.',back_main_keyboard());}return;
+        catch(Throwable $e){error_log('[BlueGate credit topup crypto #'.$id.'] '.$e->getMessage());send_msg($chat_id,'ساخت پرداخت رمزارزی انجام نشد. دوباره تلاش کن یا روش دیگری را انتخاب کن.',back_main_keyboard());}return;
     }
     if(str_starts_with($data,'topup_view_')){
         $id=(int)substr($data,11);$t=credit_topup_by_id($id);
@@ -473,19 +473,19 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'order_pay_wallet_')) {
         $oid=(int)substr($data, 17);
         try { $order=apply_wallet_to_order($oid, (int)$user['id']); if (normalize_order_status((string)($order['status'] ?? '')) === 'payment_confirmed') { notify_admin_order((int)$order['id'], 'پرداخت کامل با اعتبار کیف پول', 'Telegram Bot', '💙 پرداخت سفارش از اعتبار کیف پول انجام شد.'); } show_order_invoice($chat_id, $message_id, $order); }
-        catch (Throwable $e) { error_log('[BlueGate wallet payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'امکان پرداخت از کیف پول برای این سفارش نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch (Throwable $e) { error_log('[BlueGate wallet payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'پرداخت از اعتبار برای این سفارش انجام نشد. وضعیت سفارش را در Mini App بررسی کن؛ اگر موجودی تغییر کرده است، با پشتیبانی تماس بگیر.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_pay_card_')) {
         $oid=(int)substr($data, 15);
         try { $order=order_set_payment_method($oid, (int)$user['id'], 'card', []); show_order_invoice($chat_id, $message_id, $order); }
-        catch (Throwable $e) { send_msg($chat_id, 'امکان انتخاب کارت به کارت نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch (Throwable $e) { error_log('[BlueGate card payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'پرداخت کارت‌به‌کارت برای این سفارش شروع نشد. وضعیت سفارش را در Mini App بررسی کن یا روش دیگری را انتخاب کن.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_pay_stars_')) {
         $oid=(int)substr($data, 16);
-        try { $order=order_set_payment_method($oid, (int)$user['id'], 'stars', []); $res=send_stars_invoice_for_order($order); show_order_invoice($chat_id, $message_id, order_by_id($oid)); if (empty($res['ok'])) send_msg($chat_id, 'ارسال فاکتور Stars ممکن نشد. شاید پرداخت Stars برای بات فعال نیست.'); }
-        catch (Throwable $e) { send_msg($chat_id, 'امکان پرداخت با Stars برای این سفارش نیست.', main_menu_keyboard(is_full_admin($chat_id))); }
+        try { $order=order_set_payment_method($oid, (int)$user['id'], 'stars', []); $res=send_stars_invoice_for_order($order); show_order_invoice($chat_id, $message_id, order_by_id($oid)); if (empty($res['ok'])) send_msg($chat_id, "ارسال فاکتور Stars برای سفارش #{$oid} ممکن نشد. وضعیت سفارش را در Mini App بررسی کن یا روش دیگری را انتخاب کن."); }
+        catch (Throwable $e) { error_log('[BlueGate Stars payment order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'پرداخت با Stars برای این سفارش شروع نشد. کمی بعد دوباره تلاش کن یا روش دیگری را انتخاب کن.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_pay_crypto_')) {
@@ -500,7 +500,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'order_crypto_wallet_')) {
         $parts=explode('_',$data); $oid=(int)($parts[3]??0); $wid=(int)($parts[4]??0);
         try { $order=start_crypto_payment($oid, (int)$user['id'], $wid); show_order_invoice($chat_id, $message_id, $order); }
-        catch(Throwable $e){ send_msg($chat_id, 'امکان انتخاب کیف پول رمزارز نیست. نرخ یا ولت را در پنل ادمین بررسی کن.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch(Throwable $e){ error_log('[BlueGate crypto wallet selection order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'انتخاب پرداخت رمزارزی برای این سفارش انجام نشد. از Mini App دوباره تلاش کن یا روش دیگری را انتخاب کن.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_crypto_hash_')) {
@@ -511,7 +511,7 @@ function handle_user_callback(int $chat_id, $message_id, array $user, string $da
     if (str_starts_with($data, 'order_check_crypto_')) {
         $oid=(int)substr($data, 19);
         try { crypto_verify_order($oid); show_order_invoice($chat_id, $message_id, order_by_id($oid)); }
-        catch(Throwable $e){ send_msg($chat_id, 'بررسی پرداخت رمزارز انجام نشد؛ کمی بعد دوباره امتحان کن.', main_menu_keyboard(is_full_admin($chat_id))); }
+        catch(Throwable $e){ error_log('[BlueGate crypto verification order #'.$oid.'] '.$e->getMessage()); send_msg($chat_id, 'بررسی پرداخت رمزارز انجام نشد. کمی بعد دوباره تلاش کن یا با پشتیبانی تماس بگیر.', main_menu_keyboard(is_full_admin($chat_id))); }
         return;
     }
     if (str_starts_with($data, 'order_receipt_')) {
@@ -599,7 +599,7 @@ function handle_admin_callback(int $chat_id, $message_id, array $user, string $d
     if (preg_match('/^adm_tu_(\d+)$/',$data,$m)) { admin_topup_view($chat_id,$message_id,(int)$m[1]);return; }
     if (preg_match('/^adm_tu_rcpt_(\d+)$/',$data,$m)) { $t=credit_topup_by_id((int)$m[1]);if($t&&!empty($t['receipt_file_id'])){$src=resolve_receipt_photo_source((string)$t['receipt_file_id']);$r=$src?tg('sendPhoto',['chat_id'=>$chat_id,'photo'=>$src,'caption'=>'رسید شارژ #'.(int)$t['id']]):['ok'=>false];if(empty($r['ok']))send_msg($chat_id,'نمایش رسید ممکن نشد؛ فایل ممکن است حذف شده یا شناسه تلگرام نامعتبر باشد.');}admin_topup_view($chat_id,$message_id,(int)$m[1]);return; }
     if (preg_match('/^adm_tu_ok_(\d+)$/',$data,$m)) { try{$t=credit_topup_credit_once((int)$m[1],'تایید از Bot Admin');if($t){send_user_message_by_id((int)$t['user_id'],"✅ شارژ اعتبار تایید شد.\nمبلغ: <b>".money((int)$t['amount'])."</b>",main_menu_keyboard(false));}admin_topup_center($chat_id,$message_id);}catch(Throwable $e){send_or_edit($chat_id,$message_id,'تایید انجام نشد: <code>'.h($e->getMessage()).'</code>',admin_keyboard());}return; }
-    if (preg_match('/^adm_tu_no_(\d+)$/',$data,$m)) { try{$t=reject_credit_topup((int)$m[1],'رد توسط ادمین از Bot');if($t){send_user_message_by_id((int)$t['user_id'],'❌ درخواست شارژ اعتبار رد شد.',main_menu_keyboard(false));}admin_topup_center($chat_id,$message_id);}catch(Throwable $e){send_or_edit($chat_id,$message_id,'رد درخواست انجام نشد.',admin_keyboard());}return; }
+    if (preg_match('/^adm_tu_no_(\d+)$/',$data,$m)) { try{$id=(int)$m[1];$current=credit_topup_by_id($id);if(!$current){send_or_edit($chat_id,$message_id,'درخواست شارژ پیدا نشد.',admin_keyboard());return;}if(!empty($current['credited_at'])||!in_array((string)$current['status'],['pending_payment','receipt_submitted','reviewing'],true)){send_or_edit($chat_id,$message_id,'رد این درخواست در وضعیت فعلی مجاز نیست.',admin_topup_keyboard($id,!empty($current['receipt_file_id'])));return;}$t=reject_credit_topup($id,'رد توسط ادمین از Bot');if($t){send_user_message_by_id((int)$t['user_id'],'❌ درخواست شارژ اعتبار رد شد.',main_menu_keyboard(false));}admin_topup_center($chat_id,$message_id);}catch(Throwable $e){error_log('[BlueGate topup rejection] '.$e->getMessage());send_or_edit($chat_id,$message_id,'رد درخواست شارژ ممکن نشد. جزئیات فنی در لاگ سرور ثبت شد.',admin_keyboard());}return; }
     if (handle_shop_admin_v2_callback($chat_id, $message_id, $user, $data)) return;
     if ($data === 'adm_stats') {
         $u = db()->query('SELECT COUNT(*) c, COALESCE(SUM(balance),0) b, COALESCE(SUM(total_earned),0) e, COALESCE(SUM(referrals_count),0) r, COALESCE(SUM(spin_balance),0) s FROM users')->fetch();
@@ -691,17 +691,17 @@ email2@test.com | pass2</code>", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'prod_toggle_')) { $pid=(int)substr($data,12); db()->prepare('UPDATE products SET is_active=1-is_active WHERE id=?')->execute([$pid]); show_admin_products($chat_id, $message_id); return; }
     if (str_starts_with($data, 'ord_view_')) { show_admin_order($chat_id, $message_id, (int)substr($data,9)); return; }
     if (str_starts_with($data, 'prod_delete_')) { $pid=(int)substr($data,12); db()->prepare('UPDATE products SET is_active=0 WHERE id=?')->execute([$pid]); send_msg($chat_id, "محصول #{$pid} غیرفعال شد.", admin_shop_keyboard()); return; }
-    if (str_starts_with($data, 'ord_archive_')) { $oid=(int)substr($data,12); $o=archive_order($oid); if ($o) send_or_edit($chat_id,$message_id,"📦 سفارش #{$oid} آرشیو شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; }
+    if (str_starts_with($data, 'ord_archive_')) { $oid=(int)substr($data,12); $current=order_by_id($oid); if(!$current){send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard());return;} if(!empty($current['archived_at'])){send_or_edit($chat_id,$message_id,"سفارش #{$oid} از قبل آرشیو شده است.",admin_order_keyboard($oid));return;} if(normalize_order_status((string)$current['status'])!=='delivered'&&!is_cleanup_order_status((string)$current['status'])){send_or_edit($chat_id,$message_id,'آرشیو فقط برای سفارش‌های تحویل‌شده، لغو‌شده، رد‌شده یا مرجوع‌شده مجاز است.',admin_order_keyboard($oid));return;} $o=archive_order($oid); if ($o) send_or_edit($chat_id,$message_id,"📦 سفارش #{$oid} آرشیو شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_delete_')) { $oid=(int)substr($data,11); $o=order_by_id($oid); if (!$o) { send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard()); return; } if (!is_cleanup_order_status($o['status'])) { send_or_edit($chat_id,$message_id,'حذف کامل فقط برای سفارش‌های لغو/رد/مرجوع‌شده مجاز است.',admin_order_keyboard($oid)); return; } send_or_edit($chat_id,$message_id,"⚠️ سفارش <code>#{$oid}</code> کامل حذف شود؟ این عملیات قابل برگشت نیست.", json_markup(['inline_keyboard'=>[[['text'=>'✅ بله، حذف کامل', 'callback_data'=>'ord_confirm_delete_'.$oid]],[['text'=>'❌ لغو', 'callback_data'=>'ord_view_'.$oid]]]])); return; }
     if (str_starts_with($data, 'ord_confirm_delete_')) { $oid=(int)substr($data,19); if (hard_delete_order($oid,true)) send_or_edit($chat_id,$message_id,"✅ سفارش #{$oid} کامل حذف شد.",admin_shop_keyboard()); else send_or_edit($chat_id,$message_id,'حذف انجام نشد. فقط سفارش‌های لغو/رد/مرجوع‌شده قابل حذف کامل هستند.',admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_receipt_')) { $oid=(int)substr($data,12);$o=order_by_id($oid);if(!$o||empty($o['receipt_file_id'])){send_or_edit($chat_id,$message_id,'رسیدی برای این سفارش ثبت نشده است.',admin_order_keyboard($oid));return;}$src=resolve_receipt_photo_source((string)$o['receipt_file_id']);$r=$src?tg('sendPhoto',['chat_id'=>$chat_id,'photo'=>$src,'caption'=>'🧾 رسید سفارش #'.$oid,'reply_markup'=>admin_order_keyboard($oid)]):['ok'=>false];if(empty($r['ok']))send_msg($chat_id,'نمایش تصویر رسید ممکن نشد. متن/جزئیات سفارش همچنان در دسترس است.',admin_order_keyboard($oid));return; }
     if (str_starts_with($data, 'ord_review_')) { $oid=(int)substr($data,11); $o=update_order_status($oid, 'reviewing', 'سفارش در حال بررسی است'); if ($o) { send_user_message_by_id((int)$o['user_id'], "👀 سفارش <code>#{$oid}</code> در حال بررسی است.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_paid_')) { $oid=(int)substr($data,9); $o=approve_order_payment($oid,'پرداخت تایید شد','',true); if ($o) { send_user_message_by_id((int)$o['user_id'], "✅ پرداخت سفارش <code>#{$oid}</code> تایید شد.\nبعد از آماده شدن، اطلاعات تحویل برای شما ارسال می‌شود.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_prepare_')) { $oid=(int)substr($data,12); $o=mark_order_preparing($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "📦 سفارش <code>#{$oid}</code> در حال آماده‌سازی است.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
-    if (str_starts_with($data, 'ord_provision_')) { $oid=(int)substr($data,14); try{$r=bluegate_admin_provision_order_now($oid);$msg=($r['state']??'')==='delivered'?'✅ Client ساخته شد و لینک Subscription برای مشتری فعال شد.':'⏳ ساخت سرویس شروع شد و Retry خودکار فعال است.';send_or_edit($chat_id,$message_id,$msg,admin_order_keyboard($oid));}catch(Throwable $e){send_or_edit($chat_id,$message_id,"❌ ساخت از پنل ناموفق بود.\n<code>".h(mb_substr($e->getMessage(),0,700))."</code>",admin_order_keyboard($oid));} return; }
+    if (str_starts_with($data, 'ord_provision_')) { $oid=(int)substr($data,14); try{$r=bluegate_admin_provision_order_now($oid);$msg=($r['state']??'')==='delivered'?'✅ Client ساخته شد و لینک Subscription برای مشتری فعال شد.':'⏳ ساخت سرویس شروع شد و Retry خودکار فعال است.';send_or_edit($chat_id,$message_id,$msg,admin_order_keyboard($oid));}catch(Throwable $e){error_log('[BlueGate admin provisioning order #'.$oid.'] '.$e->getMessage());send_or_edit($chat_id,$message_id,'❌ ساخت سرویس از پنل ناموفق بود. جزئیات فنی در لاگ سرور ثبت شد؛ وضعیت سفارش را دوباره بررسی کن.',admin_order_keyboard($oid));} return; }
     if (str_starts_with($data, 'ord_service_status_')) { $oid=(int)substr($data,19); send_or_edit($chat_id,$message_id,admin_order_service_status_text($oid),admin_order_keyboard($oid)); return; }
     if (str_starts_with($data, 'ord_auto_deliver_')) { $oid=(int)substr($data,17); $o=auto_deliver_order($oid); if ($o) { send_user_message_once((int)$o['user_id'],'order:'.$oid.':delivered',"📦 سفارش شما تحویل داده شد.\nسفارش: <code>#{$oid}</code>\nمحصول: <b>".h(order_catalog_display_name($o))."</b>\n\nاطلاعات تحویل:\n<code>".h($o['delivery_text'])."</code>", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } else send_msg($chat_id, 'موجودی آماده برای این سفارش پیدا نشد. از تحویل دستی استفاده کن.', admin_order_keyboard($oid)); return; }
-    if (str_starts_with($data, 'ord_reject_')) { $oid=(int)substr($data,11); $o=reject_order($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "❌ سفارش <code>#{$oid}</code> رد شد. برای پیگیری با پشتیبانی ارتباط بگیر.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
+    if (str_starts_with($data, 'ord_reject_')) { $oid=(int)substr($data,11); $current=order_by_id($oid); if(!$current){send_or_edit($chat_id,$message_id,'سفارش پیدا نشد.',admin_shop_keyboard());return;} if(!in_array(normalize_order_status((string)$current['status']),['pending_payment','receipt_submitted','reviewing'],true)){send_or_edit($chat_id,$message_id,'رد سفارش پس از تأیید پرداخت از این مسیر مجاز نیست؛ وضعیت را بررسی کن.',admin_order_keyboard($oid));return;} $o=reject_order($oid); if ($o) { send_user_message_by_id((int)$o['user_id'], "❌ سفارش <code>#{$oid}</code> رد شد. برای پیگیری با پشتیبانی ارتباط بگیر.", main_menu_keyboard(false)); show_admin_order($chat_id, $message_id, $oid); } return; }
     if (str_starts_with($data, 'ord_deliver_')) { $oid=(int)substr($data,12); set_step($chat_id, 'admin_deliver_order', (string)$oid); send_msg($chat_id, "📩 متن تحویل سفارش <code>#{$oid}</code> را بفرست.
 مثلاً ایمیل/پسورد، لینک ساب VPN، کد گیفت یا توضیحات تحویل. قالب مناسب محصول خودکار اعمال می‌شود.", admin_shop_keyboard()); return; }
     if (str_starts_with($data, 'ord_note_')) { $oid=(int)substr($data,9); set_step($chat_id, 'admin_order_note', (string)$oid); send_msg($chat_id, "📝 یادداشت داخلی سفارش <code>#{$oid}</code> را بفرست. فقط ادمین می‌بیند.", admin_shop_keyboard()); return; }
