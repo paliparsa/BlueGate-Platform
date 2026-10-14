@@ -393,3 +393,74 @@
   #ordersPage .orders-header-icon { display: none; }
   #ordersPage .filter-chip { min-height: 44px; padding-inline: 8px !important; }
 }
+
+
+/* Credit home redesign v5.1.63 — hierarchy, compact balance hero, and transaction clarity.
+   Visual-only overrides scoped to the credit center; API/payment handlers remain untouched. */
+.credit-center-mini-v27{
+  display:flex!important;flex-direction:column!important;gap:14px!important;
+  min-width:0;max-width:100%;padding-bottom:8px;
+}
+.credit-center-mini-v27 .mini-credit-hero-v27{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:flex;flex-direction:column;gap:14px;
+  padding:20px!important;border:1px solid rgba(112,174,255,.22)!important;
+  border-radius:24px!important;
+  background:linear-gradient(145deg,#101b2d 0%,#0c111b 62%,#101827 100%)!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.22)!important;
+}
+.credit-center-mini-v27 .mini-credit-hero-v27:before{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  width:220px;height:220px;inset-inline-start:-105px;top:-135px;border-radius:50%;
+  background:radial-gradient(circle,rgba(53,137,255,.20),transparent 68%);
+}
+.credit-center-mini-v27 .mini-credit-hero-v27:after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  width:150px;height:150px;inset-inline-end:-85px;bottom:-105px;border-radius:50%;
+  background:radial-gradient(circle,rgba(55,211,210,.10),transparent 70%);
+}
+.credit-center-mini-v27 .mini-credit-hero-v27 :is(h1,h2,h3,p,b,strong,small,span){min-width:0;overflow-wrap:anywhere}
+.credit-center-mini-v27 .mini-credit-hero-v27 h2,
+.credit-center-mini-v27 .mini-credit-hero-v27 h3{font-weight:900;letter-spacing:-.025em}
+.credit-center-mini-v27 .mini-credit-stats-v27{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;
+}
+.credit-center-mini-v27 .mini-credit-stats-v27>div{
+  min-width:0;padding:12px!important;border-radius:15px!important;
+  border:1px solid rgba(155,183,224,.12)!important;background:rgba(255,255,255,.035)!important;
+}
+.credit-center-mini-v27 .mini-credit-stats-v27 small{display:block;color:#9aaac1;line-height:1.65}
+.credit-center-mini-v27 .mini-credit-stats-v27 b{display:block;margin-top:4px;font-size:clamp(14px,4vw,19px);font-weight:850;line-height:1.45}
+.credit-center-mini-v27 .mini-credit-hero-v27 :is(button,.primary,.secondary){
+  min-height:44px;border-radius:13px!important;font-weight:800;
+}
+.credit-center-mini-v27 .mini-credit-history-preview{
+  min-width:0;padding:16px!important;border-radius:20px!important;
+  border:1px solid rgba(155,183,224,.12)!important;background:#0d1118!important;
+  box-shadow:none!important;
+}
+.credit-center-mini-v27 .mini-credit-history-preview .section-title{align-items:center;gap:10px;margin-bottom:12px!important}
+.credit-center-mini-v27 .mini-credit-history-preview .section-title h2{font-size:16px;font-weight:900}
+.credit-center-mini-v27 .mini-credit-tx-list{display:flex;flex-direction:column;gap:8px;min-width:0}
+.credit-center-mini-v27 .mini-credit-tx-list>div{
+  display:grid;grid-template-columns:38px minmax(0,1fr) auto!important;gap:10px!important;
+  align-items:center;min-width:0;padding:11px!important;border-radius:14px!important;
+  border:1px solid rgba(155,183,224,.09);background:rgba(255,255,255,.025);
+}
+.credit-center-mini-v27 .mini-credit-tx-copy{min-width:0;overflow:hidden}
+.credit-center-mini-v27 .mini-credit-tx-copy :is(b,strong,small){display:block;min-width:0;overflow-wrap:anywhere}
+.credit-center-mini-v27 .mini-credit-tx-copy b{font-size:13px;line-height:1.55}
+.credit-center-mini-v27 .mini-credit-tx-copy small{margin-top:3px;color:#8998ad;font-size:11px;line-height:1.6}
+.credit-center-mini-v27 .mini-credit-tx-list strong{white-space:normal!important;text-align:left;direction:rtl;font-size:12px;overflow-wrap:anywhere}
+.credit-center-mini-v27 :is(.mini-credit-tx-list,.mini-credit-history-preview) .u-empty{padding:18px 12px;text-align:center;border:1px dashed rgba(155,183,224,.16);border-radius:14px;color:#9aaac1}
+@media(max-width:420px){
+  .credit-center-mini-v27{gap:11px!important}
+  .credit-center-mini-v27 .mini-credit-hero-v27{padding:15px!important;border-radius:20px!important}
+  .credit-center-mini-v27 .mini-credit-stats-v27{gap:7px!important}
+  .credit-center-mini-v27 .mini-credit-stats-v27>div{padding:10px!important}
+  .credit-center-mini-v27 .mini-credit-history-preview{padding:12px!important}
+  .credit-center-mini-v27 .mini-credit-tx-list>div{grid-template-columns:32px minmax(0,1fr) auto!important;gap:7px!important;padding:9px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .credit-center-mini-v27 *{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+}
