@@ -9,7 +9,7 @@ body{
   padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;
   border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;
   background:var(--bg)!important;background-image:none!important;color:var(--text)!important;
-  font-family:var(--mini-font-family);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  font-family:var(--mini-font-family);letter-spacing:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
 body::before,body::after{background:none!important;animation:none!important}
 #userApp,#adminApp,.app-shell,.page,#adminContent,#homePage,#shopPage,#ordersPage,#walletPage,#supportPage,#profilePage,#accountPage,#referralPage,#vipPage,#creditPage{
