@@ -9,7 +9,7 @@ button,input,select,textarea{max-width:100%}
 
 /* switches: OFF always black, ON always current theme accent */
 .pretty-switch>span,.mcw-toggle i,.switch-line input[type="checkbox"]{background:#08090d!important}
-.pretty-switch input:checked+span,.mcw-toggle input:checked+i,.switch-line input[type="checkbox"]:checkedbackground:var(--accent)!important;box-shadow:none;t}
+.pretty-switch input:checked+span,.mcw-toggle input:checked+i,.switch-line input[type="checkbox"]:checked{background:var(--accent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--accent) 42%,transparent)!important}
 .pretty-switch input:checked+span:after,.mcw-toggle input:checked+i:after{background:#fff!important}
 
 /* catalog guide */
@@ -59,7 +59,7 @@ button,input,select,textarea{max-width:100%}
 
 /* polish motion */
 button,.admin-card,.product-tile,.quick-action,.cat-pill,.catalog-mobile-categories>button{transition:transform var(--vy-motion-fast) ease,box-shadow var(--vy-motion) ease,border-color var(--vy-motion) ease,background var(--vy-motion) ease,opacity var(--vy-motion) ease}
-@media (hover:hover){button:not(:disabled):hover,.quick-action:hover,.cat-pill:hover{transform:translateY(-1px)}.product-tile:hover,.admin-card:hoverbox-shadow:none;)}}
+@media (hover:hover){button:not(:disabled):hover,.quick-action:hover,.cat-pill:hover{transform:translateY(-1px)}.product-tile:hover,.admin-card:hover{box-shadow:0 18px 42px rgba(0,0,0,.18)}}
 button:active{transform:scale(.985)!important}
 :focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
