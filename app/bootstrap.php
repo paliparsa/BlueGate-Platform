@@ -2440,23 +2440,11 @@ function notify_new_user_signup(array $user,string $sourceStr='🌐 وب‌سا�
     $uid=(int)($user['id']??0);if($uid<=0)return;
     try{$q=db()->prepare('UPDATE users SET start_notified=1 WHERE id=? AND COALESCE(start_notified,0)=0');$q->execute([$uid]);if($q->rowCount()!==1)return;}catch(Throwable $e){error_log('[Signup notify gate] '.$e->getMessage());return;}
     if(!setting_bool('notify_new_user',true))return;
-    $uname=!empty($user['username'])?'@'.h($user['username']):(!empty($user['web_username'])?h($user['web_username']):'ثبت نشده');$name=trim((string)($user['first_name']??'').' '.(string)($user['last_name']??''));if($name==='')$name='مشتری بدون نام';
-    $email=!empty($user['email'])?h($user['email']):'ثبت نشده';$phone=!empty($user['phone_number'])?h($user['phone_number']):'ثبت نشده';$tid=real_telegram_chat_id($user);$tgId=$tid?'<code>'.$tid.'</code>':'متصل نیست (حساب وب)';
+    $uname=!empty($user['username'])?'@'.h($user['username']):(!empty($user['web_username'])?h($user['web_username']):'ثبت نشده');
+    $name=trim((string)($user['first_name']??'').' '.(string)($user['last_name']??''));if($name==='')$name='مشتری بدون نام';
+    $email=!empty($user['email'])?h($user['email']):'ثبت نشده';$phone=!empty($user['phone_number'])?h($user['phone_number']):'ثبت نشده';$tid=real_telegram_chat_id($user);$tgId=$tid?'<code>'.$tid.'</code>':'حساب وب / تلگرام متصل نیست';
     $refStr='بدون معرف';if(!empty($user['referrer_id'])){$r=get_user_by_id((int)$user['referrer_id']);if($r){$rn=!empty($r['username'])?'@'.$r['username']:($r['first_name']??'معرف');$refStr='#'.(int)$r['id'].' ('.h($rn).')';}}
-    $msg="🆕 <b>ثبت‌نام کاربر جدید</b>
-
-📍 منبع: <b>".h($sourceStr)."</b>
-🆔 User ID: <code>#{$uid}</code>
-📛 نام: <b>".h($name)."</b>
-👤 نام کاربری: {$uname}
-📧 ایمیل: {$email}
-📱 شماره: <code>{$phone}</code>
-✈️ Telegram ID: {$tgId}
-🎟 کد دعوت: <code>".h((string)($user['ref_code']??'—'))."</code>
-🔗 معرف: {$refStr}
-💰 موجودی: <b>".money((int)($user['balance']??0))."</b>
-🎁 پاداش معرف پس از احراز شرایط: <b>".money(setting_int('start_reward',2000))."</b>
-📅 زمان: <code>".h((string)($user['created_at']??date('Y-m-d H:i:s')))."</code>";
+    $msg="🆕 <b>ثبت‌نام کاربر جدید</b> · ".h($sourceStr)."\n\n👤 <b>".h($name)."</b> · {$uname}\n🆔 User <code>#{$uid}</code> · Telegram: {$tgId}\n📧 {$email} · 📱 <code>{$phone}</code>\n🎟 کد دعوت: <code>".h((string)($user['ref_code']??'—'))."</code> · معرف: {$refStr}\n💰 موجودی: <b>".money((int)($user['balance']??0))."</b>\n🕒 <code>".h((string)($user['created_at']??date('Y-m-d H:i:s')))."</code>";
     admin_notify($msg);
 }
 
@@ -2538,18 +2526,12 @@ function miniapp_url(bool $admin=false): string {
 function miniapp_inline_keyboard(bool $admin=false): string {
     $mini = miniapp_url($admin);
     $rows = [];
-    if ($admin) {
-        $rows[] = [['text'=>'🛠 کنترل سنتر ادمین', 'callback_data'=>'adm_home']];
-    }
-    if ($mini) {
-        $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
-    }
+    if ($admin) $rows[] = [['text'=>'🛠 کنترل سنتر ادمین', 'callback_data'=>'adm_home']];
+    if ($mini) $rows[] = [['text'=>$admin ? '🧑‍💼 باز کردن پنل BlueGate' : '🚀 باز کردن Mini App', 'web_app'=>['url'=>$mini]]];
     // Customer shopping and order browsing live exclusively in the Mini App.
-    // Keep only lightweight bot utilities here so legacy quick-shop/order buttons cannot reappear.
-    $rows[] = [
-        ['text'=>'💳 اعتبار من', 'callback_data'=>'u_wallet'],
-        ['text'=>'➕ افزایش اعتبار', 'callback_data'=>'u_topup'],
-    ];
+    $utilityRows = [['text'=>'💳 اعتبار من', 'callback_data'=>'u_wallet']];
+    if (credit_topup_config()['enabled']) $utilityRows[] = ['text'=>'➕ افزایش اعتبار', 'callback_data'=>'u_topup'];
+    $rows[] = $utilityRows;
     $rows[] = [['text'=>'💬 پشتیبانی', 'callback_data'=>'u_support']];
     return json_markup(['inline_keyboard'=>$rows]);
 }
@@ -2616,16 +2598,24 @@ function admin_shop_keyboard(): string {
     return json_markup(['inline_keyboard'=>$rows]);
 }
 function admin_order_keyboard(int $orderId): string {
-    $o=order_by_id($orderId);$status=$o?normalize_order_status((string)$o['status']):'';$caps=$o&&function_exists('bluegate_order_capabilities')?bluegate_order_capabilities($o):[];$managedVpn=!empty($caps['is_managed_vpn']);$canProvision=!empty($caps['can_provision']);$rows=[];
+    $o=order_by_id($orderId);$rows=[];
+    if(!$o)return json_markup(['inline_keyboard'=>[[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_orders'],['text'=>'🛒 فروشگاه ادمین','callback_data'=>'adm_shop']]]]);
+    $status=normalize_order_status((string)$o['status']);$caps=function_exists('bluegate_order_capabilities')?bluegate_order_capabilities($o):[];
+    $managedVpn=!empty($caps['is_managed_vpn']);$canProvision=!empty($caps['can_provision']);
+    $activeStatuses=['pending_payment','receipt_submitted','reviewing','payment_confirmed','preparing'];$cleanup=is_cleanup_order_status($status);
     if(in_array($status,['pending_payment','receipt_submitted','reviewing'],true))$rows[]=[['text'=>'👀 شروع بررسی','callback_data'=>'ord_review_'.$orderId],['text'=>'✅ تایید پرداخت','callback_data'=>'ord_paid_'.$orderId]];
     if(in_array($status,['payment_confirmed','preparing'],true)){
         if($canProvision)$rows[]=[['text'=>'⚡ ساخت و ارسال از پنل','callback_data'=>'ord_provision_'.$orderId],['text'=>'📡 وضعیت سرویس','callback_data'=>'ord_service_status_'.$orderId]];
         else $rows[]=[['text'=>'📦 آماده‌سازی','callback_data'=>'ord_prepare_'.$orderId],['text'=>'⚡️ تحویل از انبار','callback_data'=>'ord_auto_deliver_'.$orderId]];
         $rows[]=[['text'=>$managedVpn?'🔗 ثبت دستی لینک ساب':'📩 تحویل دستی','callback_data'=>'ord_deliver_'.$orderId],['text'=>'📝 یادداشت داخلی','callback_data'=>'ord_note_'.$orderId]];
     } elseif($status==='delivered'&&$managedVpn){$rows[]=[['text'=>'📡 وضعیت سرویس','callback_data'=>'ord_service_status_'.$orderId],['text'=>'🔗 تغییر لینک دستی','callback_data'=>'ord_deliver_'.$orderId]];}
-    if($o&&!empty($o['receipt_file_id']))$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'ord_receipt_'.$orderId]];$rows[]=[['text'=>'🧾 تایم‌لاین','callback_data'=>'ord_timeline_'.$orderId],['text'=>'❌ رد سفارش','callback_data'=>'ord_reject_'.$orderId]];
-    $rows[]=[['text'=>'📦 آرشیو','callback_data'=>'ord_archive_'.$orderId],['text'=>'🗑 حذف کامل','callback_data'=>'ord_delete_'.$orderId]];
-    $rows[]=[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_orders'],['text'=>'🛒 فروشگاه ادمین','callback_data'=>'adm_shop']];return json_markup(['inline_keyboard'=>$rows]);
+    if(!empty($o['receipt_file_id']))$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'ord_receipt_'.$orderId]];
+    $rows[]=[['text'=>'🧾 تایم‌لاین','callback_data'=>'ord_timeline_'.$orderId]];
+    if(in_array($status,$activeStatuses,true))$rows[]=[['text'=>'❌ رد سفارش','callback_data'=>'ord_reject_'.$orderId]];
+    if($status==='delivered'||$cleanup)$rows[]=[['text'=>'📦 آرشیو','callback_data'=>'ord_archive_'.$orderId]];
+    if($cleanup)$rows[]=[['text'=>'🗑 حذف کامل','callback_data'=>'ord_delete_'.$orderId]];
+    $rows[]=[['text'=>'🧾 سفارش‌ها','callback_data'=>'adm_orders'],['text'=>'🛒 فروشگاه ادمین','callback_data'=>'adm_shop']];
+    return json_markup(['inline_keyboard'=>$rows]);
 }
 function admin_order_service_status_text(int $orderId): string {
     $o=order_by_id($orderId);if(!$o)return 'سفارش پیدا نشد.';
@@ -2864,12 +2854,17 @@ function order_admin_card(array $order,string $source=''): string {
 🕒 ثبت: <code>".h((string)($order['created_at']??'—'))."</code>";if(!empty($order['customer_note']))$txt.="
 📝 یادداشت مشتری: ".h((string)$order['customer_note']);return $txt;
 }
+function order_admin_notification_card(array $order,string $source=''): string {
+    $uid=(int)($order['user_id']??0);$u=get_user_by_id($uid)?:[];$tid=real_telegram_chat_id($u);
+    $name=trim((string)($u['first_name']??'').' '.(string)($u['last_name']??''));if($name==='')$name=!empty($u['username'])?'@'.$u['username']:(!empty($u['web_username'])?$u['web_username']:'مشتری بدون نام');
+    $source=$source!==''?$source:($tid?'Telegram / Mini App':'Website');
+    $txt="🧾 <b>سفارش #".(int)$order['id']."</b>\n📍 منبع: <b>".h($source)."</b>\n👤 مشتری: <b>".h($name)."</b> · User <code>#{$uid}</code>\n";
+    $txt.="📦 محصول: <b>".h(order_catalog_display_name($order))."</b>\n💰 مبلغ نهایی: <b>".money((int)($order['final_amount']??0))."</b>\n🏦 پرداخت: <b>".h(payment_method_fa((string)($order['payment_method']??'')))."</b>\n📌 وضعیت: <b>".order_status_emoji((string)($order['status']??''))." ".h(order_status_fa((string)($order['status']??'')))."</b>\n🕒 <code>".h((string)($order['created_at']??'—'))."</code>";
+    if(!empty($order['is_renewal']))$txt.="\n🔄 تمدید سفارش <code>#".(int)($order['renewal_of_order_id']??0)."</code>";
+    return $txt;
+}
 function notify_admin_order(int $orderId,string $event='سفارش جدید',string $source='',string $detail='',mixed $photo=null): array {
-    $o=order_by_id($orderId);if(!$o)return ['sent'=>0,'failed'=>0,'fallback'=>0];$txt="🔔 <b>".h($event)."</b>
-
-".order_admin_card($o,$source);if(trim($detail)!=='')$txt.="
-
-". $detail;return admin_notify($txt,admin_order_keyboard($orderId),$photo,'order:'.$orderId.':'.sha1(trim($event)));
+    $o=order_by_id($orderId);if(!$o)return ['sent'=>0,'failed'=>0,'fallback'=>0];$txt="🔔 <b>".h($event)."</b>\n\n".order_admin_notification_card($o,$source);if(trim($detail)!=='')$txt.="\n\n".$detail;return admin_notify($txt,admin_order_keyboard($orderId),$photo,'order:'.$orderId.':'.sha1(trim($event)));
 }
 function admin_topup_keyboard(int $id,bool $hasReceipt=false): string {
     $rows=[[['text'=>'✅ تایید و شارژ','callback_data'=>'adm_tu_ok_'.$id],['text'=>'❌ رد','callback_data'=>'adm_tu_no_'.$id]]];if($hasReceipt)$rows[]=[['text'=>'🧾 مشاهده رسید','callback_data'=>'adm_tu_rcpt_'.$id]];$t=credit_topup_by_id($id);if($t)$rows[]=[['text'=>'👤 مشتری','callback_data'=>'adm_cust_id_'.(int)$t['user_id']],['text'=>'💳 جزئیات','callback_data'=>'adm_tu_'.$id]];return json_markup(['inline_keyboard'=>$rows]);
@@ -3157,7 +3152,7 @@ function force_join_keyboard(): string {
 }
 function main_text(array $user): string {
     $brand = h(setting('brand_name', app_config('BRAND_NAME', 'BlueGate')));
-    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای اینکه خرید، سفارش‌ها، VPNها، پرداخت‌ها و وضعیت تحویل همیشه یکجا و با اطلاعات به‌روز در دسترست باشه، بخش خرید و سفارش داخل خود ربات غیرفعال شده.\n\nبرای انجام کارها روی دکمه <b>🚀 باز کردن Mini App</b> بزن؛ فروشگاه، سفارش‌های من، VPNهای من، کیف پول و پیگیری پرداخت‌ها همگی اونجا در دسترس‌اند.\n\nربات فقط برای اعلان‌ها، پشتیبانی و چند ابزار سبک حساب استفاده میشه.\n\n" . vip_line($user);
+    return "💙 <b>{$brand}</b>\n\nسلام! 👋\nبرای خرید، سفارش‌ها، VPNها و پیگیری پرداخت‌ها از Mini App استفاده کن.\n\nروی <b>🚀 باز کردن Mini App</b> بزن تا همه‌چیز را یکجا مدیریت کنی. ربات برای اعلان‌ها، پشتیبانی و ابزارهای سبک حساب در دسترس است.\n\n" . vip_line($user);
 }
 function validate_theme_color(string $color): ?string {
     $color = trim($color);
