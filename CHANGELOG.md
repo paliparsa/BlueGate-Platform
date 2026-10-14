@@ -1,3 +1,11 @@
+## 5.1.78 - Account page redesign and Mini App visual parity
+
+- Reworked the account page's profile hero, completion indicator, three summary metrics, VPN service panel, guest/security notices, and account action list into one consistent card hierarchy.
+- Replaced the account page's text-symbol/emoji shortcuts with the existing BlueGate feature-icon helper while preserving the original IDs, data attributes, navigation targets, and event handlers.
+- Added responsive styling scoped to `#homePage`, matching the Mini App's dark surfaces, accent-tinted hero treatment, border language, card radii, spacing, typography, and control sizing.
+- Preserved account data, authentication, email OTP, profile editing, balance, referrals, orders, and VPN service logic; no API contracts or business rules changed.
+- Validation: checked the render function and its existing interaction hooks, confirmed all stylesheet and version references, and ran source-level checks. Live Telegram WebView/browser visual QA remains outstanding.
+
 ## 5.1.77 - Mini App-wide design rhythm unification
 
 - Added a final shared styling layer to align customer-facing typography, heading hierarchy, control sizing, card radii, border treatment, section spacing, and narrow-screen sizing across the Mini App.
