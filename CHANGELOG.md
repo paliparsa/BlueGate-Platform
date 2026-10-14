@@ -1,3 +1,13 @@
+## 5.1.65 - Credit transactions and pending top-up resume
+
+- Refined the full credit transaction sheet to match the shared BlueGateUI sheet system: clearer history rows, readable signed amounts, top-up history strip, and responsive narrow-screen layout.
+- Improved open top-up request cards with a clear status hierarchy and a dedicated “continue payment” action for requests still in `pending_payment`.
+- Resume routes to the existing payment details for card and crypto when available, reopens crypto wallet selection when needed, resumes the Telegram Stars invoice flow, or returns to payment-method selection when no method is set.
+- Added status guarding so the resume action is only available for `pending_payment`; reviewing/receipt-submitted requests are not treated as payable again.
+- Preserved the existing top-up API and payment handlers; presentation and an explicit resume entry point only.
+- Two review loops: (1) transaction/history sheet hierarchy and alignment with shared bot sheet styling; (2) pending-state eligibility, payment-method routing, responsive layout, and selector scoping.
+- Verification: source-level checks only; no live Telegram WebView or payment provider regression test was available.
+
 ## 5.1.64 - Credit top-up and payment journey redesign
 
 - Added a dedicated final-layer stylesheet for the full credit top-up popup journey: amount selection, payment-method selection, card receipt submission, crypto wallet/TXID steps, and confirmation.
