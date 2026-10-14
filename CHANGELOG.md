@@ -1,3 +1,10 @@
+## 5.1.37 - Mini App language picker redesign
+
+- Replaced the one-tap language confirmation with a centered, accessible language-selection modal matching BlueGate's graphite surfaces and blue accents.
+- Added explicit Persian/English selection states, apply/cancel actions, keyboard navigation, Escape/backdrop close, reduced-motion support, and responsive sizing.
+- Kept the existing language persistence and reload behavior; refreshed Mini App asset cache keys.
+- Static source checks only; live Telegram/browser interaction testing remains outstanding.
+
 ## 5.1.36 - Mini App notification popup redesign
 
 - Redesigned notification rows with clearer title/body/time hierarchy, distinct unread markers, and type-aware icon surfaces.
