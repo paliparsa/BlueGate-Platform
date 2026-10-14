@@ -1,3 +1,13 @@
+## 5.1.47 - Unified product card layout redesign
+
+- Introduced a dedicated final-layer stylesheet for the Mini App product cards: true-black surfaces, consistent media framing, stronger name/price hierarchy, compact two-column grid, and responsive spacing.
+- Reserved independent corners for the exact discount percentage and wishlist control; hid the decorative fire glyph to keep the discount badge concise and consistent.
+- Standardized image containment, long-name wrapping, variable-price wrapping, keyboard focus, hover feedback, and reduced-motion behavior.
+- Registered the stylesheet in the existing PHP filemtime cache-busting pipeline.
+- Preserved product-card DOM hooks, product preview, discount calculations, wishlist state/actions, and purchase/plan selection logic.
+- Loop 1 review focused on card hierarchy, badge/heart collision, and variable text lengths. Loop 2 checked cascade order, narrow mobile widths, CSS delimiters, asset registration, and unchanged interaction hooks.
+- Source-level checks only; live Telegram WebView screenshot and tap testing remain outstanding.
+
 ## 5.1.46 - Product card redesign and discount badge correction
 
 - Reworked product cards with flexible content heights so the price and card details cannot be clipped by the previous fixed 242px/86px sizing.
