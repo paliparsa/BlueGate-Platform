@@ -1,0 +1,189 @@
+/* BlueGate Mini App v5.1.57 — non-VPN order payment redesign.
+   Presentation-only layer: keep payment state, API actions and existing method markup intact. */
+.service-order-detail.order-detail-v2 .payment-box{
+  --pay-surface:#0b0c0f;--pay-panel:#111318;--pay-panel-2:#151922;--pay-border:rgba(173,190,214,.14);
+  position:relative;display:flex;flex-direction:column;gap:16px;margin:18px 0 22px;padding:clamp(14px,3.6vw,22px);
+  overflow:hidden;border:1px solid var(--pay-border);border-radius:24px;
+  background:radial-gradient(120% 85% at 100% 0%,rgba(53,116,181,.10),transparent 55%),var(--pay-surface);
+  box-shadow:0 16px 42px rgba(0,0,0,.24);color:#edf2f9;
+}
+.service-order-detail.order-detail-v2 .payment-box:before{
+  content:"";position:absolute;inset:0 0 auto;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(76,158,237,.72),rgba(116,213,190,.48),transparent);opacity:.72
+}
+.service-order-detail.order-detail-v2 .payment-box .section-title.compact{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0;padding:0 0 13px;
+  border-bottom:1px solid var(--pay-border)
+}
+.service-order-detail.order-detail-v2 .payment-box .section-title.compact h3{
+  display:flex;align-items:center;gap:9px;margin:0;color:#f6f8fc;font-size:clamp(16px,4vw,19px);font-weight:850;letter-spacing:-.02em
+}
+.service-order-detail.order-detail-v2 .payment-box .section-title.compact .badge{
+  max-width:100%;padding:6px 10px;border:1px solid rgba(147,166,192,.19);border-radius:999px;
+  background:#171c25;color:#aebbd0;font-size:12px;font-weight:750;white-space:normal
+}
+.service-order-detail.order-detail-v2 .payment-box>.muted{
+  margin:0!important;color:#929eb0;line-height:1.8;font-size:13px
+}
+.service-order-detail.order-detail-v2 .payment-box .payment-countdown-badge{
+  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;margin:0!important;padding:11px 13px;
+  border:1px solid rgba(239,181,78,.25);border-radius:15px;background:linear-gradient(110deg,rgba(107,72,19,.18),rgba(28,25,19,.72));
+  color:#f1c878;font-size:13px
+}
+.service-order-detail.order-detail-v2 .payment-box .payment-countdown-badge .timer-val{
+  min-width:62px;padding:4px 8px;border:1px solid rgba(239,181,78,.2);border-radius:9px;background:rgba(0,0,0,.22);
+  color:#ffe3a1;font-size:16px;font-variant-numeric:tabular-nums;text-align:center
+}
+.service-order-detail.order-detail-v2 .payment-box .support-warning-box{
+  display:grid;gap:8px;margin:0;padding:13px 14px;border:1px solid rgba(232,173,70,.19);border-radius:17px;
+  background:linear-gradient(135deg,rgba(105,75,28,.17),rgba(20,19,17,.72))
+}
+.service-order-detail.order-detail-v2 .payment-box .support-warning-head{
+  color:#f2d18b;font-size:13px;font-weight:850;line-height:1.7
+}
+.service-order-detail.order-detail-v2 .payment-box .support-warning-text{
+  color:#b4b2a9;font-size:12.5px;line-height:1.9
+}
+.service-order-detail.order-detail-v2 .payment-box .support-contact-btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:9px 12px;
+  border:1px solid rgba(97,163,239,.24);border-radius:12px;background:rgba(48,105,170,.12);
+  color:#9bcaff!important;font-size:12.5px;font-weight:800;text-decoration:none!important;text-align:center;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .payment-box .payment-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method{
+  position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;
+  min-width:0;min-height:91px;padding:15px 14px;border:1px solid rgba(158,177,204,.15);border-radius:17px;
+  background:linear-gradient(145deg,#151922,#0f1116);color:#e9eff8;text-align:right;white-space:normal;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);transition:border-color .18s ease,background .18s ease,transform .18s ease
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method b{
+  color:#edf3fc;font-size:14px;font-weight:850;line-height:1.65;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method span{
+  color:#909db0;font-size:12px;line-height:1.7;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method.success{
+  border-color:rgba(79,190,143,.27);background:linear-gradient(145deg,rgba(25,75,57,.32),rgba(15,24,21,.92))
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method.success b{color:#a5efd0}
+.service-order-detail.order-detail-v2 .payment-box .pay-method.warning{
+  border-color:rgba(228,180,83,.22);background:linear-gradient(145deg,rgba(78,57,20,.25),rgba(20,18,15,.94))
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method.crypto{
+  border-color:rgba(90,153,231,.22);background:linear-gradient(145deg,rgba(28,57,92,.28),rgba(15,18,24,.94))
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method:focus-visible,
+.service-order-detail.order-detail-v2 .payment-box button:focus-visible,
+.service-order-detail.order-detail-v2 .payment-box a:focus-visible,
+.service-order-detail.order-detail-v2 .payment-box input:focus-visible{
+  outline:2px solid #69b6ff;outline-offset:3px
+}
+.service-order-detail.order-detail-v2 .payment-box .pay-method:active{transform:scale(.99)}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-container,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-container{
+  display:flex;flex-direction:column;gap:14px;min-width:0;margin:0;padding:14px;border:1px solid var(--pay-border);
+  border-radius:20px;background:linear-gradient(155deg,rgba(20,24,32,.95),rgba(11,13,17,.98))
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-topbar,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--pay-border)
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-title,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-title{
+  display:flex;align-items:center;gap:9px;min-width:0;color:#f1f5fb;font-size:15px;font-weight:850
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-reset-btn,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-reset-btn{
+  order:2;min-height:35px;padding:7px 10px;border:1px solid var(--pay-border);border-radius:11px;background:#171c25;color:#b8c7da;font-size:12px;font-weight:750
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-bank-card,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-card{
+  display:flex;flex-direction:column;gap:12px;min-width:0;padding:15px;border:1px solid rgba(125,160,205,.19);border-radius:17px;
+  background:radial-gradient(100% 130% at 100% 0%,rgba(58,112,176,.16),transparent 65%),#0b1018
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-card-number{
+  display:block;max-width:100%;padding:12px 9px;border:1px dashed rgba(120,163,218,.24);border-radius:12px;background:rgba(0,0,0,.2);
+  color:#eaf3ff;font-size:clamp(15px,4vw,19px);font-weight:800;letter-spacing:.025em;text-align:center;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-copy-btn,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-copy-btn{
+  min-height:42px;border:1px solid rgba(103,163,229,.24);border-radius:12px;background:rgba(46,107,175,.13);color:#a8d0ff;font-size:13px;font-weight:800
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-form-section,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-txid-section{
+  display:flex;flex-direction:column;gap:13px;min-width:0
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-form-group{display:flex;flex-direction:column;gap:7px;min-width:0}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-label-title,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-label{
+  color:#b7c3d4;font-size:12.5px;font-weight:750;line-height:1.8
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-input,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-input,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-txid-section input{
+  width:100%;min-width:0;min-height:46px;padding:11px 13px;border:1px solid rgba(154,175,205,.18);border-radius:13px;
+  background:#090b0f;color:#eef4fd;font:inherit;font-size:13px;box-sizing:border-box
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-upload-box{
+  min-width:0;padding:13px;border:1px dashed rgba(130,160,201,.27);border-radius:15px;background:rgba(5,8,12,.45)
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-upload-inner{
+  display:flex;align-items:center;justify-content:center;gap:9px;min-height:70px;flex-wrap:wrap;color:#a5b3c6;text-align:center;font-size:12.5px
+}
+.service-order-detail.order-detail-v2 .payment-box .card-v2-submit-btn,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-submit-btn{
+  width:100%;min-height:48px;padding:12px 15px;border:1px solid rgba(94,165,244,.28);border-radius:14px;
+  background:linear-gradient(110deg,#173d65,#20578a);color:#f5f9ff;font-size:13.5px;font-weight:850;box-shadow:0 7px 18px rgba(17,67,115,.17)
+}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-subtitle{
+  margin:0;color:#a3b0c2;font-size:13px;line-height:1.8
+}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-wallet-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-wallet-card{
+  display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0;min-height:76px;padding:12px;
+  border:1px solid rgba(139,170,211,.17);border-radius:15px;background:#10151d;overflow-wrap:anywhere
+}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-wallet-name{color:#e8f0fb;font-size:13px;line-height:1.6}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-wallet-network,
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-rate-pill{color:#91a1b6;font-size:11.5px;line-height:1.6}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-amount-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid rgba(98,171,241,.18);
+  border-radius:13px;background:rgba(39,94,152,.12);color:#b7c7dc;font-size:12.5px
+}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-amount-val{color:#dceeff;font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-address-box{min-width:0;padding:12px;border:1px dashed rgba(132,165,207,.23);border-radius:13px;background:#080b10}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-address-code{display:block;color:#d9e9fc;font-size:12px;line-height:1.9;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-status,
+.service-order-detail.order-detail-v2 .payment-box .order-expired-card{
+  margin:0;padding:13px;border:1px solid var(--pay-border);border-radius:14px;background:#10151c;color:#b8c6d8;line-height:1.85
+}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-status.success{border-color:rgba(75,190,137,.23);background:rgba(25,82,58,.15);color:#9de4c0}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-status.error{border-color:rgba(235,98,98,.24);background:rgba(94,32,35,.18);color:#ffaaaa}
+.service-order-detail.order-detail-v2 .payment-box .crypto-v2-status.pending{border-color:rgba(226,179,75,.23);color:#f0cf8b}
+.service-order-detail.order-detail-v2 .payment-box .order-expired-card{display:grid;gap:10px;text-align:center}
+.service-order-detail.order-detail-v2 .payment-box .order-expired-card h4{margin:0;color:#f2d6a0;font-size:15px}
+.service-order-detail.order-detail-v2 .payment-box .order-expired-card p{margin:0;color:#b4b9c2;font-size:13px;line-height:1.9}
+.service-order-detail.order-detail-v2 .payment-box .btn-reorder{min-height:46px;border-radius:13px}
+.service-order-detail.order-detail-v2 .payment-box button:disabled{opacity:.55;cursor:wait;transform:none}
+@media(max-width:420px){
+  .service-order-detail.order-detail-v2 .payment-box{gap:13px;padding:13px;border-radius:20px}
+  .service-order-detail.order-detail-v2 .payment-box .payment-grid{gap:8px}
+  .service-order-detail.order-detail-v2 .payment-box .pay-method{min-height:86px;padding:12px 11px;border-radius:15px}
+  .service-order-detail.order-detail-v2 .payment-box .pay-method b{font-size:13px}
+  .service-order-detail.order-detail-v2 .payment-box .pay-method span{font-size:11.5px}
+  .service-order-detail.order-detail-v2 .payment-box .card-v2-container,
+  .service-order-detail.order-detail-v2 .payment-box .crypto-v2-container{padding:11px;border-radius:17px}
+  .service-order-detail.order-detail-v2 .payment-box .crypto-v2-wallet-list{grid-template-columns:1fr}
+}
+@media(max-width:340px){
+  .service-order-detail.order-detail-v2 .payment-box .payment-grid{grid-template-columns:1fr}
+  .service-order-detail.order-detail-v2 .payment-box .section-title.compact{align-items:flex-start}
+}
+@media(hover:hover){
+  .service-order-detail.order-detail-v2 .payment-box .pay-method:hover{border-color:rgba(111,171,238,.36);background-color:#171d28}
+}
+@media(prefers-reduced-motion:reduce){
+  .service-order-detail.order-detail-v2 .payment-box *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
