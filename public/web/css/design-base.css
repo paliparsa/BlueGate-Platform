@@ -1,4 +1,9 @@
-/* BlueGate Web base contract — royal blue / deep black */
-:root{--bg:#050608;--bg2:#080a0e;--surface:#101217;--surface2:#151922;--surface3:#1b202b;--text:#f5f7fb;--muted:#9ba3b2;--line:rgba(255,255,255,.085);--line-strong:rgba(255,255,255,.14);--accent:#315efb;--primary:#315efb;--admin-accent:#315efb;--admin-surface:#101217;--admin-surface-2:#080a0e;--admin-line:rgba(255,255,255,.085);--admin-muted:#9ba3b2;--app-radius-xl:20px;--app-radius-lg:16px;--app-radius-md:12px}
-html{color-scheme:dark}
-:where(#memberContent,.bg-admin-shell,.bg-admin-main,.bg-admin-sidebar,.bg-admin-content,.admin-page){color:var(--text)}
+/* BlueGate Web admin tokens — deliberately scoped away from customer storefront */
+.bg-admin-shell{
+  --bg:#050608;--bg2:#080a0e;--surface:#101217;--surface2:#151922;--surface3:#1b202b;
+  --text:#f5f7fb;--muted:#9ba3b2;--line:rgba(255,255,255,.085);--line-strong:rgba(255,255,255,.14);
+  --accent:#315efb;--primary:#315efb;--admin-accent:#315efb;--admin-surface:#101217;--admin-surface-2:#080a0e;--admin-line:rgba(255,255,255,.085);--admin-muted:#9ba3b2;
+  --app-radius-xl:20px;--app-radius-lg:16px;--app-radius-md:12px;
+}
+#memberContent:has(.bg-admin-shell){background:#050608;color:#f5f7fb}
+:where(.bg-admin-shell,.bg-admin-shell *){color-scheme:dark}
