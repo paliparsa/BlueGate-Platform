@@ -14,3 +14,12 @@ hr,.divider,.section-divider{border-color:var(--line)}
 #userApp,#adminApp,.app-shell{outline:0;box-shadow:none}
 #userApp,#adminApp,button,input,textarea,select,option,[role="button"],[role="dialog"],[role="alertdialog"]{font-family:var(--mini-font-family)}
 body::before,body::after{background-image:none}
+
+/* Shared typography and canvas contract; icon/code glyph fonts are preserved. */
+html,body{margin:0;background:var(--mini-canvas,#030303);background-image:none;color:var(--text);}
+body{padding-top:0;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px));border-radius:0;}
+#userApp,#adminApp,.app-shell,#adminContent,#homePage,#shopPage,#ordersPage,#walletPage,#supportPage,#profilePage,#accountPage,#referralPage,#vipPage,#creditPage{box-shadow:none;outline:0;background-color:var(--mini-canvas,#030303);background-image:none;}
+#userApp,#adminApp{border-radius:0}
+#userApp,#adminApp,#userApp :is(h1,h2,h3,h4,h5,h6,p,span,div,label,button,a,li,td,th,small,strong,b,em,summary,legend,input:not([type="checkbox"]):not([type="radio"]),select,textarea),#adminApp :is(h1,h2,h3,h4,h5,h6,p,span,div,label,button,a,li,td,th,small,strong,b,em,summary,legend,input:not([type="checkbox"]):not([type="radio"]),select,textarea){font-family:var(--mini-font-family)}
+#userApp :is(code,pre,kbd,samp,.bank-card-number,.mono,.monospace),#adminApp :is(code,pre,kbd,samp,.bank-card-number,.mono,.monospace){font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#userApp :is(.fa,.fas,.far,.fab,.fal,.fad,[class^="fa-"],[class*=" fa-"],.material-icons,.material-symbols-outlined,.iconfont,[data-icon-font]),#adminApp :is(.fa,.fas,.far,.fab,.fal,.fad,[class^="fa-"],[class*=" fa-"],.material-icons,.material-symbols-outlined,.iconfont,[data-icon-font]){font-family:inherit}
