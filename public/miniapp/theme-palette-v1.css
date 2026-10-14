@@ -1,541 +1,265 @@
-/* BlueGate Mini App — unified black / white / blue / violet palette
-   v5.1.23. Visual-only layer: intentionally loaded last; no application logic changes. */
+/* BlueGate Mini App — unified visual system v5.1.29
+   One source of truth for palette, typography, surfaces, controls and overlays.
+   Layout, responsive behavior, interactions and business logic remain in feature layers. */
 :root {
   color-scheme: dark !important;
-  --bgds-bg: #07080D !important;
-  --bgds-bg-2: #0A0C12 !important;
-  --bgds-surface-1: #10131B !important;
-  --bgds-surface-2: #151925 !important;
-  --bgds-surface-3: #1C2130 !important;
-  --bgds-text: #F5F7FC !important;
-  --bgds-muted: #A7AFBF !important;
-  --bgds-muted-2: #D0D5E0 !important;
-  --bgds-border: rgba(190, 200, 220, .12) !important;
-  --bgds-border-strong: rgba(74, 141, 255, .38) !important;
-  --bgds-primary: #4A8DFF !important;
-  --bgds-primary-soft: #86B5FF !important;
-  --bgds-purple: #8B5CF6 !important;
-  --bgds-success: #42D6A0 !important;
-  --bgds-warning: #F5C86A !important;
-  --bgds-danger: #FF718A !important;
-  --bgds-shadow-card: 0 14px 36px rgba(0,0,0,.22) !important;
-  --bgds-shadow-float: 0 24px 70px rgba(0,0,0,.44) !important;
-  --bgds-focus: 0 0 0 3px rgba(74,141,255,.20) !important;
-  --bg: #07080D !important;
-  --card: #10131B !important;
-  --card2: #151925 !important;
-  --surface: #10131B !important;
-  --surface2: #151925 !important;
-  --text: #F5F7FC !important;
-  --muted: #A7AFBF !important;
-  --line: rgba(190,200,220,.12) !important;
-  --border: rgba(190,200,220,.12) !important;
-  /* Runtime-adjustable by applyTheme() and the local palette picker. */
-  --accent: #4A8DFF;
-  --accent-2: #86B5FF;
-  --primary: #4A8DFF;
-  --secondary: #1C2130 !important;
-  --u-accent: #4A8DFF !important;
-  --u-accent-2: #86B5FF !important;
-  --u-surface: rgba(16,19,27,.96) !important;
-  --u-surface-2: rgba(21,25,37,.96) !important;
-  --u-border: rgba(190,200,220,.12) !important;
-  --shadow: 0 14px 36px rgba(0,0,0,.22) !important;
-}
-html, body {
-  background: #07080D !important;
-  color: #F5F7FC !important;
-}
-body {
-  background:
-    radial-gradient(ellipse at 92% -8%, rgba(74,141,255,.075), transparent 34%),
-    radial-gradient(ellipse at 5% 28%, rgba(139,92,246,.045), transparent 30%),
-    #07080D !important;
-}
-#userApp, #adminApp, .app-shell, .page,
-#homePage, #shopPage, #ordersPage, #walletPage, #supportPage,
-#adminContent, #adminStats { color: #F5F7FC; }
-h1,h2,h3,h4,h5,h6,.section-title h2,.brand-box h1,.product-title,
-.product-name,.wallet-card-main strong,.order-card-total { color: #F5F7FC !important; }
-p, small, .muted, .tile-desc, .section-title>small { color: #A7AFBF; }
-.glass, .topbar, .bottom-nav, .admin-tabs,
-.wallet-card,.detail-card,.order-card,.admin-card,.admin-item,
-.account-hub-card,.mission-card,.order-row,.vpn-sub-panel,
-.vpn-subscription-card,.vpn-sub-targets,.presentation-sheet,
-.dialog-card,.auth-modal-content,.quick-card,.mini-stat,
-.product-tile,.glowing-flash-card,.detail-card,.cart-sheet,
-.cust-drawer,.preview-sheet,.qr-sheet,.share-sheet,.onboarding,
-.palette-popup,.cmd-inner,.app-sheet,.app-sheet-panel,
-.shop-filter-sheet,.filter-sheet,.filter-sheet-panel {
-  background-color: #10131B !important;
-  border-color: rgba(190,200,220,.12) !important;
-  box-shadow: 0 14px 36px rgba(0,0,0,.22) !important;
-}
-.topbar.glass {
-  background: rgba(10,12,18,.96) !important;
-  border-color: rgba(190,200,220,.10) !important;
-}
-.bottom-nav.glass,.bottom-nav {
-  background: rgba(9,10,15,.97) !important;
-  border-color: rgba(190,200,220,.13) !important;
-  box-shadow: 0 -10px 34px rgba(0,0,0,.32) !important;
-}
-.product-tile,.glowing-flash-card,.detail-card,.wallet-card,.admin-card,.admin-item,
-.account-hub-card,.mission-card,.order-row,.quick-card,.mini-stat {
-  background: linear-gradient(155deg, #12151E, #0D0F16) !important;
-  border-color: rgba(190,200,220,.11) !important;
-}
-.tile-img,.detail-hero,.product-image-wrap,.product-card-image {
-  background: linear-gradient(135deg, rgba(74,141,255,.11), rgba(139,92,246,.055), #10131B) !important;
-}
-.primary,.btn-primary,button.primary,.purchase-confirm-submit,
-.mini-credit-primary,.credit-primary-action {
-  background: var(--primary, #4A8DFF) !important;
-  color: #FFFFFF !important;
-  border-color: transparent !important;
-  box-shadow: 0 8px 22px rgba(74,141,255,.18) !important;
-}
-.secondary,button.secondary {
-  background: #1A1E2A !important;
-  color: #E7EBF4 !important;
-  border: 1px solid rgba(190,200,220,.14) !important;
-  box-shadow: none !important;
-}
-.ghost,button.ghost,.icon-btn,.app-sheet-close,.purchase-confirm-cancel {
-  background: rgba(255,255,255,.035) !important;
-  color: #D8DEEA !important;
-  border: 1px solid rgba(190,200,220,.14) !important;
-  box-shadow: none !important;
-}
-button:active,.primary:active,.secondary:active { filter: brightness(1.08); }
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
-[role="button"]:focus-visible {
-  outline: 2px solid var(--accent, #4A8DFF) !important;
-  outline-offset: 3px !important;
-  box-shadow: var(--bgds-focus, 0 0 0 3px rgba(74,141,255,.16)) !important;
-}
-input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
-textarea,select,.field input,.field textarea,.field select,
-.searchbar,.searchbar-modern,.mini-account-field input {
-  background-color: #0B0D14 !important;
-  color: #F5F7FC !important;
-  border-color: rgba(190,200,220,.15) !important;
-}
-input::placeholder,textarea::placeholder,.searchbar input::placeholder {
-  color: #7F899C !important;
-}
-.cat-pill,.filter-chip,.filter-choice-grid button,.variant-btn,
-.purchase-plan-option,.shop-filter-trigger,.credit-launch,
-.account-menu-row,.mini-settings-actions button {
-  background: #141722 !important;
-  color: #DCE2EE !important;
-  border-color: rgba(190,200,220,.12) !important;
-}
-.cat-pill.active,.filter-chip.active,.filter-choice-grid button.active,
-.variant-btn.active,.purchase-plan-option.active,.purchase-plan-option.selected,
-.orders-filter-option.active,.admin-tabs button.active,.bottom-nav button.active,
-.topbar-desktop-nav button.active {
-  background: linear-gradient(135deg,rgba(74,141,255,.17),rgba(139,92,246,.10)) !important;
-  color: #FFFFFF !important;
-  border-color: var(--accent, #4A8DFF) !important;
-  box-shadow: inset 0 0 0 1px rgba(74,141,255,.06) !important;
-}
-.price-pill,.flash-card-cur-price,.product-price,.price,.wallet-card-main strong {
-  color: #F5F7FC !important;
-}
-.brand-box small,.app-sheet-heading small,.shop-active-filters span.on,
-.account-menu-row .accent,.vpn-sub-micro,.vpn-sub-panel header small {
-  color: #86B5FF !important;
-}
-.hero,.shop-page-intro,.account-center-mini-hero,.mini-credit-hero-v27 {
-  background: linear-gradient(145deg,rgba(74,141,255,.12),rgba(139,92,246,.065) 58%,#10131B) !important;
-  border-color: rgba(74,141,255,.17) !important;
-}
-.hero:after,.hero-glow { background: rgba(139,92,246,.10) !important; }
-.account-menu-icon,.u-empty .u-empty-icon,.orders-filter-option-icon {
-  background: rgba(139,92,246,.11) !important;
-  color: #B8A1FF !important;
-}
-.status-badge.success,.status-badge.active,.status-badge.ok,.vpn-sub-status.ok,
-.status-badge.warning,.status-badge.pending,.status-badge.danger,.status-badge.failed {
-  box-shadow: none !important;
-}
-.order-more-popup-backdrop,.mini-credit-topup-backdrop,.purchase-confirm-overlay,
-.app-sheet-backdrop,.modal-backdrop,.dialog-backdrop {
-  background: rgba(2,3,8,.70) !important;
-  -webkit-backdrop-filter: blur(4px) saturate(108%) !important;
-  backdrop-filter: blur(4px) saturate(108%) !important;
-}
-.order-more-popup-card,.mini-credit-topup-panel,.purchase-confirm-card,
-.dialog-card,.auth-modal-content,.app-sheet-panel,.app-sheet .app-sheet-content {
-  background: linear-gradient(160deg,#151925,#0C0E15) !important;
-  color: #F5F7FC !important;
-  border-color: rgba(190,200,220,.15) !important;
-  box-shadow: 0 24px 70px rgba(0,0,0,.48) !important;
-}
-.order-more-popup-option,.purchase-confirm-desc,.purchase-confirm-specs,
-.mini-topup-balance,.mini-topup-after,.mini-topup-method-list>button,
-.purchase-confirm-price-primary,.bg-centered-confirm-message {
-  background-color: rgba(255,255,255,.035) !important;
-  border-color: rgba(190,200,220,.11) !important;
-  color: #F5F7FC !important;
-}
-.order-more-popup-option.active,.mini-topup-method-list>button.active {
-  border-color: rgba(139,92,246,.52) !important;
-  background: linear-gradient(135deg,rgba(74,141,255,.10),rgba(139,92,246,.10)) !important;
-}
-.order-more-popup-title,.purchase-confirm-brand h3,.mini-credit-topup-panel h2 {
-  color: #F5F7FC !important;
-}
-.order-more-popup-option small,.purchase-confirm-desc p,.mini-credit-topup-panel p {
-  color: #A7AFBF !important;
-}
-.price-pill,.badge { border-color: rgba(74,141,255,.20) !important; background: rgba(74,141,255,.10) !important; }
-.primary .bg-ico,.btn-primary .bg-ico { color: #FFFFFF !important; }
-a { color: #86B5FF; }
-hr,.divider { border-color: rgba(190,200,220,.10) !important; }
-::selection { background: rgba(74,141,255,.30); color: #FFFFFF; }
-@media (prefers-reduced-motion: reduce) {
-  *,*::before,*::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
-}
 
-
-/* v5.1.26 — final cross-screen palette normalization.
-   This block intentionally comes last: legacy stylesheets remain for layout/behavior,
-   while this file owns the Mini App visual tokens. */
-:root {
-  --bgds-bg: #07080D !important;
-  --bgds-bg-2: #0A0C12 !important;
-  --bgds-surface-1: #10131B !important;
-  --bgds-surface-2: #151925 !important;
-  --bgds-surface-3: #1C2130 !important;
-  --bgds-text: #F5F7FC !important;
-  --bgds-muted: #A7AFBF !important;
-  --bgds-border: rgba(190,200,220,.12) !important;
-  --bgds-border-strong: rgba(139,92,246,.42) !important;
-  --bgds-primary: var(--primary, #4A8DFF) !important;
-  --bgds-purple: #8B5CF6 !important;
-  --bgds-success: #42D6A0 !important;
-  --bgds-warning: #F5C86A !important;
-  --bgds-danger: #FF718A !important;
-}
-html, body, #userApp, #adminApp, .app-shell, .page {
-  background-color: #07080D !important;
-  color: #F5F7FC !important;
-}
-/* Main page and product cards: near-black surfaces, restrained decoration. */
-.product-tile, .product-card, .product-card-modern, .product-item,
-.product-grid .product, .shop-product-card, .catalog-card,
-.detail-card, .wallet-card, .account-hub-card, .mission-card,
-.order-row, .order-card, .quick-card, .mini-stat, .admin-card, .admin-item,
-.glowing-flash-card, .flash-card, .product-info-card {
-  background: #10131B !important;
-  color: #F5F7FC !important;
-  border: 1px solid rgba(190,200,220,.12) !important;
-  box-shadow: 0 10px 28px rgba(0,0,0,.20) !important;
-}
-.product-tile::before, .product-tile::after, .product-card::before,
-.product-card::after, .glowing-flash-card::before, .glowing-flash-card::after {
-  opacity: .12 !important;
-}
-.product-tile h1, .product-tile h2, .product-tile h3,
-.product-card h1, .product-card h2, .product-card h3,
-.product-name, .product-title, .product-price, .price,
-.wallet-card-main strong, .order-card-total {
-  color: #F5F7FC !important;
-}
-.product-price, .price-pill, .product-badge, .badge,
-.stock-badge, .product-tag, .category-badge {
-  border-color: rgba(74,141,255,.25) !important;
-}
-.price-pill, .product-badge, .product-tag, .category-badge {
-  background: rgba(74,141,255,.10) !important;
-  color: #AFCBFF !important;
-}
-/* One button language across shop, wallet, account and checkout. */
-.primary, .btn-primary, button.primary, .button-primary, .btn-main,
-.purchase-confirm-submit, .mini-credit-primary, .credit-primary-action,
-.wallet-topup-button, .wallet-add-credit, .credit-add-button,
-button[type="submit"].primary {
-  background: var(--primary, #4A8DFF) !important;
-  color: #FFFFFF !important;
-  border-color: transparent !important;
-  box-shadow: 0 7px 20px rgba(74,141,255,.15) !important;
-}
-.secondary, button.secondary, .btn-secondary, .button-secondary,
-.ghost, button.ghost, .btn-ghost, .icon-btn, .purchase-confirm-cancel {
-  background: #151925 !important;
-  color: #E5EAF4 !important;
-  border: 1px solid rgba(190,200,220,.15) !important;
-  box-shadow: none !important;
-}
-a, .link, .accent-text, .wallet-method-help { color: #86B5FF; }
-/* Wallet balance and top-up/payment method states. */
-.wallet-balance, .wallet-balance strong, .balance-amount,
-.credit-balance, .credit-balance strong, .mini-topup-balance strong,
-.wallet-card-main strong, .wallet-amount, .account-balance {
-  color: #FFFFFF !important;
-}
-.wallet-topup-button, .wallet-add-credit, .credit-add-button,
-.mini-credit-primary, .credit-primary-action { background: var(--primary,#4A8DFF) !important; }
-.payment-method, .wallet-method, .payment-option, .mini-topup-method-list>button,
-.wallet-method-option, .payment-method-option, .topup-method-option {
-  background: #11141D !important;
-  color: #E9EDF6 !important;
-  border: 1px solid rgba(190,200,220,.13) !important;
-}
-.payment-method.active, .wallet-method.active, .payment-option.active,
-.mini-topup-method-list>button.active, .wallet-method-option.active,
-.payment-method-option.active, .topup-method-option.active,
-.payment-method[aria-checked="true"], .payment-option[aria-checked="true"] {
-  background: rgba(139,92,246,.10) !important;
-  border-color: #8B5CF6 !important;
-  box-shadow: inset 0 0 0 1px rgba(139,92,246,.16) !important;
-}
-/* Consistent active tabs, filters, selected plans and menu rows. */
-.cat-pill.active, .filter-chip.active, .filter-choice-grid button.active,
-.variant-btn.active, .purchase-plan-option.active, .purchase-plan-option.selected,
-.orders-filter-option.active, .admin-tabs button.active, .bottom-nav button.active,
-.topbar-desktop-nav button.active, .account-menu-row.active,
-.tab.active, [role="tab"][aria-selected="true"], [aria-current="page"] {
-  background: rgba(74,141,255,.12) !important;
-  color: #FFFFFF !important;
-  border-color: rgba(139,92,246,.62) !important;
-  box-shadow: inset 0 0 0 1px rgba(139,92,246,.08) !important;
-}
-/* Shared popup / modal / sheet treatment, including language and Stars flows. */
-.order-more-popup-backdrop, .mini-credit-topup-backdrop,
-.purchase-confirm-overlay, .app-sheet-backdrop, .modal-backdrop,
-.dialog-backdrop, .popup-backdrop, .language-popup-backdrop,
-.stars-popup-backdrop, [class*="popup-backdrop"], [class*="modal-backdrop"],
-[class*="sheet-backdrop"], [class*="overlay-backdrop"] {
-  background: rgba(2,3,8,.72) !important;
-  -webkit-backdrop-filter: blur(5px) saturate(108%) !important;
-  backdrop-filter: blur(5px) saturate(108%) !important;
-}
-.order-more-popup-card, .mini-credit-topup-panel, .purchase-confirm-card,
-.dialog-card, .auth-modal-content, .app-sheet-panel, .app-sheet .app-sheet-content,
-.modal-content, .modal-card, .popup-card, .popup-panel, .language-popup,
-.language-modal, .stars-popup, .stars-modal, .credit-popup, .topup-popup,
-[class*="popup-card"], [class*="modal-content"], [class*="modal-card"],
-[class*="sheet-panel"] {
-  background: #11141D !important;
-  color: #F5F7FC !important;
-  border: 1px solid rgba(190,200,220,.15) !important;
-  border-radius: 22px !important;
-  box-shadow: 0 24px 70px rgba(0,0,0,.48) !important;
-}
-.order-more-popup-option, .purchase-confirm-desc, .purchase-confirm-specs,
-.mini-topup-balance, .mini-topup-after, .mini-topup-method-list>button,
-.purchase-confirm-price-primary, .bg-centered-confirm-message,
-.modal-content .option, .popup-card .option, .language-option,
-.language-popup button, .stars-popup button {
-  background-color: rgba(255,255,255,.035) !important;
-  border-color: rgba(190,200,220,.12) !important;
-  color: #F5F7FC !important;
-}
-.order-more-popup-option.active, .mini-topup-method-list>button.active,
-.language-option.active, .language-popup button.active, .stars-popup button.active {
-  border-color: #8B5CF6 !important;
-  background: rgba(139,92,246,.10) !important;
-}
-.order-more-popup-title, .purchase-confirm-brand h3, .mini-credit-topup-panel h2,
-.modal-content h1, .modal-content h2, .modal-content h3,
-.popup-card h1, .popup-card h2, .popup-card h3,
-.language-popup h1, .language-popup h2, .stars-popup h1, .stars-popup h2 {
-  color: #FFFFFF !important;
-}
-.order-more-popup-option small, .purchase-confirm-desc p,
-.mini-credit-topup-panel p, .modal-content p, .popup-card p {
-  color: #A7AFBF !important;
-}
-/* Keep status meaning intact; do not recolor success/warning/error to the accent. */
-.status-badge.success, .status-badge.active, .status-badge.ok, .vpn-sub-status.ok,
-.status-badge.warning, .status-badge.pending, .status-badge.danger,
-.status-badge.failed, .status-success, .status-warning, .status-danger,
-.badge-success, .badge-warning, .badge-danger {
-  box-shadow: none !important;
-}
-.status-badge.success, .status-badge.active, .status-badge.ok, .status-success, .badge-success {
-  color: #42D6A0 !important;
-}
-.status-badge.warning, .status-badge.pending, .status-warning, .badge-warning {
-  color: #F5C86A !important;
-}
-.status-badge.danger, .status-badge.failed, .status-danger, .badge-danger {
-  color: #FF718A !important;
-}
-input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
-textarea, select, .field input, .field textarea, .field select {
-  background-color: #0B0D14 !important;
-  color: #F5F7FC !important;
-  border-color: rgba(190,200,220,.15) !important;
-}
-input:focus, textarea:focus, select:focus {
-  border-color: #8B5CF6 !important;
-}
-::selection { background: rgba(139,92,246,.28); color: #FFFFFF; }
-
-
-/* v5.1.27 — deep-black palette: final override after all legacy styles.
-   Visual-only layer; intentionally does not alter application behavior. */
-:root {
+  /* Core palette: deep black, quiet graphite, one blue accent. */
   --bgds-bg: #030303 !important;
-  --bgds-bg-2: #050505 !important;
-  --bgds-surface-1: #080808 !important;
-  --bgds-surface-2: #0B0B0B !important;
-  --bgds-surface-3: #101010 !important;
+  --bgds-bg-2: #060606 !important;
+  --bgds-surface-1: #090909 !important;
+  --bgds-surface-2: #0E0E0E !important;
+  --bgds-surface-3: #141414 !important;
   --bgds-text: #F5F5F5 !important;
-  --bgds-muted: #A6A6A6 !important;
-  --bgds-border: rgba(255,255,255,.075) !important;
-  --bgds-border-strong: rgba(255,255,255,.14) !important;
-  --bgds-primary: var(--primary, #3477EE) !important;
-  --bgds-purple: #8B5CF6 !important;
-  --bgds-success: #42D6A0 !important;
-  --bgds-warning: #F5C86A !important;
-  --bgds-danger: #FF718A !important;
-  color-scheme: dark;
+  --bgds-muted: #A0A0A0 !important;
+  --bgds-muted-2: #C8C8C8 !important;
+  --bgds-border: #1B1B1B !important;
+  --bgds-border-strong: #303030 !important;
+  --bgds-primary: #3478F6 !important;
+  --bgds-primary-soft: #75A5FF !important;
+  --bgds-purple: #3478F6 !important;
+  --bgds-success: #39C995 !important;
+  --bgds-warning: #EABF62 !important;
+  --bgds-danger: #F16D7A !important;
+  --bgds-shadow-card: 0 4px 18px rgba(0,0,0,.18) !important;
+  --bgds-shadow-float: 0 18px 54px rgba(0,0,0,.55) !important;
+  --bgds-focus: 0 0 0 3px rgba(52,120,246,.18) !important;
+  --bgds-font-body: 15px !important;
+  --bgds-font-secondary: 13px !important;
+  --bgds-font-micro: 11px !important;
+  --bgds-line-body: 1.7 !important;
+
+  /* Legacy aliases consumed by existing components. */
+  --bg: #030303 !important;
+  --bg2: #060606 !important;
+  --card: #090909 !important;
+  --card2: #0E0E0E !important;
+  --surface: #090909 !important;
+  --surface2: #0E0E0E !important;
+  --text: #F5F5F5 !important;
+  --text-muted: #A0A0A0 !important;
+  --muted: #A0A0A0 !important;
+  --border: #1B1B1B !important;
+  --accent: #3478F6 !important;
+  --accent-2: #75A5FF !important;
+  --primary: #3478F6 !important;
+  --secondary: #3478F6 !important;
+  --u-accent: #3478F6 !important;
+  --u-accent-2: #75A5FF !important;
+  --mini-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+  --bgds-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+  --r-sm: 10px !important;
+  --r-md: 14px !important;
+  --r-lg: 18px !important;
+  --r-xl: 22px !important;
+  --r-xxl: 26px !important;
+  --elev-sm: 0 4px 18px rgba(0,0,0,.18) !important;
+  --elev-md: 0 12px 32px rgba(0,0,0,.32) !important;
+  --elev-lg: 0 18px 54px rgba(0,0,0,.55) !important;
 }
-html, body, #userApp, #adminApp, .app-shell, .page,
-#homePage, #shopPage, #ordersPage, #walletPage, #supportPage {
+
+/* Global canvas and type. Preserve dedicated icon-font glyphs. */
+html, body {
+  background: #030303 !important;
+  background-image: none !important;
+  color: #F5F5F5 !important;
+  font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+  font-synthesis: weight style;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body *, #userApp, #userApp *, #adminApp, #adminApp *,
+dialog, dialog *, [role="dialog"], [role="dialog"] * {
+  font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+  font-synthesis: weight style;
+}
+i[class^="fa"], i[class*=" fa"], .fa, [class^="fa-"], [class*=" fa-"],
+.material-icons, .material-symbols-outlined, .iconfont, [data-icon-font] {
+  font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", "Material Icons", "iconfont" !important;
+}
+::selection { background: rgba(52,120,246,.28); color: #FFFFFF; }
+
+/* Stable page canvas: no ambient radial gradients or tinted page sections. */
+#userApp, #adminApp, .app-shell, .page, .admin-content,
+#homePage, #shopPage, #ordersPage, #walletPage, #supportPage,
+#accountPage, #settingsPage, #referralPage, #missionsPage {
   background-color: #030303 !important;
+  background-image: none !important;
   color: #F5F5F5 !important;
 }
-/* Black card surfaces. Remove decorative gradients and pseudo-element glow. */
-.product-tile, .product-card, .product-card-modern, .product-item,
-.product-grid .product, .shop-product-card, .catalog-card, .detail-card,
+body, #userApp, #adminApp {
+  --accent: #3478F6 !important;
+  --primary: #3478F6 !important;
+}
+
+/* One surface contract for cards, panels, product tiles and data blocks. */
+:is(.card, .panel, .section-card, .product-tile, .product-card,
+.product-card-modern, .product-item, .product-grid .product,
+.shop-product-card, .catalog-card, .catalog-tile, .detail-card,
 .wallet-card, .account-hub-card, .mission-card, .order-row, .order-card,
 .quick-card, .mini-stat, .admin-card, .admin-item, .glowing-flash-card,
 .flash-card, .product-info-card, .hero, .shop-page-intro,
 .account-center-mini-hero, .mini-credit-hero-v27, .glass,
 .payment-method, .wallet-method, .payment-option, .wallet-method-option,
-.payment-method-option, .topup-method-option {
-  background: #080808 !important;
+.payment-method-option, .topup-method-option, .credit-launch,
+.purchase-confirm-specs, .purchase-confirm-desc, .mini-topup-balance,
+.mini-topup-after, .orders-header, .order-detail-card, .support-card,
+.ticket-card, .admin-section, .admin-panel, .stat-card) {
+  background-color: #090909 !important;
   background-image: none !important;
-  border-color: rgba(255,255,255,.075) !important;
-  box-shadow: 0 6px 18px rgba(0,0,0,.16) !important;
+  border-color: #1B1B1B !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18) !important;
+  color: #F5F5F5 !important;
 }
-.product-tile::before, .product-tile::after, .product-card::before,
-.product-card::after, .glowing-flash-card::before, .glowing-flash-card::after,
-.hero::after, .hero-glow {
+
+/* Shared navigation chrome: quiet borders, no glass or glow treatment. */
+:is(.topbar, .bottom-nav, .topbar-desktop-nav, .admin-tabs,
+.category-strip, .shop-toolbar, .orders-toolbar, .account-menu,
+.account-menu-list, .settings-list) {
+  background-color: #070707 !important;
   background-image: none !important;
+  border-color: #1B1B1B !important;
   box-shadow: none !important;
-  opacity: 0 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
-/* Very subtle gray separators throughout all screens. */
-hr, .divider, .card, .panel, .section-card, .list-item,
-.account-menu-row, .cat-pill, .filter-chip, .filter-choice-grid button,
-.variant-btn, .purchase-plan-option, .shop-filter-trigger,
-.credit-launch, .mini-settings-actions button {
-  border-color: rgba(255,255,255,.075) !important;
+:is(.divider, hr, .section-divider) {
+  border-color: #1B1B1B !important;
+  background-color: #1B1B1B !important;
 }
-.secondary, button.secondary, .btn-secondary, .button-secondary,
-.ghost, button.ghost, .btn-ghost, .icon-btn, .purchase-confirm-cancel,
-.tab, [role="tab"], .order-more-popup-option, .purchase-confirm-desc,
-.purchase-confirm-specs, .mini-topup-balance, .mini-topup-after,
-.purchase-confirm-price-primary, .bg-centered-confirm-message,
-.language-option, .language-popup button, .stars-popup button {
-  background-color: #0B0B0B !important;
-  background-image: none !important;
-  border-color: rgba(255,255,255,.075) !important;
-  box-shadow: none !important;
-  color: #EAEAEA !important;
+
+/* Buttons share one geometry; color signals action hierarchy, not decoration. */
+:is(button, .btn, .button, [role="button"]) {
+  font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+  box-shadow: none;
+  text-shadow: none !important;
 }
-/* Keep blue primary actions; glow is deliberately limited to interaction states. */
-.primary, .btn-primary, button.primary, .button-primary, .btn-main,
+:is(.primary, .btn-primary, button.primary, .button-primary, .btn-main,
 .purchase-confirm-submit, .mini-credit-primary, .credit-primary-action,
 .wallet-topup-button, .wallet-add-credit, .credit-add-button,
-button[type="submit"].primary {
-  background: var(--primary, #3477EE) !important;
+button[type="submit"].primary, .cart-fab) {
+  background: #3478F6 !important;
   background-image: none !important;
   color: #FFFFFF !important;
-  border-color: transparent !important;
+  border: 1px solid #3478F6 !important;
   box-shadow: none !important;
-  transition: box-shadow .16s ease, filter .16s ease, transform .16s ease;
 }
-.primary:hover, .btn-primary:hover, button.primary:hover,
-.button-primary:hover, .btn-main:hover, .purchase-confirm-submit:hover,
-.mini-credit-primary:hover, .credit-primary-action:hover,
-.wallet-topup-button:hover, .wallet-add-credit:hover, .credit-add-button:hover,
-.primary:focus-visible, .btn-primary:focus-visible, button.primary:focus-visible {
-  box-shadow: 0 0 0 2px rgba(74,141,255,.12) !important;
+:is(.primary, .btn-primary, button.primary, .button-primary, .btn-main,
+.purchase-confirm-submit, .mini-credit-primary, .credit-primary-action,
+.wallet-topup-button, .wallet-add-credit, .credit-add-button,
+button[type="submit"].primary, .cart-fab):hover {
+  background: #2868DF !important;
+  border-color: #2868DF !important;
+  box-shadow: 0 0 0 2px rgba(52,120,246,.12) !important;
 }
-.cat-pill.active, .filter-chip.active, .filter-choice-grid button.active,
+:is(.secondary, button.secondary, .btn-secondary, .button-secondary,
+.ghost, button.ghost, .btn-ghost, .icon-btn, .purchase-confirm-cancel,
+.tab, [role="tab"], .order-more-popup-option, .language-option,
+.language-popup button, .stars-popup button, .mini-settings-actions button) {
+  background: #0E0E0E !important;
+  background-image: none !important;
+  border-color: #202020 !important;
+  color: #E8E8E8 !important;
+  box-shadow: none !important;
+}
+:is(button, .btn, .button, [role="button"], .product-tile, .product-card,
+.catalog-tile, .payment-method, .wallet-method, .payment-option) {
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease !important;
+}
+
+/* Selected state is blue-tinted and consistent across every feature. */
+:is(.cat-pill.active, .filter-chip.active, .filter-choice-grid button.active,
 .variant-btn.active, .purchase-plan-option.active, .purchase-plan-option.selected,
 .orders-filter-option.active, .admin-tabs button.active, .bottom-nav button.active,
 .topbar-desktop-nav button.active, .account-menu-row.active, .tab.active,
 [role="tab"][aria-selected="true"], [aria-current="page"],
 .payment-method.active, .wallet-method.active, .payment-option.active,
-.mini-topup-method-list>button.active, .wallet-method-option.active,
+.mini-topup-method-list > button.active, .wallet-method-option.active,
 .payment-method-option.active, .topup-method-option.active,
-.payment-method[aria-checked="true"], .payment-option[aria-checked="true"] {
-  background: #101010 !important;
+.payment-method[aria-checked="true"], .payment-option[aria-checked="true"]) {
+  background: rgba(52,120,246,.12) !important;
   background-image: none !important;
-  color: #FFFFFF !important;
-  border-color: rgba(255,255,255,.16) !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025) !important;
+  color: #75A5FF !important;
+  border-color: rgba(52,120,246,.5) !important;
+  box-shadow: inset 0 0 0 1px rgba(52,120,246,.08) !important;
 }
-/* Same black panel for every popup, sheet, modal, language and Stars flow. */
-.order-more-popup-backdrop, .mini-credit-topup-backdrop,
+
+/* Product cards: clean surfaces, no decorative pseudo-element gradients. */
+:is(.product-tile, .product-card, .product-card-modern, .product-item,
+.shop-product-card, .catalog-card, .catalog-tile, .glowing-flash-card,
+.flash-card, .hero, .shop-page-intro)::before,
+:is(.product-tile, .product-card, .product-card-modern, .product-item,
+.shop-product-card, .catalog-card, .catalog-tile, .glowing-flash-card,
+.flash-card, .hero, .shop-page-intro)::after,
+.hero-glow {
+  background-image: none !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+:is(.price-pill, .product-badge, .product-tag, .category-badge, .badge) {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Inputs: graphite field, legible placeholder, one blue focus language. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+textarea, select, .field input, .field textarea, .field select {
+  background: #070707 !important;
+  background-image: none !important;
+  color: #F5F5F5 !important;
+  border-color: #242424 !important;
+  box-shadow: none !important;
+  font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
+}
+input::placeholder, textarea::placeholder { color: #777777 !important; opacity: 1; }
+input:focus, textarea:focus, select:focus,
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  border-color: #3478F6 !important;
+  box-shadow: 0 0 0 3px rgba(52,120,246,.16) !important;
+  outline: none !important;
+}
+
+/* All overlays and popups use the same backdrop and panel surface. */
+:is(.order-more-popup-backdrop, .mini-credit-topup-backdrop,
 .purchase-confirm-overlay, .app-sheet-backdrop, .modal-backdrop,
 .dialog-backdrop, .popup-backdrop, .language-popup-backdrop,
 .stars-popup-backdrop, [class*="popup-backdrop"], [class*="modal-backdrop"],
-[class*="sheet-backdrop"], [class*="overlay-backdrop"] {
-  background: rgba(0,0,0,.82) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-  backdrop-filter: blur(4px) !important;
+[class*="sheet-backdrop"], [class*="overlay-backdrop"]) {
+  background: rgba(0,0,0,.78) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  backdrop-filter: blur(3px) !important;
 }
-.order-more-popup-card, .mini-credit-topup-panel, .purchase-confirm-card,
+:is(.order-more-popup-card, .mini-credit-topup-panel, .purchase-confirm-card,
 .dialog-card, .auth-modal-content, .app-sheet-panel, .app-sheet .app-sheet-content,
 .modal-content, .modal-card, .popup-card, .popup-panel, .language-popup,
 .language-modal, .stars-popup, .stars-modal, .credit-popup, .topup-popup,
 [class*="popup-card"], [class*="modal-content"], [class*="modal-card"],
-[class*="sheet-panel"] {
-  background: #080808 !important;
+[class*="sheet-panel"]) {
+  background: #090909 !important;
   background-image: none !important;
   color: #F5F5F5 !important;
-  border: 1px solid rgba(255,255,255,.085) !important;
-  box-shadow: 0 20px 56px rgba(0,0,0,.62) !important;
+  border: 1px solid #252525 !important;
+  box-shadow: 0 18px 54px rgba(0,0,0,.58) !important;
 }
-input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
-textarea, select, .field input, .field textarea, .field select {
-  background: #050505 !important;
-  background-image: none !important;
-  color: #F5F5F5 !important;
-  border-color: rgba(255,255,255,.085) !important;
-}
-input:focus, textarea:focus, select:focus {
-  border-color: rgba(255,255,255,.22) !important;
-  box-shadow: 0 0 0 2px rgba(255,255,255,.025) !important;
-}
-/* Semantic statuses stay meaningful; only decorative glow is removed. */
-.status-badge.success, .status-badge.active, .status-badge.ok, .status-success, .badge-success { color: #42D6A0 !important; box-shadow: none !important; }
-.status-badge.warning, .status-badge.pending, .status-warning, .badge-warning { color: #F5C86A !important; box-shadow: none !important; }
-.status-badge.danger, .status-badge.failed, .status-danger, .badge-danger { color: #FF718A !important; box-shadow: none !important; }
-.price-pill, .product-badge, .product-tag, .category-badge, .badge {
-  background-image: none !important;
+
+/* Status colors remain semantic; violet is not used as a second brand accent. */
+:is(.status-badge.success, .status-badge.active, .status-badge.ok,
+.status-success, .badge-success) { color: #39C995 !important; box-shadow: none !important; }
+:is(.status-badge.warning, .status-badge.pending, .status-warning,
+.badge-warning) { color: #EABF62 !important; box-shadow: none !important; }
+:is(.status-badge.danger, .status-badge.failed, .status-danger,
+.badge-danger) { color: #F16D7A !important; box-shadow: none !important; }
+:is(.error, .text-danger, .danger-text) { color: #F16D7A !important; }
+:is(.success, .text-success, .success-text) { color: #39C995 !important; }
+
+/* Avoid bright glows from legacy motion layers while retaining feedback motion. */
+:is(.bottom-nav button.active .nav-icon, .topbar-desktop-nav button.active .nav-icon,
+.admin-tabs button.active span) { filter: none !important; }
+.bottom-nav button.active::after {
+  background: #3478F6 !important;
   box-shadow: none !important;
 }
-::selection { background: rgba(74,141,255,.22); color: #FFFFFF; }
-
-
-/* v5.1.28 — enforce one typography system across the entire Mini App.
-   Yekan is the preferred Persian face; Inter fills Latin glyphs and numerals. */
-:root {
-  --mini-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
-  --bgds-font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
-}
-html, body, body *,
-#userApp, #userApp *, #adminApp, #adminApp *,
-dialog, dialog *, [role="dialog"], [role="dialog"] *,
-input::placeholder, textarea::placeholder, input::-webkit-input-placeholder,
-textarea::-webkit-input-placeholder, button::before, button::after {
-  font-family: "Yekan", "Inter", "Vazirmatn", Tahoma, Arial, sans-serif !important;
-  font-synthesis: weight style;
-  font-optical-sizing: auto;
-}
-/* Preserve dedicated icon fonts if a legacy component still uses them. */
-i[class^="fa"], i[class*=" fa"], .fa, [class^="fa-"], [class*=" fa-"],
-.material-icons, .material-symbols-outlined, .iconfont, [data-icon-font] {
-  font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", "Material Icons", "iconfont" !important;
+:focus-visible { outline-color: #3478F6 !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
 }
