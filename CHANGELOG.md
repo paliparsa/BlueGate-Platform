@@ -1,3 +1,12 @@
+## 5.1.66 - Unified referral center and invite popup
+
+- Redesigned the referral center sheet with a consistent BlueGate surface system, improved referral/reward stat hierarchy, VIP progress, invite-link card, sub-referral list, and empty state.
+- Restyled the invite/share popup to align with the shared sheet design, including clearer native share, Telegram, copy-link, copy-code, and QR actions.
+- Unified the account-page “دعوت دوستان” entry and wallet referral shortcut through `openMiniReferralCenter()` so both open the same referral view and use the same referral data/actions.
+- Kept referral counts, reward calculations, custom-code eligibility, share destinations, and existing APIs unchanged.
+- Two review loops: (1) visual hierarchy and shared sheet consistency; (2) account/wallet entry routing, action preservation, responsive behavior, and CSS asset registration.
+- Verification: source-level checks only; live Telegram WebView sharing/QR interaction tests were not available.
+
 ## 5.1.65 - Credit transactions and pending top-up resume
 
 - Refined the full credit transaction sheet to match the shared BlueGateUI sheet system: clearer history rows, readable signed amounts, top-up history strip, and responsive narrow-screen layout.
