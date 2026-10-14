@@ -1,3 +1,12 @@
+## 5.1.49 - Category and filter button visual parity
+
+- Made the Store's category picker and filter/sort control a consistent paired component: equal width and height, shared grid alignment, matching icon tiles, typography, borders, surface and spacing.
+- Kept category labels and active-filter count readable with wrapping/clamping; active filters still use the existing indicator.
+- Added compact-width handling and focus-visible / reduced-motion states.
+- Preserved existing button IDs, markup, click handlers, category selection, filter/sort state and filtering logic.
+- Registered the new stylesheet after existing design layers and added PHP filemtime cache-busting.
+- Source-level review: stylesheet braces balanced; both controls share the same selectors and geometry; IDs and JS event wiring untouched. Live Telegram WebView visual testing remains outstanding.
+
 ## 5.1.48 - Product details popup redesign
 
 - Added a dedicated final-layer stylesheet for the product details / purchase popup, with a true-black surface, centered layout on mobile and desktop, cleaner header, and clearer close control.
