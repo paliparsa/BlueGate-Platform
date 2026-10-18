@@ -1,11 +1,10 @@
-# BlueGate Platform v5.1.89 — Active VPN service list and catalog navigation fix
+# BlueGate Platform v5.1.90 — Customizable in-place VPN renewal
 
-- Changed the account “همه سفارش‌ها” sheet to show only currently active VPN services, sourced from the service list rather than every historical purchase/renewal order.
-- Deduplicated repeated records by managed service identity or subscription URL so a renewal does not create another row for the same service.
-- Resolved purchase navigation through the service’s original order/product identifiers first, then normalized catalog-name matching. If a legacy product no longer exists, open the store pre-filtered to the VPN name instead of showing a dead-end “not found” error.
-- Updated Mini App asset cache keys and project version.
-- Validation: source-level checks; live Telegram Mini App verification remains necessary.
-
+- Added a branded Mini App renewal flow to choose an eligible subservice and plan before creating a renewal order, with price, duration, and configured quota preview.
+- Added server-side ownership, catalog activity, same-service, provider-map and remote-target compatibility validation; incompatible provider migrations are excluded instead of silently changing the existing VPN client destination.
+- Renewal orders retain the existing service identity and use the selected plan's server-side price, duration, quota settings, and catalog snapshot. The active service's plan/name is updated only after service-action jobs finish successfully.
+- Preserved the 3x-ui live usage check, reset confirmation, reset-after-payment behavior, and idempotent target expiry/quota handling.
+- Validation: source-level review only; PHP syntax checks, CI, and live provider/Telegram Mini App testing remain required.
 # BlueGate Platform v5.1.88 — Native VPN renewal confirmation modal
 
 - Replaced the browser `window.confirm` prompt with a branded, responsive Mini App modal aligned with BlueGate's dark surfaces and royal-blue action style.
