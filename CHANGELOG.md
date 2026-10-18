@@ -1,3 +1,10 @@
+## 5.1.83 - Correct Mini App language in payment requests
+
+- Use the active Mini App/i18n language as the source of truth for API requests.
+- Default to Persian when no language preference is saved, matching the Mini App UI; do not infer the storefront language from the browser/device locale.
+- Preserve the international storefront restriction for card-to-card payments when English is actually selected.
+- Validation: source-level review; verify Persian and English payment selection in the deployed Telegram Mini App.
+
 ## 5.1.82 - Card payment rendering and verified VPN renewal
 
 - Fix card-to-card selection so the order is explicitly re-rendered after the payment-method API succeeds; do not show a success message when the API call fails.
