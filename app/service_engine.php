@@ -343,20 +343,28 @@ function bluegate_run_provisioning_job(int $jobId): array {
 function bluegate_run_job(int $id): array {$q=db()->prepare('SELECT job_type FROM provisioning_jobs WHERE id=?');$q->execute([$id]);$t=(string)($q->fetchColumn()?:'create');return in_array($t,['renew','add_traffic','add_days'],true)?bluegate_run_service_action_job($id):bluegate_run_provisioning_job($id);}
 function bluegate_reconcile_verified_service_action_orders(int $limit=100): int {
     $limit=max(1,min(300,$limit));
-    $q=db()->query("SELECT id,user_service_id,request_json,result_json FROM provisioning_jobs WHERE job_type IN ('renew','add_traffic','add_days') AND status IN ('retry','failed') AND result_json IS NOT NULL ORDER BY id DESC LIMIT ".$limit);
+    $q=db()->query("SELECT id,user_service_id,status,last_error_code,request_json,result_json FROM provisioning_jobs WHERE job_type IN ('renew','add_traffic','add_days') AND status IN ('retry','failed') ORDER BY id DESC LIMIT ".$limit);
     $rows=$q->fetchAll()?:[];$fixed=0;
     foreach($rows as $job){
         $result=bluegate_json_array($job['result_json']??null);
-        if(empty($result['ok'])||empty($result['verified']))continue;
         $req=bluegate_json_array($job['request_json']??null);$orderId=(int)($req['order_id']??0);
-        if($orderId<=0)continue;
-        db()->prepare('UPDATE provisioning_jobs SET status="completed",completed_at=COALESCE(completed_at,NOW()),locked_at=NULL,locked_by=NULL,last_error_code=NULL,last_error_message=NULL WHERE id=? AND status IN ("retry","failed")')->execute([(int)$job['id']]);
-        $pending=db()->prepare('SELECT COUNT(*) FROM provisioning_jobs WHERE request_json LIKE ? AND status<>"completed"');$pending->execute(['%"order_id":'.$orderId.',%']);
-        if((int)$pending->fetchColumn()!==0)continue;
-        $order=order_by_id($orderId);$service=bluegate_service_record((int)$job['user_service_id']);
-        if(!$order||!$service)continue;
-        try{$sub=bluegate_service_public($service);db()->prepare('UPDATE orders SET delivery_url=COALESCE(?,delivery_url),delivery_title=? WHERE id=?')->execute([$sub['subscription_url']??null,'مدیریت سرویس',$orderId]);update_order_status($orderId,'delivered','سرویس بروزرسانی شد','تمدید/تغییر سرویس قبلاً روی پنل تأیید شده بود؛ وضعیت سفارش بازیابی شد.',true);$fixed++;}
-        catch(Throwable $e){error_log('[BlueGate verified service order recovery #'.$orderId.'] '.$e->getMessage());}
+        if(!empty($result['ok'])&&!empty($result['verified'])){
+            if($orderId<=0)continue;
+            db()->prepare('UPDATE provisioning_jobs SET status="completed",completed_at=COALESCE(completed_at,NOW()),locked_at=NULL,locked_by=NULL,last_error_code=NULL,last_error_message=NULL WHERE id=? AND status IN ("retry","failed")')->execute([(int)$job['id']]);
+            $pending=db()->prepare('SELECT COUNT(*) FROM provisioning_jobs WHERE request_json LIKE ? AND status<>"completed"');$pending->execute(['%"order_id":'.$orderId.',%']);
+            if((int)$pending->fetchColumn()!==0)continue;
+            $order=order_by_id($orderId);$service=bluegate_service_record((int)$job['user_service_id']);
+            if(!$order||!$service)continue;
+            try{$sub=bluegate_service_public($service);db()->prepare('UPDATE orders SET delivery_url=COALESCE(?,delivery_url),delivery_title=? WHERE id=?')->execute([$sub['subscription_url']??null,'مدیریت سرویس',$orderId]);update_order_status($orderId,'delivered','سرویس بروزرسانی شد','تمدید/تغییر سرویس قبلاً روی پنل تأیید شده بود؛ وضعیت سفارش بازیابی شد.',true);$fixed++;}
+            catch(Throwable $e){error_log('[BlueGate verified service order recovery #'.$orderId.'] '.$e->getMessage());}
+            continue;
+        }
+        // One bounded recovery attempt for older final XUI timeouts that may have applied remotely.
+        if((string)($job['status']??'')==='failed'&&str_starts_with((string)($job['last_error_code']??''),'XUI_HTTP_ERROR')&&empty($req['_bluegate_timeout_reconcile_attempted'])){
+            $req['_bluegate_timeout_reconcile_attempted']=true;
+            db()->prepare('UPDATE provisioning_jobs SET status="retry",attempt_count=0,max_attempts=2,available_at=NOW(),request_json=?,locked_at=NULL,locked_by=NULL WHERE id=? AND status="failed"')->execute([json_encode($req,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),(int)$job['id']]);
+            $fixed++;
+        }
     }
     return $fixed;
 }
@@ -517,6 +525,8 @@ function bluegate_run_service_action_job(int $jobId): array {
         // Legacy completed jobs may have updated BlueGate's database without changing the remote panel.
         // Reuse their recorded target values so reconciliation cannot add the same duration twice.
         if($legacyCompleted){$legacyExpiry=strtotime((string)$legacyResult['expires_at']);if($legacyExpiry<=0)throw new RuntimeException('LEGACY_JOB_TARGET_EXPIRY_INVALID');$newExp=$legacyExpiry;$newLimit=max(0,(int)$legacyResult['traffic_limit_bytes']);}
+        // Persist absolute targets before the remote write so a retry cannot add the same renewal twice.
+        if(!$legacyCompleted){$storedExpiry=strtotime((string)($req['_bluegate_target_expires_at']??''));$hasStoredLimit=array_key_exists('_bluegate_target_traffic_limit_bytes',$req);if($storedExpiry>0)$newExp=$storedExpiry;if($hasStoredLimit)$newLimit=max(0,(int)$req['_bluegate_target_traffic_limit_bytes']);if($storedExpiry<=0||!$hasStoredLimit){$req['_bluegate_target_expires_at']=date('Y-m-d H:i:s',$newExp);$req['_bluegate_target_traffic_limit_bytes']=$newLimit;db()->prepare('UPDATE provisioning_jobs SET request_json=? WHERE id=?')->execute([json_encode($req,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),$jobId]);}}
         $driver=bluegate_provider_driver((int)$i['provider_id']);$instanceInboundIds=bluegate_instance_inbound_ids($i);$upd=['external_username'=>$i['external_username'],'email'=>$i['external_username'],'external_client_id'=>$i['external_client_id'],'id'=>$i['external_client_id'],'inbound_ids'=>$instanceInboundIds,'inbound_id'=>(string)($instanceInboundIds[0]??$i['remote_target_id']),'remote_target_id'=>$i['remote_target_id'],'provider_config'=>[],'traffic_limit_bytes'=>$newLimit,'expires_at'=>date('Y-m-d H:i:s',$newExp),'enable'=>true];$writeError=null;$check=null;
         try{$r=$driver->renewService($upd);}catch(Throwable $e){
             // Some 3x-ui panels apply the update but time out before returning the HTTP response.
