@@ -206,7 +206,7 @@ final class BlueGateXuiProvider extends BlueGateAbstractProvider {
     private function modernClientPayload(array $request, ?array $existing=null): array {
         $src=is_array($existing)?$existing:[];
         foreach($request as $k=>$v){
-            if(in_array($k,['inbound_ids','inboundIds','inbound_id','remote_target_id','traffic_limit_bytes','expires_at','expiry_ms','limit_ip','limit_hwid','existing','external_client_id','external_username','username'],true))continue;
+            if(in_array($k,['inbound_ids','inboundIds','inbound_id','remote_target_id','traffic_limit_bytes','expires_at','expiry_ms','limit_ip','limit_hwid','existing','external_client_id','external_username','username','reset_traffic','reset_strategy','reset_confirmed_by_user','reset_confirmed_at','auto_reset','auto_reset_reason','remaining_bytes_at_order','remaining_seconds_at_order'],true))continue;
             if($v!==null)$src[$k]=$v;
         }
         $email=trim((string)($request['email']??$request['external_username']??$request['username']??$src['email']??''));
@@ -346,9 +346,29 @@ final class BlueGateXuiProvider extends BlueGateAbstractProvider {
         return ['ok'=>true,'external_username'=>$email,'provider_response'=>$this->obj($r)];
     }
 
+    private function resetClientTraffic(string $email): array {
+        $r=$this->request('POST','/panel/api/clients/resetTraffic/'.rawurlencode($email),[]);
+        if(!empty($r['ok']))return ['ok'=>true,'mode'=>'modern','provider_response'=>$this->obj($r)];
+        if(($r['http_status']??0)!==404&&($r['error_code']??'')!=='XUI_ENDPOINT_NOT_FOUND')$this->requireOk($r);
+        // Compatibility with older 3x-ui panels: reset each inbound where this email exists.
+        $ids=$this->legacyInboundIdsForEmail($email);
+        if(!$ids)throw new RuntimeException('XUI_RESET_TRAFFIC_ENDPOINT_UNAVAILABLE');
+        $results=[];
+        foreach($ids as $inbound){
+            $legacy=$this->requireOk($this->request('POST','/panel/api/inbounds/'.(int)$inbound.'/resetClientTraffic/'.rawurlencode($email),[]));
+            $results[]=['inbound_id'=>(int)$inbound,'response'=>$this->obj($legacy)];
+        }
+        return ['ok'=>true,'mode'=>'legacy','inbounds'=>$results];
+    }
     public function renewService(array $request): array {
         $external=(string)($request['external_username']??$request['email']??''); if($external==='') throw new RuntimeException('XUI_CLIENT_EMAIL_REQUIRED');
-        return $this->updateService($external,$request);
+        $reset=!empty($request['reset_traffic']);
+        $update=$this->updateService($external,$request);
+        if(!$reset)return $update;
+        // Updating expiry/quota and resetting counters are separate 3x-ui operations.
+        // The service job performs read-back verification before it can be marked complete.
+        $resetResult=$this->resetClientTraffic($external);
+        return $update+['traffic_reset'=>true,'traffic_reset_result'=>$resetResult];
     }
     private function legacyInboundIdsForEmail(string $email): array {
         $r=$this->requireOk($this->request('GET','/panel/api/inbounds/list'));$obj=$this->obj($r);$ids=[];if(!is_array($obj))return$ids;
