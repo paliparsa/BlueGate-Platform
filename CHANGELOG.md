@@ -1,3 +1,10 @@
+# BlueGate Platform v5.1.88 — Native VPN renewal confirmation modal
+
+- Replaced the browser `window.confirm` prompt with a branded, responsive Mini App modal aligned with BlueGate's dark surfaces and royal-blue action style.
+- Shows remaining traffic and remaining time in separate stat cards, clearly explains the irreversible reset, and states that the reset only happens after successful payment.
+- Added explicit confirm/cancel actions, backdrop and Escape cancellation, focus handling, reduced-motion support, and Telegram haptic feedback.
+- Updated Mini App asset cache keys and bumped the project version.
+
 # BlueGate Platform v5.1.87 — Smart VPN renewal with verified full reset
 
 - Added a live server-side renewal preview for 3x-ui clients. If any finite client has less than 1 GiB remaining or less than 72 hours remaining, the renewal uses the automatic full-reset path; otherwise the Mini App requires explicit confirmation before creating a renewal order.

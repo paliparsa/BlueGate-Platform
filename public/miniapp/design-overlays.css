@@ -22,3 +22,34 @@ dialog::backdrop,.order-more-popup-backdrop,.mini-credit-topup-backdrop,.purchas
 /* Feature overlays keep geometry in behavior layers; shared surfaces are opaque black. */
 #userApp :is(.wallet-confirm-card,.purchase-confirm-card,.purchase-confirm-dialog,.popup-content,.sheet-content,.cart-sheet-inner,.preview-sheet-inner,.qr-sheet-inner,.share-sheet-inner,.palette-popup,.cmd-palette,.lightbox),#adminApp :is(.popup-content,.sheet-content){background:#080808!important;background-image:none!important;border-color:#242424!important}
 #userApp :is(.modal-header,.popup-header,.sheet-header,.modal-footer,.popup-footer,.sheet-footer),#adminApp :is(.modal-header,.popup-header,.sheet-header,.modal-footer,.popup-footer,.sheet-footer){background:#080808!important;background-image:none!important;border-color:#242424!important}
+
+
+/* Smart VPN renewal reset confirmation — native Mini App dialog */
+.bg-renewal-reset-backdrop{position:fixed;inset:0;z-index:100500;display:flex;align-items:center;justify-content:center;padding:22px 18px calc(22px + env(safe-area-inset-bottom));background:rgba(0,0,0,.76);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transition:opacity .18s ease}
+.bg-renewal-reset-backdrop.is-visible{opacity:1}
+.bg-renewal-reset-dialog{position:relative;width:min(100%,410px);max-height:min(88dvh,700px);overflow-y:auto;overscroll-behavior:contain;padding:28px 22px 20px;border:1px solid #252a35;border-radius:26px;background:#08090c;color:#f6f7fb;box-shadow:0 26px 90px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.025) inset;transform:translateY(12px) scale(.985);transition:transform .2s cubic-bezier(.2,.8,.2,1);font-family:inherit;text-align:center}
+.bg-renewal-reset-backdrop.is-visible .bg-renewal-reset-dialog{transform:translateY(0) scale(1)}
+.bg-renewal-reset-close{position:absolute;top:13px;left:13px;display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid #282c35;border-radius:11px;background:#111319;color:#a9afbd;cursor:pointer}
+.bg-renewal-reset-close svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.bg-renewal-reset-symbol{display:grid;place-items:center;width:58px;height:58px;margin:2px auto 16px;border:1px solid rgba(255,178,72,.28);border-radius:19px;background:rgba(255,170,55,.09);color:#ffbb61}
+.bg-renewal-reset-symbol svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.bg-renewal-reset-eyebrow{margin-bottom:7px;color:#8baeff;font-size:12px;font-weight:700;letter-spacing:.1px}
+.bg-renewal-reset-dialog h2{margin:0 auto 10px;max-width:300px;color:#f7f8fc;font-size:20px;line-height:1.55;font-weight:800}
+.bg-renewal-reset-description{margin:0 auto 20px;max-width:330px;color:#a5aab7;font-size:13px;line-height:1.95}
+.bg-renewal-reset-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;text-align:right}
+.bg-renewal-reset-stat{display:flex;align-items:center;gap:10px;min-width:0;padding:13px 11px;border:1px solid #252a35;border-radius:16px;background:#101217}
+.bg-renewal-reset-stat-icon{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;border-radius:12px;background:rgba(69,125,255,.12);color:#7ca6ff}
+.bg-renewal-reset-stat-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bg-renewal-reset-stat div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.bg-renewal-reset-stat small{color:#8e95a4;font-size:11px;line-height:1.4}
+.bg-renewal-reset-stat strong{color:#f4f6fb;font-size:13px;font-weight:800;line-height:1.5;overflow-wrap:anywhere}
+.bg-renewal-reset-note{display:flex;align-items:flex-start;justify-content:center;gap:7px;margin-bottom:18px;padding:10px 12px;border:1px solid rgba(255,181,75,.15);border-radius:12px;background:rgba(255,181,75,.055);color:#c6a875;font-size:11px;line-height:1.8;text-align:right}
+.bg-renewal-reset-note svg{width:16px;height:16px;flex:0 0 16px;margin-top:2px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bg-renewal-reset-actions{display:grid;gap:9px}
+.bg-renewal-reset-actions button{width:100%;min-height:48px;border-radius:14px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:transform .12s ease,opacity .12s ease}
+.bg-renewal-reset-actions button:active{transform:scale(.985)}
+.bg-renewal-reset-confirm{border:1px solid #4c7fff;background:#2863ed;color:#fff;box-shadow:0 7px 20px rgba(40,99,237,.22)}
+.bg-renewal-reset-confirm:focus-visible,.bg-renewal-reset-cancel:focus-visible,.bg-renewal-reset-close:focus-visible{outline:2px solid #8bb0ff;outline-offset:3px}
+.bg-renewal-reset-cancel{border:1px solid #292d37;background:#111318;color:#d1d5df}
+@media(max-width:360px){.bg-renewal-reset-dialog{padding:25px 15px 16px;border-radius:22px}.bg-renewal-reset-dialog h2{font-size:18px}.bg-renewal-reset-stats{gap:7px}.bg-renewal-reset-stat{gap:7px;padding:10px 8px}.bg-renewal-reset-stat-icon{width:30px;height:30px;flex-basis:30px}.bg-renewal-reset-stat strong{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.bg-renewal-reset-backdrop,.bg-renewal-reset-dialog{transition:none}}
