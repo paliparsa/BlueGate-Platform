@@ -691,7 +691,7 @@ if ($action === 'service_renew') {
             $seconds=$expiryMs>0?max(0,(int)floor($expiryMs/1000)-time()):null;
             if($remaining!==null)$remainingBytes[]=$remaining;
             if($seconds!==null)$remainingSeconds[]=$seconds;
-            $clientRows[]=['remaining_bytes'=>$remaining,'remaining_seconds'=>$seconds,'traffic_limit_bytes'=>$limit,'used_bytes'=>$used,'expiry_ms'=>$expiryMs];
+            $clientRows[]=['instance_id'=>(int)$instance['id'],'remaining_bytes'=>$remaining,'remaining_seconds'=>$seconds,'traffic_limit_bytes'=>$limit,'used_bytes'=>$used,'expiry_ms'=>$expiryMs];
         }
         $minBytes=$remainingBytes?min($remainingBytes):null;
         $minSeconds=$remainingSeconds?min($remainingSeconds):null;
@@ -707,7 +707,8 @@ if ($action === 'service_renew') {
         if(!$old)throw new RuntimeException('SERVICE_ORDER_NOT_FOUND');
         $order=create_renewal_order_from_order($uid,(int)$old['id'],$sid);
         $fresh=order_by_id((int)$order['id']);$order=$fresh?:$order;
-        $actionPayload=['service_id'=>$sid,'reset_traffic'=>true,'reset_strategy'=>'full_reset','reset_confirmed_by_user'=>($confirmed?1:0),'reset_confirmed_at'=>$confirmed?date('c'):null,'auto_reset'=>$autoReset?1:0,'auto_reset_reason'=>$preview['auto_reset_reason'],'remaining_bytes_at_order'=>$minBytes,'remaining_seconds_at_order'=>$minSeconds];
+        $resetLimits=[];foreach($clientRows as $row)$resetLimits[(string)$row['instance_id']]=(int)$row['traffic_limit_bytes'];
+        $actionPayload=['service_id'=>$sid,'reset_traffic'=>true,'reset_strategy'=>'full_reset','reset_target_limits'=>$resetLimits,'reset_confirmed_by_user'=>($confirmed?1:0),'reset_confirmed_at'=>$confirmed?date('c'):null,'auto_reset'=>$autoReset?1:0,'auto_reset_reason'=>$preview['auto_reset_reason'],'remaining_bytes_at_order'=>$minBytes,'remaining_seconds_at_order'=>$minSeconds];
         db()->prepare('UPDATE orders SET user_service_id=?,service_action="renew",service_action_json=? WHERE id=?')->execute([$sid,json_encode($actionPayload,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),(int)$order['id']]);
         $payload=dashboard_payload(get_user_by_id($uid));
         $payload['order']=order_public_payload(order_by_id((int)$order['id'])?:$order);
