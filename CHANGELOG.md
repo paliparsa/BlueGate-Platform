@@ -1,3 +1,10 @@
+## 5.1.86 - VPN orders list and purchase navigation
+
+- Scope the “همه سفارش‌ها” sheet under “VPNهای من” to VPN orders/services only, excluding unrelated digital purchases.
+- Make each listed VPN row clickable and open its matching product purchase page in the Mini App; resolve product IDs directly where available and fall back to matching the catalog product name.
+- Show a VPN-specific empty state when the account has no VPN orders.
+- Validation: source-level checks; verify the VPN list and purchase modal in the deployed Mini App.
+
 ## 5.1.85 - Wallet VPN provisioning feedback and order reconciliation
 
 - Keep the Mini App loading animation and block repeated wallet-payment clicks while VPN purchase/renewal is being provisioned; poll order status until delivery or a terminal result.
