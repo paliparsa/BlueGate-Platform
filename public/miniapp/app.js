@@ -464,7 +464,7 @@ function showStatus(text,type='success'){
 const BlueGateCommandLoader=(()=>{
   // Opt in only for deliberate user actions that mutate data or take noticeable time.
   // A denylist accidentally showed the overlay for every newly-added read/refresh action.
-  const tracked=new Set(['create_order','create_cart_orders','renew_order','service_renew','service_add_days','service_add_traffic','create_credit_topup','credit_topup_start_stars','credit_topup_submit_crypto_hash','credit_topup_submit_receipt','apply_coupon','login','register','telegram_login','change_my_password','email_change_start','email_change_set_new','email_change_verify_current','email_change_verify_new','update_my_profile','update_my_avatar','reset_my_avatar','support_ticket_create','support_ticket_reply','admin_broadcast','admin_notification_broadcast','admin_order_provision_now','admin_provider_save','admin_provider_test','admin_provider_client_create','admin_provider_client_update','admin_provider_client_delete','admin_catalog_upload_image','admin_crypto_wallet_save','admin_crypto_wallet_delete','admin_plan_provider_map_save','spin','initial_boot','select_payment_method','select_crypto_wallet','select_crypto_tab','start_stars_invoice','submit_crypto_hash','check_crypto_payment','credit_topup_set_method','credit_topup_change_method','cancel_credit_topup','cancel_order','hide_order','clear_canceled_orders','service_sync','service_usage_history','service_event_history']);
+  const tracked=new Set(['create_order','create_cart_orders','renew_order','service_renew','apply_wallet','wallet_vpn_provisioning','service_add_days','service_add_traffic','create_credit_topup','credit_topup_start_stars','credit_topup_submit_crypto_hash','credit_topup_submit_receipt','apply_coupon','login','register','telegram_login','change_my_password','email_change_start','email_change_set_new','email_change_verify_current','email_change_verify_new','update_my_profile','update_my_avatar','reset_my_avatar','support_ticket_create','support_ticket_reply','admin_broadcast','admin_notification_broadcast','admin_order_provision_now','admin_provider_save','admin_provider_test','admin_provider_client_create','admin_provider_client_update','admin_provider_client_delete','admin_catalog_upload_image','admin_crypto_wallet_save','admin_crypto_wallet_delete','admin_plan_provider_map_save','spin','initial_boot','select_payment_method','select_crypto_wallet','select_crypto_tab','start_stars_invoice','submit_crypto_hash','check_crypto_payment','credit_topup_set_method','credit_topup_change_method','cancel_credit_topup','cancel_order','hide_order','clear_canceled_orders','service_sync','service_usage_history','service_event_history']);
   let active=0,root=null,textNode=null;
   const loadingMessage='در حال انجام درخواست…';
   function ensure(){
@@ -478,7 +478,7 @@ const BlueGateCommandLoader=(()=>{
     active++;
     const el=ensure();el.dataset.action=String(action||'');el.setAttribute('aria-hidden','false');
     if(active===1){
-      textNode.textContent=loadingMessage;
+      textNode.textContent=String(action||'')==='wallet_vpn_provisioning'?'در حال پرداخت و ساخت سرویس VPN؛ لطفاً صبر کن…':String(action||'')==='apply_wallet'?'در حال بررسی و کسر اعتبار کیف پول…':loadingMessage;
       el.classList.remove('is-idle');el.classList.add('visible');
       document.documentElement.classList.add('bg-command-busy');document.body.classList.add('bg-command-busy');
     }
@@ -965,6 +965,21 @@ function productCardDiscountNoteText(p){
 function priceCurrencyOptions(selected='IRT'){selected=String(selected||'IRT').toUpperCase();return `<option value="IRT" ${selected!=='USD'?'selected':''}>تومان</option><option value="USD" ${selected==='USD'?'selected':''}>دلار / USDT</option>`}
 function priceAdminFields(prefix,item={}){const c=String(item.price_currency||'IRT').toUpperCase();const usd=item.price_usd||'';const toman=item.price||'';return `<div class="price-editor full"><div class="price-editor-head"><span>💸</span><div><b>نوع قیمت‌گذاری</b><small>تومان ثابت یا دلار با تبدیل خودکار به تومان</small></div></div><div class="price-editor-grid"><label><span>واحد قیمت</span><select id="${prefix}_currency">${priceCurrencyOptions(c)}</select></label><label><span>قیمت تومان</span><input id="${prefix}_price" value="${esc(toman)}" inputmode="numeric" placeholder="مثلاً 2199000"></label><label><span>قیمت دلار</span><input id="${prefix}_price_usd" value="${esc(usd)}" inputmode="decimal" placeholder="مثلاً 19.99"></label><p class="muted full">اگر دلار انتخاب شود، کاربر فقط قیمت تومانی لحظه‌ای را می‌بیند؛ مبلغ دلاری فقط هنگام پرداخت رمزارز/ارزی نمایش داده می‌شود.</p></div></div>`}
 function priceAdminSummary(obj={}){const m=obj.price_meta||{};if((obj.price_currency||m.currency)==='USD'){return `قیمت دلاری: ${nf(obj.price_usd||m.usd||0)}$ → ${fmt(obj.price||m.toman||0)} ${m.rate_source?`· نرخ ${esc(m.rate_source)}`:''}`}return `قیمت تومانی: ${fmt(obj.price||0)}`}
+let _walletPaymentInProgress=false;
+async function waitForVpnOrderCompletion(orderId,timeoutMs=180000){
+  const started=Date.now();
+  while(Date.now()-started<timeoutMs){
+    const order=orderById(orderId);
+    const status=String(order?.status||'').toLowerCase();
+    if(status==='delivered')return {state:'delivered',status};
+    if(['rejected','canceled','refunded','failed','provisioning_failed'].includes(status))return {state:'failed',status};
+    await new Promise(resolve=>setTimeout(resolve,1800));
+    try{const fresh=await api('me');state=fresh;applyTheme(state);renderUser();}
+    catch(err){console.warn('[BlueGate VPN order polling]',err?.message||err);}
+  }
+  const order=orderById(orderId);
+  return {state:'timeout',status:String(order?.status||'unknown').toLowerCase()};
+}
 function openWalletConfirmSheet(orderId){
   const o = orderById(orderId);
   if(!o) return;
@@ -1008,12 +1023,39 @@ function openWalletConfirmSheet(orderId){
   
   sheet.querySelector('#doWalletPayBtn')?.addEventListener('click', async(e) => {
     e.preventDefault();
+    if(_walletPaymentInProgress)return;
+    _walletPaymentInProgress=true;
+    const payBtn=sheet.querySelector('#doWalletPayBtn');
+    if(payBtn){payBtn.disabled=true;payBtn.setAttribute('aria-busy','true');payBtn.textContent=en?'Processing…':'در حال پردازش…';}
+    const finishWalletLoader=BlueGateCommandLoader.show('wallet_vpn_provisioning');
     closeSheet();
-    await loadAfterAction('apply_wallet',{order_id:orderId});
-    currentTab='orders';
-    currentOrderId=orderId;
-    renderUser();
-    showStatus('پرداخت از اعتبار BlueGate با موفقیت انجام شد');
+    try{
+      const ok=await loadAfterAction('apply_wallet',{order_id:orderId});
+      if(!ok)return;
+      currentTab='orders';
+      currentOrderId=Number(orderId);
+      renderUser();
+      let order=orderById(orderId);
+      const status=String(order?.status||'').toLowerCase();
+      const isVpnAction=['renew','add_traffic','add_days'].includes(String(order?.service_action||''))||Number(order?.user_service_id||0)>0||(state.services||[]).some(s=>Number(s.order_id||0)===Number(orderId))||/vpn|وی\s*پی\s*ان|کانفیگ|v2ray|vmess|vless|wireguard|sing.?box/i.test(String(order?.product_name||order?.display_name||order?.product_title||''));
+      if(isVpnAction&&['payment_confirmed','preparing'].includes(status)){
+        const result=await waitForVpnOrderCompletion(Number(orderId),180000);
+        order=orderById(orderId);
+        if(result.state==='delivered')showStatus('پرداخت انجام شد و سرویس VPN آماده است.','success');
+        else if(result.state==='failed')showStatus('پرداخت ثبت شد، اما آماده‌سازی سرویس به بررسی نیاز دارد. با پشتیبانی تماس بگیر.','warning');
+        else showStatus('پرداخت ثبت شد؛ ساخت سرویس در پس‌زمینه ادامه دارد. سفارش را از بخش سفارش‌ها پیگیری کن.','warning');
+      }else if(['payment_confirmed','preparing','delivered'].includes(status)){
+        showStatus('پرداخت از اعتبار BlueGate ثبت شد.','success');
+      }else{
+        showStatus('پرداخت انجام شد، اما هنوز مبلغ کامل سفارش تسویه نشده است.','warning');
+      }
+    }catch(err){
+      showStatus(err?.message||'پرداخت یا آماده‌سازی سرویس ناموفق بود.','error');
+    }finally{
+      finishWalletLoader();
+      _walletPaymentInProgress=false;
+      if(payBtn){payBtn.disabled=false;payBtn.removeAttribute('aria-busy');payBtn.textContent=en?'Confirm payment':'تایید و کسر از موجودی';}
+    }
   });
   
   sheet.querySelector('#cancelWalletPaySheet')?.addEventListener('click', closeSheet);
