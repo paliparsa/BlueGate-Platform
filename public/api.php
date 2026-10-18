@@ -677,6 +677,26 @@ if ($action === 'service_renew') {
         if(!$s)throw new RuntimeException('SERVICE_NOT_FOUND');
         $instances=bluegate_service_instances($sid);
         if(!$instances)throw new RuntimeException('SERVICE_INSTANCE_NOT_FOUND');
+        $smartSupported=true;
+        foreach($instances as $instance){
+            $provider=bluegate_provider((int)$instance['provider_id']);
+            if(!$provider)throw new RuntimeException('PROVIDER_NOT_FOUND');
+            if(strtolower((string)($provider['driver']??''))!=='xui'){$smartSupported=false;break;}
+        }
+        // Keep existing renewal behavior for non-3x-ui providers; the reset API semantics are 3x-ui-specific.
+        if(!$smartSupported){
+            $old=!empty($s['order_id'])?order_by_id((int)$s['order_id']):null;
+            if(!$old)throw new RuntimeException('SERVICE_ORDER_NOT_FOUND');
+            $order=create_renewal_order_from_order($uid,(int)$old['id'],$sid);
+            $fresh=order_by_id((int)$order['id']);$order=$fresh?:$order;
+            db()->prepare('UPDATE orders SET user_service_id=?,service_action="renew",service_action_json=? WHERE id=?')->execute([$sid,json_encode(['service_id'=>$sid],JSON_UNESCAPED_SLASHES),(int)$order['id']]);
+            $payload=dashboard_payload(get_user_by_id($uid));
+            $payload['order']=order_public_payload(order_by_id((int)$order['id'])?:$order);
+            $payload['renewal_reused']=!empty($order['_reused_existing_renewal']);
+            $payload['smart_reset_supported']=false;
+            $payload['message']='برای این پنل، تمدید طبق روش معمول انجام می‌شود؛ ریست هوشمند فقط برای 3x-ui فعال است.';
+            api_out($payload);
+        }
         $remainingBytes=[];$remainingSeconds=[];$clientRows=[];
         foreach($instances as $instance){
             $provider=bluegate_provider((int)$instance['provider_id']);
