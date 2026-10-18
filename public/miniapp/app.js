@@ -1707,13 +1707,40 @@ function openAccountOrdersSummary(){
   const accountName=String(state?.user?.first_name||state?.user?.username||state?.user?.web_username||'کلاینت شما').trim();
   const rows=orders.map(o=>{
     const linkedService=serviceForOrder(o);
+    // Keep this sheet scoped to VPN orders/services; unrelated digital goods must not appear here.
+    if(!isVpnService(o)&&!linkedService)return null;
     const vpnClient=linkedService?miniVpnClientSummary(linkedService):'';
     const client=String(vpnClient||o.client_username||o.client_name||o.external_username||accountName||'کلاینت شما').trim();
-    const product=String(o.display_name||o.product_name||o.service_title||o.product_title||o.title||'محصول خریداری‌شده').trim();
-    return {client,product};
-  });
-  const body=rows.length?'<div class="account-order-summary-list">'+rows.map(r=>'<article class="account-order-summary-row"><div class="account-order-summary-copy"><small>شناسه اشتراک</small><b>'+esc(r.client)+'</b><span class="account-order-summary-product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10l2 2h5.5A2.5 2.5 0 0 1 20 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="M4.5 10h15"/></svg><span>'+esc(r.product)+'</span></span></div></article>').join('')+'</div>':'<div class="account-order-summary-empty"><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><b>هنوز سفارشی ثبت نشده</b><p>بعد از اولین خرید، شناسه اشتراک و محصول خریداری‌شده اینجا نمایش داده می‌شود.</p></div>';
-  BlueGateUI.openSheet({type:'action',eyebrow:'حساب · سفارش‌ها',title:'همه سفارش‌ها',subtitle:orders.length?rows.length.toLocaleString('fa-IR')+' سفارش ثبت‌شده':'فهرست خریدهای حساب',body:'<div class="account-order-summary">'+body+'</div>',footer:'<button type="button" class="secondary" data-account-orders-close>بستن</button>',onOpen:host=>host.querySelector('[data-account-orders-close]')?.addEventListener('click',()=>BlueGateUI.closeSheet())});
+    const product=String(o.display_name||o.product_name||o.service_title||o.product_title||o.title||linkedService?.display_name||'سرویس VPN').trim();
+    let productId=Number(o.product_id||o.catalog_product_id||linkedService?.product_id||linkedService?.catalog_product_id||0);
+    let catalogProduct=productId?(state.shop_products||[]).find(p=>Number(p.id)===productId):null;
+    if(!catalogProduct){
+      const normalized=product.toLocaleLowerCase().trim();
+      catalogProduct=(state.shop_products||[]).find(p=>String(p.name||p.title||'').toLocaleLowerCase().trim()===normalized)||null;
+      if(catalogProduct)productId=Number(catalogProduct.id||0);
+    }
+    return {client,product,productId};
+  }).filter(Boolean);
+  const body=rows.length
+    ? '<div class="account-order-summary-list">'+rows.map(r=>'<button type="button" class="account-order-summary-row" style="width:100%;text-align:right;cursor:pointer;font:inherit;color:inherit" data-vpn-purchase="'+esc(String(r.productId||''))+'" data-vpn-product-name="'+esc(r.product)+'"><div class="account-order-summary-copy"><small>شناسه اشتراک</small><b>'+esc(r.client)+'</b><span class="account-order-summary-product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10l2 2h5.5A2.5 2.5 0 0 1 20 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><path d="M4.5 10h15"/></svg><span>'+esc(r.product)+'</span></span></div><span aria-hidden="true">›</span></button>').join('')+'</div>'
+    : '<div class="account-order-summary-empty"><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><b>هنوز سفارش VPN ثبت نشده</b><p>فقط سفارش‌های VPN در این بخش نمایش داده می‌شوند.</p></div>';
+  BlueGateUI.openSheet({type:'action',eyebrow:'حساب · VPNهای من',title:'همه سفارش‌های VPN',subtitle:rows.length?rows.length.toLocaleString('fa-IR')+' سرویس VPN':'فهرست سرویس‌های VPN',body:'<div class="account-order-summary">'+body+'</div>',footer:'<button type="button" class="secondary" data-account-orders-close>بستن</button>',onOpen:host=>{
+    host.querySelector('[data-account-orders-close]')?.addEventListener('click',()=>BlueGateUI.closeSheet());
+    host.querySelectorAll('[data-vpn-purchase]').forEach(button=>button.addEventListener('click',()=>{
+      const productName=button.dataset.vpnProductName||'';
+      let productId=Number(button.dataset.vpnPurchase||0);
+      if(!productId){
+        const normalized=productName.toLocaleLowerCase().trim();
+        const match=(state.shop_products||[]).find(p=>String(p.name||p.title||'').toLocaleLowerCase().trim()===normalized);
+        productId=Number(match?.id||0);
+      }
+      if(!productId){showStatus('صفحه خرید این VPN در کاتالوگ پیدا نشد.','error');return;}
+      BlueGateUI.closeSheet();
+      currentTab='shop';currentOrderId=null;currentServiceOrderId=null;
+      renderUser();
+      showProduct(productId);
+    }));
+  }});
 }
 function renderMyServiceDetail(){
   const o=myServiceById(currentServiceOrderId);
