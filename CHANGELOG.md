@@ -1,3 +1,9 @@
+# BlueGate Platform v5.1.91 — Preserve existing renewal orders safely
+
+- Prevented a new plan selection from rewriting an already-open renewal order for the same service.
+- Preserve the existing order's payment method, wallet/discount accounting, selected plan, and amount; the Mini App returns the existing order with a clear message instead of overwriting payment state.
+- Validation: PHP/JavaScript syntax and repository workflow checks; live payment and Mini App testing remain necessary.
+
 # BlueGate Platform v5.1.90 — Customizable in-place VPN renewal
 
 - Added a branded Mini App renewal flow to choose an eligible subservice and plan before creating a renewal order, with price, duration, and configured quota preview.
