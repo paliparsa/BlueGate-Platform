@@ -669,7 +669,79 @@ if ($action === 'mini_enhancements') {
 if ($action === 'my_services') { api_out(['ok'=>true,'services'=>bluegate_user_services((int)$user['id'],50)]); }
 if ($action === 'service_details') { try{$sid=(int)($input['service_id']??0);$s=bluegate_service_record($sid,(int)$user['id']);if(!$s)api_out(['ok'=>false,'error'=>'SERVICE_NOT_FOUND','message'=>'سرویس پیدا نشد.'],404);api_out(['ok'=>true,'service'=>bluegate_service_public($s,true)]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'دریافت جزئیات سرویس ناموفق بود.'],400);} }
 if ($action === 'service_sync') { try{$sid=(int)($input['service_id']??0);$s=bluegate_service_record($sid,(int)$user['id']);if(!$s)api_out(['ok'=>false,'error'=>'SERVICE_NOT_FOUND','message'=>'سرویس پیدا نشد.'],404);api_out(['ok'=>true,'service'=>bluegate_sync_service($sid,true)]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'همگام‌سازی سرویس انجام نشد.'],400);} }
-if ($action === 'service_renew') { try{$sid=(int)($input['service_id']??0);$s=bluegate_service_record($sid,(int)$user['id']);if(!$s)throw new RuntimeException('SERVICE_NOT_FOUND');$old=$s['order_id']?order_by_id((int)$s['order_id']):null;if(!$old)throw new RuntimeException('SERVICE_ORDER_NOT_FOUND');$order=create_renewal_order_from_order((int)$user['id'],(int)$old['id'],$sid);$fresh=order_by_id((int)$order['id']);$order=$fresh?:$order;db()->prepare('UPDATE orders SET user_service_id=?,service_action="renew",service_action_json=? WHERE id=?')->execute([$sid,json_encode(['service_id'=>$sid],JSON_UNESCAPED_SLASHES),(int)$order['id']]);$payload=dashboard_payload(get_user_by_id((int)$user['id']));$payload['order']=order_public_payload(order_by_id((int)$order['id'])?:$order);$payload['renewal_reused']=!empty($order['_reused_existing_renewal']);$payload['message']=$payload['renewal_reused']?'برای این سرویس سفارش تمدید باز وجود دارد؛ پرداخت همان سفارش را ادامه بده.':'';api_out($payload);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'ساخت سفارش تمدید ممکن نشد.'],400);} }
+if ($action === 'service_renew') {
+    try {
+        $sid=(int)($input['service_id']??0);
+        $uid=(int)$user['id'];
+        $s=bluegate_service_record($sid,$uid);
+        if(!$s)throw new RuntimeException('SERVICE_NOT_FOUND');
+        $instances=bluegate_service_instances($sid);
+        if(!$instances)throw new RuntimeException('SERVICE_INSTANCE_NOT_FOUND');
+        $smartSupported=true;
+        foreach($instances as $instance){
+            $provider=bluegate_provider((int)$instance['provider_id']);
+            if(!$provider)throw new RuntimeException('PROVIDER_NOT_FOUND');
+            if(strtolower((string)($provider['driver']??''))!=='xui'){$smartSupported=false;break;}
+        }
+        // Keep existing renewal behavior for non-3x-ui providers; the reset API semantics are 3x-ui-specific.
+        if(!$smartSupported){
+            $old=!empty($s['order_id'])?order_by_id((int)$s['order_id']):null;
+            if(!$old)throw new RuntimeException('SERVICE_ORDER_NOT_FOUND');
+            $order=create_renewal_order_from_order($uid,(int)$old['id'],$sid);
+            $fresh=order_by_id((int)$order['id']);$order=$fresh?:$order;
+            db()->prepare('UPDATE orders SET user_service_id=?,service_action="renew",service_action_json=? WHERE id=?')->execute([$sid,json_encode(['service_id'=>$sid],JSON_UNESCAPED_SLASHES),(int)$order['id']]);
+            $payload=dashboard_payload(get_user_by_id($uid));
+            $payload['order']=order_public_payload(order_by_id((int)$order['id'])?:$order);
+            $payload['renewal_reused']=!empty($order['_reused_existing_renewal']);
+            $payload['smart_reset_supported']=false;
+            $payload['message']='برای این پنل، تمدید طبق روش معمول انجام می‌شود؛ ریست هوشمند فقط برای 3x-ui فعال است.';
+            api_out($payload);
+        }
+        $remainingBytes=[];$remainingSeconds=[];$clientRows=[];
+        foreach($instances as $instance){
+            $provider=bluegate_provider((int)$instance['provider_id']);
+            if(!$provider||strtolower((string)($provider['driver']??''))!=='xui')throw new RuntimeException('SMART_RESET_UNSUPPORTED_PROVIDER');
+            $identity=trim((string)($instance['external_username']?:$instance['external_client_id']));
+            if($identity==='')throw new RuntimeException('SERVICE_CLIENT_ID_MISSING');
+            $usage=bluegate_provider_usage((int)$instance['provider_id'],$identity);
+            if(!array_key_exists('used_bytes',$usage)||!array_key_exists('total_bytes',$usage)||!array_key_exists('expiry_ms',$usage))throw new RuntimeException('SERVICE_USAGE_UNAVAILABLE');
+            $limit=max(0,(int)$usage['total_bytes']);$used=max(0,(int)$usage['used_bytes']);
+            $expiryMs=max(0,(int)$usage['expiry_ms']);
+            $remaining=$limit>0?max(0,$limit-$used):null;
+            $seconds=$expiryMs>0?max(0,(int)floor($expiryMs/1000)-time()):null;
+            if($remaining!==null)$remainingBytes[]=$remaining;
+            if($seconds!==null)$remainingSeconds[]=$seconds;
+            $clientRows[]=['instance_id'=>(int)$instance['id'],'remaining_bytes'=>$remaining,'remaining_seconds'=>$seconds,'traffic_limit_bytes'=>$limit,'used_bytes'=>$used,'expiry_ms'=>$expiryMs];
+        }
+        $minBytes=$remainingBytes?min($remainingBytes):null;
+        $minSeconds=$remainingSeconds?min($remainingSeconds):null;
+        $lowTraffic=$minBytes!==null&&$minBytes<1073741824;
+        $lowTime=$minSeconds!==null&&$minSeconds<259200;
+        $autoReset=$lowTraffic||$lowTime;
+        $confirmed=filter_var($input['confirm_reset']??false,FILTER_VALIDATE_BOOLEAN);
+        $preview=['remaining_bytes'=>$minBytes,'remaining_seconds'=>$minSeconds,'unlimited_traffic'=>$minBytes===null,'unlimited_time'=>$minSeconds===null,'auto_reset'=>$autoReset,'auto_reset_reason'=>$lowTraffic&&$lowTime?'کمتر از ۱ گیگ حجم و کمتر از ۳ روز زمان باقی مانده':($lowTraffic?'کمتر از ۱ گیگ حجم باقی مانده':($lowTime?'کمتر از ۳ روز زمان باقی مانده':null))];
+        if(!$autoReset&&!$confirmed){
+            api_out(['ok'=>true,'renewal_preview'=>$preview,'needs_confirmation'=>true,'message'=>'با تمدید در این لحظه، حجم و زمان باقی‌مانده سرویس فعلی از بین می‌رود و هر دو از صفر محاسبه می‌شوند.']);
+        }
+        $old=!empty($s['order_id'])?order_by_id((int)$s['order_id']):null;
+        if(!$old)throw new RuntimeException('SERVICE_ORDER_NOT_FOUND');
+        $order=create_renewal_order_from_order($uid,(int)$old['id'],$sid);
+        $fresh=order_by_id((int)$order['id']);$order=$fresh?:$order;
+        $resetLimits=[];foreach($clientRows as $row)$resetLimits[(string)$row['instance_id']]=(int)$row['traffic_limit_bytes'];
+        $actionPayload=['service_id'=>$sid,'reset_traffic'=>true,'reset_strategy'=>'full_reset','reset_target_limits'=>$resetLimits,'reset_confirmed_by_user'=>($confirmed?1:0),'reset_confirmed_at'=>$confirmed?date('c'):null,'auto_reset'=>$autoReset?1:0,'auto_reset_reason'=>$preview['auto_reset_reason'],'remaining_bytes_at_order'=>$minBytes,'remaining_seconds_at_order'=>$minSeconds];
+        db()->prepare('UPDATE orders SET user_service_id=?,service_action="renew",service_action_json=? WHERE id=?')->execute([$sid,json_encode($actionPayload,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),(int)$order['id']]);
+        $payload=dashboard_payload(get_user_by_id($uid));
+        $payload['order']=order_public_payload(order_by_id((int)$order['id'])?:$order);
+        $payload['renewal_reused']=!empty($order['_reused_existing_renewal']);
+        $payload['renewal_preview']=$preview;
+        $payload['message']=$payload['renewal_reused']?'برای این سرویس سفارش تمدید باز دارد؛ همان سفارش نمایش داده شد.':'سفارش تمدید ساخته شد.';
+        api_out($payload);
+    }catch(Throwable $e){
+        $code=api_exception_code($e);
+        $message=$code==='SMART_RESET_UNSUPPORTED_PROVIDER'?'تمدید هوشمند و ریست کامل فعلاً فقط برای سرویس‌های 3x-ui فعال است.':($code==='SERVICE_USAGE_UNAVAILABLE'?'اطلاعات لحظه‌ای سرویس دریافت نشد؛ برای جلوگیری از ریست ناخواسته دوباره تلاش کن.':'ساخت سفارش تمدید ممکن نشد.');
+        api_out(['ok'=>false,'error'=>$code,'message'=>$message],400);
+    }
+}
 if ($action === 'service_add_traffic') { try{$order=bluegate_service_action_order((int)$user['id'],(int)($input['service_id']??0),'add_traffic',(int)($input['gb']??0));api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['order'=>order_public_payload($order)]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'خرید حجم اضافه ممکن نیست.'],400);} }
 if ($action === 'service_add_days') { try{$order=bluegate_service_action_order((int)$user['id'],(int)($input['service_id']??0),'add_days',(int)($input['days']??0));api_out(dashboard_payload(get_user_by_id((int)$user['id']))+['order'=>order_public_payload($order)]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'خرید زمان اضافه ممکن نیست.'],400);} }
 if ($action === 'wishlist_toggle') { try{$r=toggle_user_wishlist((int)$user['id'],(int)($input['product_id']??0));api_out(['ok'=>true,'wishlist_product_ids'=>$r['ids'],'active'=>$r['active']]);}catch(Throwable $e){api_out(['ok'=>false,'error'=>api_exception_code($e),'message'=>'تغییر علاقه‌مندی انجام نشد.'],400);} }
