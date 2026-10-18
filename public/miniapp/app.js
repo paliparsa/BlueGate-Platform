@@ -1724,7 +1724,7 @@ function openAccountOrdersSummary(){
     const product=String(service.display_name||service.product_name||sourceOrder?.display_name||sourceOrder?.product_name||sourceOrder?.service_name_snapshot||'سرویس VPN').trim();
     let productId=Number(sourceOrder?.product_id||sourceOrder?.catalog_product_id||service.product_id||service.catalog_product_id||0);
     let catalogProduct=productId?(state.shop_products||[]).find(p=>Number(p.id)===productId):null;
-    const normalizeName=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\\u200c\\s\\-_–—]+/g,' ').replace(/[\\u064a]/g,'ی').replace(/[\\u0643]/g,'ک').trim();
+    const normalizeName=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\u200c\s\\-_–—]+/g,' ').replace(/[\u064a]/g,'ی').replace(/[\u0643]/g,'ک').trim();
     if(!catalogProduct){
       const names=[product,sourceOrder?.display_name,sourceOrder?.product_name,sourceOrder?.service_name_snapshot,sourceOrder?.group_name_snapshot,sourceOrder?.plan_name_snapshot,service.service_name,service.group_name,service.plan_name].map(normalizeName).filter(Boolean);
       const products=state.shop_products||[];
@@ -1745,7 +1745,7 @@ function openAccountOrdersSummary(){
       const products=state.shop_products||[];
       let productId=Number(button.dataset.vpnPurchase||0);
       let product=productId?products.find(p=>Number(p.id)===productId):null;
-      const normalizeName=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\\u200c\\s\\-_–—]+/g,' ').replace(/[\\u064a]/g,'ی').replace(/[\\u0643]/g,'ک').trim();
+      const normalizeName=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/[\u200c\s\\-_–—]+/g,' ').replace(/[\u064a]/g,'ی').replace(/[\u0643]/g,'ک').trim();
       if(!product){
         const normalized=normalizeName(productName);
         product=products.find(p=>normalizeName(p.name||p.title||p.display_name)===normalized)
