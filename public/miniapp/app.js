@@ -492,7 +492,12 @@ async function api(action,payload={}){
   const finishCommandLoader=BlueGateCommandLoader.show(action);
   try{
   refreshTelegramContext();
-  const body = JSON.stringify({action,initData,language:(localStorage.getItem('bluegate_language')||((navigator.language||'').toLowerCase().startsWith('fa')?'fa':'en')),...payload});
+  // The UI language is authoritative. The old navigator.language fallback could mark
+  // a Persian Mini App as international when the device/browser locale is English.
+  const savedLanguage = (() => { try { return localStorage.getItem('bluegate_language'); } catch (_) { return null; } })();
+  const documentLanguage = String(document.documentElement.lang || '').toLowerCase().split('-')[0];
+  const activeLanguage = String(window.BlueGateI18n?.language || (documentLanguage === 'fa' || documentLanguage === 'en' ? documentLanguage : '') || (savedLanguage === 'fa' || savedLanguage === 'en' ? savedLanguage : 'fa')).toLowerCase();
+  const body = JSON.stringify({action,initData,...payload,language:activeLanguage});
   const headers = {'Content-Type':'application/json'};
 
   // Resolve API path robustly. Mini App lives under /miniapp/, so relative
