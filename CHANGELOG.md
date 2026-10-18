@@ -1,3 +1,12 @@
+# BlueGate Platform v5.1.87 — Smart VPN renewal with verified full reset
+
+- Added a live server-side renewal preview for 3x-ui clients. If any finite client has less than 1 GiB remaining or less than 72 hours remaining, the renewal uses the automatic full-reset path; otherwise the Mini App requires explicit confirmation before creating a renewal order.
+- The warning displays live remaining traffic and time. Cancelling creates no order and changes no client. Confirmation is revalidated against live panel data and persisted in the order action payload.
+- Renewal resets the quota to the existing plan quota, resets traffic counters through the 3x-ui client API (with legacy inbound fallback), and starts a fresh plan duration from the renewal execution time.
+- Persisted absolute target expiry/quota values prevent retries from extending the service twice. The worker verifies expiry, quota, and zero traffic counters before marking the action complete.
+- Unsupported providers or unavailable live usage fail closed rather than silently resetting a client. Unlimited quota/time dimensions are excluded from threshold checks.
+- Updated Mini App cache-busting key and project version.
+
 ## 5.1.86 - VPN orders list and purchase navigation
 
 - Scope the “همه سفارش‌ها” sheet under “VPNهای من” to VPN orders/services only, excluding unrelated digital purchases.
