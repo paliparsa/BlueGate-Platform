@@ -1,11 +1,10 @@
 # BlueGate Platform v5.1.90 — Customizable in-place VPN renewal
 
 - Added a branded Mini App renewal flow to choose an eligible subservice and plan before creating a renewal order, with price, duration, and configured quota preview.
-- Added server-side ownership, catalog activity, same-service, and provider-map compatibility validation; incompatible provider migrations are deliberately excluded instead of silently changing the existing VPN client destination.
-- Renewal orders retain the existing service identity and use the selected plan's server-side price, duration, quota settings, and catalog snapshot. The active service's plan/name is updated only after service-action jobs complete successfully.
+- Added server-side ownership, catalog activity, same-service, provider-map and remote-target compatibility validation; incompatible provider migrations are excluded instead of silently changing the existing VPN client destination.
+- Renewal orders retain the existing service identity and use the selected plan's server-side price, duration, quota settings, and catalog snapshot. The active service's plan/name is updated only after service-action jobs finish successfully.
 - Preserved the 3x-ui live usage check, reset confirmation, reset-after-payment behavior, and idempotent target expiry/quota handling.
 - Validation: source-level review only; PHP syntax checks, CI, and live provider/Telegram Mini App testing remain required.
-
 # BlueGate Platform v5.1.88 — Native VPN renewal confirmation modal
 
 - Replaced the browser `window.confirm` prompt with a branded, responsive Mini App modal aligned with BlueGate's dark surfaces and royal-blue action style.
