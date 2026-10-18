@@ -1,3 +1,10 @@
+## 5.1.82 - Card payment rendering and verified VPN renewal
+
+- Fix card-to-card selection so the order is explicitly re-rendered after the payment-method API succeeds; do not show a success message when the API call fails.
+- Remove the hardcoded fallback bank-card number. If card details are not configured, show a clear configuration warning instead of displaying fabricated payment details.
+- Run the VPN service-action job on admin payment approval in Telegram and the admin API, and surface failures instead of implying the renewal completed. The 3x-ui job's read-back verification remains the source of truth; retries/errors are logged for diagnosis.
+- Validation: source-level review only. PHP syntax checks and live Telegram Mini App / 3x-ui panel testing remain required on the deployment environment.
+
 ## 5.1.81 - Bot messages and action consistency
 
 - Shortened the Telegram welcome message and unified the Mini App guidance shown by legacy shopping/order entry points.
