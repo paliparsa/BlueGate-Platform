@@ -341,7 +341,26 @@ function bluegate_run_provisioning_job(int $jobId): array {
     }catch(Throwable $e){if(isset($actionLock)&&!empty($gotActionLock)){try{db()->prepare('SELECT RELEASE_LOCK(?)')->execute([$actionLock]);}catch(Throwable $ignored){}}$attempt=(int)$j['attempt_count'];$max=(int)$j['max_attempts'];$final=$attempt>=$max;$delay=max(1,(int)min(900,30*(2**max(0,$attempt-1))));db()->prepare('UPDATE provisioning_jobs SET status=?,available_at=DATE_ADD(NOW(),INTERVAL '.$delay.' SECOND),last_error_code=?,last_error_message=?,locked_at=NULL,locked_by=NULL WHERE id=?')->execute([$final?'failed':'retry',substr(preg_replace('/:.*/','',$e->getMessage()),0,128),mb_substr($e->getMessage(),0,1000),$jobId]);if($final){db()->prepare('UPDATE user_services SET status="provisioning_failed" WHERE id=?')->execute([(int)$j['user_service_id']]);add_order_event((int)$order['id'],'preparing','ساخت خودکار سرویس نیاز به بررسی دارد','تمام مسیرهای Routing ناموفق بودند؛ سفارش تحویل‌نشده باقی ماند.',false);notify_admin_order((int)$order['id'],'Provisioning ناموفق شد','Auto Provisioning','❌ تلاش '.(int)$attempt.'/'.(int)$max."\n<code>".h(mb_substr($e->getMessage(),0,500)).'</code>');}throw$e;}
 }
 function bluegate_run_job(int $id): array {$q=db()->prepare('SELECT job_type FROM provisioning_jobs WHERE id=?');$q->execute([$id]);$t=(string)($q->fetchColumn()?:'create');return in_array($t,['renew','add_traffic','add_days'],true)?bluegate_run_service_action_job($id):bluegate_run_provisioning_job($id);}
-function bluegate_run_due_provisioning_jobs(int $limit=20): array {$limit=max(1,min(100,$limit));try{db()->exec("UPDATE provisioning_jobs SET status='retry', available_at=NOW(), locked_at=NULL, locked_by=NULL WHERE status='running' AND locked_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)");}catch(Throwable $ignore){}$rows=db()->query("SELECT id FROM provisioning_jobs WHERE status IN ('queued','retry') AND available_at<=NOW() ORDER BY available_at,id LIMIT ".$limit)->fetchAll(PDO::FETCH_COLUMN)?:[];$ok=0;$failed=0;foreach($rows as$id){try{bluegate_run_job((int)$id);$ok++;}catch(Throwable $e){$failed++;}}return ['processed'=>count($rows),'completed'=>$ok,'failed'=>$failed];}
+function bluegate_reconcile_verified_service_action_orders(int $limit=100): int {
+    $limit=max(1,min(300,$limit));
+    $q=db()->query("SELECT id,user_service_id,request_json,result_json FROM provisioning_jobs WHERE job_type IN ('renew','add_traffic','add_days') AND status IN ('retry','failed') AND result_json IS NOT NULL ORDER BY id DESC LIMIT ".$limit);
+    $rows=$q->fetchAll()?:[];$fixed=0;
+    foreach($rows as $job){
+        $result=bluegate_json_array($job['result_json']??null);
+        if(empty($result['ok'])||empty($result['verified']))continue;
+        $req=bluegate_json_array($job['request_json']??null);$orderId=(int)($req['order_id']??0);
+        if($orderId<=0)continue;
+        db()->prepare('UPDATE provisioning_jobs SET status="completed",completed_at=COALESCE(completed_at,NOW()),locked_at=NULL,locked_by=NULL,last_error_code=NULL,last_error_message=NULL WHERE id=? AND status IN ("retry","failed")')->execute([(int)$job['id']]);
+        $pending=db()->prepare('SELECT COUNT(*) FROM provisioning_jobs WHERE request_json LIKE ? AND status<>"completed"');$pending->execute(['%"order_id":'.$orderId.',%']);
+        if((int)$pending->fetchColumn()!==0)continue;
+        $order=order_by_id($orderId);$service=bluegate_service_record((int)$job['user_service_id']);
+        if(!$order||!$service)continue;
+        try{$sub=bluegate_service_public($service);db()->prepare('UPDATE orders SET delivery_url=COALESCE(?,delivery_url),delivery_title=? WHERE id=?')->execute([$sub['subscription_url']??null,'مدیریت سرویس',$orderId]);update_order_status($orderId,'delivered','سرویس بروزرسانی شد','تمدید/تغییر سرویس قبلاً روی پنل تأیید شده بود؛ وضعیت سفارش بازیابی شد.',true);$fixed++;}
+        catch(Throwable $e){error_log('[BlueGate verified service order recovery #'.$orderId.'] '.$e->getMessage());}
+    }
+    return $fixed;
+}
+function bluegate_run_due_provisioning_jobs(int $limit=20): array {$limit=max(1,min(100,$limit));$reconciled=bluegate_reconcile_verified_service_action_orders(100);try{db()->exec("UPDATE provisioning_jobs SET status='retry', available_at=NOW(), locked_at=NULL, locked_by=NULL WHERE status='running' AND locked_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)");}catch(Throwable $ignore){}$rows=db()->query("SELECT id FROM provisioning_jobs WHERE status IN ('queued','retry') AND available_at<=NOW() ORDER BY available_at,id LIMIT ".$limit)->fetchAll(PDO::FETCH_COLUMN)?:[];$ok=0;$failed=0;foreach($rows as$id){try{bluegate_run_job((int)$id);$ok++;}catch(Throwable $e){$failed++;}}return ['processed'=>count($rows),'completed'=>$ok,'failed'=>$failed,'reconciled_service_orders'=>$reconciled];}
 function bluegate_after_order_paid(int $orderId): void {
     try{
         if(function_exists('bluegate_after_order_paid_phase4')&&bluegate_after_order_paid_phase4($orderId))return;
