@@ -1,3 +1,12 @@
+# BlueGate Platform v5.1.92 — Safely replace untouched renewal checkouts
+
+- Allow a customer selecting a different VPN renewal plan to replace an existing renewal only when it is still `pending_payment` and has no payment method/details, receipt, payment note, Stars charge, coupon/discount, or wallet contribution.
+- Serialize the replacement under the existing per-service renewal lock and use a conditional database update; if the old order changes concurrently or payment/review has begun, preserve it and return it unchanged.
+- Keep payment/review-stage renewals protected from plan mutation and avoid refund logic because eligible replacements have no wallet contribution.
+- Validation: source-level assertions performed; PHP syntax checks and live Mini App/database/payment-provider tests remain to be run in a deployed test environment.
+
+---
+
 # BlueGate Platform v5.1.91 — Preserve existing renewal orders safely
 
 - Prevented a new plan selection from rewriting an already-open renewal order for the same service.
