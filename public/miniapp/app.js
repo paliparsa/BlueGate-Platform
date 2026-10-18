@@ -1627,9 +1627,9 @@ function miniVpnClientRows(o){
   }
   return rows;
 }
-function miniVpnClientSummary(o){const r=miniVpnClientRows(o);if(!r.length)return '';const names=[...new Set(r.map(v=>v.name).filter(Boolean))];return names.length===1?names[0]:`${names.length||r.length} Client`;}
+function miniVpnClientSummary(o){const r=miniVpnClientRows(o);if(!r.length)return 'شناسه اشتراک ثبت نشده';const ids=[...new Set(r.map(v=>v.sid).filter(Boolean))];return ids.length?ids.join('، '):'شناسه اشتراک ثبت نشده';}
 function miniVpnClientIdentityHtml(o){const rows=miniVpnClientRows(o);if(!rows.length)return '';
-  return `<article class="vpn-client-card"><header><small>CLIENT IDENTITY</small><h3>شناسه اشتراک</h3></header><div class="vpn-client-list">${rows.map((r,idx)=>`<section><div><small>${r.provider?esc(r.provider):`Client ${idx+1}`}</small><b>${esc(r.name||r.cid||'—')}</b></div><div><small>Sub ID</small><code>${esc(r.sid||'—')}</code></div></section>`).join('')}</div></article>`;
+  return `<article class="vpn-client-card"><header><small>SUBSCRIPTION ID</small><h3>شناسه اشتراک</h3></header><div class="vpn-client-list">${rows.map((r,idx)=>`<section><div><small>${r.provider?esc(r.provider):`اشتراک ${idx+1}`}</small><code>${esc(r.sid||'شناسه ثبت نشده')}</code></div></section>`).join('')}</div></article>`;
 }
 function vpnServiceDetailHtml(o,{context='service',order=null}={}){
   const rawUrl=String(o.subscription_url||o.service_url||o.delivery_url||'').trim();
@@ -1648,7 +1648,7 @@ function vpnServiceDetailHtml(o,{context='service',order=null}={}){
     <div class="vpn-sub-topbar">${back}<div class="vpn-sub-top-actions">${topActions}</div><div class="vpn-sub-topmeta">${orderId?`<span class="vpn-order-number"><small>شماره سفارش</small><b>#${nf(orderId)}</b></span>`:''}<b class="vpn-sub-status ${status==='active'?'ok':status==='expired'||status==='provisioning_failed'?'bad':'warn'}"><i></i>${esc(statusFa)}</b></div></div>
     <article class="vpn-sub-identity">
       <div class="vpn-sub-copy"><div><div class="vpn-sub-micro"><i></i> BLUEGATE MANAGED VPN</div><h1>${title}</h1><p>${hasUrl?'سرویس آماده استفاده است؛ لینک اشتراک را باز کن یا کپی کن.':'سرویس ثبت شده و پس از ساخت Client، لینک اشتراک فعال می‌شود.'}</p></div>
-        <div class="vpn-client-summary"><span class="vpn-client-avatar" aria-hidden="true">BG</span><span><small>نام کلاینت</small><b>${esc(clientName||o.client_username||'کلاینت شما')}</b></span></div>
+        <div class="vpn-client-summary"><span class="vpn-client-avatar" aria-hidden="true">BG</span><span><small>شناسه اشتراک</small><b>${esc(clientName||'شناسه اشتراک ثبت نشده')}</b></span></div>
         <div class="vpn-sub-pills">${locations?`<span>◉ ${nf(locations)} لوکیشن</span>`:''}${orderId?`<span class="vpn-order-chip">سفارش #${nf(orderId)}</span>`:''}</div>
         ${miniVpnClientRows(o).filter(r=>r.sid).length?`<div class="vpn-sub-id-strip"><small>شناسه اشتراک</small>${miniVpnClientRows(o).filter(r=>r.sid).map(r=>'<button type="button" data-copy-subid="'+esc(r.sid)+'" title="کپی شناسه اشتراک"><code>'+esc(r.sid)+'</code><span>⧉</span></button>').join('')}</div>`:''}
       </div>
