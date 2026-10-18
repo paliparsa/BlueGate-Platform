@@ -70,7 +70,7 @@ final class BlueGateXuiProvider extends BlueGateAbstractProvider {
             CURLOPT_HEADER=>true,
             CURLOPT_CUSTOMREQUEST=>strtoupper($method),
             CURLOPT_CONNECTTIMEOUT=>min(5,max(2,(int)($this->meta['connect_timeout'] ?? 4))),
-            CURLOPT_TIMEOUT=>min(10,max(5,(int)($this->meta['request_timeout'] ?? 8))),
+            CURLOPT_TIMEOUT=>min(30,max(20,(int)($this->meta['request_timeout'] ?? 20))),
             CURLOPT_FOLLOWLOCATION=>false,
             CURLOPT_MAXREDIRS=>0,
             CURLOPT_HTTPHEADER=>$headers,
@@ -122,7 +122,7 @@ final class BlueGateXuiProvider extends BlueGateAbstractProvider {
             CURLOPT_COOKIEFILE=>$file,
             CURLOPT_HTTPHEADER=>['Accept: application/json','Content-Type: application/x-www-form-urlencoded'],
             CURLOPT_CONNECTTIMEOUT=>min(5,max(2,(int)($this->meta['connect_timeout'] ?? 4))),
-            CURLOPT_TIMEOUT=>min(10,max(5,(int)($this->meta['request_timeout'] ?? 8))),CURLOPT_FOLLOWLOCATION=>false,
+            CURLOPT_TIMEOUT=>min(30,max(20,(int)($this->meta['request_timeout'] ?? 20))),CURLOPT_FOLLOWLOCATION=>false,
             CURLOPT_SSL_VERIFYPEER=>!array_key_exists('verify_tls',$this->meta)||(bool)$this->meta['verify_tls'],
             CURLOPT_SSL_VERIFYHOST=>(!array_key_exists('verify_tls',$this->meta)||(bool)$this->meta['verify_tls'])?2:0,
         ]);
