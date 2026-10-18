@@ -1,3 +1,11 @@
+## 5.1.85 - Wallet VPN provisioning feedback and order reconciliation
+
+- Keep the Mini App loading animation and block repeated wallet-payment clicks while VPN purchase/renewal is being provisioned; poll order status until delivery or a terminal result.
+- When 3x-ui times out after applying a change, read the client back and treat the operation as successful only if target expiry/traffic values are verified. Retry a timed-out readback once.
+- Mark a verified service-action order as delivered before optional post-delivery sync, so a sync timeout cannot revert a successful job to retry/failed or leave the order in preparing.
+- Reconcile older retry/failed jobs that already contain a verified success result, restoring their orders to delivered.
+- Validation: source-level checks only; live wallet checkout, 3x-ui and Telegram tests are required after deployment.
+
 ## 5.1.84 - VPN subscription IDs and 3x-ui timeout resilience
 
 - Include each VPN subscription ID in Telegram expiry/expired reminders so customers can identify the exact subscription.
