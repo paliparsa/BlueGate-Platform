@@ -1,3 +1,10 @@
+## 5.1.84 - VPN subscription IDs and 3x-ui timeout resilience
+
+- Include each VPN subscription ID in Telegram expiry/expired reminders so customers can identify the exact subscription.
+- Show subscription IDs instead of provider client names in the Mini App's VPN list and service identity area; never substitute a client name when the subscription ID is missing.
+- Raise the minimum 3x-ui API request timeout to 20 seconds (configurable up to 30 seconds), including legacy login, to reduce false failures on slow panel responses. Existing job retry/backoff and panel read-back verification remain enabled.
+- Validation: source-level checks; live 3x-ui renewal and Telegram/Mini App checks are still required on the deployed environment.
+
 ## 5.1.83 - Correct Mini App language in payment requests
 
 - Use the active Mini App/i18n language as the source of truth for API requests.
