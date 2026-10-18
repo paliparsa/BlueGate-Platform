@@ -556,10 +556,31 @@ function bluegate_alert_once(int $serviceId,string $key,string $cycle,string $va
     db()->prepare('INSERT INTO service_alert_states (user_service_id,alert_key,cycle_key,last_value,sent_at,resolved_at,metadata_json) VALUES (?,?,?,?,NOW(),NULL,?) ON DUPLICATE KEY UPDATE cycle_key=VALUES(cycle_key),last_value=VALUES(last_value),sent_at=NOW(),resolved_at=NULL,metadata_json=VALUES(metadata_json)')->execute([$serviceId,$key,$cycle,$value,json_encode($meta,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)]);return true;
 }
 function bluegate_resolve_alert(int $serviceId,string $key): void {if(table_exists('service_alert_states'))db()->prepare('UPDATE service_alert_states SET resolved_at=NOW() WHERE user_service_id=? AND alert_key=? AND resolved_at IS NULL')->execute([$serviceId,$key]);}
+function bluegate_service_subscription_id_label(int $serviceId): string {
+    try {
+        $q=db()->prepare('SELECT metadata_json FROM service_instances WHERE user_service_id=? ORDER BY id ASC');
+        $q->execute([$serviceId]);
+        $ids=[];
+        foreach($q->fetchAll(PDO::FETCH_COLUMN)?:[] as $raw){
+            $meta=bluegate_json_array($raw?:null);
+            $id=trim((string)($meta['sub_id']??$meta['subscription_id']??$meta['subId']??''));
+            if($id!==''&&(str_contains($id,'://')||str_contains($id,'/'))){
+                $path=parse_url($id,PHP_URL_PATH);
+                $candidate=trim((string)basename(rtrim((string)$path,'/')));
+                if($candidate!==''&&$candidate!=='.')$id=$candidate;
+            }
+            if($id!==''&&!in_array($id,$ids,true))$ids[]=$id;
+        }
+        return $ids?implode(', ',$ids):'در دسترس نیست';
+    } catch(Throwable $e) {
+        error_log('[BlueGate subscription ID lookup #'.$serviceId.'] '.$e->getMessage());
+        return 'در دسترس نیست';
+    }
+}
 function bluegate_monitor_service_alerts(array $svc): array {
-    $out=['sent'=>0,'expired'=>false];$id=(int)$svc['id'];$uid=(int)$svc['user_id'];$name=trim((string)($svc['display_name']??''))?:('Service #'.$id);$limit=(int)($svc['traffic_limit_bytes']??0);$used=(int)($svc['traffic_used_bytes']??0);$cfg=bluegate_monitoring_settings();
+    $out=['sent'=>0,'expired'=>false];$id=(int)$svc['id'];$uid=(int)$svc['user_id'];$name=trim((string)($svc['display_name']??''))?:('Service #'.$id);$subscriptionIds=bluegate_service_subscription_id_label($id);$limit=(int)($svc['traffic_limit_bytes']??0);$used=(int)($svc['traffic_used_bytes']??0);$cfg=bluegate_monitoring_settings();
     if($limit>0){$pct=min(100,(int)floor(($used/$limit)*100));$thresholds=array_values(array_unique(array_map('intval',explode(',',(string)$cfg['usage_thresholds']))));sort($thresholds);$hit=null;foreach($thresholds as $t){$k='usage_'.$t;if($pct<$t)bluegate_resolve_alert($id,$k);elseif($hit===null||$t>$hit)$hit=$t;}if($hit!==null){$k='usage_'.$hit;$cycle='limit:'.$limit;if(bluegate_alert_once($id,$k,$cycle,(string)$pct,['percent'=>$pct,'limit'=>$limit,'used'=>$used],function()use($uid,$name,$id,$hit,$pct){bluegate_monitor_notify_user($uid,'هشدار مصرف سرویس',"مصرف {$name} به {$pct}٪ رسیده است (آستانه {$hit}٪).",$id,'usage_'.$hit);}))$out['sent']++;}}
-    $exp=$svc['expires_at']??null;if($exp){$seconds=strtotime((string)$exp)-time();$days=(int)ceil($seconds/86400);$cycle='exp:'.(string)$exp;if($seconds<=0){$out['expired']=true;$k='expired';if(bluegate_alert_once($id,$k,$cycle,'expired',['expires_at'=>$exp],function()use($uid,$name,$id){bluegate_monitor_notify_user($uid,'سرویس منقضی شد',"سرویس {$name} منقضی شده است.",$id,'expired');}))$out['sent']++;}else{$thresholds=array_values(array_unique(array_map('intval',explode(',',(string)$cfg['expiry_days']))));sort($thresholds);$hit=null;foreach($thresholds as $d){if($d>0&&$seconds<=($d*86400)){$hit=$d;break;}}if($hit!==null){$k='expiry_'.$hit;if(bluegate_alert_once($id,$k,$cycle,(string)$days,['expires_at'=>$exp,'days'=>$days],function()use($uid,$name,$id,$hit){bluegate_monitor_notify_user($uid,'یادآوری انقضای سرویس',"تا انقضای {$name} حدود {$hit} روز باقی مانده است.",$id,'expiry_'.$hit);}))$out['sent']++;}}
+    $exp=$svc['expires_at']??null;if($exp){$seconds=strtotime((string)$exp)-time();$days=(int)ceil($seconds/86400);$cycle='exp:'.(string)$exp;if($seconds<=0){$out['expired']=true;$k='expired';if(bluegate_alert_once($id,$k,$cycle,'expired',['expires_at'=>$exp],function()use($uid,$name,$id,$subscriptionIds){bluegate_monitor_notify_user($uid,'سرویس منقضی شد',"سرویس {$name} منقضی شده است.\nشناسه اشتراک: {$subscriptionIds}",$id,'expired');}))$out['sent']++;}else{$thresholds=array_values(array_unique(array_map('intval',explode(',',(string)$cfg['expiry_days']))));sort($thresholds);$hit=null;foreach($thresholds as $d){if($d>0&&$seconds<=($d*86400)){$hit=$d;break;}}if($hit!==null){$k='expiry_'.$hit;if(bluegate_alert_once($id,$k,$cycle,(string)$days,['expires_at'=>$exp,'days'=>$days],function()use($uid,$name,$id,$hit,$subscriptionIds){bluegate_monitor_notify_user($uid,'یادآوری انقضای سرویس',"تا انقضای {$name} حدود {$hit} روز باقی مانده است.\nشناسه اشتراک: {$subscriptionIds}",$id,'expiry_'.$hit);}))$out['sent']++;}}
     }
     return $out;
 }
