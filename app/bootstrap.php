@@ -4030,7 +4030,7 @@ function set_order_service_delivery(int $orderId, string $url, string $title='',
     return order_by_id($orderId);
 }
 
-function create_renewal_order_from_order(int $userId, int $oldOrderId, int $serviceId = 0): array {
+function create_renewal_order_from_order(int $userId, int $oldOrderId, int $serviceId = 0, bool $replaceSafePendingRenewal = false): array {
     $old=order_by_id($oldOrderId);
     if(!$old || (int)$old['user_id'] !== $userId) throw new RuntimeException('ORDER_NOT_FOUND');
 
@@ -4046,6 +4046,8 @@ function create_renewal_order_from_order(int $userId, int $oldOrderId, int $serv
     if((int)$lockQ->fetchColumn()!==1) throw new RuntimeException('RENEWAL_REQUEST_IN_PROGRESS');
 
     try {
+        $replacedExistingRenewal=false;
+        if(normalize_order_status((string)$old['status']) !== 'delivered') throw new RuntimeException('ORDER_NOT_RENEWABLE');
         $activeStatuses="'pending_payment','payment_confirmed','preparing','receipt_submitted','reviewing','pending_review','awaiting_payment'";
         // Resolve service identity from both the source order and its ancestry. A service's
         // current order can itself be a renewal order, so looking up only oldOrderId misses
@@ -4061,9 +4063,37 @@ function create_renewal_order_from_order(int $userId, int $oldOrderId, int $serv
             $existingQ->execute([$userId,$oldOrderId]);
         }
         $existing=$existingQ->fetch(PDO::FETCH_ASSOC);
-        if($existing){$existing['_reused_existing_renewal']=true;return $existing;}
-
-        if(normalize_order_status((string)$old['status']) !== 'delivered') throw new RuntimeException('ORDER_NOT_RENEWABLE');
+        if($existing){
+            // A plan change may replace only a truly untouched checkout. Never replace an
+            // order with a selected payment method, wallet/discount value, receipt, TXID,
+            // Stars invoice/payment, or any status that suggests payment/review has begun.
+            $replaceable = $replaceSafePendingRenewal
+                && normalize_order_status((string)($existing['status']??'')) === 'pending_payment'
+                && trim((string)($existing['payment_method']??'')) === ''
+                && trim((string)($existing['payment_details']??'')) === ''
+                && trim((string)($existing['payment_note']??'')) === ''
+                && trim((string)($existing['receipt_file_id']??'')) === ''
+                && trim((string)($existing['stars_charge_id']??'')) === ''
+                && trim((string)($existing['stars_provider_charge_id']??'')) === ''
+                && empty($existing['stars_paid_at'])
+                && trim((string)($existing['coupon_code']??'')) === ''
+                && (int)($existing['discount_amount']??0) === 0
+                && (int)($existing['wallet_amount']??0) === 0
+                && (float)($existing['wallet_amount_usd']??0) <= 0
+                && (int)($existing['wallet_amount_irt']??0) === 0;
+            if($replaceable){
+                $cancelQ=db()->prepare("UPDATE orders SET status='canceled' WHERE id=? AND user_id=? AND is_renewal=1 AND status='pending_payment' AND (payment_method IS NULL OR payment_method='') AND (payment_details IS NULL OR payment_details='') AND (payment_note IS NULL OR payment_note='') AND (receipt_file_id IS NULL OR receipt_file_id='') AND (stars_charge_id IS NULL OR stars_charge_id='') AND (stars_provider_charge_id IS NULL OR stars_provider_charge_id='') AND (coupon_code IS NULL OR coupon_code='') AND COALESCE(discount_amount,0)=0 AND COALESCE(wallet_amount,0)=0 AND COALESCE(wallet_amount_usd,0)=0 AND COALESCE(wallet_amount_irt,0)=0");
+                $cancelQ->execute([(int)$existing['id'],$userId]);
+                if($cancelQ->rowCount()===1){
+                    add_order_event((int)$existing['id'],'canceled','سفارش تمدید قبلی لغو شد','جایگزینی با پلن انتخابی جدید؛ سفارش بدون شروع پرداخت بود',true);
+                    $replacedExistingRenewal=true;
+                }else{
+                    $existing['_reused_existing_renewal']=true;return $existing;
+                }
+            }else{
+                $existing['_reused_existing_renewal']=true;return $existing;
+            }
+        }
         $order=create_storefront_order($userId,(int)$old['product_id'],!empty($old['variant_id'])?(int)$old['variant_id']:null,null);
         $carryUrl=null;$carryTitle=null;
         if(normalize_delivery_type((string)($old['delivery_type']??'manual'))==='vpn' && !empty($old['delivery_url'])){
@@ -4074,7 +4104,9 @@ function create_renewal_order_from_order(int $userId, int $oldOrderId, int $serv
         db()->prepare('UPDATE orders SET is_renewal=1, renewal_of_order_id=?, user_service_id=?, service_action=?, service_action_json=?, delivery_url=COALESCE(?,delivery_url), delivery_title=COALESCE(?,delivery_title) WHERE id=?')
             ->execute([$oldOrderId,$managedServiceId,$managedServiceId?'renew':null,$managedServiceId?json_encode(['source'=>'renew_order'],JSON_UNESCAPED_SLASHES):null,$carryUrl,$carryTitle,(int)$order['id']]);
         add_order_event((int)$order['id'],'pending_payment','سفارش تمدید ثبت شد','تمدید سفارش #'.$oldOrderId,true);
-        return order_by_id((int)$order['id']);
+        $created=order_by_id((int)$order['id']);
+        if($replacedExistingRenewal && $created)$created['_replaced_existing_renewal']=true;
+        return $created ?: $order;
     } finally {
         try{$release=db()->prepare('SELECT RELEASE_LOCK(?)');$release->execute([$lockName]);}catch(Throwable $ignored){}
     }
