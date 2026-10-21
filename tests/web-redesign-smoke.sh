@@ -56,4 +56,20 @@ grep -Fq '<span class="bg-icon"' "$MODULE_JS" || fail "SVG account/menu icons mi
 grep -Fq "setAttribute('role','menuitem')" "$MODULE_JS" || fail "account menu item semantics missing"
 ! grep -Fq 'public/miniapp' "$HTML" || fail "website entrypoint unexpectedly references Mini App source"
 
+
+BOTTOM_CSS="$ROOT/public/web/css/homepage-bottom-redesign.css"
+MODULE_BOTTOM_CSS="$ROOT/modules/pro-web/public/css/homepage-bottom-redesign.css"
+[[ -f "$BOTTOM_CSS" ]] || fail "lower homepage stylesheet missing"
+[[ -f "$MODULE_BOTTOM_CSS" ]] || fail "lower homepage stylesheet missing from served Pro Web module"
+cmp -s "$BOTTOM_CSS" "$MODULE_BOTTOM_CSS" || fail "lower homepage stylesheets differ between runtime and public mirror"
+grep -Fq '/web/css/homepage-bottom-redesign.css?v=5.1.97-bottom-1' "$MODULE_HTML" || fail "served Pro Web shell does not load lower homepage stylesheet"
+grep -Fq '/web/css/homepage-bottom-redesign.css?v=5.1.97-bottom-1' "$HTML" || fail "public shell does not load lower homepage stylesheet"
+grep -Fq '#featureGrid.feature-grid' "$MODULE_BOTTOM_CSS" || fail "feature grid redesign missing"
+grep -Fq '.generic-products-toolbar' "$MODULE_BOTTOM_CSS" || fail "more-services toolbar redesign missing"
+grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review carousel responsive styling missing"
+grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
+grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
+grep -Fq 'scrollbar-width:thin' "$MODULE_BOTTOM_CSS" || fail "local overflow styling missing"
+grep -Fxq '5.1.97' "$ROOT/VERSION" || fail "lower homepage version not bumped"
+
 pass "web redesign smoke checks"
