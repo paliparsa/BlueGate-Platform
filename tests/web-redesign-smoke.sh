@@ -23,6 +23,8 @@ grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel miss
 grep -Fq 'سرویس‌های دیجیتال، با انتخابی ساده‌تر' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
 grep -Fq '5.1.95' "$ROOT/VERSION" || fail "version not bumped"
+grep -Fq 'سرویس‌های دیجیتال، با انتخابی ساده‌تر' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
+grep -Fq 'BluePing VPN، تلگرام استارز و پرمیوم رو یک‌جا ببین' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
 grep -Fq 'id="premiumPlans"' "$HTML" || fail "Premium plan container missing"
 grep -Fq 'id="stickyBuy"' "$HTML" || fail "sticky checkout action missing"
