@@ -8,6 +8,7 @@ MODULE_HTML="$ROOT/modules/pro-web/public/index.html"
 MODULE_CSS="$ROOT/modules/pro-web/public/css/editorial-redesign.css"
 HEADER_CSS="$ROOT/public/web/css/header-profile-redesign.css"
 MODULE_HEADER_CSS="$ROOT/modules/pro-web/public/css/header-profile-redesign.css"
+MODULE_JS="$ROOT/modules/pro-web/public/js/account.js"
 
 fail(){ printf 'FAIL: %s\n' "$1" >&2; exit 1; }
 pass(){ printf 'PASS: %s\n' "$1"; }
@@ -48,7 +49,8 @@ grep -Fq '.bg-credit-chip' "$HEADER_CSS" || fail "redesigned credit chip missing
 grep -Fq '.bg-account-popover' "$HEADER_CSS" || fail "redesigned profile popover missing"
 grep -Fq 'bgHeaderSheetIn' "$HEADER_CSS" || fail "mobile account sheet animation missing"
 grep -Fq 'aria-expanded="false"' "$MODULE_HTML" || fail "accessible initial menu state missing"
-grep -Fq '<span class="bg-icon"' "$MODULE_CSS" || fail "SVG account/menu icons missing from runtime JS"
+grep -Fq '<span class="bg-icon"' "$MODULE_JS" || fail "SVG account/menu icons missing from runtime JS"
+grep -Fq "setAttribute('role','menuitem')" "$MODULE_JS" || fail "account menu item semantics missing"
 ! grep -Fq 'public/miniapp' "$HTML" || fail "website entrypoint unexpectedly references Mini App source"
 
 pass "web redesign smoke checks"
