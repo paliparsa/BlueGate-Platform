@@ -54,3 +54,9 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 2. Update the website token adapter and affected components in the same change.
 3. Preserve business logic and selectors used by `app.js`, `checkout.js`, `account.js`, `dashboard.js`, and `admin.js`.
 4. Verify desktop, narrow mobile, keyboard focus, and reduced motion before declaring the UI done.
+
+## Lower homepage sections (v5.1.97)
+- The lower homepage is a single editorial sequence: optional More Services catalog, compact benefits grid, optional VPN comparison, customer reviews, connection guides, FAQ, then footer.
+- Keep the signature treatment restrained: thin royal-blue rules on benefit cards, dark layered surfaces, quiet borders, and clear Persian typography. Avoid heavy gradients, oversized glow, and decorative emoji as new UI chrome.
+- Dynamic sections retain their current IDs, data sources, and visibility rules. CSS must not force hidden comparison, review, or tutorial content visible or alter product and checkout behavior.
+- Mobile owns horizontal overflow locally for category chips, reviews, and the comparison table; the document remains naturally scrollable. Respect reduced motion, visible keyboard focus, and bottom safe-area padding.
