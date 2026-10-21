@@ -1,3 +1,10 @@
+## 5.1.99 — Homepage service-index redesign
+- Refined the website homepage into a clearer product-led service index: calmer hero hierarchy, less duplicated brand copy, more legible dynamic catalog controls, and stronger separation between the full catalog and featured purchase configurators.
+- Replaced homepage reassurance and featured-product emoji icons with inline SVGs for a consistent interface icon language.
+- Simplified product selection presentation, removed the static non-progressing purchase-step strip from view, and improved responsive category/product grids while retaining every underlying control and purchase flow.
+- Added a website-only CSS layer; storefront API data, pricing calculations, account/navigation actions, checkout behavior, and Telegram Mini App assets remain unchanged.
+- Validation: HTML mirror checks, icon-replacement assertions, source-level smoke checks and PHP/JavaScript checks are intended for CI. Live browser/device and authenticated checkout verification require runtime access.
+
 ## 5.1.98 — Catalog-first homepage and clearer brand introduction
 - Reordered the website homepage so the dynamic, active-products catalog appears immediately after the hero, followed by reassurance cues, featured VPN/Stars/Premium purchase flows, and then the crypto reference-rate strip.
 - Removed the collapsed “More Services” interaction: catalog categories and products are visible on page load, remain sourced from the live storefront API, and keep the existing product checkout path.
