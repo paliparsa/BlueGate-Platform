@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#06101d">
+  <meta name="theme-color" content="#030303">
   <title>BlueGate Store</title>
   <meta name="description" content="فروشگاه سرویس‌های دیجیتال BlueGate؛ VPN، Telegram Stars و Telegram Premium">
   <link rel="manifest" href="/web/manifest.json">
@@ -44,6 +44,7 @@
   <link rel="stylesheet" href="/web/css/design-base.css?v=20261014-root-royal-blue-v9">
   <link rel="stylesheet" href="/web/css/design-components.css?v=20261014-root-royal-blue-v9">
   <link rel="stylesheet" href="/web/css/design-admin.css?v=20261014-root-royal-blue-v9">
+  <link rel="stylesheet" href="/web/css/editorial-redesign.css?v=5.1.93-editorial-1">
 </head>
 <body>
   <div id="bgRouteBoot" aria-live="polite"><div><span class="bg-route-loader-mark"><img src="/web/assets/logo-mark.webp" alt="BlueGate" width="43" height="43"></span><span class="bg-route-loader-label">در حال باز کردن بخش درخواستی…</span></div></div>
@@ -67,7 +68,7 @@
         <button id="bgAiLanguageToggle" type="button" class="bg-account-btn" style="white-space:nowrap;min-height:38px" aria-label="Change language">🇬🇧 EN</button>
         <button id="quickCreditBtn" class="bg-credit-chip hidden" type="button" aria-label="اعتبار BlueGate"><span>اعتبار</span><b id="quickCreditValue">0 تومان</b></button>
         <button id="accountBtn" class="bg-account-btn" type="button" aria-haspopup="menu" aria-expanded="false">
-          <span id="accountAvatar" class="bg-header-avatar">👤</span><span id="accountLabel">ورود</span><span id="accountChevron" class="bg-account-chevron hidden">⌄</span><b id="accountBadge" class="bg-account-badge hidden">0</b>
+          <span id="accountAvatar" class="bg-header-avatar"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span></span><span id="accountLabel">ورود</span><span id="accountChevron" class="bg-account-chevron hidden">⌄</span><b id="accountBadge" class="bg-account-badge hidden">0</b>
         </button>
         <button id="registerBtn" class="bg-register-btn" type="button">ساخت حساب</button>
         <a id="supportTop" class="btn header-support" target="_blank" rel="noopener">پشتیبانی</a>
@@ -75,7 +76,7 @@
       </div>
     </div>
     <div id="mobileMenu" class="mobile-menu hidden">
-      <div class="shell mobile-menu-links"><a data-store-nav href="#products">سرویس‌ها</a><a data-store-nav href="#why">مزایا</a><a data-store-nav href="#reviewsSection">نظرات</a><a data-store-nav href="#faq">سوالات</a><button class="member-mobile-link hidden" data-member-route="orders" type="button">📦 سفارش‌ها</button><button class="member-mobile-link hidden" data-member-route="wallet" type="button">💳 اعتبار</button><button class="member-mobile-link hidden" data-member-route="referral" type="button">👥 همکاری در فروش</button><button class="member-mobile-link hidden" data-member-route="support" type="button">💬 تیکت‌ها</button><button class="member-mobile-link admin-only hidden" data-member-route="admin" type="button">🛠 مدیریت</button><button id="mobileAccountBtn" class="bg-mobile-account-action" type="button">🔑 ورود</button><button id="mobileRegisterBtn" class="bg-mobile-register-action" type="button">✨ ساخت حساب</button><a id="mobileSupport" target="_blank" rel="noopener">پشتیبانی تلگرام</a></div>
+      <div class="shell mobile-menu-links"><a data-store-nav href="#products">سرویس‌ها</a><a data-store-nav href="#why">مزایا</a><a data-store-nav href="#reviewsSection">نظرات</a><a data-store-nav href="#faq">سوالات</a><button class="member-mobile-link hidden" data-member-route="orders" type="button">${icons.package} سفارش‌ها</button><button class="member-mobile-link hidden" data-member-route="wallet" type="button">${icons.credit} اعتبار</button><button class="member-mobile-link hidden" data-member-route="referral" type="button">${icons.users} همکاری در فروش</button><button class="member-mobile-link hidden" data-member-route="support" type="button">${icons.chat} تیکت‌ها</button><button class="member-mobile-link admin-only hidden" data-member-route="admin" type="button">${icons.wrench} مدیریت</button><button id="mobileAccountBtn" class="bg-mobile-account-action" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="5"/><path d="m11.5 11.5 8-8 2 2-2 2 2 2-3 3-2-2-1.5 1.5"/></svg></svg></span> ورود</button><button id="mobileRegisterBtn" class="bg-mobile-register-action" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg></span> ساخت حساب</button><a id="mobileSupport" target="_blank" rel="noopener">پشتیبانی تلگرام</a></div>
     </div>
   </header>
 
@@ -101,9 +102,9 @@
       <div class="hero-visual" aria-hidden="true">
         <div class="brand-orbit"></div>
         <div class="brand-stage"><img src="/web/assets/logo-mark.webp" alt=""><div class="brand-stage-copy"><span>BLUEGATE</span><strong>Digital Services</strong><small>VPN • Stars • Premium</small></div><span class="brand-live-badge"><i></i> STORE ONLINE</span></div>
-        <div class="floating-card fc-one"><span>🛡️</span><div><small>BluePing</small><strong>VPN</strong><em>پایدار و منعطف</em></div></div>
-        <div class="floating-card fc-two"><span>⭐</span><div><small>Telegram</small><strong>Stars</strong><em>تعداد دلخواه</em></div></div>
-        <div class="floating-card fc-three"><span>✈️</span><div><small>Telegram</small><strong>Premium</strong><em>۳ تا ۱۲ ماهه</em></div></div>
+        <div class="floating-card fc-one">${icons.shield}<div><small>BluePing</small><strong>VPN</strong><em>پایدار و منعطف</em></div></div>
+        <div class="floating-card fc-two">${icons.star}<div><small>Telegram</small><strong>Stars</strong><em>تعداد دلخواه</em></div></div>
+        <div class="floating-card fc-three">${icons.plane}<div><small>Telegram</small><strong>Premium</strong><em>۳ تا ۱۲ ماهه</em></div></div>
       </div>
     </section>
 
@@ -115,10 +116,10 @@
     </section>
 
     <section class="shell conversion-strip" aria-label="مزایای خرید از BlueGate">
-      <div class="conversion-item"><span class="conversion-icon">⚡</span><div><strong>سفارش سریع</strong><small>مسیر خرید کوتاه و مستقیم</small></div></div>
-      <div class="conversion-item"><span class="conversion-icon">◉</span><div><strong>قیمت شفاف</strong><small>مبلغ نهایی قبل از سفارش</small></div></div>
-      <div class="conversion-item"><span class="conversion-icon">🎧</span><div><strong>پشتیبانی مستقیم</strong><small>ارتباط از طریق تلگرام</small></div></div>
-      <div class="conversion-item"><span class="conversion-icon">↻</span><div><strong>نرخ تازه</strong><small>محاسبه سرویس‌های ارزی</small></div></div>
+      <div class="conversion-item"><span class="conversion-icon bg-icon">${icons.bolt.replace(/^<span class="bg-icon" aria-hidden="true">/,"").replace(/<\/span>$/,"")}</span><div><strong>سفارش سریع</strong><small>مسیر خرید کوتاه و مستقیم</small></div></div>
+      <div class="conversion-item"><span class="conversion-icon bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span><div><strong>قیمت شفاف</strong><small>مبلغ نهایی قبل از سفارش</small></div></div>
+      <div class="conversion-item"><span class="conversion-icon">${icons.headset}</span><div><strong>پشتیبانی مستقیم</strong><small>ارتباط از طریق تلگرام</small></div></div>
+      <div class="conversion-item"><span class="conversion-icon">${icons.refresh}</span><div><strong>نرخ تازه</strong><small>محاسبه سرویس‌های ارزی</small></div></div>
     </section>
 
     <section id="products" class="section shell products-section">
@@ -127,17 +128,17 @@
       <div class="service-flow" aria-label="مسیر خرید"><span class="active"><b>۱</b> انتخاب سرویس</span><i>←</i><span><b>۲</b> انتخاب گزینه</span><i>←</i><span><b>۳</b> تایید سفارش</span></div>
 
       <div class="product-tabs" role="tablist" aria-label="محصولات">
-        <button class="product-tab active" data-target="vpnPanel" data-product="vpn" type="button"><span class="tab-badge">انتخاب پلن</span><span class="tab-icon vpn-icon">🛡️</span><span class="tab-copy"><strong>BluePing VPN</strong><small>اینترنت پایدار برای استفاده روزمره تا حرفه‌ای</small></span><b>مشاهده پلن‌ها ←</b></button>
-        <button class="product-tab" data-target="starsPanel" data-product="stars" type="button"><span class="tab-badge gold">تعداد دلخواه</span><span class="tab-icon stars-icon">⭐</span><span class="tab-copy"><strong>Telegram Stars</strong><small>تعداد دلخواه با محاسبه لحظه‌ای قیمت</small></span><b>انتخاب تعداد ←</b></button>
-        <button class="product-tab" data-target="premiumPanel" data-product="premium" type="button"><span class="tab-badge purple">۳ • ۶ • ۱۲ ماهه</span><span class="tab-icon premium-icon">✈️</span><span class="tab-copy"><strong>Telegram Premium</strong><small>اشتراک ۳، ۶ و ۱۲ ماهه تلگرام</small></span><b>مشاهده پلن‌ها ←</b></button>
+        <button class="product-tab active" data-target="vpnPanel" data-product="vpn" type="button"><span class="tab-badge">انتخاب پلن</span><span class="tab-icon vpn-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span></span><span class="tab-copy"><strong>BluePing VPN</strong><small>اینترنت پایدار برای استفاده روزمره تا حرفه‌ای</small></span><b>مشاهده پلن‌ها ←</b></button>
+        <button class="product-tab" data-target="starsPanel" data-product="stars" type="button"><span class="tab-badge gold">تعداد دلخواه</span><span class="tab-icon stars-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span></span><span class="tab-copy"><strong>Telegram Stars</strong><small>تعداد دلخواه با محاسبه لحظه‌ای قیمت</small></span><b>انتخاب تعداد ←</b></button>
+        <button class="product-tab" data-target="premiumPanel" data-product="premium" type="button"><span class="tab-badge purple">۳ • ۶ • ۱۲ ماهه</span><span class="tab-icon premium-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m21 3-7.2 18-3.5-7.3L3 10.2 21 3Z"/><path d="m10.3 13.7 4.4-4.4"/></svg></span></span><span class="tab-copy"><strong>Telegram Premium</strong><small>اشتراک ۳، ۶ و ۱۲ ماهه تلگرام</small></span><b>مشاهده پلن‌ها ←</b></button>
       </div>
-      <div class="service-swipe-hint" aria-hidden="true"><span>↔</span> کارت‌ها رو بکش و سرویس دیگه رو ببین</div>
+      <div class="service-swipe-hint" aria-hidden="true"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 8h18l-4-4"/><path d="m21 8-4 4"/><path d="M21 16H3l4 4"/><path d="m3 16 4-4"/></svg></span> کارت‌ها رو بکش و سرویس دیگه رو ببین</div>
 
       <div class="service-nav-wrap" aria-hidden="true"><div class="service-nav" id="serviceNav" role="tablist" aria-label="تعویض سریع سرویس"><button class="active" data-service="vpn" role="tab">VPN</button><button data-service="stars" role="tab">Stars</button><button data-service="premium" role="tab">Premium</button></div></div>
 
       <div id="vpnPanel" class="product-panel active vpn-popup-panel">
         <div class="vpn-popup-launcher" id="vpnPopupLauncher">
-          <div class="vpn-popup-launcher-icon" aria-hidden="true">🛡️</div>
+          <div class="vpn-popup-launcher-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span></div>
           <div class="vpn-popup-launcher-copy">
             <span class="kicker">BLUEPING VPN</span>
             <h3 id="vpnLauncherHeading">انتخاب پلن BluePing</h3>
@@ -214,10 +215,10 @@
 
       <div id="starsPanel" class="product-panel">
         <div class="configurator-card">
-          <div class="config-head"><div><span class="kicker">TELEGRAM STARS</span><h3>تعداد استار رو انتخاب کن</h3><p>مقدار دلخواه را با اسلایدر یا عدد دقیق وارد کن.</p></div><div class="large-product-icon">⭐</div></div>
+          <div class="config-head"><div><span class="kicker">TELEGRAM STARS</span><h3>تعداد استار رو انتخاب کن</h3><p>مقدار دلخواه را با اسلایدر یا عدد دقیق وارد کن.</p></div><div class="large-product-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span></div></div>
           <div class="star-amount"><button id="starsMinus" type="button" aria-label="کاهش">−</button><label><input id="starsInput" type="number"><span>Stars</span></label><button id="starsPlus" type="button" aria-label="افزایش">+</button></div>
           <div class="slider-shell"><input id="starsSlider" class="range" type="range"><div class="range-labels"><span id="starsMin">—</span><span id="starsMax">—</span></div></div>
-          <div id="starsPresets" class="presets"></div><div class="config-hint"><span>✦</span><p>با تغییر تعداد، قیمت نهایی و معادل USDT / TRX / TON همان لحظه به‌روزرسانی می‌شود.</p></div>
+          <div id="starsPresets" class="presets"></div><div class="config-hint"><span>${icons.sparkle}</span><p>با تغییر تعداد، قیمت نهایی و معادل USDT / TRX / TON همان لحظه به‌روزرسانی می‌شود.</p></div>
           <div class="receive-summary"><div><span>مقدار دریافتی</span><strong><b id="starsReceive">—</b> Stars</strong></div><div><span>حداقل سفارش</span><strong><b id="starsMinimum">—</b> Stars</strong></div></div>
           <div class="primary-price-card"><span>قیمت نهایی</span><div class="hero-price"><strong id="starsToman">—</strong><small>تومان</small></div><div class="secondary-currencies"><span><b id="starsUsdt">—</b> USDT</span><span><b id="starsTrx">—</b> TRX</span><span><b id="starsTon">—</b> TON</span></div></div>
           <button id="starsBuy" class="btn primary xl full purchase-cta" type="button"><span>ثبت سفارش Stars</span><b>←</b></button><div class="purchase-reassurance centered"><span>✓ ثبت مستقیم سفارش</span><span>✓ پیگیری داخل حساب</span></div>
