@@ -283,3 +283,7 @@ body::before{animation:none!important;opacity:.035!important;filter:none!importa
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+/* Remove decorative motion that does not communicate product state. */
+:is(.btn.primary,.purchase-cta,.bg-register-btn,.sticky-cta,[data-bg-cta-shine="1"])::after{display:none!important;animation:none!important}
+:is(.pulse-dot,.live-dot,.brand-live-badge i)[data-bg-live="1"]::after{animation:none!important}
