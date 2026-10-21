@@ -1,3 +1,12 @@
+## 5.1.98 — Catalog-first homepage and clearer brand introduction
+- Reordered the website homepage so the dynamic, active-products catalog appears immediately after the hero, followed by reassurance cues, featured VPN/Stars/Premium purchase flows, and then the crypto reference-rate strip.
+- Removed the collapsed “More Services” interaction: catalog categories and products are visible on page load, remain sourced from the live storefront API, and keep the existing product checkout path.
+- Replaced generic AI-like hero copy with a short, plain-language service-discovery message; legacy default copy is normalized while custom admin-written hero copy remains respected.
+- Repositioned USDT/Toman, TRX/USD, and TON/USD reference rates after the main product selection and clarified that order totals are shown before checkout.
+- Updated desktop/mobile navigation and hero CTA to lead to the full catalog; preserved the featured product panels, pricing engine, account flows, and Mini App isolation.
+- Kept served Pro Web and public mirror HTML, JavaScript, and CSS in sync; bumped version and added smoke assertions for catalog visibility, section order, and rate placement.
+- Validation: source assertions, mirror parity checks, and PHP/JavaScript syntax checks are intended for CI. Real browser visual checks and authenticated checkout flows still require runtime access.
+
 ## 5.1.97 — Lower homepage sections redesign
 - Introduced a website-only editorial layer for More Services, feature benefits, conditional plan comparison, customer reviews, connection guides, FAQ, and footer.
 - Refined responsive grids, mobile category navigation and review-carousel scrolling, local table overflow, disclosure states, keyboard focus, reduced-motion handling, and safe-area spacing without changing existing content IDs or business logic.
