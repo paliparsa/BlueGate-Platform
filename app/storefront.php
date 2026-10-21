@@ -20,8 +20,8 @@ function storefront_settings_payload(): array {
     return [
         'brand_name' => setting('brand_name', app_config('BRAND_NAME', 'BlueGate')),
         'brand_subtitle' => setting('storefront_brand_subtitle', 'Digital Services'),
-        'hero_title' => setting('storefront_hero_title', 'سرویس‌های دیجیتال، با انتخابی ساده‌تر'),
-        'hero_text' => setting('storefront_hero_text', 'BluePing VPN، تلگرام استارز و پرمیوم رو یک‌جا ببین؛ گزینه‌ات رو انتخاب کن و قبل از ثبت سفارش، قیمت رو شفاف بررسی کن.'),
+        'hero_title' => setting('storefront_hero_title', 'سرویس موردنیازت رو پیدا کن.'),
+        'hero_text' => setting('storefront_hero_text', 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال؛ محصولات موجود رو یک‌جا ببین و قبل از سفارش، جزئیات و قیمت رو بررسی کن.'),
         'telegram_support' => setting('support_username', app_config('SUPPORT_USERNAME', 'BlueGateSupport')),
         'telegram_channel' => setting('storefront_telegram_channel', app_config('CHANNEL_USERNAME', 'BllueGate')),
         'announcement_enabled' => setting_bool('storefront_announcement_enabled', true),

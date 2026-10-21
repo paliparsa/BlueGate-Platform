@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#030303">
   <title>BlueGate Store</title>
-  <meta name="description" content="فروشگاه سرویس‌های دیجیتال BlueGate؛ VPN، Telegram Stars و Telegram Premium">
+  <meta name="description" content="سرویس‌های دیجیتال BlueGate؛ کاتالوگ خدمات، قیمت‌های شفاف و سفارش قابل پیگیری">
   <link rel="manifest" href="/web/manifest.json">
   <link rel="icon" href="/web/icon-192.png">
   <script>
@@ -43,7 +43,7 @@
   <link rel="stylesheet" href="/web/css/orders-v9.css?v=0">
   <link rel="stylesheet" href="/web/css/editorial-redesign.css?v=5.1.95-home-hero-1">
   <link rel="stylesheet" href="/web/css/header-profile-redesign.css?v=5.1.96-header-1">
-  <link rel="stylesheet" href="/web/css/homepage-bottom-redesign.css?v=5.1.97-bottom-1">
+  <link rel="stylesheet" href="/web/css/homepage-bottom-redesign.css?v=5.1.98-catalog-first-1">
 </head>
 <body>
   <div id="bgRouteBoot" aria-live="polite"><div><span class="bg-route-loader-mark"><img src="/web/assets/logo-mark.webp" alt="BlueGate" width="43" height="43"></span><span class="bg-route-loader-label">در حال باز کردن بخش درخواستی…</span></div></div>
@@ -53,7 +53,8 @@
     <div class="shell header-inner">
       <a class="brand" data-store-nav href="#top" aria-label="BlueGate home"><img src="/web/assets/logo.webp" alt="BlueGate" class="brand-wordmark"><span class="sr-only" id="brandName">BlueGate</span><span class="sr-only" id="brandSubtitle">Digital Services</span></a>
       <nav class="desktop-nav" aria-label="ناوبری اصلی">
-        <a data-store-nav data-nav-link href="#products">سرویس‌ها</a>
+        <a data-store-nav data-nav-link href="#genericProductsSection">همه سرویس‌ها</a>
+        <a data-store-nav data-nav-link href="#products">محصولات منتخب</a>
         <a data-store-nav data-nav-link href="#why">مزایا</a>
         <a data-store-nav data-nav-link href="#reviewsSection">نظرات</a>
         <a data-store-nav data-nav-link href="#faq">سوالات</a>
@@ -74,7 +75,7 @@
       </div>
     </div>
     <div id="mobileMenu" class="mobile-menu hidden">
-      <div class="shell mobile-menu-links"><a data-store-nav href="#products">سرویس‌ها</a><a data-store-nav href="#why">مزایا</a><a data-store-nav href="#reviewsSection">نظرات</a><a data-store-nav href="#faq">سوالات</a><button class="member-mobile-link hidden" data-member-route="orders" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1 14H6L5 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></span> سفارش‌ها</button><button class="member-mobile-link hidden" data-member-route="wallet" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 10h18M7 4h10"/></svg></span> اعتبار</button><button class="member-mobile-link hidden" data-member-route="referral" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M15 15a5 5 0 0 1 6 5"/></svg></span> همکاری در فروش</button><button class="member-mobile-link hidden" data-member-route="support" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="7" rx="2"/><rect x="16" y="12" width="5" height="7" rx="2"/><path d="M18 20h-5"/></svg></span> تیکت‌ها</button><button class="member-mobile-link admin-only hidden" data-member-route="admin" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 7v5c0 4-3 7-8 9-5-2-8-5-8-9V7l8-4Z"/><path d="m9 12 2 2 4-4"/></svg></span> مدیریت</button><button id="mobileAccountBtn" class="bg-mobile-account-action" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span> ورود</button><button id="mobileRegisterBtn" class="bg-mobile-register-action" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span> ساخت حساب</button><a id="mobileSupport" target="_blank" rel="noopener"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="7" rx="2"/><rect x="16" y="12" width="5" height="7" rx="2"/></svg></span> پشتیبانی تلگرام</a></div>
+      <div class="shell mobile-menu-links"><a data-store-nav href="#genericProductsSection">همه سرویس‌ها</a><a data-store-nav href="#products">محصولات منتخب</a><a data-store-nav href="#why">مزایا</a><a data-store-nav href="#reviewsSection">نظرات</a><a data-store-nav href="#faq">سوالات</a><button class="member-mobile-link hidden" data-member-route="orders" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1 14H6L5 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></span> سفارش‌ها</button><button class="member-mobile-link hidden" data-member-route="wallet" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 10h18M7 4h10"/></svg></span> اعتبار</button><button class="member-mobile-link hidden" data-member-route="referral" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M15 15a5 5 0 0 1 6 5"/></svg></span> همکاری در فروش</button><button class="member-mobile-link hidden" data-member-route="support" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="7" rx="2"/><rect x="16" y="12" width="5" height="7" rx="2"/><path d="M18 20h-5"/></svg></span> تیکت‌ها</button><button class="member-mobile-link admin-only hidden" data-member-route="admin" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 7v5c0 4-3 7-8 9-5-2-8-5-8-9V7l8-4Z"/><path d="m9 12 2 2 4-4"/></svg></span> مدیریت</button><button id="mobileAccountBtn" class="bg-mobile-account-action" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span> ورود</button><button id="mobileRegisterBtn" class="bg-mobile-register-action" type="button"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span> ساخت حساب</button><a id="mobileSupport" target="_blank" rel="noopener"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="5" height="7" rx="2"/><rect x="16" y="12" width="5" height="7" rx="2"/></svg></span> پشتیبانی تلگرام</a></div>
     </div>
   </header>
 
@@ -91,10 +92,10 @@
   <main id="top">
     <section class="hero shell">
       <div class="hero-copy">
-        <div class="hero-eyebrow"><span class="pulse-dot"></span><span>BLUEGATE DIGITAL STORE</span><b>خرید ساده، پشتیبانی مستقیم</b></div>
-        <h1 id="heroTitle">سرویس‌های دیجیتال، با انتخابی ساده‌تر</h1>
-        <p id="heroText">BluePing VPN، تلگرام استارز و پرمیوم رو یک‌جا ببین؛ گزینه‌ات رو انتخاب کن و قبل از ثبت سفارش، قیمت رو شفاف بررسی کن.</p>
-        <div class="hero-actions"><a class="btn primary xl hero-primary" data-store-nav href="#products"><span>انتخاب سرویس</span><b>←</b></a><a id="heroSupport" class="btn ghost xl" target="_blank" rel="noopener">گفتگو با پشتیبانی</a></div>
+        <div class="hero-eyebrow"><span class="pulse-dot"></span><span>خدمات دیجیتال BlueGate</span><b>قیمت و جزئیات پیش از سفارش</b></div>
+        <h1 id="heroTitle">سرویس موردنیازت رو پیدا کن.</h1>
+        <p id="heroText">از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال؛ محصولات موجود رو یک‌جا ببین و قبل از سفارش، جزئیات و قیمت رو بررسی کن.</p>
+        <div class="hero-actions"><a class="btn primary xl hero-primary" data-store-nav href="#genericProductsSection"><span>دیدن همه سرویس‌ها</span><b>←</b></a><a id="heroSupport" class="btn ghost xl" target="_blank" rel="noopener">گفتگو با پشتیبانی</a></div>
         <div class="hero-trust"><span><i>✓</i> قیمت نهایی شفاف</span><span><i>✓</i> ثبت سفارش سریع</span><span><i>✓</i> پیگیری سفارش</span></div>
         <div class="hero-microcopy"><span>به امید آینده‌ی آزاد</span><i></i><span>انتخاب سرویس تا ثبت سفارش، یک‌جا</span></div>
       </div>
@@ -106,24 +107,35 @@
             <span class="hero-console-status"><i></i> آماده سفارش</span>
           </div>
           <div class="brand-stage-copy">
-            <span>یک فروشگاه، چند سرویس</span>
-            <strong>خدمات دیجیتال،<br>بدون مسیر پیچیده.</strong>
-            <small>سرویس موردنیازت رو انتخاب کن، جزئیات رو ببین و با خیال راحت سفارشت رو ثبت کن.</small>
+            <span>BlueGate</span>
+            <strong>خدماتی که دنبالش هستی،<br>یک‌جا پیدا کن.</strong>
+            <small>محصولات فعال رو مقایسه کن، قیمت رو ببین و بعد تصمیم بگیر.</small>
           </div>
           <div class="hero-service-list">
-            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><strong>BluePing VPN</strong><small>پلن متناسب با نیازت</small></div>
-            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span><strong>Telegram Stars</strong><small>تعداد دلخواه</small></div>
-            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5 12 2l8 3.5v6.2c0 4.2-3.2 7.5-8 10.3-4.8-2.8-8-6.1-8-10.3V5.5Z"/><path d="M9 12h6M12 9v6"/></svg></span><strong>Telegram Premium</strong><small>اشتراک ۳، ۶ و ۱۲ ماهه</small></div>
+            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><strong>VPN و اتصال</strong><small>پلن‌های BluePing</small></div>
+            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span><strong>خدمات تلگرام</strong><small>Stars و Premium</small></div>
+            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5 12 2l8 3.5v6.2c0 4.2-3.2 7.5-8 10.3-4.8-2.8-8-6.1-8-10.3V5.5Z"/><path d="M9 12h6M12 9v6"/></svg></span><strong>سرویس‌های بیشتر</strong><small>اشتراک‌ها و خدمات دیجیتال</small></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="shell live-strip" aria-label="نرخ‌های لحظه‌ای">
-      <div class="live-strip-title"><span id="rateDot" class="live-dot loading"></span><div><strong id="rateState">در حال دریافت نرخ‌ها</strong><small id="rateAge">بازار زنده</small></div></div>
-      <div class="rate-cell"><span>USDT / تومان</span><strong id="usdtRate" class="rate-loading">—</strong></div>
-      <div class="rate-cell"><span>TRX / USD</span><strong id="trxRate" class="rate-loading">—</strong></div>
-      <div class="rate-cell"><span>TON / USD</span><strong id="tonRate" class="rate-loading">—</strong></div>
+    <section id="genericProductsSection" class="section shell generic-products-section hidden">
+      <div class="generic-products-intro">
+        <span class="kicker">کاتالوگ خدمات</span>
+        <h2>همه سرویس‌های BlueGate</h2>
+        <p>دسته موردنظرت رو انتخاب کن تا محصولات فعال و جزئیاتشون رو ببینی.</p>
+      </div>
+      <div id="genericProductsCollapse" class="generic-products-collapse">
+        <div class="generic-products-collapse-inner">
+          <div class="generic-products-toolbar">
+            <div><span class="kicker">CATEGORIES</span><h2>دسته‌بندی سرویس‌ها</h2><p>یک دسته را انتخاب کن تا فقط همان محصولات نمایش داده شوند.</p></div>
+            <div id="genericCategoryNav" class="generic-category-nav" role="tablist" aria-label="دسته‌بندی سرویس‌های بیشتر"></div>
+          </div>
+          <div id="genericProductsGrid" class="generic-products-grid"></div>
+          <div id="genericProductsEmpty" class="generic-products-empty hidden">در این دسته فعلاً محصول فعالی وجود ندارد.</div>
+        </div>
+      </div>
     </section>
 
     <section class="shell conversion-strip" aria-label="مزایای خرید از BlueGate">
@@ -132,6 +144,10 @@
       <div class="conversion-item"><span class="conversion-icon">🎧</span><div><strong>پشتیبانی مستقیم</strong><small>ارتباط از طریق تلگرام</small></div></div>
       <div class="conversion-item"><span class="conversion-icon">↻</span><div><strong>نرخ تازه</strong><small>محاسبه سرویس‌های ارزی</small></div></div>
     </section>
+
+    
+
+    
 
     <section id="products" class="section shell products-section">
       <div class="section-head center-head"><span class="kicker">OUR SERVICES</span><h2>سرویس موردنظرت رو انتخاب کن</h2><p>فقط چیزی که لازم داری را انتخاب کن؛ جزئیات و قیمت همان سرویس نمایش داده می‌شود.</p></div>
@@ -243,22 +259,15 @@
       </div>
     </section>
 
-    <section id="genericProductsSection" class="section shell generic-products-section hidden">
-      <button id="genericProductsToggle" class="generic-products-toggle" type="button" aria-expanded="false" aria-controls="genericProductsCollapse">
-        <span class="generic-toggle-copy"><span class="kicker">MORE SERVICES</span><strong>سرویس‌های بیشتر BlueGate</strong><small>اشتراک‌ها، هوش مصنوعی، موسیقی و سرویس‌های دیجیتال بیشتر</small></span>
-        <span class="generic-toggle-action"><b id="genericProductsToggleLabel">مشاهده سرویس‌ها</b><i aria-hidden="true">⌄</i></span>
-      </button>
-      <div id="genericProductsCollapse" class="generic-products-collapse" aria-hidden="true" inert>
-        <div class="generic-products-collapse-inner">
-          <div class="generic-products-toolbar">
-            <div><span class="kicker">CATEGORIES</span><h2>دسته‌بندی سرویس‌ها</h2><p>یک دسته را انتخاب کن تا فقط همان محصولات نمایش داده شوند.</p></div>
-            <div id="genericCategoryNav" class="generic-category-nav" role="tablist" aria-label="دسته‌بندی سرویس‌های بیشتر"></div>
-          </div>
-          <div id="genericProductsGrid" class="generic-products-grid"></div>
-          <div id="genericProductsEmpty" class="generic-products-empty hidden">در این دسته فعلاً محصول فعالی وجود ندارد.</div>
-        </div>
-      </div>
+    <section class="shell live-strip" aria-label="نرخ‌های مرجع بازار">
+      <div class="live-strip-title"><span id="rateDot" class="live-dot loading"></span><div><strong id="rateState">در حال دریافت نرخ‌ها</strong><small id="rateAge">منبع نرخ</small></div></div>
+      <div class="rate-cell"><span>USDT / تومان</span><strong id="usdtRate" class="rate-loading">—</strong></div>
+      <div class="rate-cell"><span>TRX / USD</span><strong id="trxRate" class="rate-loading">—</strong></div>
+      <div class="rate-cell"><span>TON / USD</span><strong id="tonRate" class="rate-loading">—</strong></div>
+      <p class="rate-disclaimer">این نرخ‌ها مرجع اطلاع‌رسانی‌اند؛ مبلغ نهایی هر سفارش پیش از پرداخت نمایش داده می‌شود.</p>
     </section>
+
+    
 
     <section id="why" class="section why-section"><div class="shell"><div class="section-head center-head"><span class="kicker">WHY BLUEGATE</span><h2>خرید راحت، بدون پیچیدگی</h2><p>اطلاعات مهم را همان‌جایی می‌بینی که برای تصمیم گرفتن لازم داری.</p></div><div id="featureGrid" class="feature-grid"></div></div></section>
 
@@ -288,7 +297,7 @@
   <div id="toast" class="toast hidden"></div>
   <script defer src="/web/js/config.js?v=20261012"></script><script defer src="/web/js/api.js?v=20261012"></script><script defer src="/web/js/rates.js?v=20261012"></script><script defer src="/web/js/pricing.js?v=20261012"></script><script defer src="/web/js/account.js?v=5.1.96-header-1"></script><script defer src="/web/js/admin.js?v=20261012-admin-settings-visual-2"></script>  <script defer src="/web/js/dashboard.js?v=20261012-ticket-parity-1"></script><script defer src="/web/js/checkout.js?v=20261012"></script>
   <script defer src="/web/js/mobile-v281.js?v=0"></script>
-  <script defer src="/web/js/app.js?v=0"></script>
+  <script defer src="/web/js/app.js?v=5.1.98-catalog-first-1"></script>
   <script defer src="/web/js/motion.js?v=0"></script>
 </body>
 </html>

@@ -298,3 +298,24 @@
   #genericProductsSection .generic-products-toggle,#featureGrid .feature-card,#reviewsGrid .review-card,#tutorialsGrid .tutorial-card,#faq .faq-item{border:1px solid CanvasText!important}
   #faq .faq-item summary::after{border:1px solid ButtonText;color:ButtonText}
 }
+
+/* v5.1.98 — catalog-first homepage hierarchy */
+#genericProductsSection{margin-top:clamp(22px,3vw,36px)!important;padding:clamp(22px,3.4vw,38px)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:18px!important;background:#07080b!important}
+#genericProductsSection .generic-products-intro{display:grid;gap:5px;margin:0 0 18px;max-width:720px}
+#genericProductsSection .generic-products-intro .kicker{color:#7894ff;font-size:11px;font-weight:750}
+#genericProductsSection .generic-products-intro h2{margin:0;color:#f5f7fb;font-size:clamp(23px,3vw,32px);font-weight:850;letter-spacing:-.035em;line-height:1.5}
+#genericProductsSection .generic-products-intro p{margin:0;color:#a1a8b5;font-size:13px;line-height:1.9}
+#genericProductsSection .generic-products-collapse-inner{padding:0!important}
+#genericProductsSection .generic-products-toolbar{align-items:start}
+#genericProductsSection .generic-products-toolbar>div:first-child h2{font-size:17px}
+#genericProductsSection .generic-products-grid{margin-top:16px}
+.hero-eyebrow{letter-spacing:0!important}
+.hero-eyebrow>span:not(.pulse-dot){font-size:12px;letter-spacing:0!important}
+.hero-eyebrow>b{font-size:11px}
+.hero .brand-stage-copy>span{color:#aebdff;letter-spacing:0;font-size:12px;font-weight:700}
+.hero .brand-stage-copy>strong{font-size:clamp(20px,2.5vw,28px);letter-spacing:-.025em}
+.hero .brand-stage-copy>small{max-width:32ch;line-height:2}
+.live-strip{margin-top:clamp(22px,3vw,34px)!important}
+.rate-disclaimer{grid-column:1/-1;margin:0;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);color:#a1a8b5;font-size:11px;line-height:1.8}
+@media(max-width:768px){#genericProductsSection{padding:18px!important;margin-top:18px!important}#genericProductsSection .generic-products-intro{margin-bottom:12px}#genericProductsSection .generic-products-intro h2{font-size:23px}#genericProductsSection .generic-products-toolbar{gap:12px}.rate-disclaimer{font-size:10px;padding-top:8px}}
+@media(prefers-reduced-motion:reduce){#genericProductsSection *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
