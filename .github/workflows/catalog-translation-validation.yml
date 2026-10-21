@@ -31,6 +31,8 @@ jobs:
           node --check public/translation.js
           node --check public/web/js/app.js
           node --check public/web/js/admin.js
+      - name: Check website redesign and homepage hierarchy
+        run: bash tests/web-redesign-smoke.sh
       - name: Check translation columns are unique per SQL table
         run: |
           python3 - <<'PY'
