@@ -1,3 +1,10 @@
+## 5.1.96 — Unified website header, profile and credit menus
+- Rebuilt the website header as a compact black-and-royal-blue navigation system across the served Pro Web shell and public mirror, with responsive navigation, calmer account controls, and consistent SVG UI icons.
+- Restyled the existing account/profile popover and credit quick-view into a shared surface language; desktop credit menu anchors to its own trigger and mobile account menus become safe-area-aware bottom sheets.
+- Replaced account/mobile navigation emoji icons with inline SVGs, improved menu expanded-state semantics, and preserved existing account, wallet top-up, notifications, orders, support, and admin actions.
+- Added website-only header stylesheet, kept Mini App assets and logic out of scope, and extended web redesign smoke assertions.
+- Validation: repository smoke test and source-level parity checks; browser visual review and live authenticated wallet/top-up flows still require runtime verification.
+
 ## 5.1.95 — Homepage redesign, phase 1
 - Rebuilt the storefront first fold with clearer Persian value proposition, one dominant service-selection CTA, and compact trust cues; updated fallback hero copy while preserving admin-configured overrides.
 - Replaced the generic floating-card hero illustration with a structured BlueGate service panel for BluePing VPN, Telegram Stars, and Telegram Premium, using inline SVG icons.
