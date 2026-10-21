@@ -32,7 +32,7 @@ grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
-grep -Fxq '5.1.98' "$ROOT/VERSION" || fail "version not bumped"
+grep -Fxq '5.1.99' "$ROOT/VERSION" || fail "version not bumped"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
 grep -Fq 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
@@ -70,7 +70,7 @@ grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review ca
 grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
 grep -Fq 'scrollbar-width:thin' "$MODULE_BOTTOM_CSS" || fail "local overflow styling missing"
-grep -Fxq '5.1.98' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
+grep -Fxq '5.1.99' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
 
 pass "web redesign smoke checks"
 
@@ -91,4 +91,18 @@ for ASSET in "$ROOT/public/web/js/app.js" "$ROOT/modules/pro-web/public/js/app.j
   ! grep -Fq "genericProductsToggle')?.addEventListener('click'" "$ASSET" || fail "catalog still has collapse toggle handler"
 done
 cmp -s "$ROOT/public/web/js/app.js" "$ROOT/modules/pro-web/public/js/app.js" || fail "website app JS mirrors differ"
+
+# Homepage experience redesign layer
+EXPERIENCE_CSS="$ROOT/public/web/css/homepage-experience-redesign.css"
+MODULE_EXPERIENCE_CSS="$ROOT/modules/pro-web/public/css/homepage-experience-redesign.css"
+[[ -f "$EXPERIENCE_CSS" ]] || fail "homepage experience stylesheet missing"
+[[ -f "$MODULE_EXPERIENCE_CSS" ]] || fail "homepage experience stylesheet missing from served Pro Web module"
+cmp -s "$EXPERIENCE_CSS" "$MODULE_EXPERIENCE_CSS" || fail "homepage experience stylesheets differ between runtime and public mirror"
+grep -Fq '/web/css/homepage-experience-redesign.css?v=5.1.99-home-experience-1' "$MODULE_HTML" || fail "served Pro Web shell does not load homepage experience stylesheet"
+grep -Fq '/web/css/homepage-experience-redesign.css?v=5.1.99-home-experience-1' "$HTML" || fail "public shell does not load homepage experience stylesheet"
+grep -Fq '#products .product-tabs' "$EXPERIENCE_CSS" || fail "featured product tabs redesign missing"
+grep -Fq 'prefers-reduced-motion:reduce' "$EXPERIENCE_CSS" || fail "homepage experience reduced-motion support missing"
+! grep -Fq 'class="conversion-icon">⚡' "$MODULE_HTML" || fail "static conversion icon still uses emoji"
+! grep -Fq 'class="conversion-icon">🎧' "$MODULE_HTML" || fail "static support icon still uses emoji"
+
 pass "catalog-first homepage checks"
