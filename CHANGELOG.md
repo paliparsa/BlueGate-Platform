@@ -1,3 +1,9 @@
+## 5.1.95 — Homepage redesign, phase 1
+- Rebuilt the storefront first fold with clearer Persian value proposition, one dominant service-selection CTA, and compact trust cues.
+- Replaced the generic floating-card hero illustration with a structured BlueGate service panel for BluePing VPN, Telegram Stars, and Telegram Premium, using inline SVG icons.
+- Refined desktop and mobile hero composition with responsive spacing and reduced-motion compatibility.
+- Kept product IDs, routes, pricing, checkout, account, and Mini App behavior unchanged.
+
 ## 5.1.94 — Web redesign deployment fix
 - Register the Premium Editorial stylesheet in the actual Pro Web module shell served at `/`.
 - Mirror the stylesheet into `modules/pro-web/public/css`, which is the asset root used by the web gate and versioned shell.
