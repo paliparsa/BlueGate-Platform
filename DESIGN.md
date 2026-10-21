@@ -43,6 +43,12 @@ BlueGate is a Persian-first digital-services storefront for customers buying VPN
 ## Runtime mapping
 The website-only adapter is `public/web/css/editorial-redesign.css`, loaded last by `public/web/index.html`. It maps legacy storefront variables and shared `--bgds-*` values to the palette above and scopes admin-specific tokens to `.bg-admin-shell`. The Telegram Mini App does not load this stylesheet and remains on its existing shared design system.
 
+## Shared website / Mini App interaction language
+- The website should feel like the same BlueGate product as the Telegram Mini App through its black/royal-blue palette, SVG icon family, compact account controls, and consistent panel/button states, while retaining a website-specific desktop navigation layout.
+- Header, profile popover, and credit quick-view use the website-only `header-profile-redesign.css` layer, loaded after `editorial-redesign.css` in both the served Pro Web shell and the public mirror. Keep the copies identical.
+- On desktop, the profile menu is a compact anchored popover and the credit view anchors to the credit trigger. On narrow screens, account/credit popovers use a bottom sheet with safe-area padding, bounded viewport height, and reduced-motion support.
+- Keep the existing `account.js` handlers and `BGDashboard` routes as the source of truth for account, notifications, orders, wallet top-up, transactions, profile, and admin actions. Do not create parallel payment or authentication flows. The Telegram Mini App must not load website-only styles.
+
 ## Change discipline
 1. Change this document when an approved, durable design decision changes.
 2. Update the website token adapter and affected components in the same change.
