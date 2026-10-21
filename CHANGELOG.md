@@ -1,3 +1,13 @@
+# BlueGate Platform v5.1.93 — Premium Editorial Web refresh
+
+- Introduced a website-only Premium Dark + Editorial visual layer with a single mapped token set for storefront, customer account, and web admin surfaces.
+- Reduced ambient glow, excessive gradients, oversized corner radii, and decorative motion; clarified page hierarchy, product selection, prices, and customer dashboard surfaces.
+- Replaced primary static storefront emoji icons with inline SVGs and added consistent keyboard focus, mobile spacing, and reduced-motion behavior.
+- Added the stylesheet as the final web-only layer; purchase, checkout, account, admin, API, and Telegram Mini App logic remain unchanged.
+- Validation: static smoke checks and source-level HTML/CSS checks; full browser/device, checkout-provider, authenticated customer, and production deployment tests remain required.
+
+---
+
 # BlueGate Platform v5.1.92 — Safely replace untouched renewal checkouts
 
 - Allow a customer selecting a different VPN renewal plan to replace an existing renewal only when it is still `pending_payment` and has no payment method/details, receipt, payment note, Stars charge, coupon/discount, or wallet contribution.
