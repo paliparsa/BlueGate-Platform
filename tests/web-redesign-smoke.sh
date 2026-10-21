@@ -30,11 +30,11 @@ grep -Fq '/web/js/account.js?v=5.1.96-header-1' "$MODULE_HTML" || fail "served P
 grep -Fq '/web/js/account.js?v=5.1.96-header-1' "$HTML" || fail "public account script cache key not updated"
 grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
-grep -Fq 'سرویس‌های دیجیتال، با انتخابی ساده‌تر' "$MODULE_HTML" || fail "homepage hero copy missing"
+grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
-grep -Fxq '5.1.96' "$ROOT/VERSION" || fail "version not bumped"
-grep -Fq 'سرویس‌های دیجیتال، با انتخابی ساده‌تر' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
-grep -Fq 'BluePing VPN، تلگرام استارز و پرمیوم رو یک‌جا ببین' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
+grep -Fxq '5.1.98' "$ROOT/VERSION" || fail "version not bumped"
+grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
+grep -Fq 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
 grep -Fq 'id="premiumPlans"' "$HTML" || fail "Premium plan container missing"
 grep -Fq 'id="stickyBuy"' "$HTML" || fail "sticky checkout action missing"
@@ -62,14 +62,33 @@ MODULE_BOTTOM_CSS="$ROOT/modules/pro-web/public/css/homepage-bottom-redesign.css
 [[ -f "$BOTTOM_CSS" ]] || fail "lower homepage stylesheet missing"
 [[ -f "$MODULE_BOTTOM_CSS" ]] || fail "lower homepage stylesheet missing from served Pro Web module"
 cmp -s "$BOTTOM_CSS" "$MODULE_BOTTOM_CSS" || fail "lower homepage stylesheets differ between runtime and public mirror"
-grep -Fq '/web/css/homepage-bottom-redesign.css?v=5.1.97-bottom-1' "$MODULE_HTML" || fail "served Pro Web shell does not load lower homepage stylesheet"
-grep -Fq '/web/css/homepage-bottom-redesign.css?v=5.1.97-bottom-1' "$HTML" || fail "public shell does not load lower homepage stylesheet"
+grep -Fq '/web/css/homepage-bottom-redesign.css?v=5.1.98-catalog-first-1' "$MODULE_HTML" || fail "served Pro Web shell does not load lower homepage stylesheet"
+grep -Fq '/web/css/homepage-bottom-redesign.css?v=5.1.98-catalog-first-1' "$HTML" || fail "public shell does not load lower homepage stylesheet"
 grep -Fq '#featureGrid.feature-grid' "$MODULE_BOTTOM_CSS" || fail "feature grid redesign missing"
 grep -Fq '.generic-products-toolbar' "$MODULE_BOTTOM_CSS" || fail "more-services toolbar redesign missing"
 grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review carousel responsive styling missing"
 grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
 grep -Fq 'scrollbar-width:thin' "$MODULE_BOTTOM_CSS" || fail "local overflow styling missing"
-grep -Fxq '5.1.97' "$ROOT/VERSION" || fail "lower homepage version not bumped"
+grep -Fxq '5.1.98' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
 
 pass "web redesign smoke checks"
+
+# Catalog-first homepage hierarchy
+for PAGE in "$HTML" "$MODULE_HTML"; do
+  grep -Fq 'id="genericProductsSection"' "$PAGE" || fail "dynamic service catalog missing"
+  grep -Fq 'id="genericProductsGrid"' "$PAGE" || fail "dynamic catalog product grid missing"
+  grep -Fq 'href="#genericProductsSection"' "$PAGE" || fail "homepage navigation does not lead to the catalog"
+  HERO_POS=$(grep -n '<section class="hero shell"' "$PAGE" | head -1 | cut -d: -f1)
+  CATALOG_POS=$(grep -n '<section id="genericProductsSection"' "$PAGE" | head -1 | cut -d: -f1)
+  PRODUCTS_POS=$(grep -n '<section id="products"' "$PAGE" | head -1 | cut -d: -f1)
+  RATES_POS=$(grep -n '<section class="shell live-strip"' "$PAGE" | head -1 | cut -d: -f1)
+  [[ "$HERO_POS" -lt "$CATALOG_POS" && "$CATALOG_POS" -lt "$PRODUCTS_POS" && "$PRODUCTS_POS" -lt "$RATES_POS" ]] || fail "homepage section order is not catalog-first"
+  grep -Fq 'rate-disclaimer' "$PAGE" || fail "crypto reference-rate disclaimer missing"
+done
+for ASSET in "$ROOT/public/web/js/app.js" "$ROOT/modules/pro-web/public/js/app.js"; do
+  grep -Fq 'The catalog is a first-class homepage section and stays visible by default.' "$ASSET" || fail "catalog should be visible on page load"
+  ! grep -Fq "genericProductsToggle')?.addEventListener('click'" "$ASSET" || fail "catalog still has collapse toggle handler"
+done
+cmp -s "$ROOT/public/web/js/app.js" "$ROOT/modules/pro-web/public/js/app.js" || fail "website app JS mirrors differ"
+pass "catalog-first homepage checks"
