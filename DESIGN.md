@@ -60,3 +60,11 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - Keep the signature treatment restrained: thin royal-blue rules on benefit cards, dark layered surfaces, quiet borders, and clear Persian typography. Avoid heavy gradients, oversized glow, and decorative emoji as new UI chrome.
 - Dynamic sections retain their current IDs, data sources, and visibility rules. CSS must not force hidden comparison, review, or tutorial content visible or alter product and checkout behavior.
 - Mobile owns horizontal overflow locally for category chips, reviews, and the comparison table; the document remains naturally scrollable. Respect reduced motion, visible keyboard focus, and bottom safe-area padding.
+
+
+## Homepage hierarchy (v5.1.98)
+- The first fold introduces BlueGate in plain Persian and avoids generic AI-style brand language.
+- Place the live catalog immediately after the hero. Categories and active products come from the existing storefront API and remain visible without an accordion or extra reveal click.
+- Place compact reassurance cues after the catalog, then the existing featured VPN, Telegram Stars, and Telegram Premium purchase configurators.
+- Place USDT/Toman, TRX/USD, and TON/USD reference rates after the featured purchase area and before lower editorial content. Label them as reference rates and clarify that each order's final amount is shown before payment.
+- Keep all category, product, and checkout data dynamic; never hard-code categories or create a parallel checkout. Keep website HTML, JavaScript, and CSS mirrors aligned; do not modify Telegram Mini App assets.
