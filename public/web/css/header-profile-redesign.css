@@ -243,3 +243,14 @@
 @media(prefers-reduced-motion:reduce){
   .bg-account-popover,.bg-account-btn,.bg-credit-chip,.desktop-nav a::after{transition:none!important;animation:none!important}
 }
+
+
+.bg-popover-topup{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:40px;margin-top:7px;
+  padding:8px 12px!important;border:1px solid rgba(49,94,251,.55)!important;border-radius:10px!important;
+  background:rgba(49,94,251,.14)!important;color:#dce4ff!important;font-size:12px!important;font-weight:800!important;cursor:pointer;
+  transition:background .16s,border-color .16s,transform .16s;
+}
+.bg-popover-topup:hover{background:rgba(49,94,251,.23)!important;border-color:#7894ff!important;transform:translateY(-1px)}
+.bg-popover-topup .bg-icon{display:inline-flex;width:17px;height:17px;font-size:16px}
+.bg-popover-topup .bg-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
