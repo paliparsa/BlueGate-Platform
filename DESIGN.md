@@ -41,7 +41,7 @@ BlueGate is a Persian-first digital-services storefront for customers buying VPN
 - Maintain RTL and mobile layout behavior, including safe-area insets and sticky checkout spacing.
 
 ## Runtime mapping
-The website-only adapter is `public/web/css/editorial-redesign.css`, loaded last by `public/web/index.html`. It maps legacy storefront variables and shared `--bgds-*` values to the palette above and scopes admin-specific tokens to `.bg-admin-shell`. The Telegram Mini App does not load this stylesheet and remains on its existing shared design system.
+The website-only adapters are `public/web/css/editorial-redesign.css` followed by `public/web/css/header-profile-redesign.css`, loaded last by both the public mirror and the served Pro Web shell. They map legacy storefront variables and shared `--bgds-*` values to the palette above and scope admin-specific tokens to `.bg-admin-shell`. The Telegram Mini App does not load this stylesheet and remains on its existing shared design system.
 
 ## Shared website / Mini App interaction language
 - The website should feel like the same BlueGate product as the Telegram Mini App through its black/royal-blue palette, SVG icon family, compact account controls, and consistent panel/button states, while retaining a website-specific desktop navigation layout.
