@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+HTML="$ROOT/public/web/index.html"
+CSS="$ROOT/public/web/css/editorial-redesign.css"
+
+fail(){ printf 'FAIL: %s\n' "$1" >&2; exit 1; }
+pass(){ printf 'PASS: %s\n' "$1"; }
+
+[[ -f "$HTML" ]] || fail "public web entrypoint missing"
+[[ -f "$CSS" ]] || fail "editorial redesign stylesheet missing"
+grep -Fq '/web/css/editorial-redesign.css?v=5.1.93-editorial-1' "$HTML" || fail "versioned stylesheet link missing"
+grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
+grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
+grep -Fq 'id="premiumPlans"' "$HTML" || fail "Premium plan container missing"
+grep -Fq 'id="stickyBuy"' "$HTML" || fail "sticky checkout action missing"
+grep -Fq '/web/js/checkout.js' "$HTML" || fail "checkout entrypoint missing"
+grep -Fq '/web/js/account.js' "$HTML" || fail "account entrypoint missing"
+grep -Fq '/web/js/dashboard.js' "$HTML" || fail "member dashboard entrypoint missing"
+grep -Fq '/web/js/admin.js' "$HTML" || fail "admin entrypoint missing"
+grep -Fq -- '--blue:#315efb' "$CSS" || fail "royal blue token missing"
+grep -Fq '@media(max-width:768px)' "$CSS" || fail "mobile breakpoint missing"
+grep -Fq 'prefers-reduced-motion:reduce' "$CSS" || fail "reduced-motion support missing"
+grep -Fq '.bg-admin-shell' "$CSS" || fail "admin token scope missing"
+grep -Fq '.bg-icon svg' "$CSS" || fail "SVG icon baseline missing"
+! grep -Fq 'public/miniapp' "$HTML" || fail "website entrypoint unexpectedly references Mini App source"
+
+pass "web redesign smoke checks"
