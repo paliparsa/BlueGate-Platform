@@ -1,3 +1,9 @@
+## 5.1.97 — Lower homepage sections redesign
+- Introduced a website-only editorial layer for More Services, feature benefits, conditional plan comparison, customer reviews, connection guides, FAQ, and footer.
+- Refined responsive grids, mobile category navigation and review-carousel scrolling, local table overflow, disclosure states, keyboard focus, reduced-motion handling, and safe-area spacing without changing existing content IDs or business logic.
+- Loaded the stylesheet in both the served Pro Web module and public mirror; documented the lower-homepage design contract and expanded smoke assertions.
+- Validation: source-level parity and repository smoke checks are included in the PR; browser/device visual checks and authenticated commerce flows require runtime access.
+
 ## 5.1.96 — Unified website header, profile and credit menus
 - Rebuilt the website header as a compact black-and-royal-blue navigation system across the served Pro Web shell and public mirror, with responsive navigation, calmer account controls, and consistent SVG UI icons.
 - Restyled the existing account/profile popover and credit quick-view into a shared surface language; desktop credit menu anchors to its own trigger and mobile account menus become safe-area-aware bottom sheets.
