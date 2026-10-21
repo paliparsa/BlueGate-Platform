@@ -4,12 +4,19 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HTML="$ROOT/public/web/index.html"
 CSS="$ROOT/public/web/css/editorial-redesign.css"
+MODULE_HTML="$ROOT/modules/pro-web/public/index.html"
+MODULE_CSS="$ROOT/modules/pro-web/public/css/editorial-redesign.css"
 
 fail(){ printf 'FAIL: %s\n' "$1" >&2; exit 1; }
 pass(){ printf 'PASS: %s\n' "$1"; }
 
 [[ -f "$HTML" ]] || fail "public web entrypoint missing"
 [[ -f "$CSS" ]] || fail "editorial redesign stylesheet missing"
+[[ -f "$MODULE_HTML" ]] || fail "served Pro Web module entrypoint missing"
+[[ -f "$MODULE_CSS" ]] || fail "editorial stylesheet missing from served Pro Web module"
+grep -Fq '/web/css/editorial-redesign.css?v=5.1.94-editorial-2' "$MODULE_HTML" || fail "served Pro Web shell does not load the editorial stylesheet"
+grep -Fq 'content="#030303"' "$MODULE_HTML" || fail "served Pro Web shell theme color is not updated"
+grep -Fq -- '--blue:#315efb' "$MODULE_CSS" || fail "served Pro Web stylesheet royal blue token missing"
 grep -Fq '/web/css/editorial-redesign.css?v=5.1.93-editorial-1' "$HTML" || fail "versioned stylesheet link missing"
 grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
