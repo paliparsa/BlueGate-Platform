@@ -26,6 +26,8 @@ grep -Fq -- '--blue:#315efb' "$MODULE_CSS" || fail "served Pro Web stylesheet ro
 grep -Fq '/web/css/editorial-redesign.css?v=5.1.95-home-hero-1' "$HTML" || fail "versioned stylesheet link missing"
 grep -Fq '/web/css/header-profile-redesign.css?v=5.1.96-header-1' "$MODULE_HTML" || fail "served Pro Web shell does not load header/profile stylesheet"
 grep -Fq '/web/css/header-profile-redesign.css?v=5.1.96-header-1' "$HTML" || fail "public shell does not load header/profile stylesheet"
+grep -Fq '/web/js/account.js?v=5.1.96-header-1' "$MODULE_HTML" || fail "served Pro Web account script cache key not updated"
+grep -Fq '/web/js/account.js?v=5.1.96-header-1' "$HTML" || fail "public account script cache key not updated"
 grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
 grep -Fq 'سرویس‌های دیجیتال، با انتخابی ساده‌تر' "$MODULE_HTML" || fail "homepage hero copy missing"
