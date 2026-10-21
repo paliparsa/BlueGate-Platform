@@ -49,6 +49,13 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - On desktop, the profile menu is a compact anchored popover and the credit view anchors to the credit trigger. On narrow screens, account/credit popovers use a bottom sheet with safe-area padding, bounded viewport height, and reduced-motion support.
 - Keep the existing `account.js` handlers and `BGDashboard` routes as the source of truth for account, notifications, orders, wallet top-up, transactions, profile, and admin actions. Do not create parallel payment or authentication flows. The Telegram Mini App must not load website-only styles.
 
+## Homepage experience refinement (v5.1.99)
+- Treat the homepage as a service index first: a concise brand introduction, discoverable dynamic catalog, compact purchase reassurance, then featured purchase configurators and lower editorial content.
+- Avoid repeating the same value proposition in both hero columns. The visual panel should support discovery, not compete with the main headline.
+- Interface icons use inline SVG; emoji may remain in customer-generated product content but should not be introduced as static interface chrome.
+- Do not display a static numbered purchase strip as a progress indicator unless its state reflects the user's actual progress.
+- Keep catalog, product cards, tabs and configurators readable at desktop, tablet and narrow mobile widths; preserve all existing IDs, API sources and action handlers.
+
 ## Change discipline
 1. Change this document when an approved, durable design decision changes.
 2. Update the website token adapter and affected components in the same change.
