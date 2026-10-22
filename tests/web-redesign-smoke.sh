@@ -71,7 +71,7 @@ grep -Fq 'id="genericCatalogSort"' "$HTML" || fail "catalog sort control missing
 grep -Fq 'id="genericCatalogCount"' "$HTML" || fail "catalog result count missing"
 grep -Fq 'function genericSearchMatch' "$ROOT/public/web/js/app.js" || fail "catalog search logic missing"
 grep -Fq 'function genericSortedProducts' "$ROOT/public/web/js/app.js" || fail "catalog sort logic missing"
-grep -Fq 'generic-product-card--catalog:focus-visible' "$EXPERIENCE_CSS" || fail "catalog card keyboard focus styling missing"
+grep -Fq 'generic-product-card--catalog:focus-visible' "$ROOT/public/web/css/homepage-experience-redesign.css" || fail "catalog card keyboard focus styling missing"
 grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review carousel responsive styling missing"
 grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
