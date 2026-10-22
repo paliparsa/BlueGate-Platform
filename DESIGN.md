@@ -49,7 +49,7 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - On desktop, the profile menu is a compact anchored popover and the credit view anchors to the credit trigger. On narrow screens, account/credit popovers use a bottom sheet with safe-area padding, bounded viewport height, and reduced-motion support.
 - Keep the existing `account.js` handlers and `BGDashboard` routes as the source of truth for account, notifications, orders, wallet top-up, transactions, profile, and admin actions. Do not create parallel payment or authentication flows. The Telegram Mini App must not load website-only styles.
 
-## Homepage experience refinement (v5.2.0)
+## Homepage experience refinement (v5.2.1)
 - Treat the homepage as a service index first: a concise brand introduction, discoverable dynamic catalog, compact purchase reassurance, then featured purchase configurators and lower editorial content.
 - Avoid repeating the same value proposition in both hero columns. The visual panel should support discovery, not compete with the main headline.
 - Interface icons use inline SVG; emoji may remain in customer-generated product content but should not be introduced as static interface chrome.
@@ -77,3 +77,10 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - Place compact reassurance cues after the catalog, then the existing featured VPN, Telegram Stars, and Telegram Premium purchase configurators.
 - Place USDT/Toman, TRX/USD, and TON/USD reference rates after the featured purchase area and before lower editorial content. Label them as reference rates and clarify that each order's final amount is shown before payment.
 - Keep all category, product, and checkout data dynamic; never hard-code categories or create a parallel checkout. Keep website HTML, JavaScript, and CSS mirrors aligned; do not modify Telegram Mini App assets.
+
+
+## Integrated service catalog heading (v5.2.1)
+- The “OUR SERVICES / سرویس موردنظرت رو انتخاب کن” heading belongs to the live catalog section, directly above its search, sort, category filters, and dynamic product grid.
+- Do not repeat this heading above the separate featured VPN, Stars, and Premium configurators; those controls remain a secondary purchase path after the catalog.
+- Keep the heading and catalog controls visually joined as one surface, with a restrained royal-blue edge, compact vertical rhythm, and responsive search/filter layout.
+- Public website and served Pro Web HTML/CSS must remain synchronized for these shared homepage sections. Telegram Mini App files and logic remain out of scope.
