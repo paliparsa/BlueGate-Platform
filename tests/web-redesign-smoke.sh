@@ -128,3 +128,20 @@ grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway re
 grep -Fq '/web/css/homepage-brand-motion.css?v=5.3.0-brand-gateway-1' "$MODULE_HTML" || fail "served Pro Web shell does not load Brand Gateway motion stylesheet"
 grep -Fq '/web/css/homepage-brand-motion.css?v=5.3.0-brand-gateway-1' "$HTML" || fail "public shell does not load Brand Gateway motion stylesheet"
 pass "Brand Gateway and flagship-first checks"
+
+
+# The Blue Gate cinematic intro (v5.4.0)
+GATE_JS="$ROOT/public/web/js/homepage-brand-motion.js"
+MODULE_GATE_JS="$ROOT/modules/pro-web/public/js/homepage-brand-motion.js"
+[[ -f "$GATE_JS" && -f "$MODULE_GATE_JS" ]] || fail "Brand Gateway pointer-motion helper missing"
+cmp -s "$GATE_JS" "$MODULE_GATE_JS" || fail "Brand Gateway JS differs between runtime and public mirror"
+grep -Fq 'href="#products"><span>مشاهده سرویس‌ها</span>' "$HTML" || fail "hero CTA does not point to flagship configurators"
+grep -Fq '<strong>Premium</strong>' "$HTML" || fail "Premium marker missing from Brand Gateway"
+grep -Fq '<strong>Stars</strong>' "$HTML" || fail "Stars marker missing from Brand Gateway"
+grep -Fq 'bgGatewayForm' "$BRAND_MOTION_CSS" || fail "gateway formation animation missing"
+grep -Fq '1.5s' "$BRAND_MOTION_CSS" || fail "flagship reveal sequence timing missing"
+grep -Fq 'requestAnimationFrame' "$GATE_JS" || fail "pointer motion is not frame-coalesced"
+grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway reduced-motion support missing"
+grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$MODULE_HTML" || fail "served Pro Web shell does not load gateway pointer helper"
+grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$HTML" || fail "public shell does not load gateway pointer helper"
+pass "The Blue Gate cinematic intro checks"
