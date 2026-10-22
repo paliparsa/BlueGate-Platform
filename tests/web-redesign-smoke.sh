@@ -140,6 +140,7 @@ grep -Fq '<strong>Premium</strong>' "$HTML" || fail "Premium marker missing from
 grep -Fq '<strong>Stars</strong>' "$HTML" || fail "Stars marker missing from Brand Gateway"
 grep -Fq 'bgGatewayForm' "$BRAND_MOTION_CSS" || fail "gateway formation animation missing"
 grep -Fq '1.5s' "$BRAND_MOTION_CSS" || fail "flagship reveal sequence timing missing"
+grep -Fq '#products .product-tab{animation:none}' "$BRAND_MOTION_CSS" || fail "real purchase configurators must not be delayed by the hero animation"
 grep -Fq 'requestAnimationFrame' "$GATE_JS" || fail "pointer motion is not frame-coalesced"
 grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway reduced-motion support missing"
 grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$MODULE_HTML" || fail "served Pro Web shell does not load gateway pointer helper"
