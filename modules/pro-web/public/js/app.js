@@ -1,6 +1,6 @@
 (function(){
 const $=id=>document.getElementById(id);
-const state={settings:null,content:null,rates:null,bluepingService:null,vpnPlans:[],vpnPackages:[],premium:[],starsProduct:null,genericProducts:[],shopCategories:[],genericOpen:false,activeGenericCategory:null,stars:1000,activeProduct:'vpn',selectedVpnPlan:null,selectedVpnPackage:null,selectedPremium:null,stickyAction:null};
+const state={settings:null,content:null,rates:null,bluepingService:null,vpnPlans:[],vpnPackages:[],premium:[],starsProduct:null,genericProducts:[],shopCategories:[],genericOpen:false,activeGenericCategory:null,genericSearch:'',genericSort:'default',stars:1000,activeProduct:'vpn',selectedVpnPlan:null,selectedVpnPackage:null,selectedPremium:null,stickyAction:null};
 let vpnPickerModal=null;
 const fallback={brand_name:'BlueGate',brand_subtitle:'Digital Services',hero_title:'سرویس موردنیازت رو پیدا کن.',hero_text:'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال؛ محصولات موجود رو یک‌جا ببین و قبل از سفارش، جزئیات و قیمت رو بررسی کن.',telegram_support:'BlueGateSupport',telegram_channel:'BllueGate',announcement_enabled:true,announcement_text:'سفارش‌ها، اعتبار و رفرال حالا در یک حساب BlueGate یکپارچه شده‌اند.',footer_text:'سرویس‌های دیجیتال با پشتیبانی واقعی.',stars_price_basis:'toman',star_sell_per_unit_usdt:.018,star_sell_per_unit_toman:3456,slider_min:50,slider_max:10000,slider_step:25,slider_presets:[100,500,1000,2500,5000],smart_rounding_enabled:true,round_small:5000,round_medium:10000,round_large:20000,fallback_usdt_toman:192000,show_reviews:true,show_tutorials:false,show_comparison:true};
 function fmt(n,d=0){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:d})}
@@ -79,10 +79,16 @@ function setGenericOpen(){
 function renderGenericCategoryNav(){
   const nav=$('genericCategoryNav');if(!nav)return;
   const cats=genericCategories();
-  if(!cats.length){nav.innerHTML='';state.activeGenericCategory=null;return}
+  if(!cats.length){nav.innerHTML='';state.activeGenericCategory='all';return}
   const valid=new Set(cats.map(c=>String(c.id)));
-  if(state.activeGenericCategory===null||(state.activeGenericCategory!=='all'&&!valid.has(String(state.activeGenericCategory))))state.activeGenericCategory=Number(cats[0].id);
-  nav.innerHTML=cats.map(c=>{const count=(state.genericProducts||[]).filter(p=>genericProductInCategory(p,c.id)).length;return `<button type="button" class="generic-category-chip ${Number(c.id)===Number(state.activeGenericCategory)?'active':''}" data-generic-category="${Number(c.id)}" role="tab" aria-selected="${Number(c.id)===Number(state.activeGenericCategory)}"><span>${esc(c.emoji||'🛍️')}</span><b>${esc(c.title)}</b><small>${count}</small></button>`}).join('')+`<button type="button" class="generic-category-chip all ${state.activeGenericCategory==='all'?'active':''}" data-generic-category="all" role="tab" aria-selected="${state.activeGenericCategory==='all'}"><span>✦</span><b>همه</b><small>${(state.genericProducts||[]).length}</small></button>`;
+  if(state.activeGenericCategory===null||(state.activeGenericCategory!=='all'&&!valid.has(String(state.activeGenericCategory))))state.activeGenericCategory='all';
+  const allCount=(state.genericProducts||[]).length;
+  const chips=[{id:'all',title:'همه سرویس‌ها',emoji:'',count:allCount},...cats.map(c=>({id:String(c.id),title:c.title,emoji:c.emoji||'🛍️',count:(state.genericProducts||[]).filter(p=>genericProductInCategory(p,c.id)).length}))];
+  nav.innerHTML=chips.map(c=>{
+    const active=String(c.id)===String(state.activeGenericCategory);
+    const icon=c.emoji?'<span aria-hidden="true">'+esc(c.emoji)+'</span>':'';
+    return '<button type="button" class="generic-category-chip '+(active?'active':'')+'" data-generic-category="'+esc(c.id)+'" aria-pressed="'+active+'">'+icon+'<b>'+esc(c.title)+'</b><small>'+c.count+'</small></button>';
+  }).join('');
   nav.querySelectorAll('[data-generic-category]').forEach(btn=>btn.addEventListener('click',()=>{
     state.activeGenericCategory=btn.dataset.genericCategory==='all'?'all':Number(btn.dataset.genericCategory);
     renderGenericCategoryNav();renderGenericProductGrid();
@@ -112,21 +118,46 @@ function genericPriceLine(product){
   return base>0?`از ${fmt(base)} تومان`:(product?.price_label||'مشاهده پلن‌ها');
 }
 
+function genericSearchMatch(product,query){
+  if(!query)return true;
+  const haystack=[product.name,product.short_description,product.full_description,product.category_title,product.parent_name,...(product.variants||[]).map(v=>v.title)].filter(Boolean).join(' ').toLocaleLowerCase('fa');
+  return haystack.includes(query.toLocaleLowerCase('fa'));
+}
+function genericSortedProducts(products){
+  const result=[...products],sort=state.genericSort||'default';
+  if(sort==='featured')result.sort((a,b)=>Number(b.is_featured||0)-Number(a.is_featured||0));
+  else if(sort==='price-asc')result.sort((a,b)=>(genericLowestPrice(a)||Number.MAX_SAFE_INTEGER)-(genericLowestPrice(b)||Number.MAX_SAFE_INTEGER));
+  else if(sort==='price-desc')result.sort((a,b)=>(genericLowestPrice(b)||-1)-(genericLowestPrice(a)||-1));
+  else if(sort==='name')result.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'fa'));
+  return result;
+}
 function renderGenericProductGrid(){
   const grid=$('genericProductsGrid'),empty=$('genericProductsEmpty');if(!grid)return;
-  const source=state.genericProducts||[];
-  const products=source.filter(p=>genericProductInCategory(p,state.activeGenericCategory));
-  grid.innerHTML='';empty?.classList.toggle('hidden',products.length>0);
+  const source=state.genericProducts||[],query=String(state.genericSearch||'').trim();
+  const filtered=source.filter(p=>genericProductInCategory(p,state.activeGenericCategory)&&genericSearchMatch(p,query));
+  const products=genericSortedProducts(filtered),count=$('genericCatalogCount');
+  if(count)count.textContent=(query||state.activeGenericCategory!=='all')?(fmt(products.length)+' از '+fmt(source.length)+' محصول'):(fmt(source.length)+' سرویس فعال');
+  if(empty){
+    empty.classList.toggle('hidden',products.length>0);
+    empty.textContent=query?'نتیجه‌ای برای این جست‌وجو پیدا نشد. عبارت کوتاه‌تر یا نام دیگری رو امتحان کن.':state.activeGenericCategory!=='all'?'در این دسته فعلاً محصول فعالی وجود ندارد.':'فعلاً محصول فعالی برای نمایش وجود ندارد.';
+  }
+  grid.innerHTML='';
   products.forEach((p,index)=>{
     const variants=(p.variants||[]).filter(v=>Number(v.is_active)!==0);
     const emoji=p.category_emoji||p.config?.icon||'🛍️';
     const card=document.createElement('article');card.className='generic-product-card generic-product-card--catalog'+(Number(p.is_featured)?' featured':'');
     card.style.setProperty('--generic-accent',index%4===1?'145,112,255':index%4===2?'73,215,165':index%4===3?'255,176,77':'59,159,255');
+    card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label','مشاهده پلن‌ها و خرید '+p.name);
     const discount=genericDiscountInfo(p);
-    const discountChip=discount?`<span class="generic-catalog-badge">${discount.title?`${discount.percent}٪ · ${esc(discount.title)}`:`${discount.percent}٪ تخفیف`}</span>`:'';
-    card.innerHTML=`${discountChip}<div class="generic-card-media">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}">`:`<span>${esc(emoji)}</span>`}</div><div class="generic-card-copy"><h3 class="generic-card-name">${esc(p.name)}</h3><div class="generic-card-price">${genericPriceLine(p)}</div></div>`;
+    const discountChip=discount?'<span class="generic-catalog-badge">'+(discount.title?(discount.percent+'٪ · '+esc(discount.title)):(discount.percent+'٪ تخفیف'))+'</span>':'';
+    const description=String(p.short_description||p.full_description||'').trim();
+    const media=p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" decoding="async">':'<span aria-hidden="true">'+esc(emoji)+'</span>';
+    const meta='<div class="generic-card-meta"><span>'+esc(p.category_title||'سرویس دیجیتال')+'</span>'+(Number(p.is_featured)?'<b>پیشنهاد ویژه</b>':'')+'</div>';
+    const desc=description?'<p class="generic-card-description">'+esc(description)+'</p>':'';
+    card.innerHTML=discountChip+'<div class="generic-card-media">'+media+'</div><div class="generic-card-copy">'+meta+'<h3 class="generic-card-name">'+esc(p.name)+'</h3>'+desc+'<div class="generic-card-price">'+genericPriceLine(p)+'</div><span class="generic-card-action">مشاهده پلن‌ها و خرید <b aria-hidden="true">←</b></span></div>';
     const openProduct=()=>BGCheckout.open({scope:'generic',product:p.name,description:p.full_description||p.short_description||'',image:p.image_url||'',icon:emoji,badge:p.category_title||'BlueGate Service',delivery:p.delivery_type_fa||'تحویل از حساب BlueGate',toman:Number(p.price||genericLowestPrice(p)||0),rates:state.rates,productId:p.id,variantId:variants[0]?.id||null,variants:variants.map(v=>({id:v.id,title:v.title,price:Number(v.price||0),duration_days:Number(v.duration_days||0),description:v.description||'',old_price:Number(v.old_price||0),discount_percent:Number(v.discount_percent||0),product_id:Number(v.product_id||p.id)}))});
     card.addEventListener('click',openProduct);
+    card.addEventListener('keydown',event=>{if(event.target!==card)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();openProduct()}});
     grid.appendChild(card);
   });
 }
@@ -146,7 +177,17 @@ function servicePanelMap(){return {vpn:'vpnPanel',stars:'starsPanel',premium:'pr
 function scrollToServiceDetails(product){const panel=$(servicePanelMap()[product]);if(!panel)return;const target=panel.querySelector('.panel-intro,.configurator-card')||panel;smartScrollTo(target,{force:true,flash:true})}
 function activateProduct(product,scroll=false){if(!servicePanelMap()[product])return;state.activeProduct=product;const map=servicePanelMap();document.querySelectorAll('.product-tab').forEach(x=>{const active=x.dataset.product===product;x.classList.toggle('active',active);x.setAttribute('aria-selected',String(active))});document.querySelectorAll('.product-panel').forEach(x=>x.classList.toggle('active',x.id===map[product]));document.querySelectorAll('#serviceNav button').forEach(x=>{const active=x.dataset.service===product;x.classList.toggle('active',active);x.setAttribute('aria-selected',String(active))});syncProductCardState();persistShopState();syncSticky();if(scroll&&product!=='vpn')scrollToServiceDetails(product)}
 function syncSticky(){const bar=$('stickyCheckout');let product='',variant='',price=0,action=null;if(state.activeProduct==='vpn'&&state.selectedVpnPackage){product=state.selectedVpnPlan.title;variant=state.selectedVpnPackage.label;price=state.selectedVpnPackage.price_toman;action=vpnCheckout}else if(state.activeProduct==='stars'&&state.starsProduct){product='Telegram Stars';variant=fmt(state.stars)+' Stars';price=BGPricing.stars(state.stars,state.settings,state.rates||{usdt_toman:safeRate()});action=starsCheckout}else if(state.activeProduct==='premium'&&state.selectedPremium){product='Telegram Premium';variant=state.selectedPremium.label;price=state.selectedPremium.price_toman;action=premiumCheckout}state.stickyAction=action;if(!action){bar.classList.add('hidden');return}$('stickyProduct').textContent=product;$('stickyVariant').textContent=variant;$('stickyPrice').textContent=fmt(price);bar.classList.remove('hidden')}
-function bind(){document.querySelectorAll('.product-tab').forEach(b=>b.addEventListener('click',()=>{centerActiveServiceCard(b.dataset.product);if(b.dataset.product==='vpn'){activateProduct('vpn',false);openVpnPicker()}else activateProduct(b.dataset.product,true)}));document.querySelectorAll('#serviceNav button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.service==='vpn'){activateProduct('vpn',false);openVpnPicker()}else activateProduct(b.dataset.service,true)}));$('vpnPopupOpen')?.addEventListener('click',openVpnPicker);$('changeVpnPlan').addEventListener('click',()=>{const stage=$('vpnPackageStage');stage.classList.add('hidden');state.selectedVpnPlan=null;state.selectedVpnPackage=null;renderVpn();persistShopState();syncSticky();smartScrollTo($('vpnPlans'),{force:true})});$('vpnBuy').addEventListener('click',vpnCheckout);$('premiumBuy').addEventListener('click',premiumCheckout);$('starsSlider').addEventListener('input',e=>{state.stars=Number(e.target.value);$('starsInput').value=state.stars;renderStars()});$('starsInput').addEventListener('change',e=>{let v=Number(e.target.value||state.settings.slider_min);v=Math.min(state.settings.slider_max,Math.max(state.settings.slider_min,v));v=state.settings.slider_min+Math.round((v-state.settings.slider_min)/state.settings.slider_step)*state.settings.slider_step;state.stars=v;$('starsInput').value=$('starsSlider').value=v;renderStars()});$('starsMinus').addEventListener('click',()=>{state.stars=Math.max(state.settings.slider_min,state.stars-state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsPlus').addEventListener('click',()=>{state.stars=Math.min(state.settings.slider_max,state.stars+state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsBuy').addEventListener('click',starsCheckout);$('stickyBuy').addEventListener('click',()=>state.stickyAction?.());localStorage.removeItem('nx_theme');document.body.classList.remove('light');$('mobileMenuBtn').addEventListener('click',()=>$('mobileMenu').classList.toggle('hidden'));$('reviewsPrev')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:380,behavior:'smooth'}));$('reviewsNext')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:-380,behavior:'smooth'}));const header=$('siteHeader');let raf=0;const onViewportChange=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;header?.classList.toggle('scrolled',window.scrollY>24);syncServiceSwitcherVisibility()})};onViewportChange();window.addEventListener('scroll',onViewportChange,{passive:true});window.addEventListener('resize',onViewportChange,{passive:true})}
+function bindCatalogDiscovery(){
+  const input=$('genericCatalogSearch'),clear=$('genericCatalogSearchClear'),sort=$('genericCatalogSort');
+  if(input){
+    const apply=()=>{state.genericSearch=input.value;if(clear)clear.hidden=!input.value;renderGenericProductGrid()};
+    input.addEventListener('input',apply);
+    input.addEventListener('compositionend',apply);
+    clear?.addEventListener('click',()=>{input.value='';state.genericSearch='';renderGenericProductGrid();clear.hidden=true;input.focus()});
+  }
+  sort?.addEventListener('change',()=>{state.genericSort=sort.value;renderGenericProductGrid()});
+}
+function bind(){bindCatalogDiscovery();document.querySelectorAll('.product-tab').forEach(b=>b.addEventListener('click',()=>{centerActiveServiceCard(b.dataset.product);if(b.dataset.product==='vpn'){activateProduct('vpn',false);openVpnPicker()}else activateProduct(b.dataset.product,true)}));document.querySelectorAll('#serviceNav button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.service==='vpn'){activateProduct('vpn',false);openVpnPicker()}else activateProduct(b.dataset.service,true)}));$('vpnPopupOpen')?.addEventListener('click',openVpnPicker);$('changeVpnPlan').addEventListener('click',()=>{const stage=$('vpnPackageStage');stage.classList.add('hidden');state.selectedVpnPlan=null;state.selectedVpnPackage=null;renderVpn();persistShopState();syncSticky();smartScrollTo($('vpnPlans'),{force:true})});$('vpnBuy').addEventListener('click',vpnCheckout);$('premiumBuy').addEventListener('click',premiumCheckout);$('starsSlider').addEventListener('input',e=>{state.stars=Number(e.target.value);$('starsInput').value=state.stars;renderStars()});$('starsInput').addEventListener('change',e=>{let v=Number(e.target.value||state.settings.slider_min);v=Math.min(state.settings.slider_max,Math.max(state.settings.slider_min,v));v=state.settings.slider_min+Math.round((v-state.settings.slider_min)/state.settings.slider_step)*state.settings.slider_step;state.stars=v;$('starsInput').value=$('starsSlider').value=v;renderStars()});$('starsMinus').addEventListener('click',()=>{state.stars=Math.max(state.settings.slider_min,state.stars-state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsPlus').addEventListener('click',()=>{state.stars=Math.min(state.settings.slider_max,state.stars+state.settings.slider_step);$('starsInput').value=$('starsSlider').value=state.stars;renderStars()});$('starsBuy').addEventListener('click',starsCheckout);$('stickyBuy').addEventListener('click',()=>state.stickyAction?.());localStorage.removeItem('nx_theme');document.body.classList.remove('light');$('mobileMenuBtn').addEventListener('click',()=>$('mobileMenu').classList.toggle('hidden'));$('reviewsPrev')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:380,behavior:'smooth'}));$('reviewsNext')?.addEventListener('click',()=>$('reviewsGrid').scrollBy({left:-380,behavior:'smooth'}));const header=$('siteHeader');let raf=0;const onViewportChange=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;header?.classList.toggle('scrolled',window.scrollY>24);syncServiceSwitcherVisibility()})};onViewportChange();window.addEventListener('scroll',onViewportChange,{passive:true});window.addEventListener('resize',onViewportChange,{passive:true})}
 function initialMemberRoute(){const p=(location.pathname||'/').replace(/\/+$/,'')||'/';return /^\/(account|orders|wallet|referral|profile|admin)(?:\/|$)/.test(p)}
 async function bootstrapStore(){await load();restoreShopState();renderShell();renderRates();renderVpn();setupStars();renderPremium();renderGenericProducts();renderContent();if(state.selectedVpnPlan){renderVpnPackages();$('vpnPackageStage')?.classList.remove('hidden')}activateProduct(state.activeProduct,false);bind();syncServiceSwitcherVisibility();window.BGStoreState=state;setInterval(refreshRates,Math.max(30,Number(NX_CONFIG.RATE_REFRESH_SECONDS||60))*1000)}
 async function init(){try{if(initialMemberRoute()){await window.BGAccount?.init?.();await window.BGDashboard?.init?.();const warm=()=>bootstrapStore().catch(e=>console.warn('Storefront warmup skipped:',e));if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:1800});else setTimeout(warm,250);return}const accountTask=window.BGAccount?.init?.();await bootstrapStore();await accountTask;await window.BGDashboard?.init?.()}catch(e){console.error(e);document.documentElement.classList.remove('bg-route-boot');document.body.insertAdjacentHTML('afterbegin','<div class="bg-fatal">اتصال فروشگاه به بک‌اند برقرار نشد. تنظیمات config.php و دیتابیس را بررسی کن.</div>')}}

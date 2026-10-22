@@ -47,7 +47,7 @@
   <link rel="stylesheet" href="/web/css/editorial-redesign.css?v=5.1.95-home-hero-1">
   <link rel="stylesheet" href="/web/css/header-profile-redesign.css?v=5.1.96-header-1">
   <link rel="stylesheet" href="/web/css/homepage-bottom-redesign.css?v=5.1.98-catalog-first-1">
-  <link rel="stylesheet" href="/web/css/homepage-experience-redesign.css?v=5.1.99-home-experience-1">
+  <link rel="stylesheet" href="/web/css/homepage-experience-redesign.css?v=5.2.0-catalog-discovery-1">
 </head>
 <body>
   <div id="bgRouteBoot" aria-live="polite"><div><span class="bg-route-loader-mark"><img src="/web/assets/logo-mark.webp" alt="BlueGate" width="43" height="43"></span><span class="bg-route-loader-label">در حال باز کردن بخش درخواستی…</span></div></div>
@@ -134,11 +134,16 @@
       <div id="genericProductsCollapse" class="generic-products-collapse">
         <div class="generic-products-collapse-inner">
           <div class="generic-products-toolbar">
-            <div><span class="kicker">CATEGORIES</span><h2>دسته‌بندی سرویس‌ها</h2><p>یک دسته را انتخاب کن تا فقط همان محصولات نمایش داده شوند.</p></div>
-            <div id="genericCategoryNav" class="generic-category-nav" role="tablist" aria-label="دسته‌بندی سرویس‌های بیشتر"></div>
+            <div class="generic-products-toolbar-heading"><span class="kicker">CATALOG / BLUEGATE</span><h2>از کجا شروع کنیم؟</h2><p>بین سرویس‌های فعال جست‌وجو کن، قیمت‌ها رو مقایسه کن و بعد پلن مناسب رو انتخاب کن.</p></div>
+            <div class="generic-products-tools">
+              <label class="generic-catalog-search" for="genericCatalogSearch"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input id="genericCatalogSearch" type="search" inputmode="search" autocomplete="off" placeholder="جست‌وجوی سرویس یا اشتراک…" aria-label="جست‌وجو در کاتالوگ خدمات"><button id="genericCatalogSearchClear" type="button" class="generic-catalog-search-clear" aria-label="پاک کردن جست‌وجو" hidden>×</button></label>
+              <label class="generic-catalog-sort" for="genericCatalogSort"><span>مرتب‌سازی</span><select id="genericCatalogSort" aria-label="مرتب‌سازی محصولات"><option value="default">پیشنهادی</option><option value="featured">پیشنهادهای ویژه</option><option value="price-asc">ارزان‌ترین</option><option value="price-desc">گران‌ترین</option><option value="name">نام محصول</option></select></label>
+              <p id="genericCatalogCount" class="generic-catalog-count" aria-live="polite" aria-atomic="true"></p>
+            </div>
           </div>
+          <div id="genericCategoryNav" class="generic-category-nav" role="group" aria-label="فیلتر دسته‌بندی سرویس‌ها"></div>
           <div id="genericProductsGrid" class="generic-products-grid"></div>
-          <div id="genericProductsEmpty" class="generic-products-empty hidden">در این دسته فعلاً محصول فعالی وجود ندارد.</div>
+          <div id="genericProductsEmpty" class="generic-products-empty hidden" role="status">محصولی مطابق جست‌وجوت پیدا نشد. عبارت دیگه‌ای امتحان کن یا فیلتر دسته‌بندی رو تغییر بده.</div>
         </div>
       </div>
     </section>
@@ -302,7 +307,7 @@
   <div id="toast" class="toast hidden"></div>
   <script defer src="/web/js/config.js?v=20261012"></script><script defer src="/web/js/api.js?v=20261012"></script><script defer src="/web/js/rates.js?v=20261012"></script><script defer src="/web/js/pricing.js?v=20261012"></script><script defer src="/web/js/account.js?v=5.1.96-header-1"></script><script defer src="/web/js/admin.js?v=20261013-translation-resilience-2"></script>  <script defer src="/web/js/dashboard.js?v=20261012-ticket-parity-1"></script><script defer src="/web/js/checkout.js?v=20261012"></script>
   <script defer src="/web/js/mobile-v281.js?v=0"></script>
-  <script defer src="/web/js/app.js?v=5.1.98-catalog-first-1"></script>
+  <script defer src="/web/js/app.js?v=5.2.0-catalog-discovery-1"></script>
   <script defer src="/web/js/motion.js?v=0"></script>
   <script defer src="/translation.js?v=20261013-translation-resilience-2"></script>
 </body>
