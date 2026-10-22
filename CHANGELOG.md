@@ -5,7 +5,7 @@
 - Improved empty-result messaging, mobile category navigation, compact two-column product cards and visible focus/reduced-motion behavior.
 - Preserved storefront API data, catalog IDs, pricing and the existing BGCheckout order path; no Mini App or backend behavior changed.
 - Kept public website and served Pro Web HTML, JavaScript and CSS mirrors synchronized; added smoke assertions and bumped the version.
-- Validation: source-level checks and JavaScript syntax validation are included where the runtime supports them; live browser/device and authenticated checkout verification still require runtime access.
+- Validation: source-level mirror and feature assertions are included in the smoke test; the smoke test was not executed in this session. Live browser/device and authenticated checkout verification still require runtime access.
 
 ## 5.1.99 — Homepage service-index redesign
 - Refined the website homepage into a clearer product-led service index: calmer hero hierarchy, less duplicated brand copy, more legible dynamic catalog controls, and stronger separation between the full catalog and featured purchase configurators.
