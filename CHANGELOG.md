@@ -1,3 +1,11 @@
+## 5.2.1 — Integrated services heading and catalog controls
+- Moved the “OUR SERVICES / سرویس موردنظرت رو انتخاب کن” heading into the live catalog so the title, search, sorting, categories and products read as one cohesive section.
+- Removed the duplicate heading from the featured VPN/Stars/Premium configurators and the redundant catalog intro, reducing visual separation and excess vertical space.
+- Refined desktop and mobile hierarchy with a restrained royal-blue editorial edge, clearer heading scale, and search/filter controls grouped directly below the title.
+- Preserved catalog data, search/sort/category behavior, product cards, pricing, BGCheckout, featured configurators, and the Telegram Mini App.
+- Kept public website and served Pro Web HTML/CSS mirrors synchronized; updated the web redesign smoke assertions and bumped the version.
+- Validation: source-level checks and mirror parity assertions updated; runtime browser/device and authenticated checkout verification still require execution in a deployed/browser environment.
+
 ## 5.2.0 — Catalog discovery and product-card refresh
 - Added live client-side search across service names, descriptions, categories and plan names, with an accessible clear action and result count.
 - Added sorting by featured services, price and name, and made “all services” the default category so the full active catalog is discoverable immediately.
