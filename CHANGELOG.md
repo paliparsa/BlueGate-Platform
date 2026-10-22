@@ -1,3 +1,11 @@
+## 5.3.0 — Brand Gateway and flagship services first
+- Reordered the homepage so BluePing VPN, Telegram Stars, and Telegram Premium purchase configurators appear immediately after the brand hero and before the general services catalog.
+- Added a restrained BlueGate gateway motion treatment: electric-blue portal rings, a single light beam, staggered hero reveal, and subtle featured-service card interactions.
+- Preserved the complete dynamic catalog, search/sort/category controls, reference rates, product data, account/navigation behavior, and existing checkout handlers.
+- Added a website-only stylesheet mirrored across the public shell and served Pro Web module; respected reduced-motion preferences and responsive layouts. Telegram Mini App files and logic remain unchanged.
+- Updated the web redesign smoke checks to assert the new flagship-first section order and motion stylesheet parity.
+- Validation: source-level checks updated; full local test execution and real-browser/authenticated checkout testing still require a repository runtime/browser environment.
+
 ## 5.2.1 — Integrated services heading and catalog controls
 - Moved the “OUR SERVICES / سرویس موردنظرت رو انتخاب کن” heading into the live catalog so the title, search, sorting, categories and products read as one cohesive section.
 - Removed the duplicate heading from the featured VPN/Stars/Premium configurators and the redundant catalog intro, reducing visual separation and excess vertical space.

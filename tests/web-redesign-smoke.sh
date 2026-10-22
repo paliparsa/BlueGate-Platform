@@ -32,7 +32,7 @@ grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
-grep -Fxq '5.2.1' "$ROOT/VERSION" || fail "version not bumped"
+grep -Fxq '5.3.0' "$ROOT/VERSION" || fail "version not bumped"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
 grep -Fq 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
@@ -80,7 +80,7 @@ grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review ca
 grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
 grep -Fq 'scrollbar-width:thin' "$MODULE_BOTTOM_CSS" || fail "local overflow styling missing"
-grep -Fxq '5.2.1' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
+grep -Fxq '5.3.0' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
 
 pass "web redesign smoke checks"
 
@@ -93,7 +93,8 @@ for PAGE in "$HTML" "$MODULE_HTML"; do
   CATALOG_POS=$(grep -n '<section id="genericProductsSection"' "$PAGE" | head -1 | cut -d: -f1)
   PRODUCTS_POS=$(grep -n '<section id="products"' "$PAGE" | head -1 | cut -d: -f1)
   RATES_POS=$(grep -n '<section class="shell live-strip"' "$PAGE" | head -1 | cut -d: -f1)
-  [[ "$HERO_POS" -lt "$CATALOG_POS" && "$CATALOG_POS" -lt "$PRODUCTS_POS" && "$PRODUCTS_POS" -lt "$RATES_POS" ]] || fail "homepage section order is not catalog-first"
+  CONVERSION_POS=$(grep -n '<section class="shell conversion-strip"' "$PAGE" | head -1 | cut -d: -f1)
+  [[ "$HERO_POS" -lt "$PRODUCTS_POS" && "$PRODUCTS_POS" -lt "$CONVERSION_POS" && "$CONVERSION_POS" -lt "$CATALOG_POS" && "$CATALOG_POS" -lt "$RATES_POS" ]] || fail "homepage order must prioritize featured products before the dynamic catalog"
   grep -Fq 'rate-disclaimer' "$PAGE" || fail "crypto reference-rate disclaimer missing"
 done
 for ASSET in "$ROOT/public/web/js/app.js" "$ROOT/modules/pro-web/public/js/app.js"; do
@@ -116,3 +117,14 @@ grep -Fq 'prefers-reduced-motion:reduce' "$EXPERIENCE_CSS" || fail "homepage exp
 ! grep -Fq 'class="conversion-icon">🎧' "$MODULE_HTML" || fail "static support icon still uses emoji"
 
 pass "catalog-first homepage checks"
+
+# Brand Gateway + flagship-first homepage
+BRAND_MOTION_CSS="$ROOT/public/web/css/homepage-brand-motion.css"
+MODULE_BRAND_MOTION_CSS="$ROOT/modules/pro-web/public/css/homepage-brand-motion.css"
+[[ -f "$BRAND_MOTION_CSS" && -f "$MODULE_BRAND_MOTION_CSS" ]] || fail "Brand Gateway motion stylesheet missing"
+cmp -s "$BRAND_MOTION_CSS" "$MODULE_BRAND_MOTION_CSS" || fail "Brand Gateway stylesheets differ between runtime and public mirror"
+grep -Fq 'bgGatewayPulse' "$BRAND_MOTION_CSS" || fail "gateway signature motion missing"
+grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway reduced-motion support missing"
+grep -Fq '/web/css/homepage-brand-motion.css?v=5.3.0-brand-gateway-1' "$MODULE_HTML" || fail "served Pro Web shell does not load Brand Gateway motion stylesheet"
+grep -Fq '/web/css/homepage-brand-motion.css?v=5.3.0-brand-gateway-1' "$HTML" || fail "public shell does not load Brand Gateway motion stylesheet"
+pass "Brand Gateway and flagship-first checks"

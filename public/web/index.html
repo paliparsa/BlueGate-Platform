@@ -48,6 +48,7 @@
   <link rel="stylesheet" href="/web/css/header-profile-redesign.css?v=5.1.96-header-1">
   <link rel="stylesheet" href="/web/css/homepage-bottom-redesign.css?v=5.1.98-catalog-first-1">
   <link rel="stylesheet" href="/web/css/homepage-experience-redesign.css?v=5.2.1-integrated-catalog-1">
+  <link rel="stylesheet" href="/web/css/homepage-brand-motion.css?v=5.3.0-brand-gateway-1">
 </head>
 <body>
   <div id="bgRouteBoot" aria-live="polite"><div><span class="bg-route-loader-mark"><img src="/web/assets/logo-mark.webp" alt="BlueGate" width="43" height="43"></span><span class="bg-route-loader-label">در حال باز کردن بخش درخواستی…</span></div></div>
@@ -124,35 +125,6 @@
         </div>
       </div>
     </section>
-
-    <section id="genericProductsSection" class="section shell generic-products-section hidden">
-      <div id="genericProductsCollapse" class="generic-products-collapse">
-        <div class="generic-products-collapse-inner">
-          <div class="generic-products-toolbar">
-            <div class="generic-products-toolbar-heading"><span class="kicker">OUR SERVICES</span><h2>سرویس موردنظرت رو انتخاب کن</h2><p>سرویس‌های فعال رو جست‌وجو کن، قیمت‌ها رو مقایسه کن و پلن مناسب رو انتخاب کن.</p></div>
-            <div class="generic-products-tools">
-              <label class="generic-catalog-search" for="genericCatalogSearch"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input id="genericCatalogSearch" type="search" inputmode="search" autocomplete="off" placeholder="جست‌وجوی سرویس یا اشتراک…" aria-label="جست‌وجو در کاتالوگ خدمات"><button id="genericCatalogSearchClear" type="button" class="generic-catalog-search-clear" aria-label="پاک کردن جست‌وجو" hidden>×</button></label>
-              <label class="generic-catalog-sort" for="genericCatalogSort"><span>مرتب‌سازی</span><select id="genericCatalogSort" aria-label="مرتب‌سازی محصولات"><option value="default">پیشنهادی</option><option value="featured">پیشنهادهای ویژه</option><option value="price-asc">ارزان‌ترین</option><option value="price-desc">گران‌ترین</option><option value="name">نام محصول</option></select></label>
-              <p id="genericCatalogCount" class="generic-catalog-count" aria-live="polite" aria-atomic="true"></p>
-            </div>
-          </div>
-          <div id="genericCategoryNav" class="generic-category-nav" role="group" aria-label="فیلتر دسته‌بندی سرویس‌ها"></div>
-          <div id="genericProductsGrid" class="generic-products-grid"></div>
-          <div id="genericProductsEmpty" class="generic-products-empty hidden" role="status">محصولی مطابق جست‌وجوت پیدا نشد. عبارت دیگه‌ای امتحان کن یا فیلتر دسته‌بندی رو تغییر بده.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="shell conversion-strip" aria-label="مزایای خرید از BlueGate">
-      <div class="conversion-item"><span class="conversion-icon bg-icon">${icons.bolt.replace(/^<span class="bg-icon" aria-hidden="true">/,"").replace(/<\/span>$/,"")}</span><div><strong>سفارش سریع</strong><small>مسیر خرید کوتاه و مستقیم</small></div></div>
-      <div class="conversion-item"><span class="conversion-icon bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span><div><strong>قیمت شفاف</strong><small>مبلغ نهایی قبل از سفارش</small></div></div>
-      <div class="conversion-item"><span class="conversion-icon">${icons.headset}</span><div><strong>پشتیبانی مستقیم</strong><small>ارتباط از طریق تلگرام</small></div></div>
-      <div class="conversion-item"><span class="conversion-icon">${icons.refresh}</span><div><strong>نرخ تازه</strong><small>محاسبه سرویس‌های ارزی</small></div></div>
-    </section>
-
-    
-
-    
 
     <section id="products" class="section shell products-section">
       <div class="service-flow" aria-label="مسیر خرید"><span class="active"><b>۱</b> انتخاب سرویس</span><i>←</i><span><b>۲</b> انتخاب گزینه</span><i>←</i><span><b>۳</b> تایید سفارش</span></div>
@@ -259,6 +231,33 @@
         <div class="panel-intro"><div><span class="kicker">TELEGRAM PREMIUM</span><h3>مدت اشتراک رو انتخاب کن</h3><p>یک پلن را انتخاب کن؛ قیمت اصلی تومان است و معادل ارزها زیر آن نمایش داده می‌شود.</p></div><span class="step-badge">مرحله ۲ از ۳</span></div>
         <div id="premiumPlans" class="premium-grid"></div>
         <div class="premium-action-wrap"><div class="selection-summary" id="premiumSelectionSummary"><div><span>پلن انتخاب‌شده</span><strong id="premiumSelectedLabel">هنوز انتخاب نشده</strong></div><div class="selection-price"><span id="premiumSelectedPrice">—</span><small>تومان</small></div><button id="premiumBuy" class="btn primary" type="button" disabled>ثبت سفارش</button></div><div class="purchase-reassurance"><span>✓ قیمت نهایی به تومان</span><span>✓ معادل USDT / TRX / TON</span></div></div>
+      </div>
+    </section>
+
+    
+
+    <section class="shell conversion-strip" aria-label="مزایای خرید از BlueGate">
+      <div class="conversion-item"><span class="conversion-icon bg-icon">${icons.bolt.replace(/^<span class="bg-icon" aria-hidden="true">/,"").replace(/<\/span>$/,"")}</span><div><strong>سفارش سریع</strong><small>مسیر خرید کوتاه و مستقیم</small></div></div>
+      <div class="conversion-item"><span class="conversion-icon bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span><div><strong>قیمت شفاف</strong><small>مبلغ نهایی قبل از سفارش</small></div></div>
+      <div class="conversion-item"><span class="conversion-icon">${icons.headset}</span><div><strong>پشتیبانی مستقیم</strong><small>ارتباط از طریق تلگرام</small></div></div>
+      <div class="conversion-item"><span class="conversion-icon">${icons.refresh}</span><div><strong>نرخ تازه</strong><small>محاسبه سرویس‌های ارزی</small></div></div>
+    </section>
+
+    <section id="genericProductsSection" class="section shell generic-products-section hidden">
+      <div id="genericProductsCollapse" class="generic-products-collapse">
+        <div class="generic-products-collapse-inner">
+          <div class="generic-products-toolbar">
+            <div class="generic-products-toolbar-heading"><span class="kicker">OUR SERVICES</span><h2>سرویس موردنظرت رو انتخاب کن</h2><p>سرویس‌های فعال رو جست‌وجو کن، قیمت‌ها رو مقایسه کن و پلن مناسب رو انتخاب کن.</p></div>
+            <div class="generic-products-tools">
+              <label class="generic-catalog-search" for="genericCatalogSearch"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input id="genericCatalogSearch" type="search" inputmode="search" autocomplete="off" placeholder="جست‌وجوی سرویس یا اشتراک…" aria-label="جست‌وجو در کاتالوگ خدمات"><button id="genericCatalogSearchClear" type="button" class="generic-catalog-search-clear" aria-label="پاک کردن جست‌وجو" hidden>×</button></label>
+              <label class="generic-catalog-sort" for="genericCatalogSort"><span>مرتب‌سازی</span><select id="genericCatalogSort" aria-label="مرتب‌سازی محصولات"><option value="default">پیشنهادی</option><option value="featured">پیشنهادهای ویژه</option><option value="price-asc">ارزان‌ترین</option><option value="price-desc">گران‌ترین</option><option value="name">نام محصول</option></select></label>
+              <p id="genericCatalogCount" class="generic-catalog-count" aria-live="polite" aria-atomic="true"></p>
+            </div>
+          </div>
+          <div id="genericCategoryNav" class="generic-category-nav" role="group" aria-label="فیلتر دسته‌بندی سرویس‌ها"></div>
+          <div id="genericProductsGrid" class="generic-products-grid"></div>
+          <div id="genericProductsEmpty" class="generic-products-empty hidden" role="status">محصولی مطابق جست‌وجوت پیدا نشد. عبارت دیگه‌ای امتحان کن یا فیلتر دسته‌بندی رو تغییر بده.</div>
+        </div>
       </div>
     </section>
 

@@ -1,0 +1,77 @@
+/* BlueGate Web — Brand Gateway + flagship-service motion, v5.3.0.
+   Website-only visual layer. Keep the live catalog and purchase logic untouched. */
+:root{--bg-gateway-blue:#315efb;--bg-gateway-soft:#7894ff}
+#top .hero{position:relative;isolation:isolate;overflow:clip}
+#top .hero-copy{animation:bgGatewayRise .68s cubic-bezier(.2,.7,.2,1) both}
+#top .hero-eyebrow{animation:bgGatewayRise .55s .04s cubic-bezier(.2,.7,.2,1) both}
+#top .hero h1{animation:bgGatewayRise .65s .12s cubic-bezier(.2,.7,.2,1) both}
+#top .hero-copy>p{animation:bgGatewayRise .65s .2s cubic-bezier(.2,.7,.2,1) both}
+#top .hero-actions{animation:bgGatewayRise .65s .28s cubic-bezier(.2,.7,.2,1) both}
+#top .hero-trust,#top .hero-microcopy{animation:bgGatewayRise .65s .36s cubic-bezier(.2,.7,.2,1) both}
+#top .hero-visual{position:relative;isolation:isolate}
+#top .hero-visual::before{
+ content:"";position:absolute;z-index:-1;inline-size:clamp(220px,31vw,410px);aspect-ratio:1;
+ inset-block-start:50%;inset-inline-start:50%;transform:translate(-50%,-50%);
+ border:1px solid rgba(120,148,255,.19);border-radius:50%;
+ background:radial-gradient(circle,rgba(49,94,251,.085),rgba(49,94,251,.025) 38%,transparent 68%);
+ box-shadow:0 0 0 18px rgba(49,94,251,.018),0 0 0 38px rgba(49,94,251,.012),inset 0 0 44px rgba(49,94,251,.045);
+ animation:bgGatewayPulse 6s ease-in-out infinite
+}
+#top .hero-visual::after{
+ content:"";position:absolute;z-index:-1;inset-inline:-18%;inset-block-start:23%;height:1px;
+ background:linear-gradient(90deg,transparent,rgba(120,148,255,.4),rgba(49,94,251,.08),transparent);
+ transform:rotate(-22deg);transform-origin:center;opacity:.7;animation:bgGatewayBeam 7.5s ease-in-out infinite
+}
+#top .hero .brand-stage{
+ position:relative;overflow:hidden;isolation:isolate;border-color:rgba(120,148,255,.19);
+ background:linear-gradient(135deg,rgba(16,20,29,.97),rgba(7,8,11,.98) 68%);
+ box-shadow:0 24px 72px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.025)
+}
+#top .hero .brand-stage::before{
+ content:"";position:absolute;z-index:-1;inset-block:0;inset-inline-start:0;width:2px;
+ background:linear-gradient(180deg,transparent,#315efb 26%,#7894ff 53%,#315efb 78%,transparent);opacity:.95
+}
+#top .hero .brand-stage::after{pointer-events:none}
+#top .hero .hero-console-head{animation:bgGatewayRise .6s .16s both}
+#top .hero .brand-stage-copy{animation:bgGatewayRise .65s .25s both}
+#top .hero .hero-service-item{animation:bgGatewayRise .55s both;transition:border-color .18s ease,background-color .18s ease,transform .18s ease}
+#top .hero .hero-service-item:nth-child(1){animation-delay:.32s}
+#top .hero .hero-service-item:nth-child(2){animation-delay:.4s}
+#top .hero .hero-service-item:nth-child(3){animation-delay:.48s}
+#top .hero .hero-service-item:hover{transform:translateX(-2px);border-color:rgba(120,148,255,.25)}
+#products.products-section{position:relative;scroll-margin-top:92px}
+#products.products-section::before{
+ content:"";display:block;width:clamp(42px,6vw,72px);height:2px;margin:0 auto 18px;
+ background:linear-gradient(90deg,transparent,#315efb,transparent);opacity:.85
+}
+#products .product-tab{animation:bgGatewayRise .45s both}
+#products .product-tab:nth-child(2){animation-delay:.06s}
+#products .product-tab:nth-child(3){animation-delay:.12s}
+#products .product-tab:hover{border-color:rgba(120,148,255,.32)!important}
+#products .product-tab.active{box-shadow:inset 3px 0 0 #315efb,0 10px 32px rgba(0,0,0,.16)!important}
+#products .tab-icon{transition:transform .18s ease,background-color .18s ease}
+#products .product-tab:hover .tab-icon{transform:translateY(-2px)}
+#genericProductsSection{scroll-margin-top:92px}
+#genericProductsSection .generic-products-toolbar-heading{position:relative}
+#genericProductsSection .generic-products-toolbar-heading::after{
+ content:"";position:absolute;inset-block:2px;inset-inline-start:-2px;width:2px;
+ background:linear-gradient(180deg,transparent,#7894ff,transparent);opacity:.55
+}
+@keyframes bgGatewayRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bgGatewayPulse{0%,100%{opacity:.68;scale:.98}50%{opacity:1;scale:1.025}}
+@keyframes bgGatewayBeam{0%,100%{opacity:.24;translate:-2% 0}50%{opacity:.8;translate:2% 0}}
+@media(max-width:768px){
+ #top .hero{overflow:visible}
+ #top .hero-visual::before{inline-size:min(76vw,330px);opacity:.75}
+ #top .hero-visual::after{inset-inline:-6%;inset-block-start:17%;opacity:.4}
+ #top .hero .brand-stage{box-shadow:0 16px 40px rgba(0,0,0,.28)}
+ #products.products-section{padding-top:38px!important}
+ #products.products-section::before{margin-bottom:14px}
+}
+@media(max-width:420px){#top .hero-visual::before{inline-size:74vw}#top .hero .brand-stage{padding:16px!important}}
+@media(prefers-reduced-motion:reduce){
+ #top .hero-copy,#top .hero-eyebrow,#top .hero h1,#top .hero-copy>p,#top .hero-actions,#top .hero-trust,#top .hero-microcopy,
+ #top .hero-console-head,#top .brand-stage-copy,#top .hero-service-item,#products .product-tab{animation:none!important}
+ #top .hero-visual::before,#top .hero-visual::after{animation:none!important}
+ #top .hero .hero-service-item,#products .tab-icon{transition:none!important}
+}
