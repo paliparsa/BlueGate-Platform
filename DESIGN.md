@@ -84,3 +84,10 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - Do not repeat this heading above the separate featured VPN, Stars, and Premium configurators; those controls remain a secondary purchase path after the catalog.
 - Keep the heading and catalog controls visually joined as one surface, with a restrained royal-blue edge, compact vertical rhythm, and responsive search/filter layout.
 - Public website and served Pro Web HTML/CSS must remain synchronized for these shared homepage sections. Telegram Mini App files and logic remain out of scope.
+
+
+## Brand Gateway homepage (v5.3.0)
+- Homepage order is intentional: brand hero, the three core purchase configurators (BluePing VPN, Telegram Stars, Telegram Premium), purchase reassurance, then the complete live services catalog, reference rates, and lower editorial content.
+- VPN, Stars, and Premium are the business's flagship services and must appear before the general catalog without removing or hiding other active catalog products.
+- The hero signature is a restrained electric-blue gateway: layered circular light, one thin moving beam, staggered text/service reveal, and subtle card interactions. Keep the page predominantly near-black; the gate supports the brand rather than becoming a large gradient background.
+- Use CSS-only motion with no interaction-blocking intro. Honor `prefers-reduced-motion`; never hide essential content while waiting for animation. Keep HTML/CSS mirrored between `public/web` and `modules/pro-web/public`. Mini App assets are out of scope.
