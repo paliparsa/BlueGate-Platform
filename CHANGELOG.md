@@ -1,3 +1,11 @@
+## 5.4.0 — The Blue Gate cinematic intro
+- Refined the homepage hero into a short, cinematic gateway sequence: a thin electric-blue beam and portal form first, then the BlueGate mark and headline, followed by the VPN, Telegram Premium, and Stars cues.
+- Added restrained desktop pointer parallax with requestAnimationFrame; it is disabled for coarse pointers and respects live reduced-motion preference changes.
+- Updated the hero CTA to “مشاهده سرویس‌ها” and point directly to the flagship purchase configurators. Core services remain available immediately; no blocking intro or loading screen was added.
+- Kept mobile effects lighter and retained the same brand identity, responsive layout, and prefers-reduced-motion behavior.
+- Preserved pricing, product data, search/sort/categories, account, checkout, API handlers, and Telegram Mini App files. Public website and served Pro Web mirrors stay synchronized.
+- Validation: source assertions added for sequence timing, CTA target, service labels, script/style mirrors, pointer accessibility gates, and reduced motion. Real-browser and authenticated checkout testing still require runtime access.
+
 ## 5.3.0 — Brand Gateway and flagship services first
 - Reordered the homepage so BluePing VPN, Telegram Stars, and Telegram Premium purchase configurators appear immediately after the brand hero and before the general services catalog.
 - Added a restrained BlueGate gateway motion treatment: electric-blue portal rings, a single light beam, staggered hero reveal, and subtle featured-service card interactions.
