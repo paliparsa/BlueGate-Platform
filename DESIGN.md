@@ -91,3 +91,11 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - VPN, Stars, and Premium are the business's flagship services and must appear before the general catalog without removing or hiding other active catalog products.
 - The hero signature is a restrained electric-blue gateway: layered circular light, one thin moving beam, staggered text/service reveal, and subtle card interactions. Keep the page predominantly near-black; the gate supports the brand rather than becoming a large gradient background.
 - Use CSS-only motion with no interaction-blocking intro. Honor `prefers-reduced-motion`; never hide essential content while waiting for animation. Keep HTML/CSS mirrored between `public/web` and `modules/pro-web/public`. Mini App assets are out of scope.
+
+
+## The Blue Gate cinematic intro (v5.4.0)
+- The hero opens with a single thin blue beam resolving into the portal; the BlueGate mark follows, then headline/copy, then VPN, Telegram Premium, and Stars markers with short staggered delays.
+- The primary CTA reads “مشاهده سرویس‌ها” and scrolls to the existing flagship configurators at #products; do not insert a blocking splash or delay the product interface for a long animation.
+- Desktop pointer parallax is limited to a small offset, coalesced with requestAnimationFrame, and disabled on touch/coarse pointers or when reduced motion is requested. The CSS-only composition remains the fallback if the helper script fails.
+- Keep mobile motion lighter, all content available without waiting, and all catalog, pricing, account, API, checkout, and Telegram Mini App behavior unchanged.
+- Public web and served Pro Web HTML/CSS/JS mirrors must stay synchronized.
