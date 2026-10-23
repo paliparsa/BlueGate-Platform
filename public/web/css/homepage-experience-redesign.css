@@ -251,7 +251,7 @@
 }
 @media(hover:hover) and (pointer:fine){
   #genericProductsSection .generic-product-card:hover{
-    transform:translateY(-2px);border-color:var(--cat-line-strong)!important;background:var(--cat-raised)!important;box-shadow:none!important;
+    transform:translateY(-2px)!important;border-color:var(--cat-line-strong)!important;background:var(--cat-raised)!important;box-shadow:none!important;
   }
   #genericProductsSection .generic-product-card:hover .generic-card-action{background:var(--cat-blue)!important;border-color:var(--cat-blue)!important;color:#fff!important}
   #genericProductsSection .generic-product-card:hover .generic-card-action b{transform:translateX(-3px)}
@@ -395,4 +395,33 @@
   #genericProductsSection .generic-category-nav{gap:20px;padding:10px 16px 0;border-radius:0 0 18px 18px}
   #genericProductsSection .generic-category-nav .generic-category-chip{min-height:44px!important;padding:11px 0 13px!important;font-size:14px!important}
   #genericProductsSection .generic-category-chip b{font-size:14px}
+}
+
+/* v5.5.0 stage 4 — empty state, reduced motion and forced colours. The empty-state copy is unchanged. */
+#genericProductsSection .generic-products-empty:not(.hidden){
+  display:block;margin:24px 0 0;padding:56px 24px;border:1px dashed var(--cat-line-strong);border-radius:var(--cat-radius);
+  background:transparent;color:var(--cat-muted);font-size:15px;line-height:1.9;text-align:center;
+}
+#genericProductsSection .generic-products-empty::before{
+  content:"";display:block;width:64px;height:64px;margin:0 auto 14px;border:1px solid var(--cat-line);border-radius:16px;
+  background:var(--cat-raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237894ff' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='10.8' cy='10.8' r='6.8'/%3E%3Cpath d='m16 16 4.5 4.5'/%3E%3C/svg%3E") no-repeat center/30px;
+}
+@media(max-width:640px){
+  #genericProductsSection .generic-products-empty:not(.hidden){margin-top:14px;padding:40px 18px;font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  #genericProductsSection .generic-product-card,
+  #genericProductsSection .generic-product-card:hover,
+  #genericProductsSection .generic-card-action b,
+  #genericProductsSection .generic-product-card:hover .generic-card-action b{transform:none!important;transition:none!important}
+  #genericProductsSection .generic-catalog-search,
+  #genericProductsSection .generic-catalog-sort,
+  #genericProductsSection .generic-card-action,
+  #genericProductsSection .generic-category-chip{transition:none!important}
+}
+@media(forced-colors:active){
+  #genericProductsSection .generic-product-card,
+  #genericProductsSection .generic-products-toolbar,
+  #genericProductsSection .generic-category-nav{border:1px solid CanvasText!important}
+  #genericProductsSection .generic-category-nav .generic-category-chip[aria-pressed="true"]::after{background:Highlight}
 }
