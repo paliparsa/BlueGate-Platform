@@ -75,7 +75,7 @@ grep -Fq 'id="genericCatalogCount"' "$HTML" || fail "catalog result count missin
 grep -Fq '<span class="kicker">OUR SERVICES</span><h2>سرویس موردنظرت رو انتخاب کن</h2>' "$HTML" || fail "services heading not integrated into catalog toolbar"
 grep -Fq '<span class="kicker">OUR SERVICES</span><h2>سرویس موردنظرت رو انتخاب کن</h2>' "$MODULE_HTML" || fail "served services heading not integrated into catalog toolbar"
 ! grep -Fq '<div class="section-head center-head"><span class="kicker">OUR SERVICES</span>' "$HTML" || fail "duplicate services heading remains above featured configurators"
-grep -Fq 'v5.2.1 — integrate the service heading into the live catalog' "$ROOT/public/web/css/homepage-experience-redesign.css" || fail "integrated catalog heading stylesheet missing"
+grep -Fq 'v5.5.0 — editorial catalog (Direction A)' "$ROOT/public/web/css/homepage-experience-redesign.css" || fail "editorial catalog stylesheet layer missing"
 grep -Fq 'function genericSearchMatch' "$ROOT/public/web/js/app.js" || fail "catalog search logic missing"
 grep -Fq 'function genericSortedProducts' "$ROOT/public/web/js/app.js" || fail "catalog sort logic missing"
 grep -Fq 'generic-product-card--catalog:focus-visible' "$ROOT/public/web/css/homepage-experience-redesign.css" || fail "catalog card keyboard focus styling missing"

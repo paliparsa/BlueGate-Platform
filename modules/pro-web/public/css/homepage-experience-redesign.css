@@ -41,32 +41,7 @@
 #top .hero .hero-service-icon{width:29px;height:29px;border-radius:8px;background:rgba(49,94,251,.13)}
 #top .hero .hero-service-item strong{font-size:11px}
 #top .hero .hero-service-item small{font-size:10px;line-height:1.7}
-#genericProductsSection{
-  margin-top:clamp(14px,2.2vw,26px)!important;
-  padding:clamp(20px,3vw,34px)!important;
-  border-radius:16px!important;border-color:rgba(255,255,255,.095)!important;
-  background:#07080b!important;
-}
-#genericProductsSection .generic-products-intro{max-width:780px;margin-bottom:22px}
-#genericProductsSection .generic-products-intro h2{font-size:clamp(25px,3vw,34px);line-height:1.4}
-#genericProductsSection .generic-products-intro p{max-width:54ch;font-size:12px}
-#genericProductsSection .generic-products-toolbar{
-  display:flex;flex-direction:column;align-items:stretch;gap:13px;padding-bottom:18px;
-}
-#genericProductsSection .generic-products-toolbar>div:first-child{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-#genericProductsSection .generic-products-toolbar>div:first-child .kicker{font-size:10px}
-#genericProductsSection .generic-products-toolbar>div:first-child h2{margin:0;font-size:15px;letter-spacing:0}
-#genericProductsSection .generic-products-toolbar>div:first-child p{font-size:11px}
-#genericProductsSection .generic-category-nav{gap:7px}
-#genericProductsSection .generic-category-nav button,
-#genericProductsSection .generic-category-nav [role="tab"]{
-  min-height:40px;padding:8px 14px!important;border-radius:8px!important;
-}
-#genericProductsSection .generic-products-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-top:17px}
-#genericProductsSection .generic-product-card{
-  border-radius:11px!important;background:#090b0f!important;padding:18px!important;
-}
-#genericProductsSection .generic-product-card:hover{transform:translateY(-1px)}
+#genericProductsSection{margin-top:clamp(14px,2.2vw,26px)!important}
 .conversion-strip{
   margin-top:12px!important;border-radius:12px!important;background:#080a0d!important;
 }
@@ -114,7 +89,6 @@
 @media(max-width:1024px){
   #top .hero{min-height:unset;gap:26px}
   #top .hero .brand-stage{min-height:325px}
-  #genericProductsSection .generic-products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   #products .product-tab{min-height:140px;padding:15px!important}
 }
 @media(max-width:768px){
@@ -127,17 +101,6 @@
   #top .hero .hero-service-item{padding:10px 8px;gap:8px}
   #top .hero .hero-service-item strong{font-size:10px}
   #top .hero .hero-service-item small{font-size:9px}
-  #genericProductsSection{padding:18px!important;margin-top:16px!important}
-  #genericProductsSection .generic-products-intro{margin-bottom:17px}
-  #genericProductsSection .generic-products-intro h2{font-size:25px}
-  #genericProductsSection .generic-products-toolbar>div:first-child{display:grid;gap:4px}
-  #genericProductsSection .generic-products-toolbar>div:first-child h2{font-size:14px}
-  #genericProductsSection .generic-products-toolbar>div:first-child p{font-size:10px}
-  #genericProductsSection .generic-category-nav{gap:6px;padding-bottom:5px}
-  #genericProductsSection .generic-category-nav button,
-  #genericProductsSection .generic-category-nav [role="tab"]{min-height:38px;padding:7px 11px!important}
-  #genericProductsSection .generic-products-grid{grid-template-columns:minmax(0,1fr);gap:8px;padding-top:13px}
-  #genericProductsSection .generic-product-card{padding:16px!important}
   .conversion-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
   .conversion-item{padding:11px 9px!important;gap:8px}
   .conversion-item:nth-child(2n){border-left:0}
@@ -177,99 +140,37 @@
   #genericProductsSection,#products .product-tab,#top .hero .brand-stage{border:1px solid CanvasText!important}
 }
 
-/* v5.2.0 — catalog discovery controls and product-card affordance */
-#genericProductsSection .generic-products-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.92fr);align-items:end;gap:22px;padding-bottom:18px;border-bottom:1px solid var(--bg-home-line)}
-#genericProductsSection .generic-products-toolbar-heading{min-width:0}
-#genericProductsSection .generic-products-toolbar-heading h2{margin:5px 0;font-size:clamp(22px,2.5vw,30px);line-height:1.45;letter-spacing:-.03em}
-#genericProductsSection .generic-products-toolbar-heading p{max-width:52ch;margin:0;color:var(--bg-home-muted);font-size:12px;line-height:1.9}
-#genericProductsSection .generic-products-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;min-width:0}
-#genericProductsSection .generic-catalog-search{display:flex;align-items:center;gap:10px;min-width:0;min-height:44px;padding:0 12px;border:1px solid var(--bg-home-line-strong);border-radius:10px;background:#0b0d12;color:#aab2c0}
-#genericProductsSection .generic-catalog-search:focus-within{border-color:rgba(120,148,255,.65);background:#0d1017}
-#genericProductsSection .generic-catalog-search>svg{flex:0 0 18px;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-#genericProductsSection .generic-catalog-search input{width:100%;min-width:0;height:42px;padding:0;border:0;outline:0!important;background:transparent;color:var(--text);font-size:12px}
-#genericProductsSection .generic-catalog-search input::placeholder{color:#7f8999}
-#genericProductsSection .generic-catalog-search-clear{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;padding:0;border:1px solid var(--bg-home-line);border-radius:7px;background:#171b23;color:#dce3ff;font-size:20px;line-height:1}
-#genericProductsSection .generic-catalog-search-clear[hidden]{display:none}
-#genericProductsSection .generic-catalog-sort{display:flex;align-items:center;gap:8px;min-width:0;color:var(--bg-home-muted);font-size:10px;white-space:nowrap}
-#genericProductsSection .generic-catalog-sort select{max-width:145px;min-height:42px;padding:0 10px;border:1px solid var(--bg-home-line-strong);border-radius:9px;background:#0b0d12;color:var(--text);font:inherit;font-size:11px}
-#genericProductsSection .generic-catalog-count{grid-column:1/-1;margin:0;color:#8f99aa;font-size:10px;line-height:1.5;text-align:left;font-variant-numeric:tabular-nums}
-#genericProductsSection .generic-category-nav{padding-top:15px}
-#genericProductsSection .generic-category-chip{display:inline-flex;align-items:center;gap:7px}
-#genericProductsSection .generic-category-chip small{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:6px;background:rgba(255,255,255,.055);color:#aab2c0;font-size:10px;font-variant-numeric:tabular-nums}
-#genericProductsSection .generic-category-chip[aria-pressed="true"] small{background:rgba(120,148,255,.16);color:#dfe5ff}
-#genericProductsSection .generic-product-card--catalog{position:relative;cursor:pointer;outline-offset:3px}
-#genericProductsSection .generic-product-card--catalog:focus-visible{outline:2px solid var(--bg-home-blue-soft)!important;outline-offset:3px}
-#genericProductsSection .generic-card-media{display:grid;place-items:center;min-height:68px;margin-bottom:14px;border:1px solid rgba(255,255,255,.045);border-radius:10px;background:linear-gradient(120deg,rgba(49,94,251,.09),rgba(255,255,255,.015));overflow:hidden}
-#genericProductsSection .generic-card-media img{display:block;width:100%;height:84px;object-fit:contain;padding:10px}
-#genericProductsSection .generic-card-media>span{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:rgba(49,94,251,.13);color:#c3ceff;font-size:23px}
-#genericProductsSection .generic-card-copy{display:flex;flex:1;flex-direction:column;align-items:flex-start;min-width:0}
-#genericProductsSection .generic-card-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-bottom:5px;color:#8f99aa;font-size:10px}
-#genericProductsSection .generic-card-meta b{padding:3px 7px;border:1px solid rgba(120,148,255,.2);border-radius:5px;background:rgba(49,94,251,.1);color:#b8c5ff;font-size:9px;font-weight:650}
-#genericProductsSection .generic-card-name{margin:0 0 5px;font-size:15px;font-weight:800;line-height:1.7;overflow-wrap:anywhere}
-#genericProductsSection .generic-card-description{display:-webkit-box;min-height:0;margin:0 0 14px;color:var(--bg-home-muted);font-size:11px;line-height:1.85;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-#genericProductsSection .generic-card-price{margin-top:auto;padding-top:10px;color:#f5f7fb;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
-#genericProductsSection .generic-card-action{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:13px;padding-top:11px;border-top:1px solid rgba(255,255,255,.065);color:#b9c7ff;font-size:11px;font-weight:750}
-#genericProductsSection .generic-card-action b{font-size:16px;font-weight:500;transition:transform .16s ease}
-#genericProductsSection .generic-product-card--catalog:hover .generic-card-action b{transform:translateX(-3px)}
-#genericProductsSection .generic-products-empty{margin-top:18px}
-@media(max-width:900px){#genericProductsSection .generic-products-toolbar{grid-template-columns:minmax(0,1fr);gap:15px}#genericProductsSection .generic-products-tools{grid-template-columns:minmax(0,1fr) auto}}
-@media(max-width:560px){
-#genericProductsSection .generic-products-toolbar-heading h2{font-size:23px}
-#genericProductsSection .generic-products-toolbar-heading p{font-size:11px}
-#genericProductsSection .generic-products-tools{grid-template-columns:minmax(0,1fr);gap:8px}
-#genericProductsSection .generic-catalog-search{min-height:46px}
-#genericProductsSection .generic-catalog-search input{height:44px;font-size:12px}
-#genericProductsSection .generic-catalog-sort{justify-content:space-between;width:100%}
-#genericProductsSection .generic-catalog-sort select{flex:1;max-width:none}
-#genericProductsSection .generic-catalog-count{text-align:right}
-#genericProductsSection .generic-category-nav{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;scrollbar-color:#343c4c transparent;padding:13px 1px 7px}
-#genericProductsSection .generic-category-chip{flex:0 0 auto}
-#genericProductsSection .generic-products-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-#genericProductsSection .generic-product-card--catalog{padding:12px!important}
-#genericProductsSection .generic-card-media{min-height:54px;margin-bottom:10px}
-#genericProductsSection .generic-card-media img{height:62px;padding:7px}
-#genericProductsSection .generic-card-media>span{width:35px;height:35px;font-size:19px}
-#genericProductsSection .generic-card-name{font-size:12px;line-height:1.6}
-#genericProductsSection .generic-card-description{font-size:10px;line-height:1.7;margin-bottom:8px}
-#genericProductsSection .generic-card-price{font-size:13px;padding-top:8px}
-#genericProductsSection .generic-card-action{font-size:10px;margin-top:10px;padding-top:9px}
-}
-@media(max-width:360px){#genericProductsSection .generic-products-grid{grid-template-columns:minmax(0,1fr)}}
-@media(prefers-reduced-motion:reduce){#genericProductsSection .generic-product-card--catalog,#genericProductsSection .generic-card-action b{transition:none!important}}
-#genericProductsSection button.generic-card-action{min-height:0;padding-right:0;padding-bottom:0;padding-left:0;border-right:0;border-bottom:0;border-left:0;border-radius:0;background:none;box-shadow:none;font-size:11px!important;line-height:1.75;text-align:inherit;cursor:pointer}
-@media(max-width:560px){#genericProductsSection button.generic-card-action{font-size:10px!important}}
-#genericProductsSection .generic-card-action::before{content:"";position:absolute;inset:0;z-index:1;border-radius:inherit}
-#genericProductsSection .generic-card-copy{position:static}
-#genericProductsSection .generic-card-action:focus-visible{outline:none!important}
-#genericProductsSection .generic-card-action:focus-visible::before{outline:2px solid var(--bg-home-blue-soft);outline-offset:-3px}
-#genericProductsSection .generic-card-price-old{margin-inline-end:4px;color:var(--muted,#94abc2);font-size:.82em;font-weight:600;text-decoration-thickness:1px}
 
-
-/* v5.2.1 — integrate the service heading into the live catalog */
-#genericProductsSection .generic-products-intro{display:none!important}
-#genericProductsSection .generic-products-toolbar{
-  display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch;gap:17px;padding-bottom:21px;
-}
-#genericProductsSection .generic-products-toolbar-heading{
-  display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding-inline-start:15px;border-inline-start:2px solid #315efb;
-}
-#genericProductsSection .generic-products-toolbar-heading .kicker{color:#9aabff;font-size:10px;font-weight:800;letter-spacing:.13em}
-#genericProductsSection .generic-products-toolbar-heading h2{margin:0;font-size:clamp(27px,3.1vw,38px);line-height:1.45;letter-spacing:-.035em}
-#genericProductsSection .generic-products-toolbar-heading p{margin:2px 0 0;max-width:58ch;font-size:12px;line-height:1.9}
-#genericProductsSection .generic-products-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
-#genericProductsSection .generic-catalog-count{grid-column:1/-1}
-#genericProductsSection .generic-category-nav{padding-top:17px}
 #products.products-section{padding-top:clamp(34px,4.5vw,56px)!important}
 #products .product-tabs{margin-top:0}
 @media(max-width:560px){
-  #genericProductsSection .generic-products-toolbar{gap:14px;padding-bottom:16px}
-  #genericProductsSection .generic-products-toolbar-heading{padding-inline-start:11px}
-  #genericProductsSection .generic-products-toolbar-heading h2{font-size:clamp(24px,6.5vw,30px);line-height:1.5}
-  #genericProductsSection .generic-products-toolbar-heading p{font-size:11px;line-height:1.85}
-  #genericProductsSection .generic-products-tools{grid-template-columns:minmax(0,1fr);gap:8px}
-  #genericProductsSection .generic-catalog-sort{justify-content:space-between;width:100%}
-  #genericProductsSection .generic-catalog-sort select{flex:1;max-width:none}
-  #genericProductsSection .generic-catalog-count{text-align:right}
-  #genericProductsSection .generic-category-nav{padding-top:12px}
   #products.products-section{padding-top:36px!important}
+}
+
+/* v5.5.0 — editorial catalog (Direction A)
+   Presentation only. Search, sort, category filters, pricing, IDs and BGCheckout stay as they are.
+   One scoped layer for the catalog; older catalog rules were removed from this file and from ui-overhaul.css.
+   Stage 1: tokens, section surface and grid. */
+#genericProductsSection{
+  --cat-page:#07080b;--cat-surface:#0d0f13;--cat-raised:#12151b;--cat-high:#191e27;
+  --cat-line:rgba(255,255,255,.085);--cat-line-strong:rgba(255,255,255,.14);
+  --cat-text:#f5f7fb;--cat-muted:#a1a8b5;--cat-faint:#8a91a0;
+  --cat-blue:#315efb;--cat-blue-soft:#7894ff;--cat-ok:#65d6aa;--cat-warn:#e8c878;
+  --cat-radius:16px;--cat-radius-ctl:12px;--cat-ease:cubic-bezier(.2,.7,.2,1);
+}
+#genericProductsSection.generic-products-section{
+  padding:clamp(28px,4vw,56px) 0 clamp(20px,3vw,40px)!important;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible;
+}
+#genericProductsSection.generic-products-section::before{display:none}
+#genericProductsSection .generic-products-collapse,
+#genericProductsSection .generic-products-collapse-inner{overflow:visible}
+#genericProductsSection .generic-products-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;
+  margin-top:0;padding-top:24px;align-items:stretch;
+}
+@media(max-width:1100px){#genericProductsSection .generic-products-grid{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-width:640px){
+  #genericProductsSection.generic-products-section{padding:24px 0 20px!important;margin-top:16px!important}
+  #genericProductsSection .generic-products-grid{gap:10px!important;padding-top:14px}
 }
