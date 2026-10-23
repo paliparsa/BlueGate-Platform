@@ -1,0 +1,7 @@
+.member-order-summary-main h3 { overflow-wrap: anywhere; }
+.member-order-summary-main .order-original-name { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.member-order-summary-meta span:first-child,
+.member-order-collapse-inner > .member-order-meta span:first-child { white-space: normal; overflow-wrap: anywhere; }
+.member-order-user-actions .mini-action[data-action="rename-order"] { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.web-order-control-card .bg-order-icon { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.web-order-control-card .bg-order-icon small { color: var(--muted); font-size: 9px; white-space: nowrap; }
