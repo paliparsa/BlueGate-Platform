@@ -142,24 +142,23 @@ function renderGenericProductGrid(){
   const source=state.genericProducts||[],query=String(state.genericSearch||'').trim();
   const filtered=source.filter(p=>genericProductInCategory(p,state.activeGenericCategory)&&genericSearchMatch(p,query));
   const products=genericSortedProducts(filtered),count=$('genericCatalogCount');
-  if(count)count.textContent=(query||state.activeGenericCategory!=='all')?(fmt(products.length)+' از '+fmt(source.length)+' محصول'):(fmt(source.length)+' سرویس فعال');
+  if(count)count.innerHTML=(query||state.activeGenericCategory!=='all')?('<b>'+fmt(products.length)+'</b> از '+fmt(source.length)+' محصول'):('<b>'+fmt(source.length)+'</b> سرویس فعال');
   if(empty){
     empty.classList.toggle('hidden',products.length>0);
     empty.textContent=query?'نتیجه‌ای برای این جست‌وجو پیدا نشد. عبارت کوتاه‌تر یا نام دیگری رو امتحان کن.':state.activeGenericCategory!=='all'?'در این دسته فعلاً محصول فعالی وجود ندارد.':'فعلاً محصول فعالی برای نمایش وجود ندارد.';
   }
   grid.innerHTML='';
-  products.forEach((p,index)=>{
+  products.forEach(p=>{
     const variants=(p.variants||[]).filter(v=>Number(v.is_active)!==0);
     const emoji=p.category_emoji||p.config?.icon||'🛍️';
     const card=document.createElement('article');card.className='generic-product-card generic-product-card--catalog'+(Number(p.is_featured)?' featured':'');
-    card.style.setProperty('--generic-accent',index%4===1?'145,112,255':index%4===2?'73,215,165':index%4===3?'255,176,77':'59,159,255');
     const discount=genericDiscountInfo(p);
     const discountChip=discount?'<span class="generic-catalog-badge">'+(discount.title?(BGFormat.percent(discount.percent)+' · '+esc(discount.title)):(BGFormat.percent(discount.percent)+' تخفیف'))+'</span>':'';
     const description=String(p.short_description||p.full_description||'').trim();
     const media=p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" decoding="async">':'<span aria-hidden="true">'+esc(emoji)+'</span>';
     const meta='<div class="generic-card-meta"><span>'+esc(p.category_title||'سرویس دیجیتال')+'</span>'+(Number(p.is_featured)?'<b>پیشنهاد ویژه</b>':'')+'</div>';
     const desc=description?'<p class="generic-card-description">'+esc(description)+'</p>':'';
-    card.innerHTML=discountChip+'<div class="generic-card-media">'+media+'</div><div class="generic-card-copy">'+meta+'<h3 class="generic-card-name">'+esc(p.name)+'</h3>'+desc+'<div class="generic-card-price">'+genericPriceLine(p)+'</div><button type="button" class="generic-card-action">مشاهده پلن‌ها و خرید<span class="sr-only"> '+esc(p.name)+'</span> <b aria-hidden="true">←</b></button></div>';
+    card.innerHTML='<div class="generic-card-media">'+media+'</div><div class="generic-card-copy">'+meta+'<h3 class="generic-card-name">'+esc(p.name)+'</h3>'+desc+'</div><div class="generic-card-side">'+discountChip+'<div class="generic-card-price">'+genericPriceLine(p)+'</div><button type="button" class="generic-card-action">مشاهده پلن‌ها<span class="generic-card-action-more"> و خرید</span><span class="sr-only"> '+esc(p.name)+'</span><b aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M19 12H5m6-6-6 6 6 6"/></svg></b></button></div>';
     const openProduct=()=>BGCheckout.open({scope:'generic',product:p.name,description:p.full_description||p.short_description||'',image:p.image_url||'',icon:emoji,badge:p.category_title||'BlueGate Service',delivery:p.delivery_type_fa||'تحویل از حساب BlueGate',toman:Number(p.price||genericLowestPrice(p)||0),rates:state.rates,productId:p.id,variantId:variants[0]?.id||null,variants:variants.map(v=>({id:v.id,title:v.title,price:Number(v.price||0),duration_days:Number(v.duration_days||0),description:v.description||'',old_price:Number(v.old_price||0),discount_percent:Number(v.discount_percent||0),product_id:Number(v.product_id||p.id)}))});
     card.querySelector('.generic-card-action').addEventListener('click',openProduct);
     grid.appendChild(card);

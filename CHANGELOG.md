@@ -1,3 +1,25 @@
+## 5.5.0 — Editorial web catalog redesign
+- Redesigned the web services catalog (`#genericProductsSection`) visually, following Direction A (“فهرست ادیتوریال”). It adds two elements from Direction B: one joined panel for the heading and tools, and a full-width card CTA on mobile.
+- Heading, result count, search, sort and category filters now share one panel with a blue inline-start edge. Search and sort are 52px controls with a visible focus ring. The category chips are now underline tabs with count pills. The result count shows its number large.
+- Cards are now horizontal and appear in two columns on desktop and one column at 1100px and below. Each card has a neutral icon tile, category meta with a gold star for featured products, a 19px name, a one-line description, and a side column with the offer badge, price and a single one-line CTA. On mobile, price and badge sit on one row and the CTA is full width with the short label “مشاهده پلن‌ها”. The accessible name is unchanged.
+- Removed the index-rotating accent colours (`--generic-accent`) along with the legacy glow, gradient, entrance animation and top accent line. Blue is now used only for actions, the selected tab and focus.
+- Empty state is a dashed panel with an SVG search icon. Its copy is unchanged.
+- Hover lifts the card by 2px and turns the CTA blue. Keyboard focus outlines the whole card. Both respect `prefers-reduced-motion` and forced colours.
+- Removed the superseded v3.0.x catalog blocks from `ui-overhaul.css` and the v5.2.0/v5.2.1 catalog rules from `homepage-experience-redesign.css`. Catalog styles now come from one scoped v5.5.0 layer.
+- In the `js/app.js` card template:
+  - added a side wrapper;
+  - added a span around “و خرید” so it can be hidden visually on mobile;
+  - replaced the text arrow with an inline SVG;
+  - wrapped the count number in `<b>`.
+- Unchanged: search, sort, category logic, prices, API data, `BGCheckout.open`, element IDs, the flagship services section and the Telegram Mini App. Public web and served Pro Web mirrors are identical.
+- Cache keys for `homepage-experience-redesign.css`, `ui-overhaul.css` and `app.js` were bumped to `5.5.0-catalog-editorial-1`.
+- Validation:
+  - smoke test;
+  - mirror comparison;
+  - mock-server screenshots at 1440 and 390 (catalog, empty, hover, focus) with no console errors;
+  - axe;
+  - Lighthouse accessibility and best-practices.
+
 ## 5.4.3 — Web catalog and services fixes and accessibility
 - Catalog cards now show the lowest active plan price as “از …”. When that plan is discounted, the original price is struck through before the sale price (previously the discounted plan's price was shown even when a cheaper plan existed).
 - Catalog cards are no longer `article[role=button]`. The “مشاهده پلن‌ها و خرید” control is a real button with a card-wide hit area, and its accessible name contains its visible label plus the product name. Checkout still opens through `BGCheckout.open`.

@@ -105,3 +105,16 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - A catalog card's “از …” price is the lowest active plan price. When that plan is discounted, its original price is shown struck through before the sale price.
 - Catalog cards are plain `article` elements. The visible “مشاهده پلن‌ها و خرید” control is a real `button` whose hit area is stretched over the card, and its accessible name starts with the visible text followed by the product name.
 - The flagship VPN/Stars/Premium selector is a labelled group of toggle buttons (`aria-pressed`), not a tablist; the section has a visually hidden `h2` so headings do not skip levels.
+
+## Editorial catalog (v5.5.0)
+- The services catalog follows the editorial direction. Its heading, result count, search, sort and category tabs are one `#07080B` panel with a quiet border and a 3px royal-blue inline-start edge. The product grid sits below the panel, outside it.
+- Category filters are underline tabs. The selected tab is white text with a 3px blue underline and a blue count pill. On narrow screens the row scrolls horizontally without a visible scrollbar.
+- Catalog cards are flat horizontal rows on `#0D0F13`, laid out as icon tile, copy and side column. Use two columns above 1100px and one column at or below it. Mobile cards stack the tile and copy, then show a bordered price row and a full-width CTA.
+- Card tiles are neutral (raised surface and quiet border). Do not rotate accent colours by index.
+  - Blue is reserved for the CTA on hover/focus, the selected tab and focus rings.
+  - Green is reserved for offer badges.
+  - Gold is reserved for the featured marker.
+- Each card has exactly one focusable control, the CTA button. Its hit area may cover the card. Keyboard focus outlines the whole card with `#7894FF`.
+- Hover moves the card by at most 2px. All catalog transforms and transitions are disabled under `prefers-reduced-motion`.
+- Muted text uses `#A1A8B5`. Faint text must not be darker than `#8A91A0`.
+
