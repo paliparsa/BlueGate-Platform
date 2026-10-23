@@ -1,3 +1,13 @@
+## 5.4.2 — Web catalog and services fixes and accessibility
+- Catalog cards now show the lowest active plan price as “از …”. When that plan is discounted, the original price is struck through before the sale price (previously the discounted plan's price was shown even when a cheaper plan existed).
+- Catalog cards are no longer `article[role=button]`. The “مشاهده پلن‌ها و خرید” control is a real button with a card-wide hit area, and its accessible name contains its visible label plus the product name. Checkout still opens through `BGCheckout.open`.
+- Added one shared web number formatter (`BGFormat` in `js/pricing.js`) for prices, counters, percentages and traffic volumes in the catalog and services. It uses Latin digits throughout; traffic volumes previously used Persian digits.
+- Fixed console errors: the served Pro Web shell now ships `css/orders-v9.css` (previously a 404), and `BLUEGATE_WEB_WELCOME_VERSION` is defined (previously a ReferenceError on account pages).
+- Flagship service selector and sticky switcher use group + `aria-pressed` instead of an invalid tablist/`aria-selected`/`aria-current` mix. A visually hidden `h2` fixes heading order before the VPN launcher.
+- `tests/web-redesign-smoke.sh` now reads the release from `VERSION` and checks it against the newest CHANGELOG entry instead of a hardcoded version. It also checks for the current `bgGatewayBeam` signature: `bgGatewayPulse` was removed in 5.4.0, so the test still failed after 5.4.1.
+- Public website and served Pro Web mirrors stay synchronized; Telegram Mini App files are untouched.
+- Validation: smoke test, mock-server screenshots at 1440 and 390, axe, and Lighthouse accessibility audits with no console errors.
+
 ## 5.4.1 — Homepage smoke-test alignment
 - Corrected stale website redesign smoke assertions to validate the current 5.4.0 Blue Gate assets and the current release version.
 - No storefront, checkout, pricing, API, or Mini App runtime behavior changed.
