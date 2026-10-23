@@ -142,7 +142,7 @@ function renderGenericProductGrid(){
   const source=state.genericProducts||[],query=String(state.genericSearch||'').trim();
   const filtered=source.filter(p=>genericProductInCategory(p,state.activeGenericCategory)&&genericSearchMatch(p,query));
   const products=genericSortedProducts(filtered),count=$('genericCatalogCount');
-  if(count)count.textContent=(query||state.activeGenericCategory!=='all')?(fmt(products.length)+' از '+fmt(source.length)+' محصول'):(fmt(source.length)+' سرویس فعال');
+  if(count)count.innerHTML=(query||state.activeGenericCategory!=='all')?('<b>'+fmt(products.length)+'</b> از '+fmt(source.length)+' محصول'):('<b>'+fmt(source.length)+'</b> سرویس فعال');
   if(empty){
     empty.classList.toggle('hidden',products.length>0);
     empty.textContent=query?'نتیجه‌ای برای این جست‌وجو پیدا نشد. عبارت کوتاه‌تر یا نام دیگری رو امتحان کن.':state.activeGenericCategory!=='all'?'در این دسته فعلاً محصول فعالی وجود ندارد.':'فعلاً محصول فعالی برای نمایش وجود ندارد.';
