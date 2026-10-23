@@ -7,4 +7,12 @@
   function vpn(pkg){return Number(pkg.price_toman)}
   function afterDiscount(amount,pct){return Math.max(0,Math.round(Number(amount)*(1-Number(pct||0)/100)))}
   window.BGPricing={roundUp,marked,stars,premium,vpn,afterDiscount};
+  // Shared web number formatter for catalog and services: prices, counters, percentages and volumes.
+  // One numeral system everywhere: Latin digits with en-US grouping, matching prices, checkout and order IDs.
+  const NUMBER_LOCALE='en-US';
+  function number(v,digits=0){const n=Number(v);return (Number.isFinite(n)?n:0).toLocaleString(NUMBER_LOCALE,{maximumFractionDigits:digits})}
+  function money(v){return number(v)+' تومان'}
+  function percent(v,digits=0){return number(v,digits)+'٪'}
+  function gigabytes(bytes,digits=1){return number(Number(bytes||0)/1073741824,digits)+' GB'}
+  window.BGFormat={locale:NUMBER_LOCALE,number,money,percent,gigabytes};
 })();

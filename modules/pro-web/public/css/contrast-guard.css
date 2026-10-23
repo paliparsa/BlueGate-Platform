@@ -115,7 +115,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 }
 
 /* High-contrast selected/active rows. */
-[aria-selected="true"],[aria-current="true"],option:checked{
+[aria-selected="true"],[aria-current="true"],.product-tab[aria-pressed="true"],#serviceNav [aria-pressed="true"],option:checked{
   color:#fff!important;
 }
 
