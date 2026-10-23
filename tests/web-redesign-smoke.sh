@@ -32,7 +32,7 @@ grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
-grep -Fxq '5.4.0' "$ROOT/VERSION" || fail "version not bumped"
+grep -Fxq '5.4.1' "$ROOT/VERSION" || fail "version not bumped"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
 grep -Fq 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
@@ -80,7 +80,7 @@ grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review ca
 grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
 grep -Fq 'scrollbar-width:thin' "$MODULE_BOTTOM_CSS" || fail "local overflow styling missing"
-grep -Fxq '5.4.0' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
+grep -Fxq '5.4.1' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
 
 pass "web redesign smoke checks"
 
