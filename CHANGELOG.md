@@ -1,3 +1,47 @@
+## 5.6.0 — Living Gateway homepage hero
+- **Hero redesign ("Living Gateway", Direction 1).** The visual and copy layer is redesigned. It replaces the v5.3.0/v5.4.0 brand-stage panel.
+  - **Headline:** «خدمات دیجیتال، از یک دروازه.», with only «دروازه» coloured.
+  - **Intro:** a new paragraph naming BluePing VPN, Telegram Premium and Telegram Stars.
+  - **CTAs:** one primary CTA, «مشاهده همه سرویس‌ها», which goes to the full catalog, plus «یا مستقیم:» shortcuts that open the VPN, Premium and Stars flagship cards.
+  - **Proof row:**
+    - Premium durations «3، 6، 12»;
+    - toman pricing with USDT/TRX/TON equivalents;
+    - a live «N سرویس فعال در کاتالوگ» counter.
+  - **Slogan:** the brand slogan «به امید آینده‌ی آزاد» stays as a quiet signature line.
+  - **Removed:** «انتخاب سرویس تا ثبت سفارش، یک‌جا», the unbound «آماده سفارش» status and the duplicate panel headline.
+- **Counter data.** The counter uses real storefront data: `state.genericProducts.length`, the same number as the catalog's «همه سرویس‌ها» chip. It counts up only without reduced motion and is omitted when there are no products. Its space is reserved until data arrives.
+- **Gateway visual:**
+  - rings;
+  - a one-shot sweep;
+  - a beam;
+  - the BlueGate mark behind opening doors;
+  - a halo;
+  - VPN, Premium and Stars nodes;
+  - layered desktop pointer parallax.
+- **Motion:**
+  - The entrance is transform/opacity only and runs once. It sits behind `prefers-reduced-motion:no-preference`, so reduced motion shows the final state.
+  - Scroll-driven exit and heading-edge effects sit behind `@supports (animation-timeline:view())`.
+  - The broken v5.4.0 `bgGatewayBeam` keyframe (bare `scaleX()` without `transform`) is fixed.
+- **Borrowed from Direction 2:**
+  - the blue edge line above the headline;
+  - on flagship cards, a blue inline-start edge on hover, focus and the active card, with a 6px arrow nudge.
+- **Flagship heading.** The h2 «سرویس‌های اصلی BlueGate» is now visible, with a FEATURED kicker and a subtitle. The Premium badge reads «3، 6، 12 ماهه» in Latin digits per `BGFormat`, and does not wrap. The Premium card subtitle now uses the same digits.
+- **CLS.** The announcement bar now reserves one line until storefront settings arrive. Its last text, or its disabled state, is remembered in `localStorage` and painted before first paint on later visits. It also gained a labelled `region` landmark.
+- **Existing installs.** Code defaults are updated in:
+  - `app/storefront.php`;
+  - the new-install seed in `app/bootstrap.php`;
+  - the admin form fallbacks in `public/api.php`;
+  - the `js/app.js` fallback.
+  - Saved values are not migrated. `renderShell` already mapped old built-in defaults on the client; that list now covers every previous default (both seeds, the v5.x fallbacks and the admin-form fallbacks) and maps each to the new copy. Any admin-customised title or text is shown unchanged.
+- **Unchanged:** pricing, products, catalog logic, account, checkout, API handlers and the Telegram Mini App. The public web and served Pro Web mirrors are identical for every changed asset.
+- **Validation.** Smoke checks were added for the hero markup, slogan, live counter, legacy-default mapping, CLS reservation, keyframe properties and the reduced-motion guard.
+  - **Lighthouse (local mock, median of 3):**
+    - desktop Performance 89→95, CLS 0.155→0.016;
+    - mobile Performance 63→64, CLS 0.044→0.000;
+    - Accessibility 99 and Best Practices 100 are unchanged.
+  - **axe:** 0 violations in the hero and flagship section at 1440 and 390.
+  - **Console:** no console errors.
+
 ## 5.5.0 — Editorial web catalog redesign
 - Redesigned the web services catalog (`#genericProductsSection`) visually, following Direction A (“فهرست ادیتوریال”). It adds two elements from Direction B: one joined panel for the heading and tools, and a full-width card CTA on mobile.
 - Heading, result count, search, sort and category filters now share one panel with a blue inline-start edge. Search and sort are 52px controls with a visible focus ring. The category chips are now underline tabs with count pills. The result count shows its number large.

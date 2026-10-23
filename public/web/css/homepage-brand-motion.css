@@ -1,43 +1,182 @@
-/* BlueGate Web — The Blue Gate cinematic brand intro, v5.4.0.
-   Website-only visual layer. Product data, catalog, and checkout remain untouched. */
-:root{--bg-gateway-blue:#315efb;--bg-gateway-soft:#7894ff}
-#top .hero{position:relative;isolation:isolate;overflow:clip}
-#top .hero-visual{position:relative;isolation:isolate;--bg-gateway-x:0px;--bg-gateway-y:0px}
-#top .hero-copy{animation:bgGatewayRise .58s .62s cubic-bezier(.2,.7,.2,1) both}
-#top .hero-eyebrow{animation:bgGatewayRise .48s .7s cubic-bezier(.2,.7,.2,1) both}
-#top .hero h1{animation:bgGatewayRise .52s .84s cubic-bezier(.2,.7,.2,1) both}
-#top .hero-copy>p{animation:bgGatewayRise .52s .96s cubic-bezier(.2,.7,.2,1) both}
-#top .hero-actions{animation:bgGatewayRise .52s 1.08s cubic-bezier(.2,.7,.2,1) both}
-#top .hero-trust,#top .hero-microcopy{animation:bgGatewayRise .52s 1.18s cubic-bezier(.2,.7,.2,1) both}
-#top .hero-visual::before{content:"";position:absolute;z-index:-1;inline-size:clamp(220px,31vw,410px);aspect-ratio:1;inset-block-start:50%;inset-inline-start:50%;transform:translate(calc(-50% + var(--bg-gateway-x)),calc(-50% + var(--bg-gateway-y)));border:1px solid rgba(120,148,255,.24);border-radius:50%;background:radial-gradient(circle,rgba(49,94,251,.09),rgba(49,94,251,.025) 42%,transparent 69%);box-shadow:0 0 0 18px rgba(49,94,251,.018),0 0 0 38px rgba(49,94,251,.012),inset 0 0 44px rgba(49,94,251,.045);animation:bgGatewayForm .62s cubic-bezier(.2,.7,.2,1) both}
-#top .hero-visual::after{content:"";position:absolute;z-index:-1;inset-inline:-18%;inset-block-start:50%;height:1px;background:linear-gradient(90deg,transparent,rgba(120,148,255,.8),rgba(49,94,251,.12),transparent);transform:translate3d(var(--bg-gateway-x),var(--bg-gateway-y),0) rotate(-22deg);transform-origin:center;opacity:.76;animation:bgGatewayBeam .72s ease-out both}
-#top .hero .brand-stage{position:relative;overflow:hidden;isolation:isolate;border-color:rgba(120,148,255,.2);background:linear-gradient(135deg,rgba(16,20,29,.97),rgba(7,8,11,.98) 68%);box-shadow:0 24px 72px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.025)}
-#top .hero .brand-stage::before{content:"";position:absolute;z-index:-1;inset-block:0;inset-inline-start:0;width:2px;background:linear-gradient(180deg,transparent,#315efb 26%,#7894ff 53%,#315efb 78%,transparent);opacity:.95}
-#top .hero .brand-stage::after{pointer-events:none}
-#top .hero .hero-console-head{animation:bgGatewayMark .58s .62s cubic-bezier(.2,.7,.2,1) both}
-#top .hero .hero-console-head img{filter:drop-shadow(0 0 0 rgba(120,148,255,0));animation:bgGatewayLogoGlow .9s .7s ease-out both}
-#top .hero .brand-stage-copy{animation:bgGatewayRise .56s .86s cubic-bezier(.2,.7,.2,1) both}
-#top .hero .hero-service-item{animation:bgGatewayRise .42s 1.5s cubic-bezier(.2,.7,.2,1) both;transition:border-color .18s ease,background-color .18s ease,transform .18s ease}
-#top .hero .hero-service-item:nth-child(2){animation-delay:1.72s}
-#top .hero .hero-service-item:nth-child(3){animation-delay:1.94s}
-#top .hero .hero-service-item:hover{transform:translateX(-2px);border-color:rgba(120,148,255,.25)}
+/* BlueGate Web — Living Gateway hero, v5.6.0 (supersedes the v5.4.0 Blue Gate intro).
+   Website-only visual layer: product data, catalog, checkout and the Mini App remain untouched.
+   Motion rules: transform/opacity only, runs once, never blocks content; everything below
+   the "no-preference" guard is skipped for prefers-reduced-motion, which shows the final state. */
+:root{--bg-gateway-blue:#315efb;--bg-gateway-soft:#7894ff;--bg-gw-text:#f5f7fb;--bg-gw-muted:#a1a8b5;--bg-gw-faint:#8a91a0;--bg-gw-line:rgba(255,255,255,.085);--bg-gw-line-2:rgba(255,255,255,.14);--bg-gw-surface:#0d0f13;--bg-gw-ease:cubic-bezier(.2,.7,.2,1);--bg-gw-ease-out:cubic-bezier(.16,1,.3,1);--bg-gw-spring:cubic-bezier(.34,1.56,.64,1)}
+
+/* ---------- Announcement: reserve one line until storefront settings arrive; repeat visits paint the
+   last known text (or collapse a disabled bar) before first paint via the inline script (CLS) ---------- */
+#announcement.is-pending{color:transparent;user-select:none}
+#announcement.is-pending::before{content:"\00a0"}
+
+/* ---------- Layout ---------- */
+#top .hero.hero--gateway{position:relative;isolation:isolate;overflow:clip;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:center;gap:clamp(32px,4vw,56px);min-height:0;padding:clamp(40px,5vw,64px) 0 clamp(36px,4vw,48px);text-align:start}
+#top .hero.hero--gateway::before{display:none}
+#top .hero--gateway .bg-hero-copy{position:relative;min-width:0}
+
+/* Eyebrow: blue edge line above the headline (borrowed from Direction 2) */
+#top .hero--gateway .bg-hero-eyebrow{display:flex;align-items:center;gap:12px;color:var(--bg-gw-muted);font-size:13px;font-weight:700;letter-spacing:.02em}
+#top .hero--gateway .bg-hero-eyebrow b{color:var(--bg-gw-text);font-weight:850;letter-spacing:.14em}
+#top .hero--gateway .bg-hero-edge{display:block;flex:0 0 3px;width:3px;height:26px;border-radius:2px;background:var(--bg-gateway-blue);transform-origin:top}
+
+/* Headline: two clipped lines; only the word «دروازه» is coloured */
+#top .hero.hero--gateway h1{max-width:none;margin:20px 0 18px;font-size:clamp(38px,5.1vw,70px);line-height:1.18;font-weight:900;letter-spacing:-.02em;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--bg-gw-text);-webkit-text-fill-color:currentColor;text-wrap:balance}
+#top .hero--gateway .bg-hero-ln{display:block;overflow:clip;padding-block:.04em}
+#top .hero--gateway .bg-hero-ln>span{display:block}
+#top .hero--gateway h1 em{font-style:normal;color:var(--bg-gateway-soft)}
+#top .hero.hero--gateway .bg-hero-lede{max-width:54ch;margin:0;color:var(--bg-gw-muted);font-size:17px;line-height:2}
+
+/* Actions + direct shortcuts */
+#top .hero--gateway .bg-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+#top .hero--gateway .bg-hero-quick{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:20px;color:var(--bg-gw-faint);font-size:13px}
+#top .hero--gateway .bg-hero-chip{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border:1px solid var(--bg-gw-line);border-radius:10px;background:var(--bg-gw-surface);color:var(--bg-gw-text);font-size:13px;font-weight:700;text-decoration:none;transition:border-color .18s ease,transform .2s var(--bg-gw-ease)}
+#top .hero--gateway .bg-hero-chip svg{width:15px;height:15px;fill:none;stroke:var(--bg-gateway-soft);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#top .hero--gateway .bg-hero-chip:hover{border-color:rgba(120,148,255,.45);transform:translateY(-2px)}
+#top .hero--gateway .bg-hero-chip:focus-visible{outline:2px solid var(--bg-gateway-soft);outline-offset:2px}
+
+/* Proof row (real facts only; the live-service counter is filled from storefront data) */
+#top .hero--gateway .bg-hero-proof{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;margin-top:32px;padding-top:20px;border-top:1px solid var(--bg-gw-line)}
+#top .hero--gateway .bg-hero-proof>div{padding-inline-end:22px;margin-inline-end:22px;border-inline-end:1px solid var(--bg-gw-line)}
+#top .hero--gateway .bg-hero-proof>div:last-child{padding:0;margin:0;border:0}
+#top .hero--gateway .bg-hero-proof b{display:block;color:var(--bg-gw-text);font-size:24px;font-weight:850;line-height:1.3;white-space:nowrap}
+#top .hero--gateway .bg-hero-proof small{display:block;color:var(--bg-gw-muted);font-size:12.5px;line-height:1.8}
+#top .hero--gateway .bg-hero-count [data-hero-count]{display:inline-block;min-inline-size:2ch;font-variant-numeric:tabular-nums;text-align:end}
+#top .hero--gateway .bg-hero-unit{margin-inline-start:6px;color:var(--bg-gw-muted);font-size:13px;font-weight:700}
+#top .hero--gateway .bg-hero-count.is-pending{visibility:hidden}
+#top .hero--gateway .bg-hero-count[hidden]{display:none}
+
+/* Brand slogan — kept, quiet signature at the end of the copy column */
+#top .hero.hero--gateway .bg-hero-slogan{display:flex;align-items:center;gap:10px;max-width:none;margin:22px 0 0;color:var(--bg-gw-faint);font-size:13px;font-weight:700;line-height:1.8}
+#top .hero--gateway .bg-hero-slogan::before{content:"";flex:0 0 22px;height:2px;border-radius:2px;background:var(--bg-gateway-blue);transform-origin:right}
+
+/* ---------- Gateway visual ---------- */
+#top .hero--gateway .bg-hero-visual{position:relative;justify-self:center;width:min(100%,540px);aspect-ratio:1;--px:0;--py:0}
+#top .hero--gateway .bg-gate{position:absolute;inset:0}
+#top .hero--gateway .bg-gate-l{position:absolute;inset:0;translate:calc(var(--px) * var(--d,0) * 1px) calc(var(--py) * var(--d,0) * 1px);transition:translate .5s var(--bg-gw-ease-out)}
+#top .hero--gateway .bg-gate-ring{position:absolute;inset:var(--in);border-radius:50%;border:1px solid rgba(120,148,255,var(--a,.22))}
+#top .hero--gateway .bg-gate-r1{--in:0%;--a:.14;background:radial-gradient(circle,rgba(49,94,251,.10),rgba(49,94,251,.02) 55%,transparent 70%)}
+#top .hero--gateway .bg-gate-r2{--in:13%;--a:.26;border-style:dashed}
+#top .hero--gateway .bg-gate-r3{--in:26%;--a:.34;box-shadow:inset 0 0 60px rgba(49,94,251,.10)}
+#top .hero--gateway .bg-gate-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 78%,rgba(120,148,255,.55) 96%,transparent 100%);-webkit-mask:radial-gradient(circle,transparent 69.4%,#000 69.6%,#000 70.4%,transparent 70.6%);mask:radial-gradient(circle,transparent 69.4%,#000 69.6%,#000 70.4%,transparent 70.6%);opacity:0}
+#top .hero--gateway .bg-gate-beam{position:absolute;top:50%;inset-inline:-14%;height:1px;background:linear-gradient(90deg,transparent,rgba(120,148,255,.85) 40%,rgba(49,94,251,.15) 70%,transparent);rotate:-22deg;opacity:.8}
+#top .hero--gateway .bg-gate-core{position:absolute;inset:38%;display:grid;place-items:center;overflow:hidden;border-radius:50%;border:1px solid rgba(120,148,255,.4);background:#03091b}
+#top .hero--gateway .bg-gate-core img{width:58%;height:auto}
+#top .hero--gateway .bg-gate-core::before{content:"";position:absolute;inset:-30%;z-index:-1;background:radial-gradient(circle,rgba(49,94,251,.55),transparent 60%);opacity:.35}
+#top .hero--gateway .bg-gate-halo{position:absolute;inset:33%;border-radius:50%;box-shadow:0 0 80px 10px rgba(49,94,251,.28);opacity:.5}
+#top .hero--gateway .bg-gate-door{display:none;position:absolute;top:0;bottom:0;z-index:2;width:50%;background:linear-gradient(90deg,#0a0c11,#12151b)}
+#top .hero--gateway .bg-gate-door-a{left:0;border-right:1px solid rgba(120,148,255,.7)}
+#top .hero--gateway .bg-gate-door-b{right:0;border-left:1px solid rgba(120,148,255,.7)}
+#top .hero--gateway .bg-gate-node-pos{position:absolute;left:var(--x);top:var(--y);z-index:3;translate:-50% -50%}
+#top .hero--gateway .bg-gate-node{display:flex;align-items:center;gap:10px;padding:9px 14px 9px 10px;border:1px solid var(--bg-gw-line-2);border-radius:14px;background:rgba(13,15,19,.92);white-space:nowrap}
+#top .hero--gateway .bg-gate-ni{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(49,94,251,.14)}
+#top .hero--gateway .bg-gate-ni svg{width:17px;height:17px;fill:none;stroke:var(--bg-gateway-soft);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#top .hero--gateway .bg-gate-node b{display:block;color:var(--bg-gw-text);font-size:14px;line-height:1.4}
+#top .hero--gateway .bg-gate-node small{display:block;color:var(--bg-gw-muted);font-size:11.5px;line-height:1.5}
+
+/* ---------- #products: visible heading with edge, row hover edge + arrow (Direction 2) ---------- */
 #products.products-section{position:relative;scroll-margin-top:92px}
 #products.products-section::before{content:"";display:block;width:clamp(42px,6vw,72px);height:2px;margin:0 auto 18px;background:linear-gradient(90deg,transparent,#315efb,transparent);opacity:.85}
+#products .bg-products-head{position:relative;margin:0 0 20px;padding-inline-start:16px}
+#products .bg-products-head::before{content:"";position:absolute;inset-block:2px;inset-inline-start:0;width:3px;border-radius:2px;background:var(--bg-gateway-blue);transform-origin:top}
+#products .bg-products-kicker{display:block;color:var(--bg-gateway-soft);font-size:11.5px;font-weight:800;letter-spacing:.18em}
+#products .bg-products-head h2{margin:4px 0 2px;color:var(--bg-gw-text);font-size:clamp(22px,2.4vw,30px);font-weight:850;line-height:1.45}
+#products .bg-products-head p{margin:0;max-width:60ch;color:var(--bg-gw-muted);font-size:13.5px;line-height:1.9}
 /* Keep real purchase configurators visible immediately; only decorative hero cues stagger in. */
 #products .product-tab{animation:none}
 #products .product-tab:hover{border-color:rgba(120,148,255,.32)!important}
-#products .product-tab.active{box-shadow:inset 3px 0 0 #315efb,0 10px 32px rgba(0,0,0,.16)!important}
+#products .product-tab.active{box-shadow:0 10px 32px rgba(0,0,0,.16)!important}
+#products .product-tab::after{inset:14px auto 14px;inset-inline-start:0;width:3px;height:auto;border-radius:2px;background:var(--bg-gateway-blue);transform:scaleY(0);transform-origin:center;transition:transform .32s var(--bg-gw-ease-out)}
+#products .product-tab.active::after,#products .product-tab:hover::after,#products .product-tab:focus-visible::after{background:var(--bg-gateway-blue);transform:scaleY(1)}
+#products .product-tab>b{transition:transform .3s var(--bg-gw-ease-out),color .18s ease}
+#products .product-tab:hover>b,#products .product-tab:focus-visible>b{transform:translateX(-6px)}
+#products .tab-badge{white-space:nowrap}
 #products .tab-icon{transition:transform .18s ease,background-color .18s ease}
 #products .product-tab:hover .tab-icon{transform:translateY(-2px)}
 #products{scroll-margin-top:92px}
 #genericProductsSection{scroll-margin-top:92px}
 #genericProductsSection .generic-products-toolbar-heading{position:relative}
 #genericProductsSection .generic-products-toolbar-heading::after{content:"";position:absolute;inset-block:2px;inset-inline-start:-2px;width:2px;background:linear-gradient(180deg,transparent,#7894ff,transparent);opacity:.55}
-@keyframes bgGatewayForm{0%{opacity:0;scale:.94}100%{opacity:1;scale:1}}
-@keyframes bgGatewayBeam{0%{opacity:0;scaleX(.15)}100%{opacity:.76;scaleX(1)}}
-@keyframes bgGatewayRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-@keyframes bgGatewayMark{0%{opacity:0;transform:translateY(7px) scale(.985)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes bgGatewayLogoGlow{0%{filter:drop-shadow(0 0 0 rgba(120,148,255,0))}55%{filter:drop-shadow(0 0 12px rgba(120,148,255,.55))}100%{filter:drop-shadow(0 0 4px rgba(120,148,255,.15))}}
-@media(max-width:768px){#top .hero{overflow:visible}#top .hero-visual::before{inline-size:min(76vw,330px);opacity:.75}#top .hero-visual::after{inset-inline:-6%;opacity:.4}#top .hero .brand-stage{box-shadow:0 16px 40px rgba(0,0,0,.28)}#top .hero .hero-service-item{animation-delay:1.5s}#top .hero .hero-service-item:nth-child(2){animation-delay:1.62s}#top .hero .hero-service-item:nth-child(3){animation-delay:1.74s}#products.products-section{padding-top:38px!important}#products.products-section::before{margin-bottom:14px}}
-@media(max-width:420px){#top .hero-visual::before{inline-size:74vw}#top .hero .brand-stage{padding:16px!important}}
-@media(prefers-reduced-motion:reduce){#top .hero-copy,#top .hero-eyebrow,#top .hero h1,#top .hero-copy>p,#top .hero-actions,#top .hero-trust,#top .hero-microcopy,#top .hero-console-head,#top .hero-console-head img,#top .brand-stage-copy,#top .hero-service-item,#products .product-tab{animation:none!important}#top .hero-visual::before{animation:none!important;transform:translate(-50%,-50%)}#top .hero-visual::after{animation:none!important;transform:rotate(-22deg)}#top .hero .hero-service-item,#products .tab-icon{transition:none!important}}
+
+/* ---------- Motion (skipped entirely for reduced motion) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  #top .hero--gateway .bg-hero-eyebrow{animation:bgGatewayRise .5s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-hero-edge{animation:bgGatewayEdge .6s .05s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-hero-ln>span{animation:bgGatewayLine .7s .08s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-hero-ln:nth-child(2)>span{animation-delay:.17s}
+  #top .hero--gateway .bg-hero-lede{animation:bgGatewayRise .6s .26s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-hero-actions{animation:bgGatewayRise .6s .34s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-hero-quick{animation:bgGatewayRise .5s .42s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-hero-proof,#top .hero--gateway .bg-hero-slogan{animation:bgGatewayFade .6s .55s var(--bg-gw-ease) both}
+  #top .hero--gateway .bg-hero-slogan::before{animation:bgGatewayDraw .6s .75s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-gate-r3{animation:bgGatewayForm .8s .05s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-gate-r2{animation:bgGatewayForm .9s .14s var(--bg-gw-ease-out) both,bgGatewaySpin 1.4s .14s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-gate-r1{animation:bgGatewayForm 1s .22s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-gate-beam{animation:bgGatewayBeam .9s .18s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-gate-door{display:block}
+  #top .hero--gateway .bg-gate-door-a{animation:bgGatewayDoorA .75s .32s cubic-bezier(.7,0,.2,1) both}
+  #top .hero--gateway .bg-gate-door-b{animation:bgGatewayDoorB .75s .32s cubic-bezier(.7,0,.2,1) both}
+  #top .hero--gateway .bg-gate-core img{animation:bgGatewayLogo .7s .55s var(--bg-gw-ease-out) both}
+  #top .hero--gateway .bg-gate-core::before{animation:bgGatewayFlash 1.1s .5s ease-out both}
+  #top .hero--gateway .bg-gate-halo{animation:bgGatewayHalo 1.2s .6s ease-out both}
+  #top .hero--gateway .bg-gate-sweep{animation:bgGatewaySweep 1.3s .6s cubic-bezier(.45,0,.2,1) both}
+  #top .hero--gateway .bg-gate-node{animation:bgGatewayNode .7s var(--bg-gw-spring) both;animation-delay:calc(.85s + var(--i,0) * .12s);transition:transform .25s var(--bg-gw-ease),border-color .2s ease}
+  #top .hero--gateway .bg-gate-node:hover{transform:translateY(-3px);border-color:rgba(120,148,255,.5)}
+  /* Scroll-linked exit + #products heading edge draw: CSS scroll-driven, compositor-only, progressive */
+  @supports (animation-timeline:view()){
+    #top .hero.hero--gateway{view-timeline:--bg-hero block}
+    #top .hero--gateway .bg-hero-copy{animation:bgGatewayCopyOut linear both;animation-timeline:--bg-hero;animation-range:exit 0% exit 90%}
+    #top .hero--gateway .bg-gate{animation:bgGatewayGateOut linear both;animation-timeline:--bg-hero;animation-range:exit 0% exit 100%}
+    #products .bg-products-head::before{animation:bgGatewayEdge linear both;animation-timeline:view();animation-range:entry 0% cover 35%}
+  }
+}
+@keyframes bgGatewayRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes bgGatewayFade{from{opacity:0}to{opacity:1}}
+@keyframes bgGatewayLine{from{transform:translateY(108%)}to{transform:none}}
+@keyframes bgGatewayEdge{from{transform:scaleY(0)}to{transform:none}}
+@keyframes bgGatewayDraw{from{transform:scaleX(0)}to{transform:none}}
+@keyframes bgGatewayForm{from{opacity:0;transform:scale(.78)}to{opacity:1;transform:none}}
+@keyframes bgGatewaySpin{from{rotate:-40deg}to{rotate:0deg}}
+@keyframes bgGatewayBeam{from{opacity:0;transform:scaleX(.05)}60%{opacity:1}to{opacity:.8;transform:scaleX(1)}}
+@keyframes bgGatewayDoorA{from{transform:none}to{transform:translateX(-102%);opacity:0}}
+@keyframes bgGatewayDoorB{from{transform:none}to{transform:translateX(102%);opacity:0}}
+@keyframes bgGatewayLogo{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes bgGatewayFlash{0%{opacity:0}35%{opacity:1}100%{opacity:.35}}
+@keyframes bgGatewayHalo{0%{opacity:0;transform:scale(.7)}50%{opacity:1}100%{opacity:.5;transform:none}}
+@keyframes bgGatewaySweep{0%{opacity:0;transform:rotate(-90deg)}15%{opacity:1}85%{opacity:1}100%{opacity:0;transform:rotate(270deg)}}
+@keyframes bgGatewayNode{from{opacity:0;transform:translate(var(--fx,0),var(--fy,0)) scale(.5)}to{opacity:1;transform:none}}
+@keyframes bgGatewayCopyOut{to{opacity:.4;transform:translateY(-40px)}}
+@keyframes bgGatewayGateOut{to{opacity:.35;transform:scale(1.18) rotate(-6deg)}}
+
+/* ---------- Mobile: gateway sits above the copy at 210px ---------- */
+@media(max-width:860px){
+  #top .hero.hero--gateway{grid-template-columns:minmax(0,1fr);gap:6px;padding:18px 0 28px}
+  #top .hero--gateway .bg-hero-visual{order:-1;width:min(100%,330px);height:210px;aspect-ratio:auto}
+  #top .hero--gateway .bg-gate{inset:0 calc(50% - 105px);width:210px}
+  #top .hero--gateway .bg-gate-node{gap:6px;padding:6px 10px 6px 6px;border-radius:11px}
+  #top .hero--gateway .bg-gate-ni{width:24px;height:24px;border-radius:7px}
+  #top .hero--gateway .bg-gate-ni svg{width:13px;height:13px}
+  #top .hero--gateway .bg-gate-node b{font-size:12px}
+  #top .hero--gateway .bg-gate-node small{display:none}
+  #top .hero--gateway .bg-gate-beam{inset-inline:-40%;opacity:.5}
+  #top .hero.hero--gateway h1{margin:14px 0 12px;font-size:clamp(34px,9.6vw,46px)}
+  #top .hero.hero--gateway .bg-hero-lede{font-size:15px;line-height:1.95}
+  #top .hero--gateway .bg-hero-actions{margin-top:22px}
+  #top .hero--gateway .bg-hero-actions .btn{flex:1 1 100%;justify-content:center}
+  #top .hero--gateway .bg-hero-quick{margin-top:16px}
+  #top .hero--gateway .bg-hero-quick>span{flex-basis:100%}
+  #top .hero--gateway .bg-hero-proof{grid-template-columns:1fr 1fr;gap:14px 0;margin-top:24px}
+  #top .hero--gateway .bg-hero-proof>div{margin:0;padding-inline:0 12px}
+  #top .hero--gateway .bg-hero-proof>div:nth-child(2n){border:0}
+  #top .hero--gateway .bg-hero-proof b{font-size:21px}
+  #products.products-section{padding-top:38px!important}
+  #products.products-section::before{margin-bottom:14px}
+}
+@media(max-width:860px) and (prefers-reduced-motion:no-preference){
+  #top .hero--gateway .bg-gate-sweep{display:none}
+  #top .hero--gateway .bg-gate-node{animation-delay:calc(.6s + var(--i,0) * .08s)}
+}
+@media(prefers-reduced-motion:reduce){
+  #top .hero--gateway .bg-gate-l{translate:none!important;transition:none}
+  #top .hero--gateway .bg-hero-chip,#products .product-tab::after,#products .product-tab>b,#products .tab-icon{transition:none!important}
+  #products .product-tab:hover>b,#products .product-tab:focus-visible>b{transform:none}
+}

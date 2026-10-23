@@ -32,12 +32,12 @@ grep -Fq '/web/css/header-profile-redesign.css?v=5.1.96-header-1' "$HTML" || fai
 grep -Fq '/web/js/account.js?v=5.1.96-header-1' "$MODULE_HTML" || fail "served Pro Web account script cache key not updated"
 grep -Fq '/web/js/account.js?v=5.1.96-header-1' "$HTML" || fail "public account script cache key not updated"
 grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
-grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
-grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$MODULE_HTML" || fail "homepage hero copy missing"
+grep -Fq '<section class="hero shell hero--gateway"' "$MODULE_HTML" || fail "homepage Living Gateway hero missing"
+grep -Fq 'از یک <em>دروازه</em>.' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
 : # Version is validated against the latest CHANGELOG release above
-grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
-grep -Fq 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
+grep -Fq 'خدمات دیجیتال، از یک دروازه.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
+grep -Fq 'BluePing VPN، اشتراک تلگرام پرمیوم، تلگرام استارز و بقیه سرویس‌های فعال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
 grep -Fq 'id="premiumPlans"' "$HTML" || fail "Premium plan container missing"
 grep -Fq 'id="stickyBuy"' "$HTML" || fail "sticky checkout action missing"
@@ -92,7 +92,7 @@ for PAGE in "$HTML" "$MODULE_HTML"; do
   grep -Fq 'id="genericProductsSection"' "$PAGE" || fail "dynamic service catalog missing"
   grep -Fq 'id="genericProductsGrid"' "$PAGE" || fail "dynamic catalog product grid missing"
   grep -Fq 'href="#genericProductsSection"' "$PAGE" || fail "homepage navigation does not lead to the catalog"
-  HERO_POS=$(grep -n '<section class="hero shell"' "$PAGE" | head -1 | cut -d: -f1)
+  HERO_POS=$(grep -En '<section class="hero shell[ "]' "$PAGE" | head -1 | cut -d: -f1)
   CATALOG_POS=$(grep -n '<section id="genericProductsSection"' "$PAGE" | head -1 | cut -d: -f1)
   PRODUCTS_POS=$(grep -n '<section id="products"' "$PAGE" | head -1 | cut -d: -f1)
   RATES_POS=$(grep -n '<section class="shell live-strip"' "$PAGE" | head -1 | cut -d: -f1)
@@ -128,8 +128,8 @@ MODULE_BRAND_MOTION_CSS="$ROOT/modules/pro-web/public/css/homepage-brand-motion.
 cmp -s "$BRAND_MOTION_CSS" "$MODULE_BRAND_MOTION_CSS" || fail "Brand Gateway stylesheets differ between runtime and public mirror"
 grep -Fq '@keyframes bgGatewayForm' "$BRAND_MOTION_CSS" || fail "gateway signature motion missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway reduced-motion support missing"
-grep -Fq '/web/css/homepage-brand-motion.css?v=5.4.0-blue-gate-1' "$MODULE_HTML" || fail "served Pro Web shell does not load Brand Gateway motion stylesheet"
-grep -Fq '/web/css/homepage-brand-motion.css?v=5.4.0-blue-gate-1' "$HTML" || fail "public shell does not load Brand Gateway motion stylesheet"
+grep -Fq '/web/css/homepage-brand-motion.css?v=5.6.0-living-gateway-1' "$MODULE_HTML" || fail "served Pro Web shell does not load Brand Gateway motion stylesheet"
+grep -Fq '/web/css/homepage-brand-motion.css?v=5.6.0-living-gateway-1' "$HTML" || fail "public shell does not load Brand Gateway motion stylesheet"
 pass "Brand Gateway and flagship-first checks"
 
 
@@ -138,16 +138,16 @@ GATE_JS="$ROOT/public/web/js/homepage-brand-motion.js"
 MODULE_GATE_JS="$ROOT/modules/pro-web/public/js/homepage-brand-motion.js"
 [[ -f "$GATE_JS" && -f "$MODULE_GATE_JS" ]] || fail "Brand Gateway pointer-motion helper missing"
 cmp -s "$GATE_JS" "$MODULE_GATE_JS" || fail "Brand Gateway JS differs between runtime and public mirror"
-grep -Fq 'href="#products"><span>مشاهده سرویس‌ها</span>' "$HTML" || fail "hero CTA does not point to flagship configurators"
-grep -Fq '<strong>Premium</strong>' "$HTML" || fail "Premium marker missing from Brand Gateway"
-grep -Fq '<strong>Stars</strong>' "$HTML" || fail "Stars marker missing from Brand Gateway"
+grep -Fq 'href="#genericProductsSection"><span>مشاهده همه سرویس‌ها</span>' "$HTML" || fail "hero CTA does not point to the full catalog"
+grep -Fq '<b>Premium</b>' "$HTML" || fail "Premium marker missing from Brand Gateway"
+grep -Fq '<b>Stars</b>' "$HTML" || fail "Stars marker missing from Brand Gateway"
 grep -Fq 'bgGatewayForm' "$BRAND_MOTION_CSS" || fail "gateway formation animation missing"
-grep -Fq '1.5s' "$BRAND_MOTION_CSS" || fail "flagship reveal sequence timing missing"
+grep -Fq '@keyframes bgGatewayNode' "$BRAND_MOTION_CSS" || fail "flagship node reveal sequence missing"
 grep -Fq '#products .product-tab{animation:none}' "$BRAND_MOTION_CSS" || fail "real purchase configurators must not be delayed by the hero animation"
 grep -Fq 'requestAnimationFrame' "$GATE_JS" || fail "pointer motion is not frame-coalesced"
 grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway reduced-motion support missing"
-grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$MODULE_HTML" || fail "served Pro Web shell does not load gateway pointer helper"
-grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$HTML" || fail "public shell does not load gateway pointer helper"
+grep -Fq '/web/js/homepage-brand-motion.js?v=5.6.0-living-gateway-1' "$MODULE_HTML" || fail "served Pro Web shell does not load gateway pointer helper"
+grep -Fq '/web/js/homepage-brand-motion.js?v=5.6.0-living-gateway-1' "$HTML" || fail "public shell does not load gateway pointer helper"
 pass "The Blue Gate cinematic intro checks"
 
 
@@ -163,7 +163,7 @@ for R in "$ROOT/public/web" "$ROOT/modules/pro-web/public"; do
   grep -Fq '<button type="button" class="generic-card-action">' "$R/js/app.js" || fail "catalog card real button missing in $R"
   ! grep -Fq 'class="product-tabs" role="tablist"' "$R/index.html" || fail "product selector still declares an empty tablist in $R"
   grep -Fq 'id="productsHeading"' "$R/index.html" || fail "products section heading missing in $R"
-  grep -Fq '/web/js/app.js?v=5.5.0-catalog-editorial-1' "$R/index.html" || fail "app.js cache key not bumped in $R"
+  grep -Fq '/web/js/app.js?v=5.6.0-living-gateway-1' "$R/index.html" || fail "app.js cache key not bumped in $R"
 done
 cmp -s "$ROOT/public/web/js/pricing.js" "$ROOT/modules/pro-web/public/js/pricing.js" || fail "pricing/format JS mirrors differ"
 cmp -s "$ROOT/public/web/css/orders-v9.css" "$ROOT/modules/pro-web/public/css/orders-v9.css" || fail "orders-v9.css mirrors differ"
@@ -189,3 +189,33 @@ grep -Fq '.generic-product-card:hover .generic-card-action b{transform:none!impo
 grep -Fq '#8a91a0' "$EXP" || fail "catalog faint text token must stay at the AA-safe value"
 pass "editorial catalog redesign checks"
 
+# Living Gateway hero (v5.6.0): presentation + copy defaults only, mirrors identical
+cmp -s "$ROOT/public/web/js/app.js" "$ROOT/modules/pro-web/public/js/app.js" || fail "app.js mirrors differ"
+for R in "$ROOT/public/web" "$ROOT/modules/pro-web/public"; do
+  H="$R/index.html"
+  grep -Fq '<h1 id="heroTitle"><span class="bg-hero-ln"><span>خدمات دیجیتال، </span></span><span class="bg-hero-ln"><span>از یک <em>دروازه</em>.</span></span></h1>' "$H" || fail "Living Gateway headline markup missing in $R"
+  grep -Fq '<p class="bg-hero-slogan">به امید آینده‌ی آزاد</p>' "$H" || fail "brand slogan must stay in the hero in $R"
+  grep -Fq 'class="bg-hero-edge"' "$H" || fail "blue edge line above the headline missing in $R"
+  grep -Fq 'data-hero-service="vpn"' "$H" && grep -Fq 'data-hero-service="premium"' "$H" && grep -Fq 'data-hero-service="stars"' "$H" || fail "hero direct service shortcuts missing in $R"
+  grep -Fq 'id="heroServiceCount" class="bg-hero-count is-pending"' "$H" || fail "live service counter must start pending (filled from storefront data) in $R"
+  ! grep -Eq 'data-hero-count[^>]*>[1-9]' "$H" || fail "hero service counter must not be hardcoded in $R"
+  grep -Fq '<h2 id="productsHeading">سرویس‌های اصلی BlueGate</h2>' "$H" || fail "visible flagship heading missing in $R"
+  grep -Fq '<span class="tab-badge purple">3، 6، 12 ماهه</span>' "$H" || fail "Premium duration badge not normalised in $R"
+  grep -Fq 'id="announcement" class="announcement is-pending" role="region"' "$H" || fail "announcement space reservation (CLS) missing in $R"
+  ! grep -Fq 'انتخاب سرویس تا ثبت سفارش، یک‌جا' "$H" || fail "retired hero microcopy still present in $R"
+  ! grep -Fq 'آماده سفارش' "$H" || fail "unbound ready-to-order status still present in $R"
+  ! grep -Fq 'class="brand-stage-copy"' "$H" || fail "duplicate gateway headline still present in $R"
+  grep -Fq 'function renderHeroServiceCount' "$R/js/app.js" || fail "storefront-driven service counter missing in $R"
+  grep -Fq 'state.genericProducts||[]).length' "$R/js/app.js" || fail "service counter must use real storefront products in $R"
+  grep -Fq 'const LEGACY_HERO_TITLES=' "$R/js/app.js" || fail "legacy hero default mapping missing in $R"
+  grep -Fq 'function setHeroCopy(el,value){if(el&&el.textContent!==value)' "$R/js/app.js" || fail "hero copy must only be rewritten when it differs in $R"
+  grep -Fq "data-hero-service" "$R/js/homepage-brand-motion.js" || fail "hero shortcut handler missing in $R"
+done
+grep -Fq "seed_setting('storefront_hero_title', 'خدمات دیجیتال، از یک دروازه.')" "$ROOT/app/bootstrap.php" || fail "new-install hero title seed not updated"
+grep -Fq "setting('storefront_hero_title','خدمات دیجیتال، از یک دروازه.')" "$ROOT/public/api.php" || fail "admin hero title fallback not updated"
+grep -Fq '@keyframes bgGatewayBeam{from{opacity:0;transform:scaleX(.05)}' "$BRAND_MOTION_CSS" || fail "gateway beam keyframe must animate transform"
+! grep -Eq '@keyframes bgGateway[A-Za-z]*\{[^}]*(width|height|top|left|right|bottom|margin|padding|filter|box-shadow)[:]' "$BRAND_MOTION_CSS" || fail "gateway keyframes must stay transform/opacity only"
+grep -Fq '@media (prefers-reduced-motion:no-preference)' "$BRAND_MOTION_CSS" || fail "gateway motion must be opt-in for reduced-motion users"
+grep -Fq '@supports (animation-timeline:view())' "$BRAND_MOTION_CSS" || fail "scroll-driven hero exit must be progressive"
+grep -Fq '#products .product-tab:hover>b' "$BRAND_MOTION_CSS" || fail "flagship card hover arrow missing"
+pass "Living Gateway hero checks"

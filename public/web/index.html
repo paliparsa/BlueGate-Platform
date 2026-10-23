@@ -48,11 +48,11 @@
   <link rel="stylesheet" href="/web/css/header-profile-redesign.css?v=5.1.96-header-1">
   <link rel="stylesheet" href="/web/css/homepage-bottom-redesign.css?v=5.1.98-catalog-first-1">
   <link rel="stylesheet" href="/web/css/homepage-experience-redesign.css?v=5.5.0-catalog-editorial-1">
-  <link rel="stylesheet" href="/web/css/homepage-brand-motion.css?v=5.4.0-blue-gate-1">
+  <link rel="stylesheet" href="/web/css/homepage-brand-motion.css?v=5.6.0-living-gateway-1">
 </head>
 <body>
   <div id="bgRouteBoot" aria-live="polite"><div><span class="bg-route-loader-mark"><img src="/web/assets/logo-mark.webp" alt="BlueGate" width="43" height="43"></span><span class="bg-route-loader-label">در حال باز کردن بخش درخواستی…</span></div></div>
-  <div id="announcement" class="announcement hidden"></div>
+  <div id="announcement" class="announcement is-pending" role="region" aria-label="اطلاعیه" aria-hidden="true"></div><script>try{var v=localStorage.getItem('bg_announcement'),a=document.getElementById('announcement');if(v!==null){if(v){a.textContent=v;a.className='announcement';a.removeAttribute('aria-hidden')}else a.className='announcement hidden'}}catch(e){}</script>
 
   <header class="site-header" id="siteHeader">
     <div class="shell header-inner">
@@ -96,31 +96,30 @@
   </section>
 
   <main id="top">
-    <section class="hero shell">
-      <div class="hero-copy">
-        <div class="hero-eyebrow"><span class="pulse-dot"></span><span>خدمات دیجیتال BlueGate</span><b>قیمت و جزئیات پیش از سفارش</b></div>
-        <h1 id="heroTitle">سرویس موردنیازت رو پیدا کن.</h1>
-        <p id="heroText">از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال؛ محصولات موجود رو یک‌جا ببین و قبل از سفارش، جزئیات و قیمت رو بررسی کن.</p>
-        <div class="hero-actions"><a class="btn primary xl hero-primary" data-store-nav href="#products"><span>مشاهده سرویس‌ها</span><b>←</b></a><a id="heroSupport" class="btn ghost xl" target="_blank" rel="noopener">گفتگو با پشتیبانی</a></div>
-        <div class="hero-trust"><span><i>✓</i> قیمت نهایی شفاف</span><span><i>✓</i> ثبت سفارش سریع</span><span><i>✓</i> پیگیری سفارش</span></div>
-        <div class="hero-microcopy"><span>به امید آینده‌ی آزاد</span><i></i><span>انتخاب سرویس تا ثبت سفارش، یک‌جا</span></div>
+    <section class="hero shell hero--gateway" aria-labelledby="heroTitle">
+      <div class="bg-hero-copy">
+        <div class="bg-hero-eyebrow"><span class="bg-hero-edge" aria-hidden="true"></span><span><b>BLUEGATE</b> خدمات دیجیتال</span></div>
+        <h1 id="heroTitle"><span class="bg-hero-ln"><span>خدمات دیجیتال، </span></span><span class="bg-hero-ln"><span>از یک <em>دروازه</em>.</span></span></h1>
+        <p id="heroText" class="bg-hero-lede">BluePing VPN، اشتراک تلگرام پرمیوم، تلگرام استارز و بقیه سرویس‌های فعال — همه یک‌جا. قیمت نهایی رو قبل از سفارش می‌بینی و سفارشت رو داخل حسابت پیگیری می‌کنی.</p>
+        <div class="hero-actions bg-hero-actions"><a class="btn primary xl hero-primary" data-store-nav href="#genericProductsSection"><span>مشاهده همه سرویس‌ها</span><b aria-hidden="true">←</b></a><a id="heroSupport" class="btn ghost xl" target="_blank" rel="noopener">گفتگو با پشتیبانی</a></div>
+        <div class="bg-hero-quick"><span>یا مستقیم:</span><a class="bg-hero-chip" href="#products" data-hero-service="vpn"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 19 6v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3Z"/></svg>BluePing VPN</a><a class="bg-hero-chip" href="#products" data-hero-service="premium"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg>Telegram Premium</a><a class="bg-hero-chip" href="#products" data-hero-service="stars"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg>Telegram Stars</a></div>
+        <div class="bg-hero-proof">
+          <div><b>3، 6، 12</b><small>ماهه، پرمیوم تلگرام</small></div>
+          <div><b>تومان</b><small>با معادل USDT / TRX / TON</small></div>
+          <div id="heroServiceCount" class="bg-hero-count is-pending"><b><span data-hero-count>0</span><span class="bg-hero-unit">سرویس</span></b><small>فعال در کاتالوگ</small></div>
+        </div>
+        <p class="bg-hero-slogan">به امید آینده‌ی آزاد</p>
       </div>
-      <div class="hero-visual" aria-hidden="true">
-        <div class="brand-stage">
-          <div class="hero-console-head">
-            <img src="/web/assets/logo-mark.webp" alt="" width="42" height="42">
-            <div class="hero-console-brand"><strong>BLUEGATE</strong><small>DIGITAL SERVICES</small></div>
-            <span class="hero-console-status"><i></i> آماده سفارش</span>
-          </div>
-          <div class="brand-stage-copy">
-            <span>BlueGate</span>
-            <strong>خدماتی که دنبالش هستی،<br>یک‌جا پیدا کن.</strong>
-            <small>محصولات فعال رو مقایسه کن، قیمت رو ببین و بعد تصمیم بگیر.</small>
-          </div>
-          <div class="hero-service-list">
-            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><strong>VPN</strong><small>BluePing</small></div>
-            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span><strong>Premium</strong><small>اشتراک تلگرام</small></div>
-            <div class="hero-service-item"><span class="hero-service-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 8v8l-8 5-8-5V8l8-5Z"/><path d="m8 10 4 7 4-7"/></svg></span><strong>Stars</strong><small>ستاره‌های تلگرام</small></div>
+      <div class="bg-hero-visual" data-hero-parallax aria-hidden="true">
+        <div class="bg-gate">
+          <div class="bg-gate-l" style="--d:5"><div class="bg-gate-ring bg-gate-r1"></div><div class="bg-gate-sweep"></div></div>
+          <div class="bg-gate-l" style="--d:9"><div class="bg-gate-ring bg-gate-r2"></div></div>
+          <div class="bg-gate-l" style="--d:13"><div class="bg-gate-beam"></div><div class="bg-gate-ring bg-gate-r3"></div><div class="bg-gate-halo"></div></div>
+          <div class="bg-gate-l" style="--d:16"><div class="bg-gate-core"><img src="/web/assets/logo-mark.webp" alt="" width="480" height="480" decoding="async"><span class="bg-gate-door bg-gate-door-a"></span><span class="bg-gate-door bg-gate-door-b"></span></div></div>
+          <div class="bg-gate-l" style="--d:22">
+            <div class="bg-gate-node-pos" style="--x:76%;--y:20%"><div class="bg-gate-node" style="--i:0;--fx:-90px;--fy:110px"><span class="bg-gate-ni"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 3 19 6v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><b>VPN</b><small>BluePing</small></span></div></div>
+            <div class="bg-gate-node-pos" style="--x:15%;--y:52%"><div class="bg-gate-node" style="--i:1;--fx:120px;--fy:0px"><span class="bg-gate-ni"><svg viewBox="0 0 24 24" focusable="false"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg></span><span><b>Premium</b><small>اشتراک تلگرام</small></span></div></div>
+            <div class="bg-gate-node-pos" style="--x:70%;--y:83%"><div class="bg-gate-node" style="--i:2;--fx:-70px;--fy:-120px"><span class="bg-gate-ni"><svg viewBox="0 0 24 24" focusable="false"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span><span><b>Stars</b><small>ستاره‌های تلگرام</small></span></div></div>
           </div>
         </div>
       </div>
@@ -129,11 +128,11 @@
     <section id="products" class="section shell products-section">
       <div class="service-flow" aria-label="مسیر خرید"><span class="active"><b>۱</b> انتخاب سرویس</span><i>←</i><span><b>۲</b> انتخاب گزینه</span><i>←</i><span><b>۳</b> تایید سفارش</span></div>
 
-      <h2 id="productsHeading" class="sr-only">سرویس‌های اصلی BlueGate</h2>
+      <div class="bg-products-head"><span class="bg-products-kicker" aria-hidden="true">FEATURED</span><h2 id="productsHeading">سرویس‌های اصلی BlueGate</h2><p>سه سرویس پرتکرار، با انتخاب پلن و قیمت نهایی همین‌جا.</p></div>
       <div class="product-tabs" role="group" aria-labelledby="productsHeading">
         <button class="product-tab active" data-target="vpnPanel" data-product="vpn" type="button" aria-pressed="true"><span class="tab-badge">انتخاب پلن</span><span class="tab-icon vpn-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span></span><span class="tab-copy"><strong>BluePing VPN</strong><small>اینترنت پایدار برای استفاده روزمره تا حرفه‌ای</small></span><b>مشاهده پلن‌ها ←</b></button>
         <button class="product-tab" data-target="starsPanel" data-product="stars" type="button" aria-pressed="false"><span class="tab-badge gold">تعداد دلخواه</span><span class="tab-icon stars-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span></span><span class="tab-copy"><strong>Telegram Stars</strong><small>تعداد دلخواه با محاسبه لحظه‌ای قیمت</small></span><b>انتخاب تعداد ←</b></button>
-        <button class="product-tab" data-target="premiumPanel" data-product="premium" type="button" aria-pressed="false"><span class="tab-badge purple">۳ • ۶ • ۱۲ ماهه</span><span class="tab-icon premium-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m21 3-7.2 18-3.5-7.3L3 10.2 21 3Z"/><path d="m10.3 13.7 4.4-4.4"/></svg></span></span><span class="tab-copy"><strong>Telegram Premium</strong><small>اشتراک ۳، ۶ و ۱۲ ماهه تلگرام</small></span><b>مشاهده پلن‌ها ←</b></button>
+        <button class="product-tab" data-target="premiumPanel" data-product="premium" type="button" aria-pressed="false"><span class="tab-badge purple">3، 6، 12 ماهه</span><span class="tab-icon premium-icon"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m21 3-7.2 18-3.5-7.3L3 10.2 21 3Z"/><path d="m10.3 13.7 4.4-4.4"/></svg></span></span><span class="tab-copy"><strong>Telegram Premium</strong><small>اشتراک 3، 6 و 12 ماهه تلگرام</small></span><b>مشاهده پلن‌ها ←</b></button>
       </div>
       <div class="service-swipe-hint" aria-hidden="true"><span class="bg-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 8h18l-4-4"/><path d="m21 8-4 4"/><path d="M21 16H3l4 4"/><path d="m3 16 4-4"/></svg></span> کارت‌ها رو بکش و سرویس دیگه رو ببین</div>
 
@@ -300,8 +299,8 @@
   <div id="toast" class="toast hidden"></div>
   <script defer src="/web/js/config.js?v=20261012"></script><script defer src="/web/js/api.js?v=20261012"></script><script defer src="/web/js/rates.js?v=20261012"></script><script defer src="/web/js/pricing.js?v=5.4.3-phase1-a11y-1"></script><script defer src="/web/js/account.js?v=5.1.96-header-1"></script><script defer src="/web/js/admin.js?v=20261013-translation-resilience-2"></script>  <script defer src="/web/js/dashboard.js?v=5.4.3-phase1-a11y-1"></script><script defer src="/web/js/checkout.js?v=20261012"></script>
   <script defer src="/web/js/mobile-v281.js?v=0"></script>
-  <script defer src="/web/js/app.js?v=5.5.0-catalog-editorial-1"></script>
-  <script defer src="/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1"></script>
+  <script defer src="/web/js/app.js?v=5.6.0-living-gateway-1"></script>
+  <script defer src="/web/js/homepage-brand-motion.js?v=5.6.0-living-gateway-1"></script>
   <script defer src="/web/js/motion.js?v=0"></script>
   <script defer src="/translation.js?v=20261013-translation-resilience-2"></script>
 </body>
