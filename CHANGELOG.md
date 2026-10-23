@@ -1,3 +1,8 @@
+## 5.4.2 — Gateway motion smoke assertion
+- Corrected the homepage smoke test to assert the actual `bgGatewayForm` keyframes used by the Blue Gate portal animation instead of the nonexistent `bgGatewayPulse` name.
+- No website runtime behavior, storefront, checkout, pricing, API, or Mini App logic changed.
+- Validation: source assertion now matches the implemented CSS; CI will verify the complete smoke suite.
+
 ## 5.4.1 — Homepage smoke-test alignment
 - Corrected stale website redesign smoke assertions to validate the current 5.4.0 Blue Gate assets and the current release version.
 - No storefront, checkout, pricing, API, or Mini App runtime behavior changed.
