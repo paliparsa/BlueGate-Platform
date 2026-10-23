@@ -9,6 +9,10 @@ MODULE_CSS="$ROOT/modules/pro-web/public/css/editorial-redesign.css"
 HEADER_CSS="$ROOT/public/web/css/header-profile-redesign.css"
 MODULE_HEADER_CSS="$ROOT/modules/pro-web/public/css/header-profile-redesign.css"
 MODULE_JS="$ROOT/modules/pro-web/public/js/account.js"
+# The release version is read from VERSION and must match the newest CHANGELOG entry,
+# so version bumps never require editing hardcoded strings in this test.
+VERSION_FILE="$ROOT/VERSION"
+CURRENT_VERSION="$(tr -d '[:space:]' < "$VERSION_FILE" 2>/dev/null || true)"
 
 fail(){ printf 'FAIL: %s\n' "$1" >&2; exit 1; }
 pass(){ printf 'PASS: %s\n' "$1"; }
@@ -32,7 +36,9 @@ grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
-grep -Fxq '5.4.1' "$ROOT/VERSION" || fail "version not bumped"
+[[ "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "VERSION file missing or not semver"
+LATEST_CHANGELOG_VERSION="$(grep -m1 -oE '^## [0-9]+\.[0-9]+\.[0-9]+' "$ROOT/CHANGELOG.md" | cut -c4-)"
+[[ "$CURRENT_VERSION" == "$LATEST_CHANGELOG_VERSION" ]] || fail "version not bumped: VERSION ($CURRENT_VERSION) must match the newest CHANGELOG entry ($LATEST_CHANGELOG_VERSION)"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
 grep -Fq 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
@@ -80,7 +86,7 @@ grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review ca
 grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
 grep -Fq 'scrollbar-width:thin' "$MODULE_BOTTOM_CSS" || fail "local overflow styling missing"
-grep -Fxq '5.4.1' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
+[[ "$CURRENT_VERSION" == "$LATEST_CHANGELOG_VERSION" ]] || fail "homepage catalog version not bumped"
 
 pass "web redesign smoke checks"
 
@@ -109,8 +115,8 @@ MODULE_EXPERIENCE_CSS="$ROOT/modules/pro-web/public/css/homepage-experience-rede
 [[ -f "$EXPERIENCE_CSS" ]] || fail "homepage experience stylesheet missing"
 [[ -f "$MODULE_EXPERIENCE_CSS" ]] || fail "homepage experience stylesheet missing from served Pro Web module"
 cmp -s "$EXPERIENCE_CSS" "$MODULE_EXPERIENCE_CSS" || fail "homepage experience stylesheets differ between runtime and public mirror"
-grep -Fq '/web/css/homepage-experience-redesign.css?v=5.2.1-integrated-catalog-1' "$MODULE_HTML" || fail "served Pro Web shell does not load current catalog discovery stylesheet"
-grep -Fq '/web/css/homepage-experience-redesign.css?v=5.2.1-integrated-catalog-1' "$HTML" || fail "public shell does not load current catalog discovery stylesheet"
+grep -Fq '/web/css/homepage-experience-redesign.css?v=5.4.2-phase1-a11y-1' "$MODULE_HTML" || fail "served Pro Web shell does not load current catalog discovery stylesheet"
+grep -Fq '/web/css/homepage-experience-redesign.css?v=5.4.2-phase1-a11y-1' "$HTML" || fail "public shell does not load current catalog discovery stylesheet"
 grep -Fq '#products .product-tabs' "$EXPERIENCE_CSS" || fail "featured product tabs redesign missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$EXPERIENCE_CSS" || fail "homepage experience reduced-motion support missing"
 ! grep -Fq 'class="conversion-icon">⚡' "$MODULE_HTML" || fail "static conversion icon still uses emoji"
@@ -123,7 +129,7 @@ BRAND_MOTION_CSS="$ROOT/public/web/css/homepage-brand-motion.css"
 MODULE_BRAND_MOTION_CSS="$ROOT/modules/pro-web/public/css/homepage-brand-motion.css"
 [[ -f "$BRAND_MOTION_CSS" && -f "$MODULE_BRAND_MOTION_CSS" ]] || fail "Brand Gateway motion stylesheet missing"
 cmp -s "$BRAND_MOTION_CSS" "$MODULE_BRAND_MOTION_CSS" || fail "Brand Gateway stylesheets differ between runtime and public mirror"
-grep -Fq 'bgGatewayPulse' "$BRAND_MOTION_CSS" || fail "gateway signature motion missing"
+grep -Fq 'bgGatewayBeam' "$BRAND_MOTION_CSS" || fail "gateway signature motion missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway reduced-motion support missing"
 grep -Fq '/web/css/homepage-brand-motion.css?v=5.4.0-blue-gate-1' "$MODULE_HTML" || fail "served Pro Web shell does not load Brand Gateway motion stylesheet"
 grep -Fq '/web/css/homepage-brand-motion.css?v=5.4.0-blue-gate-1' "$HTML" || fail "public shell does not load Brand Gateway motion stylesheet"
@@ -146,3 +152,23 @@ grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway re
 grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$MODULE_HTML" || fail "served Pro Web shell does not load gateway pointer helper"
 grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$HTML" || fail "public shell does not load gateway pointer helper"
 pass "The Blue Gate cinematic intro checks"
+
+
+# Phase 1 web fixes: catalog price, card semantics, shared number formatter, console errors, ARIA (v5.4.2)
+for R in "$ROOT/public/web" "$ROOT/modules/pro-web/public"; do
+  [[ -f "$R/css/orders-v9.css" ]] || fail "orders-v9.css missing in $R (linked from the shell)"
+  grep -Fq 'const BLUEGATE_WEB_WELCOME_VERSION=' "$R/js/dashboard.js" || fail "web welcome version constant missing in $R"
+  grep -Fq 'window.BGFormat=' "$R/js/pricing.js" || fail "shared number formatter missing in $R"
+  ! grep -Fq "toLocaleString('fa-IR'" "$R/js/dashboard.js" || fail "dashboard still mixes numeral systems in $R"
+  grep -Fq 'function genericLowestOffer' "$R/js/app.js" || fail "catalog lowest-price helper missing in $R"
+  grep -Fq 'generic-card-price-old' "$R/js/app.js" || fail "discounted original price not struck through in $R"
+  ! grep -Fq "card.setAttribute('role','button')" "$R/js/app.js" || fail "catalog card still uses role=button in $R"
+  grep -Fq '<button type="button" class="generic-card-action">' "$R/js/app.js" || fail "catalog card real button missing in $R"
+  ! grep -Fq 'class="product-tabs" role="tablist"' "$R/index.html" || fail "product selector still declares an empty tablist in $R"
+  grep -Fq 'id="productsHeading"' "$R/index.html" || fail "products section heading missing in $R"
+  grep -Fq '/web/js/app.js?v=5.4.2-phase1-a11y-1' "$R/index.html" || fail "app.js cache key not bumped in $R"
+done
+cmp -s "$ROOT/public/web/js/pricing.js" "$ROOT/modules/pro-web/public/js/pricing.js" || fail "pricing/format JS mirrors differ"
+cmp -s "$ROOT/public/web/css/orders-v9.css" "$ROOT/modules/pro-web/public/css/orders-v9.css" || fail "orders-v9.css mirrors differ"
+cmp -s "$ROOT/public/web/css/homepage-experience-redesign.css" "$ROOT/modules/pro-web/public/css/homepage-experience-redesign.css" || fail "catalog stylesheet mirrors differ"
+pass "Phase 1 web bug and accessibility checks"
