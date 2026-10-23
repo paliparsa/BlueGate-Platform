@@ -375,8 +375,8 @@ function migrate(): void {
     seed_setting('storefront_brand_subtitle', 'Digital Services');
     seed_setting('bot_quick_shop_enabled', '1');
     seed_setting('bot_quick_shop_show_prices', '1');
-    seed_setting('storefront_hero_title', 'سرویس‌های دیجیتال، ساده و سریع');
-    seed_setting('storefront_hero_text', 'VPN، تلگرام استارز و تلگرام پرمیوم با قیمت شفاف و سفارش مستقیم.');
+    seed_setting('storefront_hero_title', 'خدمات دیجیتال، از یک دروازه.');
+    seed_setting('storefront_hero_text', 'BluePing VPN، اشتراک تلگرام پرمیوم، تلگرام استارز و بقیه سرویس‌های فعال — همه یک‌جا. قیمت نهایی رو قبل از سفارش می‌بینی و سفارشت رو داخل حسابت پیگیری می‌کنی.');
     seed_setting('storefront_announcement_enabled', '1');
     seed_setting('storefront_announcement_text', 'سرویس موردنظرت رو انتخاب کن؛ سفارش داخل حساب BlueGate ثبت و پیگیری می‌شود.');
     seed_setting('storefront_footer_text', 'سرویس‌های دیجیتال با پشتیبانی واقعی.');

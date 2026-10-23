@@ -104,7 +104,7 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - Numbers in the web catalog and services (prices, counters, percentages, traffic volumes, remaining days) use one shared formatter, `window.BGFormat` in `js/pricing.js`: Latin digits with en-US thousands grouping, the Persian percent sign `٪`, and `تومان`/`GB` units. Latin digits are already used by every price, checkout amount, wallet value, and order ID on the web, so they remain the single numeral system; do not reintroduce `fa-IR` digits next to Latin ones.
 - A catalog card's “از …” price is the lowest active plan price. When that plan is discounted, its original price is shown struck through before the sale price.
 - Catalog cards are plain `article` elements. The visible “مشاهده پلن‌ها و خرید” control is a real `button` whose hit area is stretched over the card, and its accessible name starts with the visible text followed by the product name.
-- The flagship VPN/Stars/Premium selector is a labelled group of toggle buttons (`aria-pressed`), not a tablist; the section has a visually hidden `h2` so headings do not skip levels.
+- The flagship VPN/Stars/Premium selector is a labelled group of toggle buttons (`aria-pressed`), not a tablist; the section's `h2` labels the group so headings do not skip levels (visible since v5.6.0).
 
 ## Editorial catalog (v5.5.0)
 - The services catalog follows the editorial direction. Its heading, result count, search, sort and category tabs are one `#07080B` panel with a quiet border and a 3px royal-blue inline-start edge. The product grid sits below the panel, outside it.
@@ -118,3 +118,45 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - Hover moves the card by at most 2px. All catalog transforms and transitions are disabled under `prefers-reduced-motion`.
 - Muted text uses `#A1A8B5`. Faint text must not be darker than `#8A91A0`.
 
+## Living Gateway hero (v5.6.0)
+- The homepage hero is the "Living Gateway" (`<section class="hero shell hero--gateway">`). It supersedes the v5.3.0/v5.4.0 brand-stage panel. The copy column is on the inline-start side and the gateway visual is on the other side. On screens at or below 860px, the gateway sits above the copy at 210px tall.
+- **Copy:** «خدمات دیجیتال، از یک دروازه.» with a short intro paragraph that names BluePing VPN, Telegram Premium and Telegram Stars.
+  - Only the word «دروازه» is coloured (`#7894FF`). The h1 has plain text colour, not gradient text.
+  - The static markup splits the headline into two clipped lines. `renderShell` rewrites `#heroTitle`/`#heroText` only when the storefront value differs from the current text, so the default markup and its motion stay intact.
+  - Admin-customised copy renders as plain text.
+  - Known older built-in defaults (`LEGACY_HERO_TITLES`/`LEGACY_HERO_TEXTS` in `js/app.js`) map to the new copy.
+- **Order inside the copy column:**
+  1. Eyebrow: a 3×26px royal-blue edge, then «BLUEGATE خدمات دیجیتال».
+  2. h1.
+  3. Intro paragraph.
+  4. One primary CTA, «مشاهده همه سرویس‌ها», which goes to `#genericProductsSection`, plus the support CTA.
+  5. «یا مستقیم:» shortcuts to the three flagship cards.
+  6. Proof row.
+  7. The brand slogan «به امید آینده‌ی آزاد».
+- **The slogan stays.** It is a quiet signature line with a short blue rule, and it is not hidden from assistive technology.
+- **Proof row:** only real facts.
+  - Premium durations are «3، 6، 12». Use Latin digits per `BGFormat`.
+  - Toman pricing has USDT/TRX/TON equivalents.
+  - The live service count comes from `state.genericProducts.length`, the same number as the catalog's «همه سرویس‌ها» chip. It is the last cell and is reserved invisibly until storefront data arrives, so revealing it causes no layout shift. It is removed when there are no products. Never hardcode it.
+- **Gateway visual:**
+  - three rings, one with a dashed spin-in;
+  - a one-shot sweep;
+  - a thin beam;
+  - the BlueGate mark on `#03091B` behind two opening doors;
+  - a halo;
+  - VPN, Premium and Stars nodes.
+  - The visual is decorative (`aria-hidden`). Desktop pointer parallax moves the layers by depth through the individual `translate` property. It runs only for fine pointers and is disabled under reduced motion.
+- **Motion:**
+  - The entrance runs once, finishes within about 1.3s, and never blocks content. All keyframes animate only `transform`/`opacity` (`rotate`/`scale` included).
+  - Motion lives inside `@media (prefers-reduced-motion:no-preference)`. Reduced motion shows the final state with no doors, parallax or scroll coupling.
+  - Scroll-linked effects use CSS scroll-driven animations inside `@supports (animation-timeline:view())`:
+    - the copy lifts and dims as the hero exits;
+    - the gateway scales and opens;
+    - the flagship heading edge draws in.
+  - Mobile skips the sweep and uses shorter delays.
+- **Flagship section (`#products`):** the h2 «سرویس‌های اصلی BlueGate» is visible, with a «FEATURED» kicker, a one-line subtitle and a 3px blue inline-start edge.
+  - Flagship cards use the Direction 2 row affordance. A 3px blue inline-start edge scales in on hover, keyboard focus and the active card, and the CTA arrow moves 6px toward the reading direction.
+  - The Premium badge reads «3، 6، 12 ماهه» and does not wrap.
+- **Announcement:** the bar is rendered `is-pending` and keeps one line until storefront settings arrive, so the hero does not jump.
+  - The last rendered text, or an empty value for a disabled bar, is remembered in `localStorage` (`bg_announcement`). Later visits paint it, or collapse the bar, before first paint.
+  - A first visit whose announcement wraps to two lines on a narrow phone can still shift once.
