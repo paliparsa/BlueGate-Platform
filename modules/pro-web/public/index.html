@@ -30,21 +30,21 @@
     @media(prefers-reduced-motion:reduce){html.bg-route-boot #bgRouteBoot .bg-route-loader-mark:before{animation:none}}
   </style>
   <link rel="stylesheet" href="/design-system.css?v=0">
-  <link rel="stylesheet" href="/web/css/store.css?v=0">
+  <link rel="stylesheet" href="/web/css/store.css?v=5.4.3-phase1-a11y-1">
   <link rel="stylesheet" href="/web/css/account.css?v=20261012-auth-drawer-hardening-1">
   <link rel="stylesheet" href="/web/css/dashboard.css?v=20261012-mobile-ticket-sheet-1">
   <link rel="stylesheet" href="/web/css/ui-overhaul.css?v=0">
   <link rel="stylesheet" href="/web/css/admin-v18.css?v=0">
   <link rel="stylesheet" href="/web/css/admin-unified.css?v=0">
   <link rel="stylesheet" href="/web/css/mobile-v281.css?v=0">
-  <link rel="stylesheet" href="/web/css/contrast-guard.css?v=0">
+  <link rel="stylesheet" href="/web/css/contrast-guard.css?v=5.4.3-phase1-a11y-1">
   <link rel="stylesheet" href="/web/css/motion.css?v=0">
   <link rel="stylesheet" href="/web/css/mobile-v460.css?v=0">
-  <link rel="stylesheet" href="/web/css/orders-v9.css?v=0">
+  <link rel="stylesheet" href="/web/css/orders-v9.css?v=5.4.3-phase1-a11y-1">
   <link rel="stylesheet" href="/web/css/editorial-redesign.css?v=5.1.95-home-hero-1">
   <link rel="stylesheet" href="/web/css/header-profile-redesign.css?v=5.1.96-header-1">
   <link rel="stylesheet" href="/web/css/homepage-bottom-redesign.css?v=5.1.98-catalog-first-1">
-  <link rel="stylesheet" href="/web/css/homepage-experience-redesign.css?v=5.2.1-integrated-catalog-1">
+  <link rel="stylesheet" href="/web/css/homepage-experience-redesign.css?v=5.4.3-phase1-a11y-1">
   <link rel="stylesheet" href="/web/css/homepage-brand-motion.css?v=5.4.0-blue-gate-1">
 </head>
 <body>
@@ -125,14 +125,15 @@
     <section id="products" class="section shell products-section">
       <div class="service-flow" aria-label="مسیر خرید"><span class="active"><b>۱</b> انتخاب سرویس</span><i>←</i><span><b>۲</b> انتخاب گزینه</span><i>←</i><span><b>۳</b> تایید سفارش</span></div>
 
-      <div class="product-tabs" role="tablist" aria-label="محصولات">
-        <button class="product-tab active" data-target="vpnPanel" data-product="vpn" type="button"><span class="tab-badge">انتخاب پلن</span><span class="tab-icon vpn-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 19 6v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="tab-copy"><strong>BluePing VPN</strong><small>اینترنت پایدار برای استفاده روزمره تا حرفه‌ای</small></span><b>مشاهده پلن‌ها ←</b></button>
-        <button class="product-tab" data-target="starsPanel" data-product="stars" type="button"><span class="tab-badge gold">تعداد دلخواه</span><span class="tab-icon stars-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span><span class="tab-copy"><strong>Telegram Stars</strong><small>تعداد دلخواه با محاسبه لحظه‌ای قیمت</small></span><b>انتخاب تعداد ←</b></button>
-        <button class="product-tab" data-target="premiumPanel" data-product="premium" type="button"><span class="tab-badge purple">۳ • ۶ • ۱۲ ماهه</span><span class="tab-icon premium-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg></span><span class="tab-copy"><strong>Telegram Premium</strong><small>اشتراک ۳، ۶ و ۱۲ ماهه تلگرام</small></span><b>مشاهده پلن‌ها ←</b></button>
+      <h2 id="productsHeading" class="sr-only">سرویس‌های اصلی BlueGate</h2>
+      <div class="product-tabs" role="group" aria-labelledby="productsHeading">
+        <button class="product-tab active" data-target="vpnPanel" data-product="vpn" type="button" aria-pressed="true"><span class="tab-badge">انتخاب پلن</span><span class="tab-icon vpn-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 19 6v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="tab-copy"><strong>BluePing VPN</strong><small>اینترنت پایدار برای استفاده روزمره تا حرفه‌ای</small></span><b>مشاهده پلن‌ها ←</b></button>
+        <button class="product-tab" data-target="starsPanel" data-product="stars" type="button" aria-pressed="false"><span class="tab-badge gold">تعداد دلخواه</span><span class="tab-icon stars-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg></span><span class="tab-copy"><strong>Telegram Stars</strong><small>تعداد دلخواه با محاسبه لحظه‌ای قیمت</small></span><b>انتخاب تعداد ←</b></button>
+        <button class="product-tab" data-target="premiumPanel" data-product="premium" type="button" aria-pressed="false"><span class="tab-badge purple">۳ • ۶ • ۱۲ ماهه</span><span class="tab-icon premium-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg></span><span class="tab-copy"><strong>Telegram Premium</strong><small>اشتراک ۳، ۶ و ۱۲ ماهه تلگرام</small></span><b>مشاهده پلن‌ها ←</b></button>
       </div>
       <div class="service-swipe-hint" aria-hidden="true"><span>↔</span> کارت‌ها رو بکش و سرویس دیگه رو ببین</div>
 
-      <div class="service-nav-wrap" aria-hidden="true"><div class="service-nav" id="serviceNav" role="tablist" aria-label="تعویض سریع سرویس"><button class="active" data-service="vpn" role="tab">VPN</button><button data-service="stars" role="tab">Stars</button><button data-service="premium" role="tab">Premium</button></div></div>
+      <div class="service-nav-wrap" aria-hidden="true"><div class="service-nav" id="serviceNav" role="group" aria-label="تعویض سریع سرویس"><button class="active" data-service="vpn" type="button" aria-pressed="true">VPN</button><button data-service="stars" type="button" aria-pressed="false">Stars</button><button data-service="premium" type="button" aria-pressed="false">Premium</button></div></div>
 
       <div id="vpnPanel" class="product-panel active vpn-popup-panel">
         <div class="vpn-popup-launcher" id="vpnPopupLauncher">
@@ -293,9 +294,9 @@
   </aside>
 
   <div id="toast" class="toast hidden"></div>
-  <script defer src="/web/js/config.js?v=20261012"></script><script defer src="/web/js/api.js?v=20261012"></script><script defer src="/web/js/rates.js?v=20261012"></script><script defer src="/web/js/pricing.js?v=20261012"></script><script defer src="/web/js/account.js?v=5.1.96-header-1"></script><script defer src="/web/js/admin.js?v=20261012-admin-settings-visual-2"></script>  <script defer src="/web/js/dashboard.js?v=20261012-ticket-parity-1"></script><script defer src="/web/js/checkout.js?v=20261012"></script>
+  <script defer src="/web/js/config.js?v=20261012"></script><script defer src="/web/js/api.js?v=20261012"></script><script defer src="/web/js/rates.js?v=20261012"></script><script defer src="/web/js/pricing.js?v=5.4.3-phase1-a11y-1"></script><script defer src="/web/js/account.js?v=5.1.96-header-1"></script><script defer src="/web/js/admin.js?v=20261012-admin-settings-visual-2"></script>  <script defer src="/web/js/dashboard.js?v=5.4.3-phase1-a11y-1"></script><script defer src="/web/js/checkout.js?v=20261012"></script>
   <script defer src="/web/js/mobile-v281.js?v=0"></script>
-  <script defer src="/web/js/app.js?v=5.2.0-catalog-discovery-1"></script>
+  <script defer src="/web/js/app.js?v=5.4.3-phase1-a11y-1"></script>
   <script defer src="/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1"></script>
   <script defer src="/web/js/motion.js?v=0"></script>
 </body>

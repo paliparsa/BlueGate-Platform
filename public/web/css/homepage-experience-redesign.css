@@ -236,6 +236,13 @@
 }
 @media(max-width:360px){#genericProductsSection .generic-products-grid{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){#genericProductsSection .generic-product-card--catalog,#genericProductsSection .generic-card-action b{transition:none!important}}
+#genericProductsSection button.generic-card-action{min-height:0;padding-right:0;padding-bottom:0;padding-left:0;border-right:0;border-bottom:0;border-left:0;border-radius:0;background:none;box-shadow:none;font-size:11px!important;line-height:1.75;text-align:inherit;cursor:pointer}
+@media(max-width:560px){#genericProductsSection button.generic-card-action{font-size:10px!important}}
+#genericProductsSection .generic-card-action::before{content:"";position:absolute;inset:0;z-index:1;border-radius:inherit}
+#genericProductsSection .generic-card-copy{position:static}
+#genericProductsSection .generic-card-action:focus-visible{outline:none!important}
+#genericProductsSection .generic-card-action:focus-visible::before{outline:2px solid var(--bg-home-blue-soft);outline-offset:-3px}
+#genericProductsSection .generic-card-price-old{margin-inline-end:4px;color:var(--muted,#94abc2);font-size:.82em;font-weight:600;text-decoration-thickness:1px}
 
 
 /* v5.2.1 — integrate the service heading into the live catalog */

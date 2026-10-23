@@ -1,3 +1,13 @@
+## 5.4.3 — Web catalog and services fixes and accessibility
+- Catalog cards now show the lowest active plan price as “از …”. When that plan is discounted, the original price is struck through before the sale price (previously the discounted plan's price was shown even when a cheaper plan existed).
+- Catalog cards are no longer `article[role=button]`. The “مشاهده پلن‌ها و خرید” control is a real button with a card-wide hit area, and its accessible name contains its visible label plus the product name. Checkout still opens through `BGCheckout.open`.
+- Added one shared web number formatter (`BGFormat` in `js/pricing.js`) for prices, counters, percentages and traffic volumes in the catalog and services. It uses Latin digits throughout; traffic volumes previously used Persian digits.
+- Fixed console errors: the served Pro Web shell now ships `css/orders-v9.css` (previously a 404), and `BLUEGATE_WEB_WELCOME_VERSION` is defined (previously a ReferenceError on account pages).
+- Flagship service selector and sticky switcher use group + `aria-pressed` instead of an invalid tablist/`aria-selected`/`aria-current` mix. A visually hidden `h2` fixes heading order before the VPN launcher.
+- Public website and served Pro Web mirrors stay synchronized; Telegram Mini App files are untouched.
+- Added Phase 1 assertions to `tests/web-redesign-smoke.sh`; release version validation uses the existing CHANGELOG-based check.
+- Validation: smoke test, mock-server screenshots at 1440 and 390, axe, and Lighthouse accessibility audits with no console errors.
+
 ## 5.4.2 — Gateway motion smoke assertion
 - Corrected the homepage smoke test to assert the actual `bgGatewayForm` keyframes used by the Blue Gate portal animation instead of the nonexistent `bgGatewayPulse` name.
 - No website runtime behavior, storefront, checkout, pricing, API, or Mini App logic changed.

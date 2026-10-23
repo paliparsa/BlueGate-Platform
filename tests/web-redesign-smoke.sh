@@ -112,8 +112,8 @@ MODULE_EXPERIENCE_CSS="$ROOT/modules/pro-web/public/css/homepage-experience-rede
 [[ -f "$EXPERIENCE_CSS" ]] || fail "homepage experience stylesheet missing"
 [[ -f "$MODULE_EXPERIENCE_CSS" ]] || fail "homepage experience stylesheet missing from served Pro Web module"
 cmp -s "$EXPERIENCE_CSS" "$MODULE_EXPERIENCE_CSS" || fail "homepage experience stylesheets differ between runtime and public mirror"
-grep -Fq '/web/css/homepage-experience-redesign.css?v=5.2.1-integrated-catalog-1' "$MODULE_HTML" || fail "served Pro Web shell does not load current catalog discovery stylesheet"
-grep -Fq '/web/css/homepage-experience-redesign.css?v=5.2.1-integrated-catalog-1' "$HTML" || fail "public shell does not load current catalog discovery stylesheet"
+grep -Fq '/web/css/homepage-experience-redesign.css?v=5.4.3-phase1-a11y-1' "$MODULE_HTML" || fail "served Pro Web shell does not load current catalog discovery stylesheet"
+grep -Fq '/web/css/homepage-experience-redesign.css?v=5.4.3-phase1-a11y-1' "$HTML" || fail "public shell does not load current catalog discovery stylesheet"
 grep -Fq '#products .product-tabs' "$EXPERIENCE_CSS" || fail "featured product tabs redesign missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$EXPERIENCE_CSS" || fail "homepage experience reduced-motion support missing"
 ! grep -Fq 'class="conversion-icon">⚡' "$MODULE_HTML" || fail "static conversion icon still uses emoji"
@@ -149,3 +149,23 @@ grep -Fq 'prefers-reduced-motion:reduce' "$BRAND_MOTION_CSS" || fail "gateway re
 grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$MODULE_HTML" || fail "served Pro Web shell does not load gateway pointer helper"
 grep -Fq '/web/js/homepage-brand-motion.js?v=5.4.0-gateway-cursor-1' "$HTML" || fail "public shell does not load gateway pointer helper"
 pass "The Blue Gate cinematic intro checks"
+
+
+# Phase 1 web fixes: catalog price, card semantics, shared number formatter, console errors, ARIA (v5.4.3)
+for R in "$ROOT/public/web" "$ROOT/modules/pro-web/public"; do
+  [[ -f "$R/css/orders-v9.css" ]] || fail "orders-v9.css missing in $R (linked from the shell)"
+  grep -Fq 'const BLUEGATE_WEB_WELCOME_VERSION=' "$R/js/dashboard.js" || fail "web welcome version constant missing in $R"
+  grep -Fq 'window.BGFormat=' "$R/js/pricing.js" || fail "shared number formatter missing in $R"
+  ! grep -Fq "toLocaleString('fa-IR'" "$R/js/dashboard.js" || fail "dashboard still mixes numeral systems in $R"
+  grep -Fq 'function genericLowestOffer' "$R/js/app.js" || fail "catalog lowest-price helper missing in $R"
+  grep -Fq 'generic-card-price-old' "$R/js/app.js" || fail "discounted original price not struck through in $R"
+  ! grep -Fq "card.setAttribute('role','button')" "$R/js/app.js" || fail "catalog card still uses role=button in $R"
+  grep -Fq '<button type="button" class="generic-card-action">' "$R/js/app.js" || fail "catalog card real button missing in $R"
+  ! grep -Fq 'class="product-tabs" role="tablist"' "$R/index.html" || fail "product selector still declares an empty tablist in $R"
+  grep -Fq 'id="productsHeading"' "$R/index.html" || fail "products section heading missing in $R"
+  grep -Fq '/web/js/app.js?v=5.4.3-phase1-a11y-1' "$R/index.html" || fail "app.js cache key not bumped in $R"
+done
+cmp -s "$ROOT/public/web/js/pricing.js" "$ROOT/modules/pro-web/public/js/pricing.js" || fail "pricing/format JS mirrors differ"
+cmp -s "$ROOT/public/web/css/orders-v9.css" "$ROOT/modules/pro-web/public/css/orders-v9.css" || fail "orders-v9.css mirrors differ"
+cmp -s "$ROOT/public/web/css/homepage-experience-redesign.css" "$ROOT/modules/pro-web/public/css/homepage-experience-redesign.css" || fail "catalog stylesheet mirrors differ"
+pass "Phase 1 web bug and accessibility checks"
