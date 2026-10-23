@@ -1,3 +1,8 @@
+## 5.4.1 — Homepage smoke-test alignment
+- Corrected stale website redesign smoke assertions to validate the current 5.4.0 Blue Gate assets and the current release version.
+- No storefront, checkout, pricing, API, or Mini App runtime behavior changed.
+- Validation: GitHub Actions will rerun the repository checks against this fix.
+
 ## 5.4.0 — The Blue Gate cinematic intro
 - Refined the homepage hero into a short, cinematic gateway sequence: a thin electric-blue beam and portal form first, then the BlueGate mark and headline, followed by the VPN, Telegram Premium, and Stars cues.
 - Added restrained desktop pointer parallax with requestAnimationFrame; it is disabled for coarse pointers and respects live reduced-motion preference changes.
