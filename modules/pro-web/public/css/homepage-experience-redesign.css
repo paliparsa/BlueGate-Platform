@@ -174,3 +174,107 @@
   #genericProductsSection.generic-products-section{padding:24px 0 20px!important;margin-top:16px!important}
   #genericProductsSection .generic-products-grid{gap:10px!important;padding-top:14px}
 }
+
+/* v5.5.0 stage 2 — horizontal editorial card: neutral tile, copy, side column with offer, price and one CTA.
+   No index-rotating accent colours: the tile is neutral and blue is kept for the action, selection and focus. */
+#genericProductsSection .generic-product-card{
+  position:relative;display:grid!important;grid-template-columns:76px minmax(0,1fr) auto;align-items:center;gap:20px;
+  min-width:0;min-height:0!important;height:auto;padding:20px 20px 20px 18px!important;
+  border:1px solid var(--cat-line)!important;border-radius:var(--cat-radius)!important;
+  background:var(--cat-surface)!important;box-shadow:none!important;overflow:visible;
+  animation:none!important;transform:none;
+  transition:border-color .2s var(--cat-ease),background-color .2s var(--cat-ease),transform .2s var(--cat-ease);
+}
+#genericProductsSection .generic-product-card::before,
+#genericProductsSection .generic-product-card::after{display:none!important}
+#genericProductsSection .generic-product-card.featured{border-color:var(--cat-line)!important;box-shadow:none!important}
+#genericProductsSection .generic-card-media{
+  position:relative;display:grid;place-items:center;width:76px;height:76px;aspect-ratio:auto!important;margin:0!important;
+  border:1px solid var(--cat-line)!important;border-radius:14px!important;background:var(--cat-raised)!important;
+  font-size:34px;line-height:1;overflow:hidden;box-shadow:none!important;
+}
+#genericProductsSection .generic-card-media img{width:100%;height:100%;object-fit:cover;border-radius:0}
+#genericProductsSection .generic-card-media span{font-size:34px;line-height:1}
+#genericProductsSection .generic-card-copy{display:block;min-width:0;padding:0!important}
+#genericProductsSection .generic-card-meta{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px;
+  color:var(--cat-muted);font-size:12.5px;font-weight:600;line-height:1.6;letter-spacing:0;
+}
+#genericProductsSection .generic-card-meta span{padding:0;border:0;background:none;color:inherit;font-size:inherit}
+#genericProductsSection .generic-card-meta b{
+  display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:none;
+  color:var(--cat-warn);font-size:12.5px;font-weight:700;
+}
+#genericProductsSection .generic-card-meta b::before{
+  content:"";width:12px;height:12px;flex:none;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2 6.4 20.2l1.1-6.3L2.9 9.5l6.3-.9z'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2 6.4 20.2l1.1-6.3L2.9 9.5l6.3-.9z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+#genericProductsSection .generic-card-name{margin:0 0 4px;color:var(--cat-text);font-size:19px;font-weight:800;line-height:1.4;letter-spacing:-.01em}
+#genericProductsSection .generic-card-description{
+  display:block;margin:0;min-height:0;color:var(--cat-muted);font-size:14px;line-height:1.7;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset;
+}
+#genericProductsSection .generic-card-side{
+  display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:178px;text-align:left;
+}
+#genericProductsSection .generic-catalog-badge{
+  position:static!important;inset:auto!important;display:inline-flex;align-items:center;gap:5px;max-width:100%;
+  margin:0;padding:3px 10px!important;border:1px solid rgba(101,214,170,.22)!important;border-radius:999px!important;
+  background:rgba(101,214,170,.1)!important;color:var(--cat-ok)!important;box-shadow:none!important;
+  font-size:12px!important;font-weight:700;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#genericProductsSection .generic-card-price{
+  display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:nowrap;gap:0 6px;margin:0;white-space:nowrap;
+  color:var(--cat-muted);font-size:12px;font-weight:600;line-height:1.5;font-variant-numeric:tabular-nums;
+}
+#genericProductsSection .generic-card-price-now{color:var(--cat-text);font-size:24px;font-weight:850;line-height:1.2;letter-spacing:-.01em}
+#genericProductsSection .generic-card-price-old{color:var(--cat-faint);font-size:12.5px;font-weight:500;text-decoration:line-through}
+#genericProductsSection .generic-card-action{
+  position:static;display:inline-flex;align-items:center;justify-content:center;gap:0;width:auto;
+  min-height:40px!important;height:40px;margin:0!important;padding:0 16px 0 12px!important;
+  border:1px solid var(--cat-line-strong)!important;border-radius:10px!important;background:var(--cat-high)!important;
+  color:var(--cat-text)!important;box-shadow:none!important;font-size:14px!important;font-weight:700;line-height:1;
+  white-space:nowrap;cursor:pointer;transition:background-color .2s var(--cat-ease),border-color .2s var(--cat-ease);
+}
+/* The whole card is the hit area of its single action; the button stays the only focusable element. */
+#genericProductsSection .generic-card-action::before{content:"";position:absolute;inset:0;z-index:1;border-radius:var(--cat-radius)}
+#genericProductsSection .generic-card-action-more{white-space:pre}
+#genericProductsSection .generic-card-action b{display:inline-grid;margin-inline-start:8px;place-items:center;width:16px;height:16px;font-size:16px;line-height:1;transition:transform .2s var(--cat-ease)}
+#genericProductsSection .generic-card-action svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Focus: the card shows the ring while its only button has keyboard focus; the button also takes the action colour. */
+#genericProductsSection .generic-card-action:focus-visible{outline:2px solid var(--cat-blue-soft)!important;outline-offset:3px}
+#genericProductsSection .generic-product-card--catalog:focus-visible,
+#genericProductsSection .generic-product-card:has(.generic-card-action:focus-visible){outline:2px solid var(--cat-blue-soft)!important;outline-offset:3px}
+#genericProductsSection .generic-product-card:has(.generic-card-action:focus-visible) .generic-card-action{
+  outline:none!important;background:var(--cat-blue)!important;border-color:var(--cat-blue)!important;color:#fff!important;
+}
+@media(hover:hover) and (pointer:fine){
+  #genericProductsSection .generic-product-card:hover{
+    transform:translateY(-2px);border-color:var(--cat-line-strong)!important;background:var(--cat-raised)!important;box-shadow:none!important;
+  }
+  #genericProductsSection .generic-product-card:hover .generic-card-action{background:var(--cat-blue)!important;border-color:var(--cat-blue)!important;color:#fff!important}
+  #genericProductsSection .generic-product-card:hover .generic-card-action b{transform:translateX(-3px)}
+}
+@media(max-width:640px){
+  #genericProductsSection .generic-product-card{
+    grid-template-columns:56px minmax(0,1fr);grid-template-areas:"media copy" "side side";align-items:start;gap:12px 14px;padding:14px!important;
+  }
+  #genericProductsSection .generic-card-media{grid-area:media;width:56px;height:56px;border-radius:12px!important;font-size:26px}
+  #genericProductsSection .generic-card-media span{font-size:26px}
+  #genericProductsSection .generic-card-copy{grid-area:copy;align-self:center}
+  #genericProductsSection .generic-card-meta{margin-bottom:2px;font-size:12px}
+  #genericProductsSection .generic-card-name{margin-bottom:2px;font-size:16.5px}
+  #genericProductsSection .generic-card-description{
+    display:-webkit-box;font-size:13px;white-space:normal;-webkit-line-clamp:1;-webkit-box-orient:vertical;
+  }
+  #genericProductsSection .generic-card-side{
+    grid-area:side;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px 8px;
+    min-width:0;padding-top:12px;border-top:1px solid var(--cat-line);text-align:right;
+  }
+  #genericProductsSection .generic-card-price{grid-column:1;justify-content:flex-start}
+  #genericProductsSection .generic-card-price-now{font-size:20px}
+  #genericProductsSection .generic-catalog-badge{grid-column:2;grid-row:1;justify-self:end}
+  #genericProductsSection .generic-card-action{grid-column:1/-1;width:100%;font-size:14px!important}
+  #genericProductsSection .generic-card-action-more{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+}
