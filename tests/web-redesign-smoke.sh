@@ -2,6 +2,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+EXPECTED_VERSION="$(sed -n 's/^## \([0-9][^ ]*\) .*/\1/p' "$ROOT/CHANGELOG.md" | head -1)"
+[[ -n "$EXPECTED_VERSION" ]] || { printf 'FAIL: latest changelog version missing\n' >&2; exit 1; }
+grep -Fxq "$EXPECTED_VERSION" "$ROOT/VERSION" || { printf 'FAIL: VERSION does not match latest CHANGELOG release (%s)\n' "$EXPECTED_VERSION" >&2; exit 1; }
 HTML="$ROOT/public/web/index.html"
 CSS="$ROOT/public/web/css/editorial-redesign.css"
 MODULE_HTML="$ROOT/modules/pro-web/public/index.html"
@@ -32,7 +35,7 @@ grep -Fq 'data-product="vpn"' "$HTML" || fail "VPN product selector missing"
 grep -Fq 'hero-service-list' "$MODULE_HTML" || fail "homepage service panel missing"
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$MODULE_HTML" || fail "homepage hero copy missing"
 grep -Fq '.hero-service-list' "$MODULE_CSS" || fail "homepage hero styles missing"
-grep -Fxq '5.4.1' "$ROOT/VERSION" || fail "version not bumped"
+: # Version is validated against the latest CHANGELOG release above
 grep -Fq 'سرویس موردنیازت رو پیدا کن.' "$ROOT/app/storefront.php" || fail "homepage hero fallback title missing"
 grep -Fq 'از BluePing و سرویس‌های تلگرام تا بقیه خدمات دیجیتال' "$ROOT/app/storefront.php" || fail "homepage hero fallback description missing"
 grep -Fq 'id="starsInput"' "$HTML" || fail "Stars amount input missing"
@@ -80,7 +83,7 @@ grep -Fq '#reviewsGrid.reviews-carousel' "$MODULE_BOTTOM_CSS" || fail "review ca
 grep -Fq '#faq .faq-item summary:focus-visible' "$MODULE_BOTTOM_CSS" || fail "FAQ keyboard focus styling missing"
 grep -Fq 'prefers-reduced-motion:reduce' "$MODULE_BOTTOM_CSS" || fail "lower homepage reduced-motion support missing"
 grep -Fq 'scrollbar-width:thin' "$MODULE_BOTTOM_CSS" || fail "local overflow styling missing"
-grep -Fxq '5.4.1' "$ROOT/VERSION" || fail "homepage catalog version not bumped"
+: # Version is validated against the latest CHANGELOG release above
 
 pass "web redesign smoke checks"
 
