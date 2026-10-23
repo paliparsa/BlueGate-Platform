@@ -100,7 +100,7 @@ The website-only adapters are `public/web/css/editorial-redesign.css` followed b
 - Keep mobile motion lighter, all content available without waiting, and all catalog, pricing, account, API, checkout, and Telegram Mini App behavior unchanged.
 - Public web and served Pro Web HTML/CSS/JS mirrors must stay synchronized.
 
-## Catalog and services correctness and accessibility (v5.4.2)
+## Catalog and services correctness and accessibility (v5.4.3)
 - Numbers in the web catalog and services (prices, counters, percentages, traffic volumes, remaining days) use one shared formatter, `window.BGFormat` in `js/pricing.js`: Latin digits with en-US thousands grouping, the Persian percent sign `٪`, and `تومان`/`GB` units. Latin digits are already used by every price, checkout amount, wallet value, and order ID on the web, so they remain the single numeral system; do not reintroduce `fa-IR` digits next to Latin ones.
 - A catalog card's “از …” price is the lowest active plan price. When that plan is discounted, its original price is shown struck through before the sale price.
 - Catalog cards are plain `article` elements. The visible “مشاهده پلن‌ها و خرید” control is a real `button` whose hit area is stretched over the card, and its accessible name starts with the visible text followed by the product name.
